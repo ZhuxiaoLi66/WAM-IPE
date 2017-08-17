@@ -26,15 +26,15 @@ $(POBJ90) $(SOBJ90): %.o: %.f90
 $(POBJ77) $(POBJ90):
 ifeq ($(PARALLELISM),parallel)
 	$(PPP) $(shell echo $(PPP_FLAGS) | sed 's/--Fmodule=$*//') -o $*_sms.f90 $<
-	$(MODCMD) && $(FCP) -c $(FFLAGS) $(INCS) $(SMS_INCFLAGS) -o $@ $*_sms.f90
+	$(FCP) -c $(FFLAGS) $(INCS) $(SMS_INCFLAGS) -o $@ $*_sms.f90
 else
-	$(MODCMD) && $(FCS) -c $(FFLAGS) $(INCS) -o $@ $<
+	$(FCS) -c $(FFLAGS) $(INCS) -o $@ $<
 endif
 
 # Rule for building serial objects
 
 $(SOBJ77) $(SOBJ90):
-	$(MODCMD) && $(FCS) -c $(FFLAGS) $(INCS) -o $@ $<
+	$(FCS) -c $(FFLAGS) $(INCS) -o $@ $<
 
 # Rule for generating dependencies
 

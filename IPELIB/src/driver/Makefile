@@ -15,9 +15,9 @@ include $(TOP)/Makefile.common
 
 $(EXE): driver_ipe.o $(LIB)
 ifeq ($(PARALLELISM),parallel)
-	$(MODCMD) && $(FCP) $(FFLAGS) $(INCS) -o $@ $^ -L$(dir $(LIB)) -lipe $(SMS_INCFLAGS) $(SMS_LDFLAGS)
+	$(FCP) $(FFLAGS) $(INCS) -o $@ $^ -L$(dir $(LIB)) -lipe $(SMS_INCFLAGS) $(SMS_LDFLAGS)
 else
-	$(MODCMD) && $(FCS) $(FFLAGS) $(INCS) -o $@ $^ -L$(dir $(LIB)) -lipe 
+	$(FCS) $(FFLAGS) $(INCS) -o $@ $^ -L$(dir $(LIB)) -lipe 
 endif
 
 $(LIB): $(OBJS)
