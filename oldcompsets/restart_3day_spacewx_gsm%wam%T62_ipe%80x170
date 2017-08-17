@@ -1,0 +1,72 @@
+###############################################################################
+#
+#  WAM-IPE coupled run
+#
+###############################################################################
+
+export TEST_DESCR="WAM-IPE 3day cold-restart coupled run"
+
+# - gsm configuration ---
+export_gsm
+export CDATE=2013031900
+export WLCLK=480
+export NDAYS=3
+export FHOUT=1
+export TASKS=104
+export PE1=32
+export THRD=1
+export QUILT=.false.
+export FDFI=0
+export CP2=.false.
+export IDEA=.true.
+export IDVC=3
+export THERMODYN_ID=3
+export SFCPRESS_ID=2
+export SPECTRALLOOP=2
+export FHRES=24
+
+# - IPE configuration ---
+export IPECASE=20130316_3day_spacewx_80x170
+
+# - nems.configure ---
+export_nems
+export nems_configure=med_atm_ipm
+export atm_model=gsm
+export atm_petlist_bounds="0 15"   # 16
+export med_model=spaceweather
+export med_petlist_bounds="16 23"  #  8
+export ipm_model=ipe
+export ipm_petlist_bounds="24 103"  # 80
+export coupling_interval_fast_sec=180.0
+export coupling_interval_sec=180.0
+
+export F107_KP_SIZE=56
+export F107_KP_INTERVAL=10800
+export WAM_IPE_COUPLING=.true.
+export HEIGHT_DEPENDENT_G=.true.
+export F107_KP_SKIP_SIZE=24
+
+# Set directory to restart from 
+export RESTART_DIR=/scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_24820/swpc%20130316_dumprs_nodensities_3day_spacewx_gsm%wam%T62_ipe%80x170
+
+# - component specific setup calls ---
+# (these depend on RESTART_DIR being set)
+cold_restart_wam  # eventually switch to restart_wam when that's working
+restart_ipe
+restart_spaceweather
+
+# -
+RUN_SCRIPT=rt_gfs.sh
+
+# - validation
+export CNTL_DIR=restart_3day_spacewx_gsm%wam%T62_ipe%80x170_V0001
+export LIST_FILES="IPE.inp SMSnamelist \
+                   sigf00 sigf01 sigf02 sigf06 sigf12 sigf18 sigf24 \
+                   sfcf00 sfcf01 sfcf02 sfcf06 sfcf12 sfcf18 sfcf24 \
+                   flxf00 flxf01 flxf02 flxf06 flxf12 flxf18 flxf24 \
+                   plasma00 plasma01 plasma02 plasma03 plasma04 \
+                   plasma05 plasma06 plasma07 plasma08 plasma09 \
+                   plasma10 plasma11 plasma12 plasma13 plasma14 \
+                   plasma15 plasma16 \
+                   wam3dgridnew2.nc ipe3dgrid2.nc wam2dmesh.nc"
+

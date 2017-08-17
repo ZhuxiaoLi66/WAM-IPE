@@ -1,0 +1,12 @@
+load 'platforms.input'
+load 'nemscommon.input'
+
+build wam.ipe.x {
+    use plat
+    NEMS.x="@[plat%EXECrt]/NEMS_gsm.x"
+    modules.nems="@[plat%INCrt]/NEMS_gsm.x.modules"
+    md5sum="@[NEMS.x].md5"
+    target="@[NEMS.x]"
+    build=NEMSAppBuilder(NEMS.x="@[NEMS.x]",modules.nems="@[modules.nems]",
+                         OPTS="app=wam-ipe",md5sum="@[md5sum]")
+}

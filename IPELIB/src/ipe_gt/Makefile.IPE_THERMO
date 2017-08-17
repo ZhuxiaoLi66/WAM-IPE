@@ -1,0 +1,78 @@
+#
+UNAMES = $(shell uname -s)
+EXEC = gt_ipe.exe
+
+NETCDF = /apps/netcdf/3.6.3/intel
+
+#FORTRAN=xlf90  vapor
+FORTRAN=ifort
+#FFLAGS=-I$(NETCDF)/include -warn general -check all -traceback -ftrapuv -O0 -g -fpe:0 -fpstkchk
+
+# enable gprof profiler w/ -pg
+ERRORFLAGS=-warn general -check all -traceback -ftrapuv -O0 -g -fpe:0 -pg
+
+FFLAGS=$(ERRORFLAGS) -I$(NETCDF)/include
+
+# -O0 -g -traceback -fpe:0 -check all 
+
+#> Try these options on both compile and link:
+#> -g debug information.  Note that -g does NOT IMPLY -O0
+#>
+#> -O0 calls out no optimizations explicitly
+#>
+#> -traceback will allow a traceback on exceptions
+#>
+#> -fpe:0 Floating-point invalid, divide-by-zero, and overflow exceptions
+#> are enabled. If any such exceptions occur, execution is aborted. 
+
+# old compiler :
+#FFLAGS=-qfree -qflag=i:w -qfloat=nans -qflttrap=enable:NANQ -g -I$(NETCDF)/include
+# -qflag - level of messages to print to listing & screen 
+# -qcheck - Performs run-time checking of array bounds 
+#FFLAGS=-qfree -qflag=i:i -I$(NETCDF)/include -qcheck
+
+LFLAGS=-L. -L$(NETCDF)/lib -lnetcdf  $(ERRORFLAGS)
+
+
+SRC0	= module_precision.f90 \
+          modSizeFluxTube.f90 \
+          modSizeFixedGridThermo.f90 \
+          modSizeThermo.f90 \
+          modSizeFixedGridIono.f90 \
+          moduleAmplitude.f90 \
+          moduleTidalPhase.f90 \
+          moduleSwitches.f90 \
+          moduleDriverDebug.f90 \
+	moduleThermospere.f90 \
+        moduleInterfaceThermo2Iono.f90   \
+        moduleInterfaceIono2Thermo.f90 \
+	driver_ipe_gt.3d.f90 
+
+# module_field_line_grid_gt.3d.f90 \  this is not used right now
+# module_neutral_gt.3d.mpi.f90 \  this is not used right now
+# module_input_parameters.f90 \ this is not used right now
+# module_io.3d.f90 \ this is not used right now
+# thermosphere_1d_v2.mod.f90 \ this is not used right now
+# module_IPE_dimension.f90 \ this is not used right now
+# module_physical_constants.f90 \ this is not used right now
+# module_unit_conversion.f90 \ this is not used right now
+# nrlmsise00.mod.f90 \ this is not used right now
+# hwm93.mod.f90 \ this is not used right now
+# run_parameters.f90 \ this is not used right now
+
+#
+OBJS	= $(SRC0:.f90=.o)
+
+
+# 
+.SUFFIXES:  .f .f90 .F .f77
+#
+$(EXEC):	$(OBJS)
+	$(FORTRAN) -o $@ $(OBJS) $(LFLAGS)  $(LIBS)
+#
+.f90.o:
+	$(FORTRAN) -c $(FFLAGS) $<
+#
+# remove object files
+clean: 
+	rm -f *.o *.mod $(EXEC)

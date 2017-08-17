@@ -1,0 +1,56 @@
+/scratch3/NCEPDEV/swpc/save/Valery.Yudin/BASE_SVN/BASE_WAM_DATA/Solar_2012
+
+
+  wam_nems_feuv_2012_366d_by_24hr.nc (Kp-F107-EUV_37)
+
+
+
+[Valery.Yudin@tfe03 20120101]$ ncdump -h wam_nems_feuv_2012.nc
+netcdf wam_nems_feuv_2012 {
+dimensions:
+	nwaves = 37 ;
+	time = 8784 ;
+variables:
+	double EUV(time, nwaves) ;
+	double f107(time) ;
+	double f107a(time) ;
+	double kp(time) ;
+	double ap(time) ;
+	int date(time) ;
+	int yddd(time) ;
+	double ydh(time) ;
+}
+
+
+  wam_nems_imf_2012_dp105410.nc     ("15-minute average of OMNI data trailed by 5 minutes. Sampled to 5-minute output" ???)
+
+
+
+
+netcdf wam_nems_imf_2012 {
+dimensions:
+	time = 105410 ;
+variables:
+	double by(time) ;
+		by:units = "nT" ;
+		by:long_name = "1AU IP By, GSM" ;
+	double bz(time) ;
+		bz:units = "nT" ;
+		bz:long_name = "1AU IP Bz, GSM" ;
+	double swden(time) ;
+		swden:units = "per cc" ;
+		swden:long_name = "1AU IP N (ion)" ;
+	double swvel(time) ;
+		swvel:units = "Km/s" ;
+		swvel:long_name = "1AU IP Plasma Speed" ;
+	double ydh(time) ;
+		ydh:long_name = "year-day plus fractional day: yyyyddd.frac" ;
+
+// global attributes:
+		:Description = "15-minute average of OMNI data trailed by 5 minutes. Sampled to 5-minute output" ;
+		:CreationTime = "2013-05-08 16:50:42.572928" ;
+		:Source = "Hourly OMNI combined 1AU IP Data" ;
+		:Version = "2.1.5.svn.r1995" ;
+		:CreatedBy = "schmitt" ;
+		:url_reference = "http://cdaweb.gsfc.nasa.gov/sp_phys" ;
+

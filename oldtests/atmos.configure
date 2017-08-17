@@ -1,0 +1,4 @@
+core: gfs
+
+atm_model:                      gsm
+atm_coupling_interval_sec:      180.0

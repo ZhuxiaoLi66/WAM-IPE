@@ -1,0 +1,21 @@
+# Standlone GSM (WAM) 
+#
+## NEMS Application Builder file
+
+COMPONENTS=( LegacyGSM )
+
+# Note lack of environment_* files to ensure the user does not
+# accidentally use the invalid modules listed in
+# nemsLegacy.appBuilder.
+
+MAKEOPT=gsm
+CONFOPT="gsm_intel_${MACHINE_ID:?}"
+
+case "$FULL_MACHINE_ID" in
+    yellowstone|gaea)
+        CHOSEN_MODULE=$FULL_MACHINE_ID/ESMF_NUOPC
+        ;;
+    wcoss*|theia)
+        CHOSEN_MODULE=$FULL_MACHINE_ID/ESMF_700_gsm
+        ;;
+esac

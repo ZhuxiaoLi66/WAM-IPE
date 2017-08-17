@@ -1,0 +1,11 @@
+module_close_files ../main/module_close_files.f90
+module_decomp ../main/module_decomp_sms.f.tmp
+module_field_line_grid_mks ../main/module_field_line_grid_sms.f.tmp
+module_init_plasma_grid ../main/module_init_plasma_grid_sms.f.tmp
+module_input_parameters ../main/module_input_parameters_sms.f.tmp
+module_ipe_dimension ../main/module_IPE_dimension.f90
+module_NEUTRAL_MKS ../neutral/module_neutral.f90
+module_open_output_files ../main/module_open_output_files_sms.f.tmp
+module_output ../main/module_output.f90
+module_precision ../main/module_precision.f90
+module_sub_PLASMA ../plasma/module_sub_plasma.f90

@@ -1,0 +1,71 @@
+#!/bin/sh
+
+unknown() {
+  echo "Unknown compiler '$2' for machine '$1'."
+  exit 1
+}
+
+usage() {
+  echo "USAGE: $(basename $0) <machine> <compiler>"
+  exit 1
+}
+
+test -z "$1" -o -z "$2" && usage
+
+case $1 in
+  "trillian")
+    init="source /opt/modules/default/init/sh"
+    this="$($init && module list 2>&1 | grep PrgEnv | sed 's/.*\(PrgEnv[^/]*\).*/\1/')"
+    goto="$init && module switch $this"
+    case $2 in
+      "cray")
+        echo "$goto PrgEnv-cray"
+        ;;
+      "intel")
+        echo "$goto PrgEnv-intel"
+        ;;
+      "pgi")
+        echo "$goto PrgEnv-pgi"
+        ;;
+      *) unknown $1 $2
+        ;;
+    esac
+    ;;
+  "zeus")
+    init="source /usr/share/Modules/init/sh"
+    goto="$init && module purge && module load"
+    case $2 in
+      "intel")
+        echo "$goto intel mpt"
+        ;;
+      "lahey")
+        echo "$goto lahey mpt"
+        ;;
+      *) unknown $1 $2
+        ;;
+    esac
+    ;;
+  "theia")
+###    init="source /apps/lmod/lmod/init/sh"
+    init="source /apps/lmod/lmod/init/sh"
+    goto="$init && module purge && module load"
+    case $2 in
+      "intel")
+        echo "$goto intel/16.1.150 impi "
+        ;;
+      *) unknown $1 $2
+        ;;
+    esac
+    ;;
+  "wcoss")
+    init="source /usrx/local/Modules/default/init/bash"
+    goto="module purge && module load"
+    case $2 in
+      "intel")
+        echo "$goto ics/15.0.6 ibmpe lsf "
+        ;;
+      *) unknown $1 $2
+        ;;
+    esac
+    ;;
+esac

@@ -1,0 +1,31 @@
+&gtipeINPUTS
+start_time= 43200,
+stop_time= 302400,
+time_step=    900,
+ipeFileStartTime = 43200,
+GT_input_dataset = '/scratch1/portfolios/NCEPDEV/swpc/noscrub/Leslie.Mayer/DATA/IONO/gtgipIPE/INPUT/ipe_640_25840/Day_80_180_dipole_test.gt.20110913.v1.nc'
+GT_output_dataset = '/scratch1/portfolios/NCEPDEV/swpc/noscrub/Leslie.Mayer/DATA/IONO/gtgipIPE/OUTPUT/ipe_640_19811/NOIPEHRATES/output_Day_80_180_dipole_test.gt.20110913.v1.nc'
+ionoStartDir = '/scratch1/portfolios/NCEPDEV/swpc/noscrub/Leslie.Mayer/DATA/IONO/gtgipIPE/INPUT/ipe_640_19811/'
+staticFileDir = '/scratch1/portfolios/NCEPDEV/swpc/noscrub/Leslie.Mayer/DATA/IONO/static_files/'
+debugDir = '/scratch1/portfolios/NCEPDEV/swpc/noscrub/Leslie.Mayer/DATA/IONO/gtgipIPE/DEBUG/ipe_640_19811/NOIPEHRATES/'
+nday = 80                                                    
+f107 = 180.                  
+GT_timestep_in_seconds = 60  
+amplitude%a_11 = 0.
+amplitude%a_22 = 300.
+amplitude%a_23 = 0.
+amplitude%a_24 = 0.
+amplitude%a_25 = 0.                 ! amplitudes
+tidalPhase%t_11 = 8.0
+tidalPhase%t_22 = 1.0
+tidalPhase%t_23 = 7.4
+tidalPhase%t_24 = 5.5
+tidalPhase%t_25 = 10.         ! tidal phases
+smoothingFrequency = 5  ! How often to smooth (in # of time steps)
+neutralCompositionFrequency = 1
+useIPEHeatingRates = .FALSE.  ! use the ipe neutral heating rates?
+switches%electro = .FALSE.
+switches%External_model_provides_NO_N4S_densities = .FALSE.
+switches%External_model_provides_low_lat_E_fields = .FALSE.
+switches%input_Auroral_production_is_single_overall_rate = .TRUE.
+/

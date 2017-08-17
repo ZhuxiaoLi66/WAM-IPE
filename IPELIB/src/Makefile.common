@@ -1,0 +1,52 @@
+# common Makefile
+
+# Dynamic variables
+
+INCS   = $(addprefix -I$(TOP)/,$(DIRS))
+POBJ77 = $(addsuffix .o,$(basename $(filter %.f,  $(PSRCS))))
+POBJ90 = $(addsuffix .o,$(basename $(filter %.f90,$(PSRCS))))
+SOBJ77 = $(addsuffix .o,$(basename $(filter %.f,  $(SSRCS))))
+SOBJ90 = $(addsuffix .o,$(basename $(filter %.f90,$(SSRCS))))
+SRCS   = $(strip $(PSRCS) $(SSRCS))
+VPATH  = $(shell echo $(addprefix $(TOP)/,$(DIRS)) | sed 's/ /:/g')
+
+.PHONY: clean objs
+
+# Default rule
+
+objs: $(POBJ77) $(POBJ90) $(SOBJ77) $(SOBJ90)
+
+# Prerequisites for serial and parallel objects, respectively
+
+$(POBJ77) $(SOBJ77): %.o: %.f
+$(POBJ90) $(SOBJ90): %.o: %.f90
+
+# Rule for building parallel objects
+
+$(POBJ77) $(POBJ90):
+ifeq ($(PARALLELISM),parallel)
+	$(PPP) $(shell echo $(PPP_FLAGS) | sed 's/--Fmodule=$*//') -o $*_sms.f90 $<
+	$(MODCMD) && $(FCP) -c $(FFLAGS) $(INCS) $(SMS_INCFLAGS) -o $@ $*_sms.f90
+else
+	$(MODCMD) && $(FCS) -c $(FFLAGS) $(INCS) -o $@ $<
+endif
+
+# Rule for building serial objects
+
+$(SOBJ77) $(SOBJ90):
+	$(MODCMD) && $(FCS) -c $(FFLAGS) $(INCS) -o $@ $<
+
+# Rule for generating dependencies
+
+DEPENDENCIES: $(SRCS)
+	$(RM) Filepath Srcfiles
+	echo "." > Filepath
+	echo $(SRCS) | sed 's/  */\n/g' > Srcfiles
+	$(TOP)/mkDepends -m -d module_decomp.o Filepath Srcfiles > $@
+
+-include DEPENDENCIES
+
+# Rule for cleaning
+
+clean:
+	$(RM) *.i *.lst *.mod *.o *_sms.f *_sms.f90 *.tmp *.ppptmp* *~ Filepath Srcfiles

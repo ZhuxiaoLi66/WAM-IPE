@@ -1,0 +1,32 @@
+&gw_parms_nl
+ ispectra_type=1, sp_width=30.0
+ nazim_ngw=4, nazim_ogw=4, nazim_cgw=4
+ ngw_par_type = 1,  pmb_ngw = 600.0,   nw_ngw = 4, cmax_ngw = 75.0, dc_ngw = 3.75
+ ogw_par_type = 1,  pmb_ogw = 1000.0,  Nw_ogw = 1, cmax_ogw = 0.0, dc_ogw = .0
+ cgw0_par_type = 0, pmb_cgw = 700.0,   Nw_cgw = 1, cmax_cgw = 0.0, dc_cgw = .0
+ relf_par_type = 1, pmb_rfric = 0.25,  rel_max = 5.0, rel_expkm = 5.0
+ eff_ogw =0.125, eff_cgw=0.30
+ gw_src_file = 'wam_nems_gw_sources.nc'
+ gw_dis_file = 'wam_nems_gw_dissip.nc'
+ Dir_swpc = '/scratch1/portfolios/NCEPDEV/swpc/save/'
+ Dir_uid =  'Valery.Yudin/NEMS/wam_april_2015/data_euv/'
+ igw_effects = 1, 1, 1
+ eff_ngw = 0.1
+ GWP_SOLVER = 'LINDZEN_LSATVY'
+ IMPL_UNIF_GW = 'WAM150L'
+/
+!      namelist /gw_parms_nl/ igw_effects, 
+!     &    Gw_src_file,Gw_dis_file, Dir_swpc, Dir_uid, 
+!     &    ngw_par_type,  ogw_par_type,  cgw0_par_type, relf_par_type,
+!     &    eff_ngw, eff_ogw, eff_cgw, lxy_ngw, lxy_ogw, lxy_cgw,
+!     &    pmb_rfric, rel_max, rel_expkm, 
+!     &    pmb_ngw, pmb_ogw, pmb_cgw, cmax_ngw, cmax_ogw, cmax_cgw,
+!     &    dc_ngw, dc_ogw, dc_cgw, nazim_ngw, nazim_ogw, nazim_cgw,
+!     &    nw_ngw, nw_ogw, nw_cgw, ispectra_type, sp_width,
+!     &    Pr_ktkv, Pr_ktkq, Fr_oro, Ls_uw2uc, Ri_wave, Ri_mean,
+!     &    keddy_max, ax_max, eps_max, umc_crit, bn1_crit, rim_crit, 
+!     &    etot_ngw, etot_ogw, etot_cgw, GWP_SOLVER,IMPL_UNIF_GW 
+!
+!cat /scratch3/NCEPDEV/stmp1/Valery.Yudin/oldw_gwp75_t62/gwp_in
+! Previous Run: 60m/s width 15x4 = 60 modes dc = 4 m/s  Cmax = 60. 
+!

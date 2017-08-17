@@ -1,0 +1,43 @@
+#Fortran output
+*.o
+*.mod
+*.a
+#SMS output
+*_sms.f.tmp
+*_sms.f90
+
+#Build Files
+*.exe
+DEPENDENCIES
+Filepath
+Srcfiles
+
+#IPE Output
+fort.*
+stup*
+plasma0*
+plasma1*
+ipe_grid*
+*.time
+logfile*
+ut_rec
+
+
+#PBS/Slurm/...
+*.err
+*.out
+*.batch
+
+#General
+*.tar.gz
+*.tgz
+*.gz
+
+# Directories and additional files we do not want committed
+log/
+*-INSTALL/
+*.md5sum.*
+routinesNotUsed/
+data/
+.svn*
+.svnignore

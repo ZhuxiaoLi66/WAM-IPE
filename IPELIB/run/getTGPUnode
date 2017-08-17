@@ -1,0 +1,55 @@
+#!/bin/csh
+#
+if ( $#argv == 0) then
+  set par = "serial"
+  set compute_tasks = 1
+  set name = ipe_S
+else 
+  set par = "parallel"
+  set compute_tasks = $1
+  set name = ipe_${compute_tasks}
+endif
+set  rundir = "${name}_${$}"
+mkdir $rundir
+echo Created $rundir
+cd  $rundir
+cp ../../bin/ipe_v18.ifort.exe .
+cp ../coef*              .
+cp ../GPTLnamelist       .
+cp ../SMSnamelist        .
+cp ../IPE.inp            .
+cp ../wei96.cofcnts      .
+cp ../stup_ut_rec        .
+ln -s /pan2/projects/fim-njet/jacques/IPEdata/* .
+
+# Make rundir a full path for runscript
+set rundir = $cwd
+
+cat << EOF >! runscript
+#!/bin/csh
+  cd $rundir
+  pwd
+  module list
+  limit
+  if ($par == 'parallel') then
+    set cmd = "time mpirun -np $compute_tasks ./ipe_v18.ifort.exe"
+  else
+    set cmd = "time ./ipe_v18.ifort.exe"
+  endif
+  echo "running \$cmd" > output
+  (\$cmd) >> output
+
+if (\$status != 0) then
+  echo ipe failed
+  exit 23
+else
+  echo ipe finished
+endif
+exit 0
+EOF
+
+chmod 755 ./runscript
+
+qsub -I -X -A acb-gpu -q batch -l partition=tgpu,procs=6,walltime=08:00:00
+
+exit 0

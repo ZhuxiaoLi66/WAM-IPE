@@ -1,0 +1,55 @@
+###############################################################################
+#
+#  WAM side-by-side run
+#
+###############################################################################
+
+export TEST_DESCR="WAM 1h STANDALONE run"
+
+# - gsm configuration ---
+export_gsm
+export CDATE=2009011500
+export WLCLK=30
+export QUEUE=debug
+export NDAYS=1
+export FHOUT=1
+export TASKS=32
+export PE1=32
+export THRD=1
+export QUILT=.false.
+export FDFI=0
+export CP2=.false.
+export IDEA=.true.
+export IDVC=3
+export THERMODYN_ID=3
+export SFCPRESS_ID=2
+export SPECTRALLOOP=2
+
+# - nems.configure ---
+export_nems
+export nems_configure=atm
+export atm_model=gsm
+export atm_petlist_bounds="0 15"
+export coupling_interval_fast_sec=180.0
+export coupling_interval_sec=180.0
+
+export F107_KP_SIZE=56
+export F107_KP_INTERVAL=10800
+#export WAM_IPE_COUPLING=.true.
+export HEIGHT_DEPENDENT_G=.true.
+export F107_KP_SKIP_SIZE=24
+
+# - component specific setup calls ---
+setup_wam_T62_2009011500
+setup_spaceweather_gsm%wam%T62_ipe%80x170
+
+# -
+RUN_SCRIPT=rt_gfs.sh
+
+# - validation
+export CNTL_DIR=swpc%20090115_1day_spacewx_gsm%wam%T62_ipe%80x170_V0003
+export LIST_FILES="sigf00 sigf01 sigf02 sigf06 sigf12 sigf18 sigf24 \
+                   sfcf00 sfcf01 sfcf02 sfcf06 sfcf12 sfcf18 sfcf24 \
+                   flxf00 flxf01 flxf02 flxf06 flxf12 flxf18 flxf24"
+
+

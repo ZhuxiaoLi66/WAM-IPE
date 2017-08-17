@@ -1,0 +1,18 @@
+# Coupled IPE-WAM Space Weather Application
+#
+## AppBuilder descriptor file of NEMS based application.
+
+sortingPriority=100   # this special line ensures wam-ipe will be selected by default
+
+COMPONENTS=( LegacyGSM IPE DATAWAM DATAIPE )
+
+IPE_SRCDIR=$ROOTDIR/IPE
+IPE_BINDIR=$ROOTDIR/IPE-INSTALL
+
+DATAWAM_SRCDIR=$ROOTDIR/DATAWAM
+DATAWAM_BINDIR=$ROOTDIR/DATAWAM-INSTALL
+
+DATAIPE_SRCDIR=$ROOTDIR/DATAIPE
+DATAIPE_BINDIR=$ROOTDIR/DATAIPE-INSTALL
+
+CHOSEN_MODULE=$FULL_MACHINE_ID/wam-ipe

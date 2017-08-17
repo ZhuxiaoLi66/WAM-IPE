@@ -1,0 +1,76 @@
+#
+UNAMES = $(shell uname -s)
+EXEC = test_Interp_Accuracy.exe
+
+NETCDF = /apps/netcdf/3.6.3/intel
+
+FORTRAN=ifort
+#FFLAGS=-I$(NETCDF)/include -warn general -check all -traceback -ftrapuv -O0 -g -fpe:0 -fpstkchk
+
+ERRORFLAGS=-warn general -check all -traceback -ftrapuv -O0 -g -fpe:0 
+
+FFLAGS=$(ERRORFLAGS) -I$(NETCDF)/include
+
+
+
+# -O0 -g -traceback -fpe:0 -check all 
+
+#> Try these options on both compile and link:
+#> -g debug information.  Note that -g does NOT IMPLY -O0
+#>
+#> -O0 calls out no optimizations explicitly
+#>
+#> -traceback will allow a traceback on exceptions
+#>
+#> -fpe:0 Floating-point invalid, divide-by-zero, and overflow exceptions
+#> are enabled. If any such exceptions occur, execution is aborted. 
+
+# old compiler :
+#FFLAGS=-qfree -qflag=i:w -qfloat=nans -qflttrap=enable:NANQ -g -I$(NETCDF)/include
+# -qflag - level of messages to print to listing & screen 
+# -qcheck - Performs run-time checking of array bounds 
+#FFLAGS=-qfree -qflag=i:i -I$(NETCDF)/include -qcheck
+
+LFLAGS=-L. -L$(NETCDF)/lib -lnetcdf  $(ERRORFLAGS)
+
+
+SRC0	= module_precision.f90 \
+          modSizeFluxTube.f90 \
+          modSizeFixedGridThermo.f90 \
+          modSizeThermo.f90 \
+          modSizeFixedGridIono.f90 \
+          moduleAmplitude.f90 \
+          moduleTidalPhase.f90 \
+          moduleSwitches.f90 \
+          moduleDriverDebug.f90 \
+	module_IPE_dimension.f90 \
+	module_physical_constants.f90 \
+	module_unit_conversion.f90 \
+	module_input_parameters.f90 \
+	module_io.3d.f90 \
+	module_field_line_grid_gt.3d.f90 \
+	nrlmsise00.mod.f90 \
+	hwm93.mod.f90 \
+	thermosphere_1d_v2.mod.f90 \
+	module_neutral_gt.3d.mpi.f90 \
+	run_parameters.f90 \
+	moduleThermospere.f90 \
+        moduleInterfaceThermo2Iono.f90   \
+        moduleInterfaceIono2Thermo.f90 \
+	test_Interp_Accuracy.f90 
+#
+OBJS	= $(SRC0:.f90=.o)
+
+
+# 
+.SUFFIXES:  .f .f90 .F .f77
+#
+$(EXEC):	$(OBJS)
+	$(FORTRAN) -o $@ $(OBJS) $(LFLAGS)  $(LIBS)
+#
+.f90.o:
+	$(FORTRAN) -c $(FFLAGS) $<
+#
+# remove object files
+clean: 
+	rm -f *.o *.mod $(EXEC)

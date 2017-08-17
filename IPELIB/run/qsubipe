@@ -1,0 +1,354 @@
+#!/bin/bash
+
+# Control variables
+
+sw_grid=1
+sw_neutral=1
+
+# Functions
+
+compiler_check() {
+
+  # Ensure the specified compiler is supported.
+
+  test -z "$1" && fail "$FUNCNAME: No list of valid compilers provided."
+  test -z "$2" && fail "$FUNCNAME: No compiiler name specified."
+  test -z "$3" && fail "$FUNCNAME: No machine name specified."
+  echo $1 | grep -q $2 || usage "$scr: Machine $3 supports compilers: $1"
+}
+
+fail() {
+  test -n "$1" && echo $1
+  exit 1
+}
+
+function findabove {
+
+  # Locate the specified item in the current directory, or any parent thereof.
+
+  (
+    until test -e $1 -o $PWD = "/" ; do cd .. ; done
+    test -e $1 || fail "$FUNCNAME: Could not find $1"
+    echo $PWD/$1
+  )
+}
+
+linksafe() {
+
+  # Create symlink only if target exists.
+
+  test -z "$1" && fail "$FUNCNAME: No target supplied."
+  test -e "$1" || fail "$FUNCNAME: No such target: $1."
+  test -z "$2" && link="." || link="$2"
+  ln -s $1 $link
+}
+
+nml() {
+
+  # Return the path to the nearest 'nml' utility.
+
+  nml=../../tst/nml
+  test -x $nml || nml=$(findabove nml)
+  echo $nml
+}
+
+runscript_trillian() {
+
+  # Produce a script to run IPE on trillian.
+
+  echo "#!/bin/bash -x"
+  echo "#PBS -j oe"
+  echo "#PBS -l nodes=$(expr $taskreq / 32 + 1):ppn=32"
+  echo "#PBS -l walltime=$IPETIME"
+  echo "#PBS -N $jobname"
+  echo "#PBS -o output.batch"
+  echo "#PBS -W umask=022"
+  echo "export $envvars"
+  echo "$($modcmd $machine $compiler)"
+  echo "module list"
+  echo "cd $PWD"
+  echo "time aprun -n $tasks ./$(basename $exe) >output 2>&1 && echo 'ipe finished' && exit 0"
+  echo "echo 'ipe failed' && exit 23"
+}
+
+runscript_zeus() {
+
+  # Produce a script to run IPE on zeus.
+
+  echo "#!/bin/bash -x"
+  echo "#PBS -A $acct"
+  echo "#PBS -d $PWD"
+  echo "#PBS -j oe"
+  echo "#PBS -l procs=$taskreq"
+  echo "#PBS -l walltime=$IPETIME"
+  echo "#PBS -N $jobname"
+  echo "#PBS -o output.batch"
+  echo "#PBS -q $IPEQUEUE"
+  echo "#PBS -W umask=022"
+  echo "export $envvars"
+  echo "$($modcmd $machine $compiler)"
+  echo "module list"
+  test $parallelism == parallel && extra="mpiexec_mpt -np $tasks "
+  echo "time $extra./$(basename $exe) >output 2>&1 && echo 'ipe finished' && exit 0"
+  echo "echo 'ipe failed' && exit 23"
+}
+
+runscript_theia() {
+
+  # Produce a script to run IPE on theia.
+
+  echo "#!/bin/bash -x"
+  echo "#PBS -A $acct"
+  echo "#PBS -d $PWD"
+  echo "#PBS -j oe"
+  echo "#PBS -l procs=$taskreq"
+  echo "#PBS -l walltime=$IPETIME"
+  echo "#PBS -N $jobname"
+  echo "#PBS -o output.batch"
+  echo "#PBS -q $IPEQUEUE"
+  echo "#PBS -W umask=022"
+  echo "export $envvars"
+  echo "$($modcmd $machine $compiler)"
+  echo "module list"
+  echo "export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/"
+  echo "echo $RESDIR"
+  test $parallelism == parallel && extra="mpirun -np $tasks "
+  echo "time $extra./$(basename $exe) >output 2>&1 && echo 'ipe finished' && exit 0"
+  echo "echo 'ipe failed' && exit 23"
+}
+
+setc() {
+
+  # Set variable to value only if variable is currently undefined.
+
+  test -z "$1" && fail "$FUNCNAME: No variable name supplied"
+  test -z "$2" && fail "$FUNCNAME: No value supplied"
+  test $# != 2 && fail "$FUNCNAME: usage: $FUNCNAME variable value"
+  test -z "$(eval echo \$$1)" && eval "$1=$2"
+}
+
+usage() {
+
+  # Show this script's supported usage, and exit with an error code.
+
+  test -n "$1" && echo -e "\n$1"
+  echo
+  echo "USAGE: ipesub <machine> <compiler> <parallelism> [tasks]"
+  echo
+  echo "Where: machine     is one of: $machines"
+  echo "       compiler    is one of: $compilers (valid values depend on <machine>)"
+  echo "       parallelism is one of: $parallelisms"
+  echo "       tasks       is the number of compute tasks for parallel runs (minimum 2)"
+  echo
+  exit 1
+}
+
+# Set the script name, for use in error messages.
+
+scr=$(basename $0)
+
+# Initialize some variables for accumulating modifications to the IPE and SMS
+# namelist files.
+
+ipe_sets=""
+sms_sets=""
+
+# Set up some lists of valid options for error checking.
+
+compilers="cray intel lahey pgi"
+machines="trillian zeus yellowstone theia"
+parallelisms="parallel serial"
+
+# Set variables for command-line arguments.
+
+machine=$1
+compiler=$2
+parallelism=$3
+tasks=$4
+
+# Ensure that mandatory arguments were supplied.
+
+test -z "$machine" -o -z "$compiler" -o -z "$parallelism" && usage
+
+# Error-check the supplied command-line arguments.
+
+echo $machines | grep -q $machine || usage "$scr: Unknown machine '$machine'."
+echo $compilers | grep -q $compiler || usage "$scr: Unknown compiler '$compiler'."
+echo $parallelisms | grep -q $parallelism || usage "$scr: Unknown parallelism '$parallelism'."
+test $parallelism == parallel -a -z "$tasks" && usage "$scr: The <tasks> option is required for parallel runs."
+test $parallelism == serial -a -n "$tasks" && usage "$scr: No <tasks> option allowed for serial runs."
+test $parallelism == serial -a -n "$COMPARE_VAR" && fail "COMPARE_VAR requires a parallel run."
+
+# Request at least 2 cores to obtain sufficient memory.
+
+test -z "$tasks" && tasks=1
+test $tasks -lt 2 && taskreq=2 || taskreq=$tasks
+
+# Handle SMS compare_var option. For a compare_var run, execute e.g.
+#
+#  COMPARE_VAR=1,2 qsubipe zeus intel parallel 3
+#
+# for a 1-task-vs-2-task run. The final core request must be the sum of the two
+# numbers assigned to the COMPARE_VAR environment variable.
+
+if [ -n "$COMPARE_VAR" ]; then
+  echo $COMPARE_VAR | grep -Eq "[0-9]+,[0-9]+" || fail "Bad COMPARE_VAR value '$COMPARE_VAR'."
+  cv1=$(echo $COMPARE_VAR | cut -d, -f1)
+  cv2=$(echo $COMPARE_VAR | cut -d, -f2)
+  test $(expr $cv1 + $cv2) -eq $tasks || fail "Sum of COMPARE_VAR values must equal tasks ($tasks)."
+fi
+
+# Set variables based on machine and compiler.
+
+case $machine in
+
+  # trillian stanza
+
+  "trillian")
+    compiler_check "cray intel pgi" $compiler $machine
+    setc IPEDATA  /mnt/lustre/lus0/space/madden/IPE/data
+    setc IPEQUEUE workq
+    setc IPETIME  00:30:00
+    setc IPEWIND  $IPEDATA
+    queue_cmd=qsub
+    case $sw_grid in
+      0) gridfile=$IPEDATA/ipe_grid             ;;
+      *) fail "$0: Grid ID '$sw_grid' unknown." ;;
+    esac
+    case $compiler in
+      cray)
+        envvars="OMP_NUM_THREADS=1"
+        ;;
+      pgi)
+        envvars="OMP_NUM_THREADS=1 NO_STOP_MESSAGE=1"
+        ;;
+    esac
+    ;;
+
+  # zeus stanza
+
+  "zeus")
+    compiler_check "intel lahey" $compiler $machine
+    setc IPEDATA  /scratch1/portfolios/NCEPDEV/swpc/noscrub/Naomi.Maruyama/IPEdata/data
+    setc IPEQUEUE batch
+    setc IPETIME  00:30:00
+    setc IPEWIND  /scratch1/portfolios/NCEPDEV/swpc/noscrub/Naomi.Maruyama/IPEdata/wind
+    acct=swpc
+    griddir=/scratch1/portfolios/NCEPDEV/swpc/noscrub/Naomi.Maruyama/grid
+    queue_cmd=qsub
+    case $sw_grid in
+      0) gridfile=$IPEDATA/ipe_grid                                               ;;
+      1) gridfile=$griddir/apex/GIP_apex_coords_global_lowres_new20120705         ;;
+      2) gridfile=$griddir/apex/GIP_apex_coords_global_lowres_new_2dynamo20120709 ;;
+      3) gridfile=$griddir/tldp/GIP_apex_coords_global_lowres_new_tilt20120709    ;;
+      *) fail "$0: Grid ID '$sw_grid' unknown."                                   ;;
+    esac
+    case $compiler in
+      intel)
+        envvars="MPI_BUFS_PER_HOST=2048 MPI_BUFS_PER_PROC=256"
+        ;;
+      lahey)
+        envvars="MPI_BUFS_PER_HOST=1024 MPI_BUFS_PER_PROC=128"
+        ipe_sets+=" -s nmswitch:mpstop=2"
+        ;;
+    esac
+    ;;
+
+  # theia stanza
+
+  "theia")
+    compiler_check "intel pgi" $compiler $machine
+#    setc IPEDATA  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/IPEdata/data
+#    setc IPEDATA  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/runs/tmp20150730/trunk/run/1444997033_ipe_theia_intel_parallel_80
+#    setc IPEDATA /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/20090115_1hr_spacewx_80x170
+    setc IPEDATA /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/20090115_1day_spacewx_80x170 
+    echo "IPEDATA=" $IPEDATA
+    setc IPEQUEUE debug
+#    setc IPEQUEUE batch
+    echo "IPEQUEUE=" $IPEQUEUE
+    setc IPETIME  08:00:00
+    if [ $IPEQUEUE = debug ]; then
+      setc IPETIME  00:30:00
+    fi
+    echo "IPETIME=" $IPETIME
+    setc IPEWIND  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/IPEdata/wind
+    acct=swpc
+    griddir=/scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/grid
+    queue_cmd=qsub
+    case $sw_grid in
+      0) gridfile=$IPEDATA/ipe_grid                                               ;;
+      1) gridfile=$griddir/apex/1/GIP_apex_coords_global_lowres_new20120705         ;;
+      2) gridfile=$griddir/apex/2/GIP_apex_coords_global_lowres_new_2dynamo20120709 ;;
+      3) gridfile=$griddir/tldp/GIP_apex_coords_global_lowres_new_tilt20120709    ;;
+      *) fail "$0: Grid ID '$sw_grid' unknown."                                   ;;
+    esac
+    case $compiler in
+      intel)
+        envvars="MPI_BUFS_PER_HOST=2048 MPI_BUFS_PER_PROC=256"
+        ;;
+      lahey)
+        envvars="MPI_BUFS_PER_HOST=1024 MPI_BUFS_PER_PROC=128"
+        ipe_sets+=" -s nmswitch:mpstop=2"
+        ;;
+    esac
+    ;;
+
+esac
+
+pre=ipe_${machine}_${compiler}_${parallelism}
+exe=../bin/${pre}.exe
+test -x $exe || fail "$0: Cannot find executable '$exe'."
+test $parallelism == serial && jobname=ipe_${compiler}_s || jobname=ipe_${compiler}_$tasks
+
+# Create unique run directory and copy/link files into it.
+
+rundir=$(date +%s)_$pre
+test "$parallelism" = "parallel" && rundir+="_$tasks"
+mkdir $rundir || fail
+echo Created run directory: $rundir
+inp=IPE.inp
+smsnl=SMSnamelist
+for x in $exe coef* GPTLnamelist $inp load_balance_groups1 $smsnl wei96.cofcnts; do
+  cp $x $rundir || fail
+done
+linksafe $gridfile $rundir/ipe_grid
+linksafe $IPEDATA/ut_rec $rundir/stup_ut_rec
+for j in $(seq 0 11); do
+  test $j -lt 10 && pad=0 || pad=
+  linksafe $IPEDATA/plasma${pad}${j} $rundir/stup${pad}${j}
+done
+if [ $sw_neutral -eq 3 ]; then
+  linksafe $IPEWIND/ut_input $rundir/ut_input2009017
+  linksafe $IPEWIND/wind_input $rundir/wind_input2009017
+fi
+###nm20170809 george's new startup files
+#linksafe /scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/ipe_grid_plasma_params $rundir/ipe_grid_plasma_params
+export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/
+echo "RESDIR=" $RESDIR
+
+
+# Enter the run directory, edit SMSnamelist, create and submit the run script.
+
+cd $rundir || fail
+if [ $parallelism == parallel ]; then
+  if [ -n "$COMPARE_VAR" ]; then
+    sms_sets+=" -s smsnamelist:compare_var_on=t"
+    sms_sets+=" -s smsnamelist:compare_var_ntasks_1=$cv1"
+    sms_sets+=" -s smsnamelist:compare_var_ntasks_2=$cv2"
+    sms_sets+=" -s smsnamelist:set_process_layout=f"
+    jobname+="_cv"
+  else
+    sms_sets="-s smsnamelist:process_layout=1,$tasks"
+  fi
+  $(nml) -i $smsnl -o $smsnl $sms_sets || fail "$0: Could not edit $smsnl"
+fi
+$(nml) -i $inp -o $inp $ipe_sets || fail "$0: Could not edit $inp"
+modcmd=../../src/modcmd # for manual runs
+test -x $modcmd || modcmd=../modcmd # for test-suite runs
+echo "$(runscript_$machine)" > runscript
+chmod 755 runscript
+jobid=$($queue_cmd runscript || echo FAIL)
+test $jobid == FAIL && fail "$0: Failed to submit job."
+echo "The job $jobid has been submitted."
+qstat -a |grep Naomi
+exit 0

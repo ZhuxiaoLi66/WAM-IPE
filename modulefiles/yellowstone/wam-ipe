@@ -1,0 +1,9 @@
+#%Module######################################################################
+
+# This script is responsible for loading modules that are compatible with
+# the ESMF 7.0.0 API.
+#
+# WARNING: UNTESTED
+
+  module load ncarenv/1.0 ncarbinlibs/1.1 intel/15.0.0 ncarcompilers/1.0 netcdf/4.3.0 mkl/11.1.2 impi/4.0.3.008
+setenv ESMFMKFILE /glade/u/home/theurich/ESMF-INSTALLS/700-Intel15.0.0-IMPI4.0.3.008-NetCDF4.3.0/lib/esmf.mk

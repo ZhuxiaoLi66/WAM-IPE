@@ -1,0 +1,16 @@
+load 'gsm.input'
+
+run gfs_eulerian           @ gfs, standard, baseline
+run wam_gh_l150            @ gfs, standard, baseline, wam
+run wam_gh_l150_nemsio     @ gfs, standard, baseline, wam
+run gfs_slg                @ gfs, standard, baseline, slg
+run gfs_slg_2thread        @ gfs, standard, baseline, slg, plat==wcoss.phase1
+run gfs_slg_48pe           @ gfs, standard, baseline, slg
+run gfs_slg_adiabatic      @ gfs, standard, baseline, slg
+run gfs_slg_land           @ gfs, standard, baseline, slg
+run gfs_slg_nsst           @ gfs, standard, baseline, slg
+run gfs_slg_rsthst         @ gfs, standard, baseline, slg
+run gfs_slg_stochy         @ gfs, standard, baseline, slg
+run gfs_slg_t574           @ gfs, standard, baseline, slg
+run gfs_gocart_nemsio      @ gfs, standard, baseline, gocart
+

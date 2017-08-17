@@ -1,0 +1,95 @@
+&ipedims
+  nlp=170
+  nmp=80
+  npts2d=44514
+/
+&nmflip
+  colfac_flip=1.7
+  dt_init_guess_flip=60
+  dtmin_flip=1.0
+  fnfac_flip=1.0
+  fpas_flip=0.0
+  heprat_flip=0.09
+  hpeq_flip=0.0
+  ht_lce=200.0
+  init_te_max=3000.0
+  start_time_depleted=0
+  sw_debug_flip=0
+  sw_depleted_flip=0
+  sw_erstop_flip=0
+  sw_ihepls=1
+  sw_init_guess_flip=f
+  sw_inno=-1
+  sw_inpls=1
+  sw_lce=f
+  sw_neutral_heating_flip=0
+  sw_ohpls=1
+  sw_optw_flip=t
+  sw_tei=1
+  sw_wind_flip=1
+  zlbdy_flip=120.00
+  zlbnp_inp=115.00
+/
+&nmipe
+  f107av=120.0
+  f107d=120.0
+  internalTimeLoopMax=1
+  ip_freq_eldyn=180
+  ip_freq_msis=180
+  ip_freq_plasma=180
+  ip_freq_output=1800
+  nday=71
+  nyear=2000
+  start_time=432000
+  time_step=180
+/
+  &nmmsis
+  ap(1)=4.
+  ap(2)=4.
+  ap(3)=4.
+  ap(4)=4.
+  ap(5)=4.
+  ap(6)=4.
+  ap(7)=4.
+  kp_eld=3.
+/
+&nmswitch
+  duration=360
+  fac_bm=1.00
+  iout(1)=1
+  iout(2)=60
+  lpFort167=57
+  lpmax_perp_trans=151
+  lpmin_perp_trans=15
+  mpFort167=71
+  mpstop=80
+  peFort167=56
+  record_number_plasma_start=2
+  sw_dbg_perp_trans=f
+  sw_debug=f
+  sw_debug_mpi=f
+  sw_divv=0
+  sw_eldyn=1
+  sw_exb_up=1
+  sw_grid=0
+  sw_ksi=2
+  sw_use_wam_fields_for_restart=f
+  sw_neutral=3
+  swNeuPar(1)=t
+  swNeuPar(2)=t
+  swNeuPar(3)=t
+  swNeuPar(4)=t
+  swNeuPar(5)=f
+  swNeuPar(6)=f
+  swNeuPar(7)=f
+  swEsmfTime=f
+  sw_output_fort167=f
+  sw_output_wind=f
+  sw_output_plasma_grid=f
+  sw_para_transport=1
+  sw_pcp=0
+  sw_perp_transport=1
+  sw_record_number=0
+  sw_th_or_r=1
+  ut_start_perp_trans=432000
+/

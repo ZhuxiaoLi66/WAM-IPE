@@ -1,0 +1,42 @@
+Brief instructions on compiling and running IPE
+
+Building
+--------
+
+From the IPE root directory:
+
+1. cd src
+2. make clean
+3. make <target>
+
+e.g.: make trillian_pgi_parallel
+
+Run 'make' with no options to see usage information.
+
+Running
+-------
+
+From the IPE root directory:
+
+1. cd run
+2. qsubipe <machine> <compiler> <parallelism> [tasks]
+
+e.g. qsubipe trillian pgi serial
+e.g. qsubipe trillian pgi parallel 10
+
+Run 'qsubipe' with no options to see usage information.
+
+Testing
+-------
+
+From the IPE root directory:
+
+1. cd tst
+2. ipets <suite>
+
+e.g. ipets trillian
+
+Run 'ipets' with no options to see usage information.
+
+See tst/REAME.IPE for more testing instructions.
+

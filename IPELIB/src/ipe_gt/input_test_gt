@@ -1,0 +1,19 @@
+/mtb/save/wx20lrm/DATA/IONOSPHERE/gtONLY/INPUT/Day_80_180_new10.gt.nc
+/mtb/save/wx20lrm/DATA/IONOSPHERE/gtONLYold/OUTPUT/Day_80_120_dipole_test.gt.nc
+/mtb/save/wx20lrm/DATA/IONOSPHERE/static_files/
+F    --     sw_electro - electrodynamics
+F    --     sw_External_model_provides_NO_N4S_densities
+F    --     sw_External_model_provides_low_lat_E_fields
+T    --     sw_input_Auroral_production_is_single_overall_rate
+80          Day number
+120.        F10.7
+60          GT_timestep_in_seconds
+1           start integer
+1440        stop integer
+1           number of days to run for
+5           GT smoothing frequency (multiples of GT timestep)
+1           GT composition calling frequency (multiples of GT timestep)
+1000.       GT maximum wind before smoothing
+130.        GT minimum temperature before smoothing
+0.,300.,0.,0.,0.
+8.0,1.0,7.4,5.5,10.0

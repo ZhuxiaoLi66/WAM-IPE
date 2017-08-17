@@ -1,0 +1,41 @@
+#! /bin/ksh --login
+
+#PBS -e /scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_128926/swpc%20090115_1hr_sbys_gsm%wam%T62_ipe%80x170/err
+#PBS -o /scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_128926/swpc%20090115_1hr_sbys_gsm%wam%T62_ipe%80x170/out
+#PBS -N rt_128926_1
+#PBS -A swpc
+#PBS -q debug
+#PBS -l procs=32
+#PBS -l walltime=00:30:00
+#PBS -W umask=027
+
+if [[ -e  /home/Joseph.Schoonover/Software/WAM-IPE/NEMS/src/conf/modules.nems ]]; then
+  source /home/Joseph.Schoonover/Software/WAM-IPE/NEMS/src/conf/modules.nems.sh
+  module list
+fi
+
+set -aeux
+export MPI_GROUP_MAX=96
+# ulimit -n 16000
+# Enable Fortran RTL core dumps for severe run time failures
+# export decfort_dump_flag=y
+
+export SCHEDULER=pbs
+
+export FIXGLOBAL=/scratch4/NCEPDEV/nems/noscrub/emc.nemspara/RT/WAM-IPE/WAM-IPE_NEMS201606-20170302/data/GSM/fix_am
+
+cd /scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_128926/swpc%20090115_1hr_sbys_gsm%wam%T62_ipe%80x170
+
+echo "Model started:  " `date`
+
+#module load intel
+#module load mpt
+#module load adaptive
+
+export TASKSIZE=32
+
+/scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_128926/swpc%20090115_1hr_sbys_gsm%wam%T62_ipe%80x170/gfs_fcst_run
+
+echo "Model ended:    " `date`
+
+exit

@@ -1,0 +1,8 @@
+Starting :
+Thu Aug 17 15:47:51 UTC 2017
+======================================================================
+Setting up to run NEMS on compset: 'swpc%20090115_1hr_sbys_gsm%wam%T62_ipe%80x170'.
+RUNDIR: '/scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_128926/swpc%20090115_1hr_sbys_gsm%wam%T62_ipe%80x170'.
+Test 
+WAM-IPE 1h side-by-side run
+GFS, 32 proc, 1 thread

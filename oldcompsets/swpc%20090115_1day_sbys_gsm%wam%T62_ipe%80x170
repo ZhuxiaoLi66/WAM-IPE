@@ -1,0 +1,66 @@
+###############################################################################
+#
+#  WAM-IPE side-by-side run 1 day
+#
+###############################################################################
+
+export TEST_DESCR="WAM-IPE 1day side-by-side run"
+
+# - gsm configuration ---
+export_gsm
+export CDATE=2009011500
+export WLCLK=480
+export QUEUE=urgent
+export NDAYS=1
+export FHOUT=1
+export TASKS=32
+export PE1=32
+export THRD=1
+export QUILT=.false.
+export FDFI=0
+export CP2=.false.
+export IDEA=.true.
+export IDVC=3
+export THERMODYN_ID=3
+export SFCPRESS_ID=2
+export SPECTRALLOOP=2
+
+# - IPE configuration ---
+export IPECASE=20090115_1hr_sbys_80x170
+
+# - nems.configure ---
+export_nems
+export nems_configure=atm_ipm
+export atm_model=gsm
+export atm_petlist_bounds="0 15"
+export ipm_model=ipe
+export ipm_petlist_bounds="16 31"
+export coupling_interval_fast_sec=180.0
+export coupling_interval_sec=180.0
+
+export F107_KP_SIZE=56
+export F107_KP_INTERVAL=10800
+export WAM_IPE_COUPLING=.true.
+export HEIGHT_DEPENDENT_G=.true.
+export F107_KP_SKIP_SIZE=24
+
+# - component specific setup calls ---
+setup_wam_T62_2009011500
+setup_ipe
+setup_spaceweather_gsm%wam%T62_ipe%80x170
+
+# -
+RUN_SCRIPT=rt_gfs.sh
+
+# - validation
+export CNTL_DIR=swpc%20090115_1day_spacewx_gsm%wam%T62_ipe%80x170_V0003
+export LIST_FILES="IPE.inp SMSnamelist \
+                   sigf00 sigf01 sigf02 sigf06 sigf12 sigf18 sigf24 \
+                   sfcf00 sfcf01 sfcf02 sfcf06 sfcf12 sfcf18 sfcf24 \
+                   flxf00 flxf01 flxf02 flxf06 flxf12 flxf18 flxf24 \
+                   plasma00 plasma01 plasma02 plasma03 plasma04 \
+                   plasma05 plasma06 plasma07 plasma08 plasma09 \
+                   plasma10 plasma11 plasma12 plasma13 plasma14 \
+                   plasma15 plasma16 \
+                   wam3dgridnew2.nc ipe3dgrid2.nc wam2dmesh.nc"
+

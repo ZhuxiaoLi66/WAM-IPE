@@ -1,0 +1,31 @@
+#############################################
+####  NEMS Run-Time Configuration File  #####
+#############################################
+
+# EARTH #
+EARTH_component_list: ATM IPM
+EARTH_attributes::
+  Verbosity = max
+::
+
+# ATM #
+ATM_model:                      gsm
+ATM_petlist_bounds:             0 15
+ATM_attributes::
+  Verbosity = max
+::
+
+# IPM #
+IPM_model:                      ipe
+IPM_petlist_bounds:             16 31
+IPM_attributes::
+  Verbosity = max
+::
+
+# Run Sequence #
+runSeq::
+  @180.0
+    ATM
+    IPM
+  @
+::
