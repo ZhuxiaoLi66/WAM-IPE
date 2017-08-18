@@ -32,7 +32,7 @@ module module_sub_myIPE_Init
   USE module_myIPE_Init
   USE module_input_parameters, ONLY: read_input_parameters,utime,start_time,stop_time, &
                                      HPEQ_flip,sw_perp_transport,NYEAR,NDAY,sw_output_plasma_grid, &
-                                     parallelBuild,mype
+                                     parallelBuild,mype, MPI_COMM_IPE
   USE module_FIELD_LINE_GRID_MKS,ONLY: plasma_3d
   USE module_open_output_files,ONLY: open_output_files
   USE module_init_plasma_grid, ONLY: init_plasma_grid
@@ -51,7 +51,7 @@ module module_sub_myIPE_Init
   type(ESMF_Clock)     :: clock
   integer, intent(out) :: rc
 !---MPI communicator
-       integer      :: MPI_COMM_IPE, ierr, size
+       integer      :: ierr, size
        type(ESMF_VM):: vm_IPE !virtual machine  !?is this vm_local or vm_global???
 !---SMS
       integer PPP__GlobalSize(PPP_MAX_RANK,PPP_MAX_VARS)
