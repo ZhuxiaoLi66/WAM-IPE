@@ -1,0 +1,1 @@
+cmd: make clean && make theia_pgi_serial

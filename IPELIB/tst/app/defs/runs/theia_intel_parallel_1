@@ -1,0 +1,3 @@
+ddts_extends: 'theia_intel_common'
+
+tasks: '1'

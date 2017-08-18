@@ -1,0 +1,5 @@
+ddts_extends: 'zeus_intel_common'
+ddts_build: 'zeus_intel_serial'
+
+parallelism: 'serial'
+tasks: ''

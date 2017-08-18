@@ -1,0 +1,9 @@
+#!/bin/sh
+
+p=$(readlink -e $0)
+d=$(dirname     $p)
+b=$(basename    $p)
+
+NMLJAR=$d/nml.jar
+
+java -Xms50M -Xmx50M -jar $NMLJAR "$@"

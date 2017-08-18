@@ -1,0 +1,6 @@
+ddts_extends: 'trillian_common'
+ddts_baseline: 'trillian_cray'
+ddts_build: 'trillian_cray_parallel'
+
+compiler: 'cray'
+parallelism: 'parallel'

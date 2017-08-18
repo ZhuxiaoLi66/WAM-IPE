@@ -1,0 +1,6 @@
+ddts_extends: 'zeus_common'
+ddts_baseline: 'zeus_intel'
+ddts_build: 'zeus_intel_parallel'
+
+compiler: 'intel'
+parallelism: 'parallel'

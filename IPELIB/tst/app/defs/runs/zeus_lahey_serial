@@ -1,0 +1,6 @@
+ddts_extends: 'zeus_lahey_common'
+ddts_baseline: 'zeus_lahey'
+ddts_build: 'zeus_lahey_serial'
+
+parallelism: 'serial'
+tasks: ''
