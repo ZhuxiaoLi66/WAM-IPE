@@ -36,6 +36,8 @@ PROGRAM  test_plasma
 !SMS$IGNORE END
    IMPLICIT NONE
    INCLUDE "gptl.inc"
+!SMS$INSERT   include "mpif.h"
+
 
    INTEGER(KIND=int_prec)           :: utime_driver ! Universal Time [sec]
    INTEGER(KIND=int_prec),parameter :: luntmp=300   !
