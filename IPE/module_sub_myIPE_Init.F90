@@ -23,7 +23,7 @@ module module_sub_myIPE_Init
   contains
   !-----------------------------------------------------------------------------
   
-  subroutine myIPE_Init ( gridComp, importState, exportState, clock, rc )
+  subroutine myIPE_Init ( clock, rc )
   use ESMF
 !nm20160307 SMS should be included
   use nnt_types_module
@@ -45,9 +45,6 @@ module module_sub_myIPE_Init
 !g  include "gptl.inc"
   include "mpif.h"
 !---
-  type(ESMF_GridComp)  :: gridComp
-  type(ESMF_State)     :: importState
-  type(ESMF_State)     :: exportState
   type(ESMF_Clock)     :: clock
   integer, intent(out) :: rc
 !---MPI communicator
@@ -442,7 +439,7 @@ END IF
         endif
 !g        ret = gptlstart ('io_plasma_bin')
         CALL ESMF_LogWrite("sub-initialize_IPE: io_plasma_bin", ESMF_LOGMSG_INFO, rc=rc)
-        CALL io_plasma_bin ( 2, start_time )
+        CALL io_plasma_bin ( 2, start_time, model_start_time )
 !g        ret = gptlstop  ('io_plasma_bin')
         if (IAM_ROOT()) then
           print *,'after CALL io_plasma_bin finished! READ: start_time=', start_time,' stop_time=',stop_time
