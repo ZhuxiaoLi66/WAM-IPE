@@ -19,7 +19,8 @@ USE module_precision
 USE module_IO,ONLY: LUN_PLASMA1,LUN_PLASMA2,lun_min1,lun_min2,lun_ut,record_number_plasma,lun_max1
 
 USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_3d,JMIN_ING,JMAX_ISG,VEXBup &
-&, Un_ms1,tn_k,on_m3,n2n_m3,o2n_m3
+!&, Un_ms1,tn_k,on_m3,n2n_m3,o2n_m3
+&, Un_ms1,vn_ms1_4output,tn_k,on_m3,n2n_m3,o2n_m3
 USE module_IPE_dimension,ONLY: NMP,NLP,NPTS2D,ISPEC,ISPEV,IPDIM,ISPET,ISTOT
 USE module_input_parameters,ONLY:sw_debug,record_number_plasma_start,mype &
 &,sw_record_number,stop_time,start_time,duration,mpstop, sw_output_wind, sw_use_wam_fields_for_restart
@@ -122,7 +123,7 @@ IF ( switch==1 ) THEN !1:Output the 16 plasma* files
   !nm20141001: moved from neutral
   IF ( sw_output_wind ) THEN
 
-!SMS$SERIAL(<tn_k,Un_ms1,on_m3,n2n_m3,o2n_m3,IN>:default=ignore) BEGIN
+!SMS$SERIAL(<tn_k,vn_ms1_4output,on_m3,n2n_m3,o2n_m3,IN>:default=ignore) BEGIN
 !SMS$IGNORE BEGIN
 #ifdef DEBUG
     ! If debugging is enabled, the activity throughout the code is logged.
@@ -140,7 +141,7 @@ IF ( switch==1 ) THEN !1:Output the 16 plasma* files
     ENDIF
 
     WRITE (unit=5998) tn_k
-    WRITE (unit=5998) un_ms1
+    WRITE (unit=5998) vn_ms1_4output
     WRITE (unit=5998) on_m3 
     WRITE (unit=5998) n2n_m3
     WRITE (unit=5998) o2n_m3
@@ -225,7 +226,8 @@ ELSE IF ( switch==2 ) THEN !2:RESTART:
   ENDIF
 
   READ (unit=5996) tn_k
-  READ (unit=5996) un_ms1
+! READ (unit=5996) vn_ms1_4output
+ READ (unit=5996) Un_ms1
   READ (unit=5996) on_m3 
   READ (unit=5996) n2n_m3
   READ (unit=5996) o2n_m3
