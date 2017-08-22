@@ -2,9 +2,13 @@
 #set -eu
 #set -x
 
+# GHGM - export qsub so this works under cron.....
+    export qsub=/apps/torque/default/bin/qsub
+
 if [[ "${RT_DEBUG:-NO}" == YES ]] ; then
     set -xue
 fi
+
 
 export GEFS_ENSEMBLE=${GEFS_ENSEMBLE:-0}
 echo "GEFS_ENSEMBLE=" $GEFS_ENSEMBLE
@@ -12,6 +16,12 @@ echo "GEFS_ENSEMBLE=" $GEFS_ENSEMBLE
 source ./atparse.auto
 
 mkdir -p ${RUNDIR}
+
+model_run_time='MODEL_RUN_TIME.'$(date +%Y%m%dT%H%M)
+model_run_time2=$(date +%Y%m%dT%H%M)
+echo $model_run_time
+touch ${RUNDIR}/$model_run_time
+
 
 export CDATE=${CDATE:-2012010100}
 export NEMSIOIN=${NEMSIOIN:-.false.}
@@ -351,6 +361,35 @@ test_status='PASS'
 
 # Give 10 seconds for data to show up on file system
 sleep 10
+
+# delete any old model_run_time and model_start_time files from the restart directory.....
+
+rm -f /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/MODEL_RUN_TIME.*
+rm -f /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/MODEL_START_TIME.*
+rm -f /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/MODEL_STOP_TIME.*
+
+# Copy across the various restart files to a restart directory......
+
+cp -f ${RUNDIR}/grdr1 /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/.
+cp -f ${RUNDIR}/grdr2 /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/.
+cp -f ${RUNDIR}/sigr1 /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/.
+cp -f ${RUNDIR}/sigr2 /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/.
+cp -f ${RUNDIR}/sfcr /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/.
+cp -f ${RUNDIR}/fort.1051 /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/.
+
+last_plasma_file=`ls ${RUNDIR}/ipe_grid_plasma* | tail -1`
+last_neutral_file=`ls ${RUNDIR}/ipe_grid_neutral* | tail -1`
+
+echo $last_plasma_file
+echo $last_neutral_file
+
+cp -f $last_plasma_file /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/ipe_grid_plasma_params
+cp -f $last_neutral_file /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/ipe_grid_neutral_params
+cp -f ${RUNDIR}/ipe_grid_plasma_params.* /scratch3/NCEPDEV/swpc/scrub/${USER}/IPE_output/plasma/.
+cp -f ${RUNDIR}/ipe_grid_neutral_params.* /scratch3/NCEPDEV/swpc/scrub/${USER}/IPE_output/neutral/.
+cp -f ${RUNDIR}/$model_run_time /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/.
+cp -f ${RUNDIR}/MODEL_START_TIME.* /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/.
+cp -f ${RUNDIR}/MODEL_STOP_TIME.* /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/.
 
 BASELINE_CNTL_DIR="${BASELINE_DIR:-$RTPWD}/$CNTL_DIR"
 
