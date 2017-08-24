@@ -1,7 +1,7 @@
 
 
 FC  = ifort
-OPT = -O0 -g -traceback -check all -debug all -fpe0
+OPT = -O0 -g -traceback -check all -debug all -fpe0 -fpp
 LIB = -L/apps/netcdf/4.3.0-intel/lib -lnetcdff -lnetcdf
 INC = -I/apps/netcdf/4.3.0-intel/include
 

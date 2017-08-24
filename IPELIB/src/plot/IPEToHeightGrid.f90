@@ -73,19 +73,18 @@ USE netcdf
   REAL(kind=real_prec8),DIMENSION(3)                    :: oplus2d_interpolated
   REAL(kind=real_prec8),DIMENSION(3)                    :: oplus2p_interpolated
 
-  CHARACTER(100)  :: filename
-  CHARACTER(1000) :: inputFile
-  CHARACTER(1000) :: gridFile
+  CHARACTER(100) :: filename
+  CHARACTER(500) :: plasmaFile
+  CHARACTER(500) :: neutralsFile
+  CHARACTER(500) :: gridFile
+  CHARACTER(500) :: outputDir
   
-  LOGICAL :: setupFail
+
+  LOGICAL :: plasmaFileGiven, neutralsFileGiven, outputDirGiven, gridFileGiven
 
 
     CALL InitializeFromCommandLine( )
 
-    IF( setupFail )THEN
-       PRINT*, '  i2hg : Setup Failed.'
-       STOP
-    ENDIF
 
     CALL read_input_parameters ( )
 
@@ -107,11 +106,18 @@ CONTAINS
 
    INTEGER        :: nArg, argID
    CHARACTER(500) :: argname
-   LOGICAL        :: inputGiven,  gridGiven, fileExists
+   LOGICAL        :: fileExists
+   LOGICAL        :: plasmaGiven, neutralsGiven,  gridGiven, outputGiven
 
+     plasmaFileGiven   = .FALSE. 
+     gridFileGiven     = .FALSE.
+     neutralsFileGiven = .FALSE.
+     outputDirGiven    = .FALSE.
 
-     inputGiven  = .FALSE.
-     gridGiven   = .FALSE.
+     plasmaGiven    = .FALSE.
+     neutralsGiven  = .FALSE.
+     gridGiven      = .FALSE.
+     outputGiven    = .FALSE.
 
      nArg = command_argument_count( )
 
@@ -123,40 +129,83 @@ CONTAINS
 
           SELECT CASE( TRIM(argName) )
 
-             CASE("-i")
-                inputGiven = .TRUE.
-             CASE("-g")
+             CASE("--plasma-file")
+                plasmaGiven = .TRUE.
+                plasmaFileGiven = .TRUE.
+             CASE("--neutral-file")
+                neutralsGiven = .TRUE.
+                neutralsFileGiven = .TRUE.
+             CASE("--grid-file")
                 gridGiven = .TRUE.
-
+             CASE("--output-dir")
+                outputGiven = .TRUE.
+                outputDirGiven = .TRUE.
              CASE DEFAULT
 
-               IF( inputGiven )THEN
+               IF( plasmaGiven )THEN
 
-                  inputFile  = TRIM(argName) ! Capture the directory name
-                  inputGiven = .FALSE.
+                  plasmaFileGiven = .TRUE.
+                  plasmaFile  = TRIM(argName) ! Capture the directory name
+                  plasmaGiven = .FALSE.
+
+               ELSEIF( neutralsGiven )THEN
+
+                  neutralsFileGiven = .TRUE.
+                  neutralsFile  = TRIM(argName) ! Capture the directory name
+                  neutralsGiven = .FALSE.
 
                ELSEIF( gridGiven )THEN
 
+                  gridFileGiven = .TRUE.
                   gridFile  = TRIM(argName)
                   gridGiven = .FALSE.
+
+               ELSEIF( outputGiven )THEN
+
+                  outputDirGiven = .TRUE.
+                  outputDir   = TRIM(argName)
+                  outputGiven = .FALSE.
                ENDIF
 
           END SELECT 
         ENDDO
 
+        IF( .NOT. plasmaFileGiven .OR. &
+            .NOT. gridFileGiven )THEN
+           PRINT*, '  i2hg : A plasma file and grid file are required'
+           PRINT*, '  i2hg : Setup Failed.'
+           STOP
+        ENDIF
+       
         
-        INQUIRE( FILE = TRIM(inputFile), &
+        INQUIRE( FILE = TRIM(plasmaFile), &
                  EXIST = fileExists )
         IF( .NOT.(fileExists) )THEN
-          PRINT*, ' Input file :'//TRIM(inputFile)//': not found.'
-          setupFail = .TRUE.
+          PRINT*, ' Input file :'//TRIM(plasmaFile)//': not found.'
+          PRINT*, '  i2hg : Setup Failed.'
         ENDIF
         
         INQUIRE( FILE = TRIM(gridFile), &
                  EXIST = fileExists )
         IF( .NOT.(fileExists) )THEN
           PRINT*, ' Grid file :'//TRIM(gridFile)//': not found.'
-          setupFail = .TRUE.
+          PRINT*, '  i2hg : Setup Failed.'
+        ENDIF
+
+
+        IF( neutralsFileGiven )THEN
+        
+           INQUIRE( FILE = TRIM(neutralsFile), &
+                    EXIST = fileExists )
+           IF( .NOT.(fileExists) )THEN
+             PRINT*, ' Input file :'//TRIM(neutralsFile)//': not found.'
+             PRINT*, '  i2hg : Setup Failed.'
+           ENDIF
+
+        ENDIF
+
+        IF( .NOT. outputDirGiven )THEN
+           outputDir = './'
         ENDIF
         
      ELSE
@@ -165,8 +214,26 @@ CONTAINS
         PRINT*, '  i2hg : IPE to Height Grid'
         PRINT*, '    A tool for interpolating IPE plasma output onto a fixed height grid.'
         PRINT*, '--------------------------------------------------------------'
-        PRINT*, '  Usage : i2hg -i /full/path/to/input/file '
-        PRINT*, '               -g /full/path/to/grid/file'
+        PRINT*, '  Usage : i2hg <inputs>                                      '
+        PRINT*, ''
+        PRINT*, ' Required inputs'
+        PRINT*, ''
+        PRINT*, ' --plasma-file /full/path/to/plasma/file '
+        PRINT*, ''
+        PRINT*, ' --grid-file /full/path/to/grid/file'
+        PRINT*, ''
+        PRINT*, ' Optional inputs'
+        PRINT*, ''
+        PRINT*, ' --neutral-file /full/path/to/neutrals/file '
+        PRINT*, ''
+        PRINT*, ' If the neutrals file is not provided, these parameters will  '
+        PRINT*, ' not be included in the netcdf output.'
+        PRINT*, ''
+        PRINT*, ' --output-directory /full/path/to/output directory '
+        PRINT*, ''
+        PRINT*, ' If the output directory is not specified, your current       '
+        PRINT*, ' directory will be used.  '
+        PRINT*, ' '
         PRINT*, '--------------------------------------------------------------'
         PRINT*, ' This executable takes READs in the plasma file that was      '
         PRINT*, ' output by IPE, and interpolates the ions to a fixed height   '
@@ -257,7 +324,7 @@ CONTAINS
 
 
      OPEN(UNIT   = 20, &
-          FILE   = TRIM(inputFile),&
+          FILE   = TRIM(plasmaFile),&
           FORM   = 'UNFORMATTED', &
           STATUS ='OLD')
 
@@ -272,6 +339,8 @@ CONTAINS
         READ(20) oplus2p_ft
 
      CLOSE(20)
+
+#ifdef DEBUG
   PRINT*, MAXVAL(oplus_ft), MINVAL(oplus_ft)
   PRINT*, MAXVAL(hplus_ft), MINVAL(hplus_ft)
   PRINT*, MAXVAL(heplus_ft), MINVAL(heplus_ft)
@@ -279,7 +348,7 @@ CONTAINS
   PRINT*, MAXVAL(noplus_ft), MINVAL(noplus_ft)
   PRINT*, MAXVAL(o2plus_ft), MINVAL(o2plus_ft)
   PRINT*, MAXVAL(n2plus_ft), MINVAL(n2plus_ft)
-
+#endif
 
  END SUBROUTINE ReadGridandPlasmaFiles
 
@@ -363,7 +432,7 @@ CONTAINS
       ENDDO
   ENDDO
 
-!!#ifdef DEBUG
+#ifdef DEBUG
   PRINT*, MAXVAL(oplus_fixed), MINVAL(oplus_fixed)
   PRINT*, MAXVAL(hplus_fixed), MINVAL(hplus_fixed)
   PRINT*, MAXVAL(heplus_fixed), MINVAL(heplus_fixed)
@@ -371,7 +440,7 @@ CONTAINS
   PRINT*, MAXVAL(noplus_fixed), MINVAL(noplus_fixed)
   PRINT*, MAXVAL(o2plus_fixed), MINVAL(o2plus_fixed)
   PRINT*, MAXVAL(n2plus_fixed), MINVAL(n2plus_fixed)
-
+#endif
   electron_density_fixed = oplus_fixed + hplus_fixed + heplus_fixed + nplus_fixed + noplus_fixed & 
                            + o2plus_fixed + n2plus_fixed + oplus2d_fixed + oplus2p_fixed
 
@@ -419,17 +488,16 @@ CONTAINS
    INTEGER :: n2plus_varid, tec_varid, nmf2_varid, hmf2_varid
    INTEGER :: edens_varid
 
+   CHARACTER( LEN(TRIM(plasmaFile)) ) :: shortenedFile
+   CHARACTER( 13 )                    :: timeStamp
 
-    !  IF( real_prec == real_prec8 )THEN
-         NF90_PREC = NF90_DOUBLE
-     !    PRINT*, 'NetCDF Precision is NF90_DOUBLE'
-     ! ELSEIF( real_prec == real_prec4 )THEN
-     !    NF90_PREC = NF90_FLOAT
-     !    PRINT*, 'NetCDF Precision is NF90_FLOAT'
-     ! ENDIF
-     ! PRINT*, 'Writing file : '//TRIM(inputFile)//'.nc'
 
-      CALL Check( nf90_create( PATH=TRIM(inputFile)//'.nc',&
+      NF90_PREC = NF90_DOUBLE
+
+      shortenedFile = TRIM(plasmaFile)
+      timestamp     = shortenedFile( LEN(shortenedFile)-12:LEN(shortenedFile) )
+
+      CALL Check( nf90_create( PATH=TRIM(outputDir)//'IPE_State.'//TRIM(timestamp)//'.nc',&
                                CMODE=OR(nf90_clobber,nf90_64bit_offset),&
                                NCID=ncid ) )
 
