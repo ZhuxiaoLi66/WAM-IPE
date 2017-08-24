@@ -1,8 +1,90 @@
 Starting :
-Thu Aug 17 15:47:51 UTC 2017
+Thu Aug 24 19:19:37 UTC 2017
 ======================================================================
-Setting up to run NEMS on compset: 'swpc%20090115_1hr_sbys_gsm%wam%T62_ipe%80x170'.
-RUNDIR: '/scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_128926/swpc%20090115_1hr_sbys_gsm%wam%T62_ipe%80x170'.
+Setting up to run NEMS on compset: 'swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170'.
+RUNDIR: '/scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_124854/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170'.
 Test 
-WAM-IPE 1h side-by-side run
-GFS, 32 proc, 1 thread
+WAM-IPE 1h coupled run
+GFS, 40 proc, 1 thread
+
+
+baseline dir = /scratch4/NCEPDEV/nems/noscrub/emc.nemspara/RT/WAM-IPE/WAM-IPE_NEMS201606-20170302/data/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_V0003
+working dir  = /scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_124854/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170
+Checking test  results ....
+ Comparing IPE.inp............MISSING baseline
+ Comparing SMSnamelist............MISSING baseline
+ Comparing sigf00............MISSING baseline
+ Comparing sigf01............MISSING baseline
+ Comparing sfcf00............MISSING baseline
+ Comparing sfcf01............MISSING baseline
+ Comparing flxf00............MISSING baseline
+ Comparing flxf01............MISSING baseline
+ Comparing plasma00............MISSING file
+ Comparing plasma01............MISSING file
+ Comparing plasma02............MISSING file
+ Comparing plasma03............MISSING file
+ Comparing plasma04............MISSING file
+ Comparing plasma05............MISSING file
+ Comparing plasma06............MISSING file
+ Comparing plasma07............MISSING file
+ Comparing plasma08............MISSING file
+ Comparing plasma09............MISSING file
+ Comparing plasma10............MISSING file
+ Comparing plasma11............MISSING file
+ Comparing plasma12............MISSING file
+ Comparing plasma13............MISSING file
+ Comparing plasma14............MISSING file
+ Comparing plasma15............MISSING file
+ Comparing plasma16............MISSING file
+ Comparing wam3dgridnew2.nc............MISSING baseline
+ Comparing ipe3dgrid2.nc............MISSING baseline
+ Comparing wam2dmesh.nc............MISSING baseline
+Test  FAIL 
+
+
+
+======================================================================
+Setting up to run NEMS on compset: 'swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart'.
+RUNDIR: '/scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_124854/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart'.
+Test 
+WAM-IPE 1h coupled run
+GFS, 40 proc, 1 thread
+
+
+baseline dir = /scratch4/NCEPDEV/nems/noscrub/emc.nemspara/RT/WAM-IPE/WAM-IPE_NEMS201606-20170302/data/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_V0003
+working dir  = /scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_124854/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart
+Checking test  results ....
+ Comparing IPE.inp............MISSING baseline
+ Comparing SMSnamelist............MISSING baseline
+ Comparing sigf00............MISSING file
+ Comparing sigf01............MISSING file
+ Comparing sfcf00............MISSING file
+ Comparing sfcf01............MISSING file
+ Comparing flxf00............MISSING file
+ Comparing flxf01............MISSING file
+ Comparing plasma00............MISSING file
+ Comparing plasma01............MISSING file
+ Comparing plasma02............MISSING file
+ Comparing plasma03............MISSING file
+ Comparing plasma04............MISSING file
+ Comparing plasma05............MISSING file
+ Comparing plasma06............MISSING file
+ Comparing plasma07............MISSING file
+ Comparing plasma08............MISSING file
+ Comparing plasma09............MISSING file
+ Comparing plasma10............MISSING file
+ Comparing plasma11............MISSING file
+ Comparing plasma12............MISSING file
+ Comparing plasma13............MISSING file
+ Comparing plasma14............MISSING file
+ Comparing plasma15............MISSING file
+ Comparing plasma16............MISSING file
+ Comparing wam3dgridnew2.nc............MISSING baseline
+ Comparing ipe3dgrid2.nc............MISSING baseline
+ Comparing wam2dmesh.nc............MISSING baseline
+Test  FAIL 
+
+
+
+======================================================================
+Thu Aug 24 19:45:57 UTC 2017

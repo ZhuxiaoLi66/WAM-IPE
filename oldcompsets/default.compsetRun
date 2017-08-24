@@ -1,6 +1,12 @@
 # Coupled IPE-WAM Space Weather Application
 # 
 
+swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170
+swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart
+
+#swpc%20170714_1hr_spacewx_gsm%wam%T62_ipe%80x170
+#swpc%20170714_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart
+
 
 # test compsets
 # *** side-by-side ***
@@ -16,10 +22,10 @@
 #swpc%20090115_1hr_sbys_gsm%wam%T62
 #swpc%20090115_1day_sbys_gsm%wam%T62
 # *** side-by-side ***
-swpc%20090115_1hr_sbys_gsm%wam%T62_ipe%80x170
+#swpc%20090115_1hr_sbys_gsm%wam%T62_ipe%80x170
 #swpc%20090115_1day_sbys_gsm%wam%T62_ipe%80x170
 # *** coupled ***
-swpc%20090115_1hr_spacewx_gsm%wam%T62_ipe%80x170
-swpc%20090115_1day_spacewx_gsm%wam%T62_ipe%80x170
-swpc%20090115_2day_wam_gsm%wam%T62
-swpc%20090115_2day_wam_gsm%wam%T62_restart
+#swpc%20090115_1hr_spacewx_gsm%wam%T62_ipe%80x170
+#swpc%20090115_1day_spacewx_gsm%wam%T62_ipe%80x170
+#swpc%20090115_2day_wam_gsm%wam%T62
+#swpc%20090115_2day_wam_gsm%wam%T62_restart

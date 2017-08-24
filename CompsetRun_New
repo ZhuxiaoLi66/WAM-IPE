@@ -333,6 +333,7 @@ setup_wam_T62_2017071400(){
   cp -f ${ROOTDIR}/RT_WAM/wam_rm3_globcomp.nc ${RUNDIR}/.
 }
 
+
 setup_wam_T62_2013111500(){
   echo 'TWFANG DATADIR ' ${DATADIR}
   echo 'TWFANG ROOTDIR ' ${ROOTDIR}
@@ -351,6 +352,96 @@ setup_wam_T62_2013111500(){
   cp -f ${ROOTDIR}/RT_WAM/wam_nems_imf_2012.nc ${RUNDIR}/.
   cp -f ${ROOTDIR}/RT_WAM/wam_rm3_globcomp.nc ${RUNDIR}/.
 }
+
+setup_wam_T62_2013031600(){
+  cp -f ${DATADIR}/WAM/T62_2013031600/*anl* ${RUNDIR}/.
+  cp -f ${DATADIR}/WAM/T62_2013031600/wam_input_f107_kp.txt ${RUNDIR}/. 
+  cp -f ${ROOTDIR}/RT_WAM/*_in ${RUNDIR}/.
+#
+  cp -f ${ROOTDIR}/RT_WAM/ionprof ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/tiros_spectra ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/tiros_tjr.nc ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/iondata_tjr.nc ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/snoe_eof.nc ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/wasolar_dan_20161019.nc ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/wam_nems_feuv_2012_366d_by_24hr.nc ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/wam_nems_imf_2012.nc ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/wam_rm3_globcomp.nc ${RUNDIR}/.
+}
+
+
+new_restart_wam(){
+  cp -f /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/fort.1051 ${RUNDIR}/.
+
+  cp -f ${ROOTDIR}/RT_WAM/*_in ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/ionprof ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/tiros_spectra ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/tiros_tjr.nc ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/iondata_tjr.nc ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/snoe_eof.nc ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/wasolar_dan_20161019.nc ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/wam_nems_feuv_2012_366d_by_24hr.nc ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/wam_nems_imf_2012.nc ${RUNDIR}/.
+  cp -f ${ROOTDIR}/RT_WAM/wam_rm3_globcomp.nc ${RUNDIR}/.
+}
+
+
+new_restart_ipe(){
+  # determine number of PETs for IPE
+  petlist_bounds=($ipm_petlist_bounds)
+  petCount=$((petlist_bounds[1]-petlist_bounds[0]+1))
+  # this implementation assumes that IPE is right under ROOTDIR
+  cat ${ROOTDIR}/IPE/SMSnamelist.IN | sed s:_petCount_:$petCount:g > ${RUNDIR}/SMSnamelist
+  cp -f ${ROOTDIR}/IPE/coeff_hflux.dat ${RUNDIR}/.
+  cp -f ${ROOTDIR}/IPE/coeff_lflux.dat ${RUNDIR}/.
+  cp -f ${ROOTDIR}/IPE/wei96.cofcnts ${RUNDIR}/.
+  if [ $MACHINE_ID = gaea ] ; then
+     echo "Machine currently not supported for this operation."
+  elif [ $MACHINE_ID = theia ] ; then
+    # Get IPE ops version
+    # TODO: put this under IPE
+    cp -f /scratch3/NCEPDEV/swpc/noscrub/George.Millward/default_svn_latest/trunk/IPELIB/input_file/IPE.inp-ops ${RUNDIR}/IPE.inp
+
+    ### Don't need to copy restart files because they are already read from the restart directory ###
+
+    # Get grid
+    ln -s ${DATADIR}/IPE/GIP_apex_coords_global_lowres_new20120705 ${RUNDIR}/ipe_grid
+  elif [ $MACHINE_ID = yellowstone ] ; then
+     echo "Machine currently not supported for this operation."
+  fi
+}
+
+new_setup_ipe(){
+  # determine number of PETs for IPE
+  petlist_bounds=($ipm_petlist_bounds)
+  petCount=$((petlist_bounds[1]-petlist_bounds[0]+1))
+  # this implementation assumes that IPE is right under ROOTDIR
+  cat ${ROOTDIR}/IPE/SMSnamelist.IN | sed s:_petCount_:$petCount:g > ${RUNDIR}/SMSnamelist
+  cp -f ${ROOTDIR}/IPE/coeff_hflux.dat ${RUNDIR}/.
+  cp -f ${ROOTDIR}/IPE/coeff_lflux.dat ${RUNDIR}/.
+  cp -f ${ROOTDIR}/IPE/wei96.cofcnts ${RUNDIR}/.
+  if [ $MACHINE_ID = gaea ] ; then
+     echo "This machine currently not supported for this operation."
+  elif [ $MACHINE_ID = theia ] ; then
+    # Get IPE ops version
+    # TODO: put this under IPE
+    cp -f /scratch3/NCEPDEV/swpc/noscrub/George.Millward/default_svn_latest/trunk/IPELIB/input_file/IPE.inp-ops ${RUNDIR}/IPE.inp
+
+    # Copy IC data to restart directory, because that's where IPE is hardcoded to get it
+    # eventually it might be nice to have IPE get the data from the rundir to be more consistent 
+    # with WAM
+    cp -f /scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/${IPE_IC_DATE}/${IPE_IC_GRID}/ipe_grid_neutral_params /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/.
+    cp -f /scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/${IPE_IC_DATE}/${IPE_IC_GRID}/ipe_grid_plasma_params /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/.
+
+    # Get grid
+    ln -s ${DATADIR}/IPE/GIP_apex_coords_global_lowres_new20120705 ${RUNDIR}/ipe_grid
+  elif [ $MACHINE_ID = yellowstone ] ; then
+     echo "This Machine currently not supported for this operation."
+  fi
+}
+
+
+
 
 setup_ipe(){
   # determine number of PETs for IPE
