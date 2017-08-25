@@ -60,7 +60,7 @@ fi
 export NHRS=$FHMAX
 
 # - component specific setup calls ---
-new_restart_wam
+new_restart_wam_T62_2013031600 # Weiyu thought that we needed some 2013 specific files
 new_restart_ipe
 setup_spaceweather_gsm%wam%T62_ipe%80x170
 
