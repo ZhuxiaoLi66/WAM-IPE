@@ -28,7 +28,7 @@ module module_update_IPE
     use nnt_types_module
     use module_decomp
     USE module_precision
-    USE module_input_parameters,ONLY: sw_perp_transport,utime,start_time,time_step,ip_freq_msis,sw_debug,nTimeStep,mype,ip_freq_eldyn,ip_freq_plasma,swEsmfTime,internalTimeLoopMax
+    USE module_input_parameters,ONLY: sw_perp_transport,utime,start_time,time_step,ip_freq_msis,sw_debug,nTimeStep,mype,ip_freq_eldyn,ip_freq_plasma,swEsmfTime,internalTimeLoopMax, ip_freq_output
     USE module_FIELD_LINE_GRID_MKS,ONLY: plasma_3d
 !SMS$IGNORE BEGIN
     USE module_sub_eldyn,ONLY: eldyn
@@ -303,6 +303,11 @@ module module_update_IPE
 	  CALL ESMF_VMWtime(end_time)
           if(mype==0.or.mype==8)write(unit=9999,FMT=*)mype,nTimeStep,"plasma endT=",(end_time-beg_time)
         end if
+
+        PRINT*, 'JAS : Check : ', utime, MOD(utime-start_time,ip_freq_output)
+        if( MOD( utime-start_time, ip_freq_output) == 0) THEN
+          CALL io_plasma_bin( 1, utime, timestamp_for_IPE_output_files )
+        endif
 
 
 !g        ret = gptlstop  ('plasma')

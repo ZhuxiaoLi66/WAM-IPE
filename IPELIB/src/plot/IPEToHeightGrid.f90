@@ -528,7 +528,7 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, x_varid, "missing_value", fillValue) )
 
       CALL Check( nf90_def_var( ncid, "O+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
                                oplus_varid ) )
       CALL Check( nf90_put_att( ncid, oplus_varid, "long_name","Density of positively chared Oxygen ions" ) )
       CALL Check( nf90_put_att( ncid, oplus_varid, "units","[unknown]" ) )
@@ -537,7 +537,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "H+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
                                hplus_varid ) )
       CALL Check( nf90_put_att( ncid, hplus_varid, "long_name","Density of positively chared Hydrogen ions" ) )
       CALL Check( nf90_put_att( ncid, hplus_varid, "units","[unknown]" ) )
@@ -546,7 +546,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "He+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
                                heplus_varid ) )
       CALL Check( nf90_put_att( ncid, heplus_varid, "long_name","Density of positively chared Helium ions" ) )
       CALL Check( nf90_put_att( ncid, heplus_varid, "units","[unknown]" ) )
@@ -555,7 +555,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "N+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
                                nplus_varid ) )
       CALL Check( nf90_put_att( ncid, nplus_varid, "long_name","Density of positively charged Nitrogen ions" ) )
       CALL Check( nf90_put_att( ncid, nplus_varid, "units","[unknown]" ) )
@@ -564,7 +564,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "NO+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
                                noplus_varid ) )
       CALL Check( nf90_put_att( ncid, noplus_varid, "long_name","Density of Nitrilooxnium." ) )
       CALL Check( nf90_put_att( ncid, noplus_varid, "units","[unknown]" ) )
@@ -573,7 +573,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "O2+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
                                o2plus_varid ) )
       CALL Check( nf90_put_att( ncid, o2plus_varid, "long_name","Density of Dioxygenyl." ) )
       CALL Check( nf90_put_att( ncid, o2plus_varid, "units","[unknown]" ) )
@@ -582,7 +582,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "N2+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
                                n2plus_varid ) )
       CALL Check( nf90_put_att( ncid, n2plus_varid, "long_name","Density of positively charged Nitrogen ions" ) )
       CALL Check( nf90_put_att( ncid, n2plus_varid, "units","[unknown]" ) )
@@ -591,7 +591,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "e", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
                                edens_varid ) )
       CALL Check( nf90_put_att( ncid, edens_varid, "long_name","Total electron density" ) )
       CALL Check( nf90_put_att( ncid, edens_varid, "units","[unknown]" ) )
@@ -600,7 +600,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "TEC", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
                                tec_varid ) )
       CALL Check( nf90_put_att( ncid, tec_varid, "long_name","Total electron content" ) )
       CALL Check( nf90_put_att( ncid, tec_varid, "units","[unknown]" ) )
@@ -609,7 +609,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "nmf2", NF90_PREC,&
-                               (/ x_dimid, y_dimid /),&
+                               (/ x_dimid, y_dimid, rec_dimid /),&
                                nmf2_varid ) )
       CALL Check( nf90_put_att( ncid, nmf2_varid, "long_name","Maximum electron density in the F layer." ) )
       CALL Check( nf90_put_att( ncid, nmf2_varid, "units","[unknown]" ) )
@@ -618,7 +618,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "hmf2", NF90_PREC,&
-                               (/ x_dimid, y_dimid /),&
+                               (/ x_dimid, y_dimid, rec_dimid /),&
                                hmf2_varid ) )
       CALL Check( nf90_put_att( ncid, hmf2_varid, &
                                 "long_name","Height of the maximum electron density in the F layer." ) )
