@@ -8,15 +8,14 @@ export TEST_DESCR="WAM-IPE 1h coupled run"
 
 # - gsm configuration ---
 export_gsm
-export CDATE=2017071400
-export WLCLK=30
-export QUEUE=debug
-#export QUEUE=batch
-export NHRS=1
-export FHOUT=1
-export FHZER=1
-export FHRES=1
-export TASKS=40
+export CDATE=2013031600
+export WLCLK=480
+export NHRS=48
+export NDAYS=20 # George M says this needs to be longer than you intent to run the whole simulation
+export FHOUT=48
+export FHZER=48
+export FHRES=48
+export TASKS=104
 export PE1=32
 export THRD=1
 export QUILT=.false.
@@ -28,18 +27,15 @@ export THERMODYN_ID=3
 export SFCPRESS_ID=2
 export SPECTRALLOOP=2
 
-# - IPE configuration ---
-export IPECASE=20130316_1hr_spacewx_80x170
-
 # - nems.configure ---
 export_nems
 export nems_configure=med_atm_ipm
 export atm_model=gsm
-export atm_petlist_bounds="0 15" # 16
-export ipm_model=ipe
-export ipm_petlist_bounds="16 31" # 16
+export atm_petlist_bounds="0 15"   # 16
 export med_model=spaceweather
-export med_petlist_bounds="32 39" # 8
+export med_petlist_bounds="16 23"  #  8
+export ipm_model=ipe
+export ipm_petlist_bounds="24 103"  # 80
 export coupling_interval_fast_sec=180.0
 export coupling_interval_sec=180.0
 
@@ -53,7 +49,7 @@ export fcst_begin=.false.
 export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/
 nemsioget=/scratch4/NCEPDEV/nems/save/Jun.Wang/nems/util/nemsio_get
 export FHINI=0
-export FHMAX=1
+export FHMAX=48
 if [[ $fcst_begin = .false. ]] ; then
   export RESTART=.true.
 #  export FHINI=`$nemsioget ${RESDIR}/grdr1 nfhour`
@@ -63,8 +59,8 @@ fi
 export NHRS=$FHMAX
 
 # - component specific setup calls ---
-setup_wam_T62_2017071400
-setup_ipe
+new_restart_wam_T62_2013031600 # Weiyu thought that we needed some 2013 specific files
+new_restart_ipe
 setup_spaceweather_gsm%wam%T62_ipe%80x170
 
 # -

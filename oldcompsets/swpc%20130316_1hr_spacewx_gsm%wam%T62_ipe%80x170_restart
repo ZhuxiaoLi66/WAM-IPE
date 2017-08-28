@@ -8,7 +8,7 @@ export TEST_DESCR="WAM-IPE 1h coupled run"
 
 # - gsm configuration ---
 export_gsm
-export CDATE=2017071400
+export CDATE=2013031600
 export WLCLK=30
 export QUEUE=debug
 #export QUEUE=batch
@@ -27,9 +27,6 @@ export IDVC=3
 export THERMODYN_ID=3
 export SFCPRESS_ID=2
 export SPECTRALLOOP=2
-
-# - IPE configuration ---
-export IPECASE=20130316_1hr_spacewx_80x170
 
 # - nems.configure ---
 export_nems
@@ -63,8 +60,8 @@ fi
 export NHRS=$FHMAX
 
 # - component specific setup calls ---
-setup_wam_T62_2017071400
-setup_ipe
+new_restart_wam_T62_2013031600 # Weiyu thought that we needed some 2013 specific files
+new_restart_ipe
 setup_spaceweather_gsm%wam%T62_ipe%80x170
 
 # -

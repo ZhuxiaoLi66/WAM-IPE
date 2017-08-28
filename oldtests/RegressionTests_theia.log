@@ -1,8 +1,8 @@
 Starting :
-Thu Aug 17 15:47:51 UTC 2017
+Fri Aug 25 17:08:31 UTC 2017
 ======================================================================
-Setting up to run NEMS on compset: 'swpc%20090115_1hr_sbys_gsm%wam%T62_ipe%80x170'.
-RUNDIR: '/scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_128926/swpc%20090115_1hr_sbys_gsm%wam%T62_ipe%80x170'.
+Setting up to run NEMS on compset: 'swpc%20130316_5day_spacewx_gsm%wam%T62_ipe%80x170'.
+RUNDIR: '/scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_146680/swpc%20130316_5day_spacewx_gsm%wam%T62_ipe%80x170'.
 Test 
-WAM-IPE 1h side-by-side run
-GFS, 32 proc, 1 thread
+WAM-IPE 1h coupled run
+GFS, 104 proc, 1 thread
