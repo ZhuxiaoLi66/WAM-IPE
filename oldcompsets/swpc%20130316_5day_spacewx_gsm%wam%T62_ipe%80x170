@@ -1,0 +1,76 @@
+###############################################################################
+#
+#  WAM-IPE coupled run
+#
+###############################################################################
+
+export TEST_DESCR="WAM-IPE 1h coupled run"
+
+# - gsm configuration ---
+export_gsm
+export CDATE=2013031600
+export WLCLK=480
+export NHRS=120
+export NDAYS=20 # George M says this needs to be longer than you intent to run the whole simulation
+export FHOUT=120
+export FHZER=120
+export FHRES=120
+export TASKS=104
+export PE1=32
+export THRD=1
+export QUILT=.false.
+export FDFI=0
+export CP2=.false.
+export IDEA=.true.
+export IDVC=3
+export THERMODYN_ID=3
+export SFCPRESS_ID=2
+export SPECTRALLOOP=2
+
+# - nems.configure ---
+export_nems
+export nems_configure=med_atm_ipm
+export atm_model=gsm
+export atm_petlist_bounds="0 15"   # 16
+export med_model=spaceweather
+export med_petlist_bounds="16 23"  #  8
+export ipm_model=ipe
+export ipm_petlist_bounds="24 103"  # 80
+export coupling_interval_fast_sec=180.0
+export coupling_interval_sec=180.0
+
+export F107_KP_SIZE=56
+export F107_KP_INTERVAL=10800
+export WAM_IPE_COUPLING=.true.
+export HEIGHT_DEPENDENT_G=.true.
+export F107_KP_SKIP_SIZE=24
+
+
+# Set restart directory
+export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/
+
+# - component specific setup calls ---
+# WAM
+setup_wam_T62_2013031600
+
+# IPE
+export IPE_IC_DATE=2013160300
+export IPE_IC_GRID=grid_80x170
+new_setup_ipe
+
+# Mediator
+setup_spaceweather_gsm%wam%T62_ipe%80x170
+
+# -
+RUN_SCRIPT=rt_gfs.sh
+
+# - validation
+export CNTL_DIR=swpc%20130316_1day_spacewx_gsm%wam%T62_ipe%80x170_V0003
+export LIST_FILES="IPE.inp SMSnamelist \
+                   sigf00 sigf01 sfcf00 sfcf01 flxf00 flxf01 \
+                   plasma00 plasma01 plasma02 plasma03 plasma04 \
+                   plasma05 plasma06 plasma07 plasma08 plasma09 \
+                   plasma10 plasma11 plasma12 plasma13 plasma14 \
+                   plasma15 plasma16 \
+                   wam3dgridnew2.nc ipe3dgrid2.nc wam2dmesh.nc"
+

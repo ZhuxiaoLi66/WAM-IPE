@@ -3,9 +3,18 @@
 #############################################
 
 # EARTH #
-EARTH_component_list: ATM IPM
+EARTH_component_list: MED ATM IPM
 EARTH_attributes::
   Verbosity = max
+::
+
+# MED #
+MED_model:                      spaceweather
+MED_petlist_bounds:             16 23
+MED_attributes::
+  Verbosity = max
+  DumpFields = false
+  DumpRHs = false
 ::
 
 # ATM #
@@ -17,14 +26,18 @@ ATM_attributes::
 
 # IPM #
 IPM_model:                      ipe
-IPM_petlist_bounds:             16 31
+IPM_petlist_bounds:             24 103
 IPM_attributes::
   Verbosity = max
+  CheckFields = true
 ::
 
 # Run Sequence #
 runSeq::
   @180.0
+    ATM -> MED :remapMethod=redist
+    MED
+    MED -> IPM :remapMethod=redist
     ATM
     IPM
   @

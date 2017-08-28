@@ -13,6 +13,8 @@ export WLCLK=30
 export QUEUE=debug
 export NHRS=1
 export FHOUT=1
+export FHZER=1
+export FHRES=1
 export TASKS=40
 export PE1=32
 export THRD=1
@@ -24,9 +26,6 @@ export IDVC=3
 export THERMODYN_ID=3
 export SFCPRESS_ID=2
 export SPECTRALLOOP=2
-
-# - IPE configuration ---
-export IPECASE=20130316_1hr_spacewx_80x170
 
 # - nems.configure ---
 export_nems
@@ -46,9 +45,19 @@ export WAM_IPE_COUPLING=.true.
 export HEIGHT_DEPENDENT_G=.true.
 export F107_KP_SKIP_SIZE=24
 
+# Set restart directory
+export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/
+
 # - component specific setup calls ---
+# WAM
 setup_wam_T62_2013031600
-setup_ipe
+
+# IPE
+export IPE_IC_DATE=2013160300
+export IPE_IC_GRID=grid_80x170
+new_setup_ipe
+
+# Mediator
 setup_spaceweather_gsm%wam%T62_ipe%80x170
 
 # -
