@@ -502,8 +502,8 @@ CONTAINS
                                NCID=ncid ) )
 
       CALL Check( nf90_def_dim( ncid, "z", nheights, z_dimid ) ) 
-      CALL Check( nf90_def_dim( ncid, "nlon", nlon, x_dimid ) ) 
-      CALL Check( nf90_def_dim( ncid, "nlat", nlat, y_dimid ) ) 
+      CALL Check( nf90_def_dim( ncid, "longitude", nlon, x_dimid ) ) 
+      CALL Check( nf90_def_dim( ncid, "latitude", nlat, y_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "time", NF90_UNLIMITED, rec_dimid ) )
 
       ! Create variables -- here we need to create arrays for the dimensions
