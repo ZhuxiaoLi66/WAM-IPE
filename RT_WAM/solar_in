@@ -1,12 +1,12 @@
 &solar_parms_nl
  idea_solar_fix = 2
  solar_file = 'wam_nems_feuv_2012.nc'
- Dir_swpc = '/scratch3/NCEPDEV/swpc/save/'
- Dir_uid =  'Valery.Yudin/SVN_VAY/WAM-IPE_NEMS201606/RT_WAM/'
+ Dir_swpc = './'
+ Dir_uid =  './'
  f107_fix = 70., f107d_fix=70.,  kp_fix=1., ap_fix = 3.
- noeof_file='/scratch3/NCEPDEV/swpc/save/Valery.Yudin/SVN_VAY/WAM-IPE_NEMS201606/RT_WAM/snoe_eof.nc'
- wxdan_file='/scratch3/NCEPDEV/swpc/save/Valery.Yudin/SVN_VAY/WAM-IPE_NEMS201606/RT_WAM/wasolar_dan_20161019.nc'
- wam2012_file='/scratch3/NCEPDEV/swpc/save/Valery.Yudin/SVN_VAY/WAM-IPE_NEMS201606/RT_WAM/wam_nems_feuv_2012_366d_by_24hr.nc'
+ noeof_file='./snoe_eof.nc'
+ wxdan_file='./wasolar_dan_20161019.nc'
+ wam2012_file='./wam_nems_feuv_2012_366d_by_24hr.nc'
  isolar_file=2016
 
  euv_fix=2642.4839, 143538.71, 14874194.0, 1.3406129e+08, 3.3387097e+08, 1.6051613e+09, 8.0719355e+09, 6.5080645e+09,1.0176452e+10,1.1451613e+10,

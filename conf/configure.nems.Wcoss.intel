@@ -65,7 +65,7 @@ EXTLIBS_POST = $(POST_LIB) \
                $(NETCDF_LIB) \
                $(SYS_LIB)
 
-FC          = mpiifort -g -openmp -mkl=sequential -align -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -diag-disable 8290,8291
+FC          = mpiifort -g -qopenmp -mkl=sequential -align array32byte -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -diag-disable 8290,8291
 # FC          = mpiifort -g -openmp -mkl=sequential -align array32byte -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm
 FPP         = -fpp
 FREE        = -free

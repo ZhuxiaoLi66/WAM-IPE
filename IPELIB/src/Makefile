@@ -194,7 +194,7 @@ endif
     FCP       = mpfort
     FCS       = mpfort
     OPT_FLAGS = -O3 -fp-model precise -fpp
-    SMS       = /swpc/noscrub/George.Millward/SMSr854legacy
+    SMS       = /gpfs/hps/emc/global/save/Adam.Kubaryk/sms/SMSr825-intel_O3
     ifeq ($(DEBUG),yes)
       DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0
     endif
