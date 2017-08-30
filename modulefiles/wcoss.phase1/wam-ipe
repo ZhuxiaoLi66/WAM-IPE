@@ -1,0 +1,17 @@
+#%Module######################################################################
+
+# This script is responsible for loading modules that are compatible with
+# the ESMF 7.0.0 API.
+#%Module######################################################################
+
+# This script is responsible for loading modules that are compatible with
+# the ESMF 7.0.0 API.
+
+module purge
+module load ics/15.0.6
+module load ibmpe
+module load NetCDF
+module load EnvVars/1.0.0 lsf NetCDF/4.2/serial
+module use /u/Adam.Kubaryk/modulefiles
+module load esmf/7.1.0bs31 svn/1.9.7
+module list
