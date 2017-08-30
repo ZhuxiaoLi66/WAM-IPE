@@ -12,6 +12,7 @@ set -aeux
 
 ### setup
 ## IPE_CONV is the directory containing ipe_conv_slice.py
+cd $PBS_O_WORKDIR
 IPE_CONV=`pwd`
 #IPE_CONV=/scratch3/NCEPDEV/swpc/save/Adam.Kubaryk/util/ipe_conv
 
