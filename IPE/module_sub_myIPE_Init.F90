@@ -218,7 +218,6 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
      print *, "The clock's final current time is NYEAR=", NYEAR, "/MM=", MM, "/DD=", DD, &
                " H=", H, ":M=", M, ":S=", S
      print *, "GHGM START DATETIME ", NYEAR, MM, DD, H, M, S
-     print *, "GHGM START DATETIME2 ", startTime, stopTime
      fmt = '(i2.2)'
      fmt1 = '(i4.4)'
      write (yy_str,fmt1) NYEAR
