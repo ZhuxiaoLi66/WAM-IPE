@@ -25,8 +25,6 @@ endif
 include $(ESMFMKFILE)
 IPE_INCFLAGS= -I$(IPE)/include 
 IPE_LDFLAGS= -L $(IPE)/lib -lipe
-SMS=/contrib/sms/legacy/SMSr825-intel
-#SMS=/swpc/noscrub/George.Millward/SMSr854legacy
 SMS_INCFLAGS= -I$(SMS)/include
 SMS_LDFLAGS= -L$(SMS)/lib -lsms
 GPTL_INCFLAGS = -I/contrib/gptl/gptl-v5.4.4_impi_noomp/include
