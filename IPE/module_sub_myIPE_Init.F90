@@ -323,7 +323,8 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !g      ret = gptlstart ('read_input')
       CALL ESMF_LogWrite("sub-initialize_IPE: read_input_parameters", ESMF_LOGMSG_INFO, rc=rc)
       CALL read_input_parameters ( )
-      ut_start_perp_trans = 0 
+      !ut_start_perp_trans = 0
+      ut_start_perp_trans = start_time 
 
 !g      ret = gptlstop  ('read_input')
 

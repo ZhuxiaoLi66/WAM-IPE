@@ -21,14 +21,14 @@ USE netcdf
 
   IMPLICIT NONE
   INTEGER, PARAMETER :: nheights=183
-  INTEGER, PARAMETER :: nlon=91 
-  INTEGER, PARAMETER :: nlat=90
+  INTEGER, PARAMETER :: nlon=90 
+  INTEGER, PARAMETER :: nlat=91
   REAL(real_prec8), PARAMETER:: fillValue = -999999.9999_real_prec8
 
 
 
-  INTEGER,DIMENSION(3,nheights,nlon,nlat)  :: ii1, ii2, ii3, ii4
-  INTEGER,DIMENSION(3,nheights,nlon,nlat)  :: ii1_interface, ii2_interface,&
+  INTEGER,DIMENSION(3,nheights,nlat,nlon)  :: ii1, ii2, ii3, ii4
+  INTEGER,DIMENSION(3,nheights,nlat,nlon)  :: ii1_interface, ii2_interface,&
                                               ii3_interface, ii4_interface
   REAL(kind=real_prec8),DIMENSION(nheights)  :: e_profile
   REAL(kind=real_prec8),DIMENSION(nheights)  :: z
@@ -251,8 +251,8 @@ CONTAINS
  SUBROUTINE AllocateArrays( )
    IMPLICIT NONE
 
-      ALLOCATE ( facfac_interface(1:3,nheights,nlon,nlat), &
-                 dd_interface(1:3,nheights,nlon,nlat), &
+      ALLOCATE ( facfac_interface(1:3,nheights,nlat,nlon), &
+                 dd_interface(1:3,nheights,nlat,nlon), &
                  oplus_ft(NPTS2D,80), &
                  hplus_ft(NPTS2D,80), &  
                  heplus_ft(NPTS2D,80), &  
@@ -396,11 +396,11 @@ CONTAINS
               dtotinv = 0.0
 
               do i=1,3
-                  factor=facfac_interface(i,iheight,m,l)
-                  mp=ii1_interface(i,iheight,m,l)
-                  lp=ii2_interface(i,iheight,m,l)
-                  in2=ii3_interface(i,iheight,m,l)
-                  in1=ii4_interface(i,iheight,m,l)
+                  factor=facfac_interface(i,iheight,l,m)
+                  mp=ii1_interface(i,iheight,l,m)
+                  lp=ii2_interface(i,iheight,l,m)
+                  in2=ii3_interface(i,iheight,l,m)
+                  in1=ii4_interface(i,iheight,l,m)
 
                   oplus_interpolated(i) = ((oplus_ft(in2,mp)-oplus_ft(in1,mp))*factor) + oplus_ft(in1,mp)
                   hplus_interpolated(i) = ((hplus_ft(in2,mp)-hplus_ft(in1,mp))*factor) + hplus_ft(in1,mp)
@@ -412,7 +412,7 @@ CONTAINS
                   oplus2d_interpolated(i) = ((oplus2d_ft(in2,mp)-oplus2d_ft(in1,mp))*factor) + oplus2d_ft(in1,mp)
                   oplus2p_interpolated(i) = ((oplus2p_ft(in2,mp)-oplus2p_ft(in1,mp))*factor) + oplus2p_ft(in1,mp)
 
-                  d = dd_interface(i,iheight,m,l)
+                  d = dd_interface(i,iheight,l,m)
                   dtotinv = (1./d) + dtotinv
 
                   oplus_fixed(m,l,iheight) = (oplus_interpolated(i)/d) + oplus_fixed(m,l,iheight)
