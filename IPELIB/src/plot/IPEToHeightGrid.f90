@@ -32,7 +32,8 @@ USE netcdf
                                               ii3_interface, ii4_interface
   REAL(kind=real_prec8),DIMENSION(nheights)  :: e_profile
   REAL(kind=real_prec8),DIMENSION(nheights)  :: z
-  REAL(kind=real_prec8),DIMENSION(nlon,nlat) :: x, y 
+  REAL(kind=real_prec8),DIMENSION(nlon) :: x
+  REAL(kind=real_prec8),DIMENSION(nlat) :: y 
   INTEGER :: height_km
   INTEGER :: i, iheight, iup, ido, ih, ip
   INTEGER :: l, m, mp, lp, in1, in2
@@ -362,12 +363,20 @@ CONTAINS
   dlon = 360.0_real_prec/REAL( nlon-1,real_prec8 ) 
 
    
+   
   do l=1,nlat
-    do m=1,nlon
-      y(m,l) = -90.0_real_prec + REAL(l-1,real_prec8)*dlat
-      x(m,l) = REAL(m-1,real_prec8)*dlon
-    enddo
+      y(l) = -90.0_real_prec + REAL(l-1,real_prec8)*dlat
   enddo
+    do m=1,nlon
+      x(m) = REAL(m-1,real_prec8)*dlon
+    enddo
+
+!  do l=1,nlat
+!    do m=1,nlon
+!      y(m,l) = -90.0_real_prec + REAL(l-1,real_prec8)*dlat
+!      x(m,l) = REAL(m-1,real_prec8)*dlon
+!    enddo
+!  enddo
 
   do iheight=1,nheights
       do l=1,nlat
@@ -502,8 +511,8 @@ CONTAINS
                                NCID=ncid ) )
 
       CALL Check( nf90_def_dim( ncid, "z", nheights, z_dimid ) ) 
-      CALL Check( nf90_def_dim( ncid, "nlon", nlon, x_dimid ) ) 
-      CALL Check( nf90_def_dim( ncid, "nlat", nlat, y_dimid ) ) 
+      CALL Check( nf90_def_dim( ncid, "longitude", nlon, x_dimid ) ) 
+      CALL Check( nf90_def_dim( ncid, "latitude", nlat, y_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "time", NF90_UNLIMITED, rec_dimid ) )
 
       ! Create variables -- here we need to create arrays for the dimensions
@@ -514,14 +523,16 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, z_varid, "missing_value", fillValue) )
 
 
-      CALL Check( nf90_def_var( ncid, "latitude", NF90_PREC, (/x_dimid, y_dimid/), y_varid ) )
+      !CALL Check( nf90_def_var( ncid, "latitude", NF90_PREC, (/x_dimid, y_dimid/), y_varid ) )
+      CALL Check( nf90_def_var( ncid, "latitude", NF90_PREC, y_dimid, y_varid ) )
       CALL Check( nf90_put_att( ncid, y_varid, "long_name", "Geographic Latitude" ) )
       CALL Check( nf90_put_att( ncid, y_varid, "units", "Degrees North" ) )
       CALL Check( nf90_put_att( ncid, y_varid, "_FillValue", fillValue) )
       CALL Check( nf90_put_att( ncid, y_varid, "missing_value", fillValue) )
 
 
-      CALL Check( nf90_def_var( ncid, "longitude", NF90_PREC, (/x_dimid,y_dimid/), x_varid ) )
+      !CALL Check( nf90_def_var( ncid, "longitude", NF90_PREC, (/x_dimid,y_dimid/), x_varid ) )
+      CALL Check( nf90_def_var( ncid, "longitude", NF90_PREC, x_dimid, x_varid ) )
       CALL Check( nf90_put_att( ncid, x_varid, "long_name", "Geographic Longitude" ) )
       CALL Check( nf90_put_att( ncid, x_varid, "units", "Degrees East" ) )
       CALL Check( nf90_put_att( ncid, x_varid, "_FillValue", fillValue) )
