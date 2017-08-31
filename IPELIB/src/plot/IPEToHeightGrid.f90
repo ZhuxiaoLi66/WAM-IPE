@@ -498,7 +498,7 @@ CONTAINS
    INTEGER :: edens_varid
 
    CHARACTER( LEN(TRIM(plasmaFile)) ) :: shortenedFile
-   CHARACTER( 13 )                    :: timeStamp
+   CHARACTER( 12 )                    :: timeStamp
 
 
       NF90_PREC = NF90_DOUBLE
