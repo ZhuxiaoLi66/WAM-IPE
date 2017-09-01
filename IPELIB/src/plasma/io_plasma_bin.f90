@@ -44,7 +44,7 @@ INTEGER (KIND=int_prec )            :: n_count
 INTEGER (KIND=int_prec )            :: ipts !dbg20120501
 INTEGER                             :: iErr
 REAL    (KIND=real_prec)            :: dumm(NPTS2D,NMP)
-CHARACTER(len=80)                  :: restart_directory
+CHARACTER(len=200)                  :: restart_directory
 
 
 CALL getenv("RESDIR", restart_directory)
