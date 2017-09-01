@@ -20,7 +20,7 @@ USE module_IO,ONLY: LUN_PLASMA1,LUN_PLASMA2,lun_min1,lun_min2,lun_ut,record_numb
 
 USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_3d,JMIN_ING,JMAX_ISG,VEXBup &
 !&, Un_ms1,tn_k,on_m3,n2n_m3,o2n_m3
-&, Un_ms1,vn_ms1_4output,tn_k,on_m3,n2n_m3,o2n_m3
+&, vn_ms1_4output,tn_k,on_m3,n2n_m3,o2n_m3
 USE module_IPE_dimension,ONLY: NMP,NLP,NPTS2D,ISPEC,ISPEV,IPDIM,ISPET,ISTOT
 USE module_input_parameters,ONLY:sw_debug,record_number_plasma_start,mype &
 &,sw_record_number,stop_time,start_time,duration,mpstop, sw_output_wind, sw_use_wam_fields_for_restart
@@ -44,7 +44,7 @@ INTEGER (KIND=int_prec )            :: n_count
 INTEGER (KIND=int_prec )            :: ipts !dbg20120501
 INTEGER                             :: iErr
 REAL    (KIND=real_prec)            :: dumm(NPTS2D,NMP)
-CHARACTER(len=80)                  :: restart_directory
+CHARACTER(len=200)                  :: restart_directory
 
 
 CALL getenv("RESDIR", restart_directory)
@@ -226,8 +226,7 @@ ELSE IF ( switch==2 ) THEN !2:RESTART:
   ENDIF
 
   READ (unit=5996) tn_k
-! READ (unit=5996) vn_ms1_4output
- READ (unit=5996) Un_ms1
+  READ (unit=5996) vn_ms1_4output
   READ (unit=5996) on_m3 
   READ (unit=5996) n2n_m3
   READ (unit=5996) o2n_m3
