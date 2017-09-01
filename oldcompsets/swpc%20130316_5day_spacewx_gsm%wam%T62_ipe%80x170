@@ -39,12 +39,11 @@ export ipm_petlist_bounds="24 103"  # 80
 export coupling_interval_fast_sec=180.0
 export coupling_interval_sec=180.0
 
-export F107_KP_SIZE=56
+export F107_KP_SIZE=4800 # 600 days
 export F107_KP_INTERVAL=10800
 export WAM_IPE_COUPLING=.true.
 export HEIGHT_DEPENDENT_G=.true.
-export F107_KP_SKIP_SIZE=24
-
+export F107_KP_SKIP_SIZE=0
 
 # Set restart directory
 export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/

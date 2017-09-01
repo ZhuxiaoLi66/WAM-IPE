@@ -3,7 +3,7 @@
  solar_file = 'wam_nems_feuv_2012.nc'
  Dir_swpc = './'
  Dir_uid =  './'
- f107_fix = 70., f107d_fix=70.,  kp_fix=1., ap_fix = 3.
+ f107_fix = 120., f107a_fix=120.,  kp_fix=1., ap_fix = 3.
  noeof_file='./snoe_eof.nc'
  wxdan_file='./wasolar_dan_20161019.nc'
  wam2012_file='./wam_nems_feuv_2012_366d_by_24hr.nc'
