@@ -1,0 +1,6 @@
+ddts_extends: 'trillian_cray_common'
+
+tasks: '20'
+namelists:
+  smsnamelist:
+    load_balance_on: !unquoted '.true.,.false.'

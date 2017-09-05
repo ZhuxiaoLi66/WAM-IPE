@@ -1,0 +1,12 @@
+namelists:
+  smsnamelist:
+    compare_var_on: !unquoted '.false.'
+    compare_var_ntasks_1: 0
+    compare_var_ntasks_2: 0
+    exact_parallel_sum: !unquoted '.false.'
+    check_halo_on: !unquoted '.false.'
+    load_balance_on: !unquoted '.false.,.false.'
+    load_balance_size: !unquoted '40,0'
+    load_balance_method: !unquoted '2,1'
+    set_process_layout: !unquoted '.false.'
+    process_layout: !unquoted '1,10'

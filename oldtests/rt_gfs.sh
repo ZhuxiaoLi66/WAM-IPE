@@ -2,9 +2,13 @@
 #set -eu
 #set -x
 
+# GHGM - export qsub so this works under cron.....
+    export qsub=/apps/torque/default/bin/qsub
+
 if [[ "${RT_DEBUG:-NO}" == YES ]] ; then
     set -xue
 fi
+
 
 export GEFS_ENSEMBLE=${GEFS_ENSEMBLE:-0}
 echo "GEFS_ENSEMBLE=" $GEFS_ENSEMBLE
@@ -12,6 +16,12 @@ echo "GEFS_ENSEMBLE=" $GEFS_ENSEMBLE
 source ./atparse.auto
 
 mkdir -p ${RUNDIR}
+
+model_run_time='MODEL_RUN_TIME.'$(date +%Y%m%dT%H%M)
+model_run_time2=$(date +%Y%m%dT%H%M)
+echo $model_run_time
+touch ${RUNDIR}/$model_run_time
+
 
 export CDATE=${CDATE:-2012010100}
 export NEMSIOIN=${NEMSIOIN:-.false.}

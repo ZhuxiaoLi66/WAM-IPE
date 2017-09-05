@@ -1,0 +1,5 @@
+ddts_extends: 'trillian_intel_common'
+ddts_build: 'trillian_intel_serial'
+
+parallelism: 'serial'
+tasks: ''

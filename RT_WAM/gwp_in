@@ -8,8 +8,8 @@
  eff_ogw =0.125, eff_cgw=0.30
  gw_src_file = 'wam_nems_gw_sources.nc'
  gw_dis_file = 'wam_nems_gw_dissip.nc'
- Dir_swpc = '/scratch1/portfolios/NCEPDEV/swpc/save/'
- Dir_uid =  'Valery.Yudin/NEMS/wam_april_2015/data_euv/'
+ Dir_swpc = './'
+ Dir_uid =  './'
  igw_effects = 1, 1, 1
  eff_ngw = 0.1
  GWP_SOLVER = 'LINDZEN_LSATVY'

@@ -907,9 +907,18 @@ build_ipe(){
     cd "$COMP_LIBSRCDIR"
     mkdir -p include lib bin
     cd src
-    make theia_intel_parallel
+    if   [[ $MACHINE_ID == theia ]] ; then
+       export SMS=/scratch3/NCEPDEV/swpc/noscrub/sms/SMSr825-intel_14.0.2-mpi_5.1.2.150
+       make theia_intel_parallel
+    elif [[ $MACHINE_ID == wcoss ]] ; then
+       export SMS=/gpfs/hps/emc/global/save/Adam.Kubaryk/sms/SMSr825-intel_O3
+       make wcoss_intel_parallel
+    else
+       echo "Machine not currently supported in NEMSAppBuilder."
+       exit
+    fi
     cd "$COMP_SRCDIR"
-    make IPE="$COMP_LIBSRCDIR" nuopc
+    make IPE="$COMP_LIBSRCDIR" SMS="$SMS" nuopc
     make IPE="$COMP_LIBSRCDIR" DESTDIR=/ "INSTDIR=$COMP_BINDIR" nuopcinstall
     if ([ ! -d "$COMP_BINDIR" ]); then
       echo "...failed building $COMP."

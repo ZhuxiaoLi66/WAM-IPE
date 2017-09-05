@@ -1,0 +1,7 @@
+group_zeus_intel:
+  - zeus_intel_parallel_1
+  - zeus_intel_parallel_10
+  - zeus_intel_parallel_20
+  - zeus_intel_serial
+group_zeus_lahey:
+  - zeus_lahey_serial

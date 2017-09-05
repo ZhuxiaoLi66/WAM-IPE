@@ -1,0 +1,1 @@
+cmd: make clean && make zeus_intel_parallel

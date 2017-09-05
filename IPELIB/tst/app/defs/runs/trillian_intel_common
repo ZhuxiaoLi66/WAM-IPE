@@ -1,0 +1,6 @@
+ddts_extends: 'trillian_common'
+ddts_baseline: 'trillian_intel'
+ddts_build: 'trillian_intel_parallel'
+
+compiler: 'intel'
+parallelism: 'parallel'

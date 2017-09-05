@@ -1,0 +1,5 @@
+group_theia_intel:
+  - theia_intel_parallel_1
+  - theia_intel_parallel_10
+  - theia_intel_parallel_20
+  - theia_intel_serial

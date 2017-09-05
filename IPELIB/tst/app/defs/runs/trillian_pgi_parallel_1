@@ -1,0 +1,3 @@
+ddts_extends: 'trillian_pgi_common'
+
+tasks: '1'

@@ -1,0 +1,39 @@
+
+1. To run a test suite:
+
+  $ ipets <suite_name>
+
+Valid IPE test suite names are: trillian zeus
+
+2. To see the definition of a suite:
+
+  $ ipets show suite <suite_name>
+
+3. To see the definition of a run listed in a suite definition:
+
+  $ ipets show run <run_name>
+
+4. To execute a single run from a suite:
+
+  $ ipets run <run_name>
+
+5. To generate a baseline from a suite:
+
+  $ ipets gen-baseline <baseline_directory> <suite_name>
+
+6. To test against an existing baseline:
+
+  $ ipets use-baseline <baseline_directory> <suite_name>
+
+7. To create a baseline for a single run:
+
+  $ ipets run gen-baseline <baseline_directory> <run_name>
+
+8. To test a single run against an existing baseline:
+
+  $ ipets run use-baseline <baseline_directory> <run_name>
+
+9. For other options:
+
+  $ ipets help
+

@@ -1,0 +1,6 @@
+ddts_extends: 'zeus_intel_common'
+
+tasks: '10'
+namelists:
+  smsnamelist:
+    set_process_layout: !unquoted '.true.'

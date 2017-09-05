@@ -1,0 +1,1 @@
+cmd: make clean && make trillian_pgi_serial

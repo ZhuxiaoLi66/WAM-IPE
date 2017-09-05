@@ -1,0 +1,15 @@
+group_trillian_cray:
+  - trillian_cray_parallel_1
+#  - trillian_cray_parallel_10
+#  - trillian_cray_parallel_20
+  - trillian_cray_serial
+group_trillian_intel:
+  - trillian_intel_parallel_1
+  - trillian_intel_parallel_10
+  - trillian_intel_parallel_20
+  - trillian_intel_serial
+group_trillian_pgi:
+  - trillian_pgi_parallel_1
+  - trillian_pgi_parallel_10
+  - trillian_pgi_parallel_20
+  - trillian_pgi_serial
