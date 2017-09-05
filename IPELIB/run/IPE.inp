@@ -54,7 +54,7 @@
   kp_eld=3.
 /
 &nmswitch
-  duration=3600
+  duration=86400
   fac_bm=1.00
   iout(1)=1
   iout(2)=60

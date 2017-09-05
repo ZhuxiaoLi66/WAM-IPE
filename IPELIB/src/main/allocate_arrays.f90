@@ -55,7 +55,8 @@
      &,           N4S_m3(MaxFluxTube,NLP,NMP)     &
      &,           TN_k  (MaxFluxTube,NLP,NMP)     &
      &,           TINF_K(MaxFluxTube,NLP,NMP)     &
-     &,           Un_ms1(MaxFluxTube,NLP,NMP,3:3) )
+     &,           Un_ms1(MaxFluxTube,NLP,NMP,3:3) &
+     &,           vn_ms1_4output(MaxFluxTube,NLP,NMP,3) )
 
 !        allocate( ON_m3_msis (MaxFluxTube,NLP,NMP)     &
 !       &,           Tn_K_msis (MaxFluxTube,NLP,NMP)    &
@@ -64,7 +65,7 @@
 
 !nm20170424 wind output corrected
 if ( sw_neutral==0.or.sw_neutral==1 ) then
-  allocate( WamField(MaxFluxTube,NLP,NMP,7), vn_ms1_4output(MaxFluxTube,NLP,NMP,3) )
+  allocate( WamField(MaxFluxTube,NLP,NMP,7) )
 end if
 
 
@@ -131,10 +132,20 @@ print *,'DE-ALLOCATing ARRAYS'
         STOP
       END IF
 
+      allocate( ON_m3     &
+     &,           HN_m3     &
+     &,           N2N_m3     &
+     &,           O2N_m3     &
+     &,           HE_m3      &
+     &,           N4S_m3     &
+     &,           TN_k       &
+     &,           TINF_K     &
+     &,           Un_ms1 &
+     &,           vn_ms1_4output )
 
 !nm20170424 wind output corrected
 if ( sw_neutral==0.or.sw_neutral==1 ) then 
-  DEallocate( WamField, vn_ms1_4output )
+  DEallocate( WamField )
 end if
 
 !---neutral heating

@@ -110,7 +110,7 @@ runscript_theia() {
   echo "export $envvars"
   echo "$($modcmd $machine $compiler)"
   echo "module list"
-  echo "export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/"
+  echo "export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/2013160300/grid_80x170/"
   echo "echo $RESDIR"
   test $parallelism == parallel && extra="mpirun -np $tasks "
   echo "time $extra./$(basename $exe) >output 2>&1 && echo 'ipe finished' && exit 0"
@@ -302,8 +302,7 @@ test $parallelism == serial && jobname=ipe_${compiler}_s || jobname=ipe_${compil
 
 # Create unique run directory and copy/link files into it.
 
-#rundir=$(date +%s)_$pre
-rundir=$pre
+rundir=$(date +%s)_$pre
 test "$parallelism" = "parallel" && rundir+="_$tasks"
 mkdir $rundir || fail
 echo Created run directory: $rundir
@@ -324,7 +323,7 @@ if [ $sw_neutral -eq 3 ]; then
 fi
 ###nm20170809 george's new startup files
 #linksafe /scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/ipe_grid_plasma_params $rundir/ipe_grid_plasma_params
-export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/March16_2013_00UT/
+export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/2013160300/grid_80x170/
 echo "RESDIR=" $RESDIR
 
 
