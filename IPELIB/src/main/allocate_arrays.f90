@@ -132,7 +132,7 @@ print *,'DE-ALLOCATing ARRAYS'
         STOP
       END IF
 
-      allocate( ON_m3     &
+      deallocate( ON_m3     &
      &,           HN_m3     &
      &,           N2N_m3     &
      &,           O2N_m3     &
