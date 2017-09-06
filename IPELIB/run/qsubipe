@@ -263,10 +263,10 @@ case $machine in
 #    setc IPEDATA /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/20090115_1hr_spacewx_80x170
     setc IPEDATA /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/20090115_1day_spacewx_80x170 
     echo "IPEDATA=" $IPEDATA
-    setc IPEQUEUE debug
-#    setc IPEQUEUE batch
+#    setc IPEQUEUE debug
+    setc IPEQUEUE batch
     echo "IPEQUEUE=" $IPEQUEUE
-    setc IPETIME  00:30:00
+    setc IPETIME  05:00:00
     if [ $IPEQUEUE = debug ]; then
       setc IPETIME  00:30:00
     fi

@@ -1,0 +1,33 @@
+#!/bin/sh --login
+#
+# -- Request 24 cores
+#PBS -l procs=1
+#
+# -- Specifya maximum wallclock of 4 hours
+#PBS -l walltime=00:30:00
+#
+#PBS -q debug
+#
+# -- Specify under which account a job should run
+#PBS -A swpc
+#
+# -- Set the name of the job, or moab will default to STDIN
+#PBS -N convert_ipe
+#
+#PBS -l vmem=8G
+#
+#PBS -j oe
+#
+# change directory to the working directory of the job
+# Use the if clause so that this script stays portable
+#
+
+if [ x$PBS_O_WORKDIR != x ]; then
+   cd $PBS_O_WORKDIR
+fi
+
+
+module load intel
+module load netcdf
+
+./Convert.sh
