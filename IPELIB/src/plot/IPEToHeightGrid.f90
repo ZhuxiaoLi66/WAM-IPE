@@ -15,7 +15,8 @@ PROGRAM IPEtoHeightGrid
 USE module_precision
 USE module_IPE_dimension,ONLY: NMP, NLP, NPTS2D, ISTOT
 USE module_input_parameters
-USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN, JMAX_IS
+USE module_FIELD_LINE_GRID_MKS,ONLY: MaxFluxTube, JMIN_IN, JMAX_IS, JMIN_ING, JMAX_ISG
+USE module_init_plasma_grid
 
 USE netcdf
 
@@ -41,15 +42,20 @@ USE netcdf
 
   REAL(kind=real_prec8)                                 :: dtotinv, factor, d, fac
   REAL(kind=real_prec8),DIMENSION(:,:,:,:), ALLOCATABLE :: facfac_interface,dd_interface
-  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE     :: oplus_ft
-  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE     :: hplus_ft
-  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE     :: heplus_ft
-  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE     :: nplus_ft
-  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE     :: noplus_ft
-  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE     :: o2plus_ft
-  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE     :: n2plus_ft
-  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE     :: oplus2d_ft
-  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE     :: oplus2p_ft
+  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE      :: oplus_ft
+  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE      :: hplus_ft
+  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE      :: heplus_ft
+  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE      :: nplus_ft
+  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE      :: noplus_ft
+  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE      :: o2plus_ft
+  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE      :: n2plus_ft
+  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE      :: oplus2d_ft
+  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE      :: oplus2p_ft
+  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE      :: tn_ft
+  REAL(kind=real_prec),DIMENSION(:,:,:), ALLOCATABLE    :: vn_ft
+  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE      :: on_ft
+  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE      :: n2n_ft
+  REAL(kind=real_prec),DIMENSION(:,:), ALLOCATABLE      :: o2n_ft
   REAL(kind=real_prec8),DIMENSION(:,:,:), ALLOCATABLE   :: oplus_fixed
   REAL(kind=real_prec8),DIMENSION(:,:,:), ALLOCATABLE   :: hplus_fixed
   REAL(kind=real_prec8),DIMENSION(:,:,:), ALLOCATABLE   :: heplus_fixed
@@ -59,6 +65,11 @@ USE netcdf
   REAL(kind=real_prec8),DIMENSION(:,:,:), ALLOCATABLE   :: n2plus_fixed
   REAL(kind=real_prec8),DIMENSION(:,:,:), ALLOCATABLE   :: oplus2d_fixed
   REAL(kind=real_prec8),DIMENSION(:,:,:), ALLOCATABLE   :: oplus2p_fixed
+  REAL(kind=real_prec8),DIMENSION(:,:,:), ALLOCATABLE   :: tn_fixed
+  REAL(kind=real_prec8),DIMENSION(:,:,:,:), ALLOCATABLE :: vn_fixed
+  REAL(kind=real_prec8),DIMENSION(:,:,:), ALLOCATABLE   :: on_fixed
+  REAL(kind=real_prec8),DIMENSION(:,:,:), ALLOCATABLE   :: n2n_fixed
+  REAL(kind=real_prec8),DIMENSION(:,:,:), ALLOCATABLE   :: o2n_fixed
   REAL(kind=real_prec8),DIMENSION(:,:,:), ALLOCATABLE   :: electron_density_fixed
   REAL(kind=real_prec8),DIMENSION(:,:), ALLOCATABLE     :: electron_density_fixed_300km
   REAL(kind=real_prec8),DIMENSION(:,:), ALLOCATABLE     :: total_electron_content
@@ -73,30 +84,39 @@ USE netcdf
   REAL(kind=real_prec8),DIMENSION(3)                    :: n2plus_interpolated
   REAL(kind=real_prec8),DIMENSION(3)                    :: oplus2d_interpolated
   REAL(kind=real_prec8),DIMENSION(3)                    :: oplus2p_interpolated
+  REAL(kind=real_prec8),DIMENSION(3)                    :: tn_interpolated
+  REAL(kind=real_prec8),DIMENSION(3,3)                  :: vn_interpolated
+  REAL(kind=real_prec8),DIMENSION(3)                    :: on_interpolated
+  REAL(kind=real_prec8),DIMENSION(3)                    :: n2n_interpolated
+  REAL(kind=real_prec8),DIMENSION(3)                    :: o2n_interpolated
 
   CHARACTER(100) :: filename
   CHARACTER(500) :: plasmaFile
-  CHARACTER(500) :: neutralsFile
+  CHARACTER(500) :: neutralFile
   CHARACTER(500) :: gridFile
   CHARACTER(500) :: outputDir
   
 
-  LOGICAL :: plasmaFileGiven, neutralsFileGiven, outputDirGiven, gridFileGiven
+  LOGICAL :: plasmaFileGiven, neutralFileGiven, outputDirGiven, gridFileGiven
 
 
     CALL InitializeFromCommandLine( )
 
-
     CALL read_input_parameters ( )
 
+    PRINT*, "AllocateArrays"
     CALL AllocateArrays( )
 
+    PRINT*, "ReadGridAndPlasmaFiles"
     CALL ReadGridAndPlasmaFiles( )
  
+    PRINT*, "InterpolateOntoFixedHeightGrid"
     CALL InterpolateOntoFixedHeightGrid( )
 
+    PRINT*,"WriteToNetCDF"
     CALL WriteToNetCDF( )
 
+    PRINT*,"CleanupArrays"
     CALL CleanupArrays( )
 
 
@@ -112,7 +132,7 @@ CONTAINS
 
      plasmaFileGiven   = .FALSE. 
      gridFileGiven     = .FALSE.
-     neutralsFileGiven = .FALSE.
+     neutralFileGiven = .FALSE.
      outputDirGiven    = .FALSE.
 
      plasmaGiven    = .FALSE.
@@ -135,7 +155,7 @@ CONTAINS
                 plasmaFileGiven = .TRUE.
              CASE("--neutral-file")
                 neutralsGiven = .TRUE.
-                neutralsFileGiven = .TRUE.
+                neutralFileGiven = .TRUE.
              CASE("--grid-file")
                 gridGiven = .TRUE.
              CASE("--output-dir")
@@ -151,8 +171,8 @@ CONTAINS
 
                ELSEIF( neutralsGiven )THEN
 
-                  neutralsFileGiven = .TRUE.
-                  neutralsFile  = TRIM(argName) ! Capture the directory name
+                  neutralFileGiven = .TRUE.
+                  neutralFile  = TRIM(argName) ! Capture the directory name
                   neutralsGiven = .FALSE.
 
                ELSEIF( gridGiven )THEN
@@ -194,12 +214,12 @@ CONTAINS
         ENDIF
 
 
-        IF( neutralsFileGiven )THEN
+        IF( neutralFileGiven )THEN
         
-           INQUIRE( FILE = TRIM(neutralsFile), &
+           INQUIRE( FILE = TRIM(neutralFile), &
                     EXIST = fileExists )
            IF( .NOT.(fileExists) )THEN
-             PRINT*, ' Input file :'//TRIM(neutralsFile)//': not found.'
+             PRINT*, ' Input file :'//TRIM(neutralFile)//': not found.'
              PRINT*, '  i2hg : Setup Failed.'
            ENDIF
 
@@ -262,6 +282,11 @@ CONTAINS
                  n2plus_ft(NPTS2D,80), &  
                  oplus2d_ft(NPTS2D,80), &  
                  oplus2p_ft(NPTS2D,80), &  
+                 tn_ft(NPTS2D,80), &  
+                 vn_ft(NPTS2D,80,1:3), &  
+                 on_ft(NPTS2D,80), &  
+                 n2n_ft(NPTS2D,80), &  
+                 o2n_ft(NPTS2D,80), &  
                  oplus_fixed(nlon,nlat,nheights), &
                  hplus_fixed(nlon,nlat,nheights), &
                  heplus_fixed(nlon,nlat,nheights), &
@@ -271,6 +296,11 @@ CONTAINS
                  n2plus_fixed(nlon,nlat,nheights), &
                  oplus2d_fixed(nlon,nlat,nheights), &
                  oplus2p_fixed(nlon,nlat,nheights), &
+                 tn_fixed(nlon,nlat,nheights), &
+                 vn_fixed(nlon,nlat,nheights,1:3), &
+                 on_fixed(nlon,nlat,nheights), &
+                 n2n_fixed(nlon,nlat,nheights), &
+                 o2n_fixed(nlon,nlat,nheights), &
                  electron_density_fixed(nlon,nlat,nheights), &
                  electron_density_fixed_300km(nlon,nlat), &
                  total_electron_content(nlon,nlat), &
@@ -293,6 +323,11 @@ CONTAINS
                    n2plus_ft, &  
                    oplus2d_ft, &  
                    oplus2p_ft, &  
+                   tn_ft, &  
+                   vn_ft, &  
+                   on_ft, &  
+                   n2n_ft, &  
+                   o2n_ft, &  
                    oplus_fixed, &
                    hplus_fixed, &
                    heplus_fixed, &
@@ -302,6 +337,11 @@ CONTAINS
                    n2plus_fixed, &
                    oplus2d_fixed, &
                    oplus2p_fixed, &
+                   tn_fixed, &
+                   vn_fixed, &
+                   on_fixed, &
+                   n2n_fixed, &
+                   o2n_fixed, &
                    electron_density_fixed, &
                    electron_density_fixed_300km, &
                    total_electron_content, &
@@ -312,6 +352,19 @@ CONTAINS
 !
  SUBROUTINE ReadGridandPlasmaFiles( )
    IMPLICIT NONE
+   REAL(real_prec), ALLOCATABLE :: tn_k(:,:,:)
+   REAL(real_prec), ALLOCATABLE :: vn_ms1(:,:,:,:)
+   REAL(real_prec), ALLOCATABLE :: on_ms1(:,:,:)
+   REAL(real_prec), ALLOCATABLE :: n2n_ms1(:,:,:)
+   REAL(real_prec), ALLOCATABLE :: o2n_m3(:,:,:)
+ 
+    CALL init_plasma_grid( )
+
+    ALLOCATE( tn_k(MaxFluxTube,NLP,NMP), &
+              vn_ms1(MaxFluxTube,NLP,NMP,1:3), &
+              on_ms1(MaxFluxTube,NLP,NMP), &
+              n2n_ms1(MaxFluxTube,NLP,NMP), &
+              o2n_m3(MaxFluxTube,NLP,NMP) )
 
     OPEN(UNIT=20,file=TRIM(gridFile),form='unformatted',status='old')
       read(20) facfac_interface
@@ -327,7 +380,7 @@ CONTAINS
      OPEN(UNIT   = 20, &
           FILE   = TRIM(plasmaFile),&
           FORM   = 'UNFORMATTED', &
-          STATUS ='OLD')
+          STATUS = 'OLD')
 
         READ(20) oplus_ft
         READ(20) hplus_ft
@@ -341,6 +394,32 @@ CONTAINS
 
      CLOSE(20)
 
+     OPEN( UNIT = 20, &
+           FILE = TRIM(neutralFile), &
+           FORM = 'UNFORMATTED', &
+           STATUS = 'OLD' )
+
+
+     READ(20) tn_k
+     READ(20) vn_ms1
+     READ(20) on_ms1
+     READ(20) n2n_ms1
+     READ(20) o2n_m3 
+
+     DO mp=1,mpstop
+       DO lp=1,nlp
+
+        tn_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)     = tn_k(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
+        vn_ft(JMIN_ING(lp):JMAX_ISG(lp),mp,1:3) = vn_ms1(JMIN_IN(lp):JMAX_IS(lp),lp,mp,1:3)
+        on_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)     = on_ms1(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
+        n2n_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)    = n2n_ms1(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
+        o2n_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)    = o2n_m3(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
+
+      ENDDO 
+     ENDDO
+
+
+
 #ifdef DEBUG
   PRINT*, MAXVAL(oplus_ft), MINVAL(oplus_ft)
   PRINT*, MAXVAL(hplus_ft), MINVAL(hplus_ft)
@@ -351,6 +430,14 @@ CONTAINS
   PRINT*, MAXVAL(n2plus_ft), MINVAL(n2plus_ft)
 #endif
 
+
+    DEALLOCATE( tn_k, &
+                vn_ms1, &
+                on_ms1, &
+                n2n_ms1, &
+                o2n_m3  )
+
+
  END SUBROUTINE ReadGridandPlasmaFiles
 
  SUBROUTINE InterpolateOntoFixedHeightGrid( )
@@ -359,26 +446,18 @@ CONTAINS
   REAL(real_prec8) :: a, b, c, x1, x2, x3, y1, y2, y3
   INTEGER         :: i1, i2, i3, i_max_location
 
-  dlat = 180.0_real_prec/REAL( nlat-1,real_prec8 ) 
-  dlon = 360.0_real_prec/REAL( nlon-1,real_prec8 ) 
+    dlat = 180.0_real_prec/REAL( nlat-1,real_prec8 ) 
+    dlon = 360.0_real_prec/REAL( nlon-1,real_prec8 ) 
 
-   
-   
-  do l=1,nlat
+    do l=1,nlat
       y(l) = -90.0_real_prec + REAL(l-1,real_prec8)*dlat
-  enddo
+    enddo
     do m=1,nlon
       x(m) = REAL(m-1,real_prec8)*dlon
     enddo
 
-!  do l=1,nlat
-!    do m=1,nlon
-!      y(m,l) = -90.0_real_prec + REAL(l-1,real_prec8)*dlat
-!      x(m,l) = REAL(m-1,real_prec8)*dlon
-!    enddo
-!  enddo
 
-  do iheight=1,nheights
+    do iheight=1,nheights
       do l=1,nlat
           do m=1,nlon
 
@@ -402,6 +481,7 @@ CONTAINS
                   in2=ii3_interface(i,iheight,l,m)
                   in1=ii4_interface(i,iheight,l,m)
 
+                  ! Ions
                   oplus_interpolated(i) = ((oplus_ft(in2,mp)-oplus_ft(in1,mp))*factor) + oplus_ft(in1,mp)
                   hplus_interpolated(i) = ((hplus_ft(in2,mp)-hplus_ft(in1,mp))*factor) + hplus_ft(in1,mp)
                   heplus_interpolated(i) = ((heplus_ft(in2,mp)-heplus_ft(in1,mp))*factor) + heplus_ft(in1,mp)
@@ -412,9 +492,21 @@ CONTAINS
                   oplus2d_interpolated(i) = ((oplus2d_ft(in2,mp)-oplus2d_ft(in1,mp))*factor) + oplus2d_ft(in1,mp)
                   oplus2p_interpolated(i) = ((oplus2p_ft(in2,mp)-oplus2p_ft(in1,mp))*factor) + oplus2p_ft(in1,mp)
 
+                  ! Neutrals
+                  tn_interpolated(i)   = ((tn_ft(in2,mp)-tn_ft(in1,mp))*factor) + tn_ft(in1,mp)
+                  vn_interpolated(i,1) = ((vn_ft(in2,mp,1)-vn_ft(in1,mp,1))*factor) + vn_ft(in1,mp,1)
+                  vn_interpolated(i,2) = ((vn_ft(in2,mp,2)-vn_ft(in1,mp,2))*factor) + vn_ft(in1,mp,2)
+                  vn_interpolated(i,3) = ((vn_ft(in2,mp,3)-vn_ft(in1,mp,3))*factor) + vn_ft(in1,mp,3)
+                  on_interpolated(i)   = ((on_ft(in2,mp)-on_ft(in1,mp))*factor) + on_ft(in1,mp)
+                  n2n_interpolated(i)  = ((n2n_ft(in2,mp)-n2n_ft(in1,mp))*factor) + n2n_ft(in1,mp)
+                  o2n_interpolated(i)  = ((o2n_ft(in2,mp)-o2n_ft(in1,mp))*factor) + o2n_ft(in1,mp)
+
+
+
                   d = dd_interface(i,iheight,l,m)
                   dtotinv = (1./d) + dtotinv
 
+                  ! Ions
                   oplus_fixed(m,l,iheight) = (oplus_interpolated(i)/d) + oplus_fixed(m,l,iheight)
                   hplus_fixed(m,l,iheight) = (hplus_interpolated(i)/d) + hplus_fixed(m,l,iheight)
                   heplus_fixed(m,l,iheight) = (heplus_interpolated(i)/d) + heplus_fixed(m,l,iheight)
@@ -425,17 +517,32 @@ CONTAINS
                   oplus2d_fixed(m,l,iheight) = (oplus2d_interpolated(i)/d) + oplus2d_fixed(m,l,iheight)
                   oplus2p_fixed(m,l,iheight) = (oplus2p_interpolated(i)/d) + oplus2p_fixed(m,l,iheight)
 
+                  ! Neutrals
+                  tn_fixed(m,l,iheight)     = (tn_interpolated(i)/d) + tn_fixed(m,l,iheight)
+                  vn_fixed(m,l,iheight,1:3) = (vn_interpolated(i,1:3)/d) + vn_fixed(m,l,iheight,1:3)
+                  on_fixed(m,l,iheight)     = (on_interpolated(i)/d) + on_fixed(m,l,iheight)
+                  n2n_fixed(m,l,iheight)    = (n2n_interpolated(i)/d) + n2n_fixed(m,l,iheight)
+                  o2n_fixed(m,l,iheight)    = (o2n_interpolated(i)/d) + o2n_fixed(m,l,iheight)
+
               ENDDO ! do 400 i=1,3
 
-              oplus_fixed(m,l,iheight) = oplus_fixed(m,l,iheight)/dtotinv
-              hplus_fixed(m,l,iheight) = hplus_fixed(m,l,iheight)/dtotinv
-              heplus_fixed(m,l,iheight) = heplus_fixed(m,l,iheight)/dtotinv
-              nplus_fixed(m,l,iheight) = nplus_fixed(m,l,iheight)/dtotinv
-              noplus_fixed(m,l,iheight) = noplus_fixed(m,l,iheight)/dtotinv
-              o2plus_fixed(m,l,iheight) = o2plus_fixed(m,l,iheight)/dtotinv
-              n2plus_fixed(m,l,iheight) = n2plus_fixed(m,l,iheight)/dtotinv
+              ! Ions
+              oplus_fixed(m,l,iheight)   = oplus_fixed(m,l,iheight)/dtotinv
+              hplus_fixed(m,l,iheight)   = hplus_fixed(m,l,iheight)/dtotinv
+              heplus_fixed(m,l,iheight)  = heplus_fixed(m,l,iheight)/dtotinv
+              nplus_fixed(m,l,iheight)   = nplus_fixed(m,l,iheight)/dtotinv
+              noplus_fixed(m,l,iheight)  = noplus_fixed(m,l,iheight)/dtotinv
+              o2plus_fixed(m,l,iheight)  = o2plus_fixed(m,l,iheight)/dtotinv
+              n2plus_fixed(m,l,iheight)  = n2plus_fixed(m,l,iheight)/dtotinv
               oplus2d_fixed(m,l,iheight) = oplus2d_fixed(m,l,iheight)/dtotinv
               oplus2p_fixed(m,l,iheight) = oplus2p_fixed(m,l,iheight)/dtotinv
+
+              ! Neutrals
+              tn_fixed(m,l,iheight)     = tn_fixed(m,l,iheight)/dtotinv
+              vn_fixed(m,l,iheight,1:3) = vn_fixed(m,l,iheight,1:3)/dtotinv
+              on_fixed(m,l,iheight)     = on_fixed(m,l,iheight)/dtotinv
+              n2n_fixed(m,l,iheight)    = n2n_fixed(m,l,iheight)/dtotinv
+              o2n_fixed(m,l,iheight)    = o2n_fixed(m,l,iheight)/dtotinv
 
           ENDDO
       ENDDO
@@ -496,6 +603,7 @@ CONTAINS
    INTEGER :: nplus_varid, noplus_varid, o2plus_varid
    INTEGER :: n2plus_varid, tec_varid, nmf2_varid, hmf2_varid
    INTEGER :: edens_varid
+   INTEGER :: tn_varid, u_varid, v_varid, w_varid, on_varid, n2n_varid, o2n_varid
 
    CHARACTER( LEN(TRIM(plasmaFile)) ) :: shortenedFile
    CHARACTER( 13 )                    :: timeStamp
@@ -523,7 +631,6 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, z_varid, "missing_value", fillValue) )
 
 
-      !CALL Check( nf90_def_var( ncid, "latitude", NF90_PREC, (/x_dimid, y_dimid/), y_varid ) )
       CALL Check( nf90_def_var( ncid, "latitude", NF90_PREC, y_dimid, y_varid ) )
       CALL Check( nf90_put_att( ncid, y_varid, "long_name", "Geographic Latitude" ) )
       CALL Check( nf90_put_att( ncid, y_varid, "units", "Degrees North" ) )
@@ -531,7 +638,6 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, y_varid, "missing_value", fillValue) )
 
 
-      !CALL Check( nf90_def_var( ncid, "longitude", NF90_PREC, (/x_dimid,y_dimid/), x_varid ) )
       CALL Check( nf90_def_var( ncid, "longitude", NF90_PREC, x_dimid, x_varid ) )
       CALL Check( nf90_put_att( ncid, x_varid, "long_name", "Geographic Longitude" ) )
       CALL Check( nf90_put_att( ncid, x_varid, "units", "Degrees East" ) )
@@ -638,6 +744,62 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, hmf2_varid,"coordinates", "latitude longitude" ) )
          
 
+      CALL Check( nf90_def_var( ncid, "tn", NF90_PREC,&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               tn_varid ) )
+      CALL Check( nf90_put_att( ncid, tn_varid, "long_name","Thermosphere temperature" ) )
+      CALL Check( nf90_put_att( ncid, tn_varid, "units","[K]" ) )
+      CALL Check( nf90_put_att( ncid, tn_varid, "_FillValue",fillValue) )
+      CALL Check( nf90_put_att( ncid, tn_varid,"coordinates", "latitude longitude z" ) )
+
+      CALL Check( nf90_def_var( ncid, "vn_zonal", NF90_PREC,&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               u_varid ) )
+      CALL Check( nf90_put_att( ncid, u_varid, "long_name","Geographic Zonal wind (positive eastward)" ) )
+      CALL Check( nf90_put_att( ncid, u_varid, "units","[m/s]" ) )
+      CALL Check( nf90_put_att( ncid, u_varid, "_FillValue",fillValue) )
+      CALL Check( nf90_put_att( ncid, u_varid,"coordinates", "latitude longitude z" ) )
+
+      CALL Check( nf90_def_var( ncid, "vn_meridional", NF90_PREC,&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               v_varid ) )
+      CALL Check( nf90_put_att( ncid, v_varid, "long_name","Geographic Meridional wind (positive northward)" ) )
+      CALL Check( nf90_put_att( ncid, v_varid, "units","[m/s]" ) )
+      CALL Check( nf90_put_att( ncid, v_varid, "_FillValue",fillValue) )
+      CALL Check( nf90_put_att( ncid, v_varid,"coordinates", "latitude longitude z" ) )
+
+      CALL Check( nf90_def_var( ncid, "vn_vertical", NF90_PREC,&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               w_varid ) )
+      CALL Check( nf90_put_att( ncid, w_varid, "long_name","Geographic Vertical wind (positive upward)" ) )
+      CALL Check( nf90_put_att( ncid, w_varid, "units","[m/s]" ) )
+      CALL Check( nf90_put_att( ncid, w_varid, "_FillValue",fillValue) )
+      CALL Check( nf90_put_att( ncid, w_varid,"coordinates", "latitude longitude z" ) )
+
+      CALL Check( nf90_def_var( ncid, "O", NF90_PREC,&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               on_varid ) )
+      CALL Check( nf90_put_att( ncid, on_varid, "long_name","Oxygen density" ) )
+      CALL Check( nf90_put_att( ncid, on_varid, "units","[#/m^3]" ) )
+      CALL Check( nf90_put_att( ncid, on_varid, "_FillValue",fillValue) )
+      CALL Check( nf90_put_att( ncid, on_varid,"coordinates", "latitude longitude z" ) )
+
+      CALL Check( nf90_def_var( ncid, "N2", NF90_PREC,&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               n2n_varid ) )
+      CALL Check( nf90_put_att( ncid, n2n_varid, "long_name","Molecular Nitrogen density" ) )
+      CALL Check( nf90_put_att( ncid, n2n_varid, "units","[#/m^3]" ) )
+      CALL Check( nf90_put_att( ncid, n2n_varid, "_FillValue",fillValue) )
+      CALL Check( nf90_put_att( ncid, n2n_varid,"coordinates", "latitude longitude z" ) )
+
+      CALL Check( nf90_def_var( ncid, "O2", NF90_PREC,&
+                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               o2n_varid ) )
+      CALL Check( nf90_put_att( ncid, o2n_varid, "long_name","Molecular Oxygen density" ) )
+      CALL Check( nf90_put_att( ncid, o2n_varid, "units","[#/m^3]" ) )
+      CALL Check( nf90_put_att( ncid, o2n_varid, "_FillValue",fillValue) )
+      CALL Check( nf90_put_att( ncid, o2n_varid,"coordinates", "latitude longitude z" ) )
+
       ! End the Define Mode
       CALL Check( nf90_enddef(ncid) )
       ! 
@@ -655,6 +817,14 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, tec_varid, total_electron_content ) )
       CALL Check( nf90_put_var( ncid, nmf2_varid, nmf2 ) )
       CALL Check( nf90_put_var( ncid, hmf2_varid, hmf2 ) )
+
+      CALL Check( nf90_put_var( ncid, tn_varid, tn_fixed ) )
+      CALL Check( nf90_put_var( ncid, u_varid, vn_fixed(:,:,:,1) ) )
+      CALL Check( nf90_put_var( ncid, v_varid, vn_fixed(:,:,:,2) ) )
+      CALL Check( nf90_put_var( ncid, w_varid, vn_fixed(:,:,:,3) ) )
+      CALL Check( nf90_put_var( ncid, on_varid, on_fixed ) )
+      CALL Check( nf90_put_var( ncid, n2n_varid, n2n_fixed ) )
+      CALL Check( nf90_put_var( ncid, o2n_varid, o2n_fixed ) )
 
 
       CALL Check( nf90_close( ncid ) )
