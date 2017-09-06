@@ -428,6 +428,10 @@ CONTAINS
   PRINT*, MAXVAL(noplus_ft), MINVAL(noplus_ft)
   PRINT*, MAXVAL(o2plus_ft), MINVAL(o2plus_ft)
   PRINT*, MAXVAL(n2plus_ft), MINVAL(n2plus_ft)
+  PRINT*, 'Neutrals'
+  PRINT*, MAXVAL(vn_ms1(:,:,:,1)), MINVAL(vn_ms1(:,:,:,1))
+  PRINT*, MAXVAL(vn_ms1(:,:,:,2)), MINVAL(vn_ms1(:,:,:,2))
+  PRINT*, MAXVAL(vn_ms1(:,:,:,3)), MINVAL(vn_ms1(:,:,:,3))
 #endif
 
 

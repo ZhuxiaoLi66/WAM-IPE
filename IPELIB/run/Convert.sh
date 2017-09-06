@@ -33,6 +33,5 @@ ${I2HG_EXE} --plasma-file $file \
             --neutral-file ${IPE_RUNDIR}${neutralfile}\
             --grid-file ${RESDIR}GIP_Fixed_GEO_grid_lowres_corrected.bin
 
-break
 done
 
