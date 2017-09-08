@@ -33,32 +33,32 @@
      title( {'Electron Density at 300 km',IPEStruct.TimeStamp}, 'FontSize', 20, 'FontName', 'Arial', 'FontWeight', 'Bold' );
      set( gca, 'LineWidth', 4, 'FontSize', 16, 'FontName', 'Arial', 'FontWeight', 'Bold' );
   
-     print( ['ElectronDensity300km_',IPEStruct.TimeStamp], '-depsc2' );
+     print( [PlotDir,'ElectronDensity300km_',IPEStruct.TimeStamp], '-depsc2' );
    close all
 
    
 %% TEC
-%   v = linspace( min(min(IPEStruct.TEC)), max(max(IPEStruct.TEC)), nColors );
-%   figure
-%     hold on
-%     contourf( IPEStruct.longitude, IPEStruct.latitude, IPEStruct.TEC, ...
-%               v, 'EdgeColor', 'None' )
-%     v = linspace( TECMin, TECMax, nContours ); 
-%     contour(  IPEStruct.longitude, IPEStruct.latitude, IPEStruct.TEC, ...
-%               v, 'EdgeColor', 'k', 'LineWidth', 2 )
-%  
-%     colormap( TECColorMap )
-%     colorbar
-%     caxis( [TECMin, TECMax] )
-%  
-%     xlabel( 'Geographic Longitude ( ^o E)', 'FontSize', 18, 'FontName', 'Arial', 'FontWeight','Bold' ); 
-%     ylabel( 'Geographic Latitude ( ^o N)', 'FontSize', 18, 'FontName', 'Arial', 'FontWeight','Bold' ); 
-%     title( {'TEC',IPEStruct.TimeStamp}, 'FontSize', 20, 'FontName', 'Arial', 'FontWeight', 'Bold' );
-%     set( gca, 'LineWidth', 4, 'FontSize', 16, 'FontName', 'Arial', 'FontWeight', 'Bold' );
-%  
-%     print( ['TEC_',IPEStruct.TimeStamp], '-depsc2' );
-%   close all
-%
+   v = linspace( min(min(IPEStruct.TEC)), max(max(IPEStruct.TEC)), nColors );
+   figure
+     hold on
+     contourf( IPEStruct.longitude, IPEStruct.latitude, IPEStruct.TEC, ...
+               v, 'EdgeColor', 'None' )
+     v = linspace( TECMin, TECMax, nContours ); 
+     contour(  IPEStruct.longitude, IPEStruct.latitude, IPEStruct.TEC, ...
+               v, 'EdgeColor', 'k', 'LineWidth', 2 )
+  
+     colormap( TECColorMap )
+     colorbar
+     caxis( [TECMin, TECMax] )
+  
+     xlabel( 'Geographic Longitude ( ^o E)', 'FontSize', 18, 'FontName', 'Arial', 'FontWeight','Bold' ); 
+     ylabel( 'Geographic Latitude ( ^o N)', 'FontSize', 18, 'FontName', 'Arial', 'FontWeight','Bold' ); 
+     title( {'TEC',IPEStruct.TimeStamp}, 'FontSize', 20, 'FontName', 'Arial', 'FontWeight', 'Bold' );
+     set( gca, 'LineWidth', 4, 'FontSize', 16, 'FontName', 'Arial', 'FontWeight', 'Bold' );
+  
+     print( [PlotDir,'TEC_',IPEStruct.TimeStamp], '-depsc2' );
+   close all
+
 %% nmf2
    v = linspace( min(min(IPEStruct.nmf2)), max(max(IPEStruct.nmf2)), nColors );
    figure
@@ -78,7 +78,7 @@
      title( {'NmF2',IPEStruct.TimeStamp}, 'FontSize', 20, 'FontName', 'Arial', 'FontWeight', 'Bold' );
      set( gca, 'LineWidth', 4, 'FontSize', 16, 'FontName', 'Arial', 'FontWeight', 'Bold' );
   
-     print( ['NmF2_',IPEStruct.TimeStamp], '-depsc2' );
+     print( [PlotDir,'NmF2_',IPEStruct.TimeStamp], '-depsc2' );
    close all
 
 
@@ -101,5 +101,5 @@
      title( {'ThermosphereTemperature',IPEStruct.TimeStamp}, 'FontSize', 20, 'FontName', 'Arial', 'FontWeight', 'Bold' );
      set( gca, 'LineWidth', 4, 'FontSize', 16, 'FontName', 'Arial', 'FontWeight', 'Bold' );
   
-     print( ['ThermosphereTemperature_',IPEStruct.TimeStamp], '-depsc2' );
+     print( [PlotDir,'ThermosphereTemperature_',IPEStruct.TimeStamp], '-depsc2' );
    close all

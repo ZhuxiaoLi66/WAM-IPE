@@ -15,6 +15,11 @@
  function IPEPlotsDriver( model, tag, IPEDir, PlotDir )
 
 
+  fprintf( ['Model : ', model, '\n'])
+  fprintf( ['Tag   : ', tag, '\n'])
+  fprintf( ['NetCDF: ', IPEDir, '\n'])
+  fprintf( ['Plot  : ', PlotDir, '\n'])
+
   % Plotting Settings
   nColors = 200;
   nContours = 7;
@@ -52,7 +57,7 @@
 
   for i = 1:length(IPEfiles);
 
-     IPEStruct = LoadIPEStruct( IPEfiles(i).name );
+     IPEStruct = LoadIPEStruct( [IPEDir,IPEfiles(i).name] );
      PlotIPEDiagnostics 
 
   end
@@ -61,8 +66,8 @@
   InsertTexGraphics( [PlotDir,'ElectronDensity300km_*.eps'],...
                      'Electron Density at 300 km', texFid )
   % Insert TEC
-%  InsertTexGraphics( [PlotDir,'TEC_*.eps'],...
-%                     'Total Electron Content', texFid )
+  InsertTexGraphics( [PlotDir,'TEC_*.eps'],...
+                     'Total Electron Content', texFid )
 
   % Insert NmF2
   InsertTexGraphics( [PlotDir,'NmF2_*.eps'],...

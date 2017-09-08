@@ -2,9 +2,9 @@
 #
 #PBS -l procs=1
 #
-#PBS -l walltime=00:30:00
+#PBS -l walltime=02:00:00
 #
-#PBS -q debug
+#PBS -q batch
 #
 #PBS -A swpc
 #
@@ -104,8 +104,11 @@ done
 module load matlab
 #
 ## Run the matlab plotting script
-matlab -nodesktop -nosplash -nodisplay -r "IPEPlotsDriver( ${MODEL},${TAG}, ${IPEDIR}, ${PLOTDIR} )" -logfile IPEPlotsDriver.log
+export mcmd="IPEPlotsDriver( '${MODEL}', '${TAG}', '${OUTDIR}', '${PLOTDIR}' )"
+matlab -nodesktop -nosplash -nodisplay -r "$mcmd; exit;" -logfile IPEPlotsDriver.log
 ## Tar up the output directory
-tar -cvzf ${PLOTDIR}.tar.gz ${PLOTDIR}
+
+
+tar -cvzf ${PLOTDIR::-1}.tar.gz ${PLOTDIR}
 # Clean up this directory
 rm ipe_grid IPE.inp fort.*
