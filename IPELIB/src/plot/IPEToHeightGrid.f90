@@ -569,6 +569,8 @@ CONTAINS
     total_electron_content(1:nlon,1:nlat) = total_electron_content(1:nlon,1:nlat) + &
                                        (electron_density_fixed(1:nlon,1:nlat,iheight) * 5000.0)                                           
   ENDDO
+  total_electron_content = total_electron_content*10.0_real_prec**(-16)
+
 ! NmF2 and hmF2....
   DO l = 1 , nlat
     DO  m = 1 , nlon
@@ -721,10 +723,10 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "TEC", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, rec_dimid /),&
                                tec_varid ) )
       CALL Check( nf90_put_att( ncid, tec_varid, "long_name","Total electron content" ) )
-      CALL Check( nf90_put_att( ncid, tec_varid, "units","[unknown]" ) )
+      CALL Check( nf90_put_att( ncid, tec_varid, "units","TECu" ) )
       CALL Check( nf90_put_att( ncid, tec_varid, "_FillValue",fillValue) )
       CALL Check( nf90_put_att( ncid, tec_varid,"coordinates", "latitude longitude" ) )
 

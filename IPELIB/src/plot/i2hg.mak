@@ -1,8 +1,8 @@
 
 
 FC  = ifort
-#OPT = -O3 -fpp
-OPT = -O0 -g -fpp
+OPT = -O3 -fpp
+#OPT = -O0 -g -fpp
 LIB = -L/apps/netcdf/4.3.0-intel/lib -lnetcdff -lnetcdf
 INC = -I/apps/netcdf/4.3.0-intel/include
 

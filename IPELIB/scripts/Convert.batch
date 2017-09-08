@@ -1,17 +1,13 @@
 #!/bin/sh --login
 #
-# -- Request 24 cores
 #PBS -l procs=1
 #
-# -- Specifya maximum wallclock of 4 hours
 #PBS -l walltime=00:30:00
 #
 #PBS -q debug
 #
-# -- Specify under which account a job should run
 #PBS -A swpc
 #
-# -- Set the name of the job, or moab will default to STDIN
 #PBS -N convert_ipe
 #
 #PBS -l vmem=8G
@@ -22,6 +18,7 @@
 # Use the if clause so that this script stays portable
 #
 
+
 if [ x$PBS_O_WORKDIR != x ]; then
    cd $PBS_O_WORKDIR
 fi
@@ -30,4 +27,85 @@ fi
 module load intel
 module load netcdf
 
-./Convert.sh
+
+# <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> #
+# Do not modify. This variable contains the path to the WAM-IPE installation.
+# Note that this script assumes you are running this under 
+WAMIPEDIR=$(pwd)
+WAMIPEDIR="${WAMIPEDIR%%WAM-IPE*}"WAM-IPE
+echo $WAMIPEDIR
+# <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> #
+
+# ********* Settings that you should modify ********* #
+# Set the MODEL variable to IPE or WAM-IPE
+export MODEL='IPE'
+
+# Set the TAG to the appropriate Git Tag for the version of the code you are testing
+export TAG='V0.1'
+
+# Set the path to the directory where your IPE output can be found
+export IPE_RUNDIR=${WAMIPEDIR}'/IPELIB/run/1504711534_ipe_theia_intel_parallel_32/'
+
+# Set the path to where you want the NetCDF output.
+export OUTDIR='/scratch3/NCEPDEV/swpc/noscrub/Joseph.Schoonover/V0.1_netcdf/'
+
+# Set the path to where you want the eps files and the Latex file.
+export PLOTDIR='/scratch3/NCEPDEV/swpc/noscrub/Joseph.Schoonover/V0.1_plots/'
+
+# Set the full path to the restart directory with the grid files can be found.
+export RESDIR='/scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/2013160300/grid_80x170/'
+
+# *************************************************** #
+
+
+
+# //////////////////////////////////////////////////////////////////////// #
+# Do not modify below this point unless you really know what you are doing
+# //////////////////////////////////////////////////////////////////////// #
+
+
+# Build the i2hg executable
+make --directory=${WAMIPEDIR}/IPELIB/src/plot/ i2hg -f i2hg.mak
+
+
+# Set the full path to the i2hg executable
+export I2HG_EXE=${WAMIPEDIR}/IPELIB/bin/i2hg
+
+# Make the output and plot directories if they don't already exist
+if [ ! -d "$OUTDIR" ]; then
+  mkdir $OUTDIR
+fi
+if [ ! -d "$PLOTDIR" ]; then
+  mkdir $PLOTDIR
+fi
+
+
+echo "i2hg executable : "${I2HG_EXE}
+#Bring in the IPE grid
+cp ${RESDIR}ipe_grid ./
+# Bring in the IPE namelist parameter
+cp ${IPE_RUNDIR}IPE.inp ./
+
+for file in ${IPE_RUNDIR}ipe_grid_plasma_params.*
+do
+  echo $file
+  timestamp=$( echo $file | awk -F'.' '{print $NF}')
+  echo ${IPE_RUNDIR}ipe_grid_neutral_params.$timestamp
+  neutralfile=ipe_grid_neutral_params.$timestamp
+
+  ${I2HG_EXE} --plasma-file $file \
+              --output-dir ${OUTDIR} \
+              --neutral-file ${IPE_RUNDIR}${neutralfile} \
+              --grid-file ${RESDIR}GIP_Fixed_GEO_grid_lowres_corrected.bin
+
+done
+
+
+module load matlab
+#
+## Run the matlab plotting script
+matlab -nodesktop -nosplash -nodisplay -r "IPEPlotsDriver( ${MODEL},${TAG}, ${IPEDIR}, ${PLOTDIR} )" -logfile IPEPlotsDriver.log
+## Tar up the output directory
+tar -cvzf ${PLOTDIR}.tar.gz ${PLOTDIR}
+# Clean up this directory
+rm ipe_grid IPE.inp fort.*
