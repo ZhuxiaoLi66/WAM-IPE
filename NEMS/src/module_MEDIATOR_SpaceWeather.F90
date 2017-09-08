@@ -48,11 +48,12 @@ module module_MEDSpaceWeather
     ! Unit vectors for cardinal direction to 3D Cartesian vector transformation
     type(ESMF_Field) :: wam_north_uvec, wam_east_uvec
 
-    ! Unit vectors for 3D Cartesian vector to cardinal direction transformation
-    type(ESMF_Field) :: ipe_north_uvec, ipe_east_uvec
-
     ! WAM wind vector expressed in 3D cartesian
     type(ESMF_Field) :: wam_wind_3Dcart_vec
+
+
+    ! Unit vectors for 3D Cartesian vector to cardinal direction transformation
+    type(ESMF_Field) :: ipe_north_uvec, ipe_east_uvec
 
     ! IPE wind vector expressed in 3D cartesian
     type(ESMF_Field) :: ipe_wind_3Dcart_vec
@@ -1793,8 +1794,8 @@ subroutine RunRegrid(model, importState, exportState, rc)
         enddo
         endif
 
-#define VECTOR_XFORM
-#ifdef VECTOR_XFORM
+#define NEW_WAY_VECTOR
+#ifdef NEW_WAY_VECTOR
         ! If these are winds, then just save results to be handled later 
         if (trim(fieldNameList(j)) .eq. "northward_wind_neutral") then
 
@@ -1850,10 +1851,11 @@ subroutine RunRegrid(model, importState, exportState, rc)
    enddo
    deallocate(wamdata)
 
-#ifdef VECTOR_XFORM
-   ! Handle winds using vector transformation
 
-#ifdef VECTOR_XFORM_TEST
+   ! Handle winds using vector transformation
+#ifdef NEW_WAY_VECTOR
+
+#ifdef ANALYTIC_TEST
    ! Test by setting vectors to analytic field
    call Set_Tst_Cardinal_Vecs(is%wrap%wam_north, is%wrap%wam_east, rc=rc)
    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -1861,27 +1863,6 @@ subroutine RunRegrid(model, importState, exportState, rc)
         file=__FILE__)) &
         return  ! bail out
 #endif
-
-   !! Convert to Cartesian vector
-   call Cardinal_to_Cart3D(is%wrap%wam_north, is%wrap%wam_east, &
-                           is%wrap%wam_north_uvec, &
-                           is%wrap%wam_east_uvec, &
-                           is%wrap%wam_wind_3Dcart_vec, rc=rc)
-   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail out
-
-
-   !! Regrid
-   call ESMF_FieldRegrid(is%wrap%wam_wind_3Dcart_vec, &
-                         is%wrap%ipe_wind_3Dcart_vec, &
-                         is%wrap%routehandle, &
-                         zeroregion=ESMF_REGION_SELECT, rc=rc)
-   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail out
 
    !! Get ipe northwind field
    call ESMF_StateGet(exportstate, itemname="northward_wind_neutral", &
@@ -1899,6 +1880,29 @@ subroutine RunRegrid(model, importState, exportState, rc)
         file=__FILE__)) &
         return  ! bail out
 
+#define VECTOR_XFORM
+#ifdef VECTOR_XFORM
+   !! Convert to Cartesian vector
+   call Cardinal_to_Cart3D(is%wrap%wam_north, is%wrap%wam_east, &
+                           is%wrap%wam_north_uvec, &
+                           is%wrap%wam_east_uvec, &
+                           is%wrap%wam_wind_3Dcart_vec, rc=rc)
+   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+   !! Regrid
+   call ESMF_FieldRegrid(is%wrap%wam_wind_3Dcart_vec, &
+                         is%wrap%ipe_wind_3Dcart_vec, &
+                         is%wrap%routehandle, &
+                         zeroregion=ESMF_REGION_SELECT, rc=rc)
+   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+
    !! Convert back to cardinal vectors
    call Cart3D_to_Cardinal(is%wrap%ipe_wind_3Dcart_vec, &
                            is%wrap%ipe_north_uvec, &
@@ -1909,7 +1913,29 @@ subroutine RunRegrid(model, importState, exportState, rc)
         file=__FILE__)) &
         return  ! bail out
 
-#ifdef VECTOR_XFORM_TEST
+#else
+   !! Regrid north
+   call ESMF_FieldRegrid(is%wrap%wam_north, &
+                         ipe_north, &
+                         is%wrap%routehandle, &
+                         zeroregion=ESMF_REGION_SELECT, rc=rc)
+   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+   !! Regrid east
+   call ESMF_FieldRegrid(is%wrap%wam_east, &
+                         ipe_east, &
+                         is%wrap%routehandle, &
+                         zeroregion=ESMF_REGION_SELECT, rc=rc)
+   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+#endif
+
+#ifdef ANALYTIC_TEST
    ! Test by comparing to analytic field
    call Cmp_Tst_Cardinal_Vecs(ipe_north, ipe_east, rc=rc)
    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -1917,6 +1943,7 @@ subroutine RunRegrid(model, importState, exportState, rc)
         file=__FILE__)) &
         return  ! bail out
 #endif
+
 #endif
 
     ! advance the time slice counter
@@ -1935,18 +1962,87 @@ subroutine Finalize(model, rc)
   type(InternalState)     :: is
 
   ! query component for its internal state
-    nullify(is%wrap)
-    call ESMF_GridCompGetInternalState(model, is, rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
+  nullify(is%wrap)
+  call ESMF_GridCompGetInternalState(model, is, rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
   
+
   ! Destroy ESMF objects
-  call ESMF_MeshDestroy(is%wrap%wam2dmesh)
-  call ESMF_MeshDestroy(is%wrap%wammesh)
-  call ESMF_MeshDestroy(is%wrap%ipemesh)
+  call ESMF_FieldDestroy(is%wrap%wam_north, rc=rc)  
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  call ESMF_FieldDestroy(is%wrap%wam_east, rc=rc)  
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  call ESMF_FieldDestroy(is%wrap%wam_north_uvec, rc=rc)  
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  call ESMF_FieldDestroy(is%wrap%wam_east_uvec, rc=rc)  
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  call ESMF_FieldDestroy(is%wrap%wam_wind_3Dcart_vec, rc=rc)  
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+
+  call ESMF_FieldDestroy(is%wrap%ipe_north_uvec, rc=rc)  
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  call ESMF_FieldDestroy(is%wrap%ipe_east_uvec, rc=rc)  
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  call ESMF_FieldDestroy(is%wrap%ipe_wind_3Dcart_vec, rc=rc)  
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  call ESMF_MeshDestroy(is%wrap%wam2dmesh, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  call ESMF_MeshDestroy(is%wrap%wammesh, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  call ESMF_MeshDestroy(is%wrap%ipemesh, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
   call ESMF_FieldRegridRelease(is%wrap%routehandle)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
 
   ! deallocate
   deallocate(is%wrap%wamhgt)
@@ -2806,7 +2902,8 @@ end subroutine Set_Tst_Cardinal_Vecs
 subroutine Cmp_Tst_Cardinal_Vecs(north_field, east_field, rc)
   type(ESMF_Field) :: north_field, east_field
   type(ESMF_Mesh) :: mesh
-  integer :: numNodes
+  type(ESMF_VM) :: vm
+  integer :: numNodes, localPet
   real(ESMF_KIND_R8), allocatable :: nodeCoords(:)
   real(ESMF_KIND_R8), pointer :: north_field_ptr(:)
   real(ESMF_KIND_R8), pointer :: east_field_ptr(:)
@@ -2816,14 +2913,13 @@ subroutine Cmp_Tst_Cardinal_Vecs(north_field, east_field, rc)
   real(ESMF_KIND_R8) :: x,y,z  
 
   real(ESMF_KIND_R8) :: relerr, err
-  real(ESMF_KIND_R8) :: max_east_relerr
-  real(ESMF_KIND_R8) :: max_north_relerr
-  real(ESMF_KIND_R8) :: max_east_err
-  real(ESMF_KIND_R8) :: max_north_err
+  real(ESMF_KIND_R8) :: max_relerr(2),g_max_relerr(2)
+  real(ESMF_KIND_R8) :: max_err(2), g_max_err(2)
   real(ESMF_KIND_R8) :: north_exact, east_exact
   real(ESMF_KIND_R8),parameter :: half_pi=1.5707963267949_ESMF_KIND_R8
   real(ESMF_KIND_R8),parameter :: two_pi=6.28318530717959_ESMF_KIND_R8
   
+
   ! Get mesh
   call ESMF_FieldGet(north_field, mesh=mesh, &
                      localDECount=localDECount, rc=rc)
@@ -2836,6 +2932,7 @@ subroutine Cmp_Tst_Cardinal_Vecs(north_field, east_field, rc)
   if (localDECount .eq. 0) then
      return
   endif
+
 
   ! If there is more than 1 DE then complain, because we aren't handling 
   ! that case right now
@@ -2882,13 +2979,9 @@ subroutine Cmp_Tst_Cardinal_Vecs(north_field, east_field, rc)
         return  ! bail out
 
 
-  ! Debug
-  max_east_relerr= -1.0E10
-  max_north_relerr= -1.0E10
-
-  ! Debug
-  max_east_err= -1.0E10
-  max_north_err= -1.0E10
+  ! Init max
+  max_relerr= -HUGE(max_relerr)
+  max_err= -HUGE(max_err)
 
 
   ! Loop setting unit vectors
@@ -2920,23 +3013,8 @@ subroutine Cmp_Tst_Cardinal_Vecs(north_field, east_field, rc)
      if (lat*ESMF_COORDSYS_RAD2DEG >  85.0) cycle
 #endif
 
-     ! Calc east error
-     err=abs(east_field_ptr(i)-east_exact)
-     if (east_exact .ne. 0.0) then
-        relerr=abs(err/east_exact)
-     else
-        relerr=err
-     endif
 
-
-     if (err > max_east_err) then
-        max_east_err=err
-     endif
-
-     if (relerr > max_east_relerr) then
-        max_east_relerr=relerr
-     endif
-
+#if 0
      if (relerr > 0.3) then
         write(*,*) i,"east rel error=",east_field_ptr(i),east_exact,relerr,&
              lon*ESMF_COORDSYS_RAD2DEG,lat*ESMF_COORDSYS_RAD2DEG
@@ -2946,6 +3024,7 @@ subroutine Cmp_Tst_Cardinal_Vecs(north_field, east_field, rc)
         write(*,*) i,"east error=",east_field_ptr(i),east_exact,err,&
              lon*ESMF_COORDSYS_RAD2DEG,lat*ESMF_COORDSYS_RAD2DEG
      endif
+#endif
 
      ! Calc north error
      err=abs(north_field_ptr(i)-north_exact)
@@ -2955,14 +3034,15 @@ subroutine Cmp_Tst_Cardinal_Vecs(north_field, east_field, rc)
         relerr=err
      endif
 
-    if (err > max_north_err) then
-        max_north_err=err
+    if (err > max_err(1)) then
+        max_err(1)=err
      endif
 
-     if (relerr > max_north_relerr) then
-        max_north_relerr=relerr
+     if (relerr > max_relerr(1)) then
+        max_relerr(1)=relerr
      endif
 
+#if 0
      if (relerr > 0.3) then
         write(*,*) i,"north rel error=",north_field_ptr(i),north_exact,relerr, &
              lon*ESMF_COORDSYS_RAD2DEG,lat*ESMF_COORDSYS_RAD2DEG
@@ -2972,12 +3052,62 @@ subroutine Cmp_Tst_Cardinal_Vecs(north_field, east_field, rc)
         write(*,*) i,"north error=",north_field_ptr(i),north_exact,err, &
              lon*ESMF_COORDSYS_RAD2DEG,lat*ESMF_COORDSYS_RAD2DEG
      endif
+#endif
 
+     ! Calc east error
+     err=abs(east_field_ptr(i)-east_exact)
+     if (east_exact .ne. 0.0) then
+        relerr=abs(err/east_exact)
+     else
+        relerr=err
+     endif
+
+     if (err > max_err(2)) then
+        max_err(2)=err
+     endif
+
+     if (relerr > max_relerr(2)) then
+        max_relerr(2)=relerr
+     endif
   enddo
 
-  write(*,*) "max relerr (north/east)=",max_north_relerr,max_east_relerr
+  ! Get current vm
+  call ESMF_VMGetCurrent(vm, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
 
-  write(*,*) "max err (north/east)=",max_north_err,max_east_err
+  ! set up local pet info
+  call ESMF_VMGet(vm, localPet=localPet, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  ! Compute global max
+  call ESMF_VMReduce(vm, max_err, g_max_err, 2, &
+       ESMF_REDUCE_MAX, 0, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  call ESMF_VMReduce(vm, max_relerr, g_max_relerr, 2, &
+       ESMF_REDUCE_MAX, 0, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+  
+
+  
+  ! Only write out if Pet 0
+  if (localPet==0) then
+     write(*,*) "max relerr (north/east)=",g_max_relerr(1),g_max_relerr(2)
+     write(*,*) "max err    (north/east)=",g_max_err(1),g_max_err(2)
+  endif
+
 
   ! Get rid of coordinates
   deallocate(nodeCoords)
