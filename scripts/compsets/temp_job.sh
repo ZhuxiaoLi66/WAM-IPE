@@ -6,11 +6,10 @@
 #BSUB -e /ptmpp2/Adam.Kubaryk/newscripts/fcst.%J
 #BSUB -n 40
 #BSUB -q debug2
-#BSUB -R span[ptile=24]
 #BSUB -a poe
 #BSUB -x
 #BSUB -network type=sn_all:mode=US
-
+#BSUB -R span[ptile=24]
 set -ax
 
 cd /global/save/Adam.Kubaryk/nems/WAM-IPE/scripts/compsets

@@ -1277,10 +1277,10 @@ if [ $IDEA = .true. ]; then
   # RT_WAM
   ${NLN} $RT_WAM/* $DATA
   # grids
-  $NLN ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew2.nc .
+  $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew2.nc .
   if [ $WAM_IPE_COUPLING = .true. ]; then
-   $NLN ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/ipe3dgrid2.nc .
-   $NLN ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew_20160427.nc .
+   $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/ipe3dgrid2.nc .
+   $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew_20160427.nc .
    $NLN $IPEGRID ${DATA}/ipe_grid
 
    # IPE fix files
@@ -1330,7 +1330,7 @@ cat > SMSnamelist <<EOF
   compare_var_on=f
   exact_parallel_sum=f
   load_balance_method=2,1
-  load_balance_on=t,f
+  load_balance_on=f,f
   load_balance_size=40,0
   process_layout=1,$NPROCIPE
   set_process_layout=t
@@ -1868,6 +1868,11 @@ cat  > atm_namelist <<EOF
   thermodyn_id=$THERMODYN_ID, sfcpress_id=$SFCPRESS_ID,
   dfilevs=$DFILEVS, liope=$liope,
   FHOUT_HF=$FHOUT_HF, FHMAX_HF=$FHMAX_HF,
+  nemsio_in=.false.,nemsio_out=.false.,
+  SHUM=0.0, -999., -999., -999, -999,SHUM_TAU=2.16E4, 1.728E5, 6.912E5, 7.776E6, 3.1536E7,SHUM_LSCALE=500.E3, 1000.E3, 2000.E3, 2000.E3, 2000.E3,ISEED_SHUM=0,
+  SPPT=0.0,0.0,0.0,0.0,0.0,SPPT_TAU=21600,2592500,25925000,7776000,31536000,SPPT_LSCALE=500000,1000000,2000000,2000000,2000000,SPPT_LOGIT=.TRUE.,ISEED_SPPT=0,
+  SKEB=0.0, -999., -999., -999, -999,SKEB_TAU=2.164E4, 1.728E5, 2.592E6, 7.776E6, 3.1536E7,SKEB_LSCALE=1000.E3, 1000.E3, 2000.E3, 2000.E3, 2000.E3,SKEB_VFILT=40,SKEB_DISS_SMOOTH=12,ISEED_SKEB=0,
+  VC=0.0,VC_TAU=4.32E4, 1.728E5, 2.592E6, 7.776E6, 3.1536E7,VC_LSCALE=1000.E3, 1000.E3, 2000.E3, 2000.E3, 2000.E3,VCAMP=0.0, -999., -999., -999, -999,ISEED_VC=0,
   $DYNVARS /
  &nam_phy
   FHOUT=$FHOUT, FHMAX=$FHMAX, IGEN=$IGEN, DELTIM=$DELTIM,
@@ -1886,6 +1891,7 @@ cat  > atm_namelist <<EOF
   thermodyn_id=$THERMODYN_ID, sfcpress_id=$SFCPRESS_ID,
   FHOUT_HF=$FHOUT_HF, FHMAX_HF=$FHMAX_HF,
   nstf_name=${nstf_name},liope=$liope,
+  SHUM=0.0, -999., -999., -999, -999, SPPT=0.0,0.0,0.0,0.0,0.0,SKEB=0.0, -999., -999., -999, -999, VC=0.0,VCAMP=0.0, -999., -999., -999, -999,
   $PHYVARS /
  &TRACER_CONSTANT
   $TRACERVARS /
@@ -1944,8 +1950,8 @@ $NLN atm_namelist.rc ./model_configure
     eval $CHGSFCFHREXEC $SFCI $CDATE_SIG $FHINI
  fi
 
-
-# eval $FCSTENV $PGM $REDOUT$PGMOUT $REDERR$PGMERR
+# cp /global/noscrub/Adam.Kubaryk/rt_17198/swpc%20170714_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart_wcoss/atm_namelist .
+ eval $FCSTENV $PGM $REDOUT$PGMOUT $REDERR$PGMERR
 
 
  if [ $DOIAU = YES ]; then
