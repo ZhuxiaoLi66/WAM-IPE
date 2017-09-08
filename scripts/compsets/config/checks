@@ -4,7 +4,7 @@
 echo "running checks for $FMID"
 echo $TASKS
 # basic directory/executable checks
-for var in SIGHDR SFCHDR NEMSIOGET APRUN PERL NDATE FIXGLOBAL BASE_NEMS FCSTEXEC EXGLOBALFCSTSH MTNVAR O3FORC O3CLIM \
+for var in SIGHDR SFCHDR NEMSIOGET APRUN NDATE MDATE FIXGLOBAL BASE_NEMS FCSTEXEC EXGLOBALFCSTSH MTNVAR O3FORC O3CLIM \
 	   OROGRAPHY OROGRAPHY_UF LONSPERLAT LONSPERLAR ; do
 	eval val=\$$var	# get the value ($val) of the variable that $var references
 	echo "checking for $var: $val"
