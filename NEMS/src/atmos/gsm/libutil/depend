@@ -1,0 +1,12 @@
+atmos_chem_phy_cpl_comp_mod_stub.o : atmos_chem_phy_cpl_comp_mod_stub.f90  
+atmos_phy_chem_cpl_comp_mod_stub.o : atmos_phy_chem_cpl_comp_mod_stub.f90  
+gfs_dyn_phy_cpl_comp_mod.o : gfs_dyn_phy_cpl_comp_mod.f90 module_export_import_data.o  
+module_DM_PARALLEL_GFS.o : module_DM_PARALLEL_GFS.f90 module_gfs_mpi_def.o module_gfs_machine.o  
+module_digital_filter_gfs.o : module_digital_filter_gfs.f90  
+module_export_import_data.o : module_export_import_data.f90  
+module_gfs_funcphys.o : module_gfs_funcphys.f90 module_gfs_physcons.o module_gfs_machine.o  
+module_gfs_machine.o : module_gfs_machine.f90  
+module_gfs_mpi_def.o : module_gfs_mpi_def.f90  
+module_gfs_physcons.o : module_gfs_physcons.f90 module_gfs_machine.o  
+module_gfs_tropp.o : module_gfs_tropp.f90 module_gfs_physcons.o module_gfs_machine.o  
+module_include_gfs.o : module_include_gfs.f90 module_gfs_machine.o  

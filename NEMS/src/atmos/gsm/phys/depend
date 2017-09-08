@@ -1,0 +1,66 @@
+GFS_simple_scatter.o : GFS_simple_scatter.f resol_def.o layout1.o  
+aoicpl_prep.o : aoicpl_prep.f namelist_physics_def.o resol_def.o gfs_physics_aoi_var_mod.o mpi_def.o layout1.o  
+checkiauforcing.o : checkiauforcing.f namelist_physics_def.o  
+compns_physics.o : compns_physics.f namelist_physics_def.o mpi_def.o  
+coordinate_def.o : coordinate_def.f  
+coundummy.o : coundummy.f  
+d3d_def.o : d3d_def.f  
+dfi_fixwr.o : dfi_fixwr.f gfs_physics_sfc_flx_mod.o namelist_physics_def.o resol_def.o gfs_physics_nst_var_mod.o layout1.o  
+do_physics_one_step.o : do_physics_one_step.f namelist_physics_def.o resol_def.o gfs_physics_g2d_mod.o gfs_physics_sfc_flx_set_mod.o mpi_def.o d3d_def.o gfs_physics_sfc_flx_mod.o gfs_physics_gridgr_mod.o gfs_physics_aoi_var_mod.o gfs_physics_nst_var_mod.o vert_def.o gfs_physics_g3d_mod.o layout1.o  
+fix_fields.o : fix_fields.f namelist_physics_def.o resol_def.o gfs_physics_sfc_flx_mod.o gfs_physics_nst_var_mod.o layout1.o gg_def.o  
+fix_fields_idea_rst.o : fix_fields_idea_rst.f namelist_physics_def.o resol_def.o gfs_physics_sfc_flx_mod.o gfs_physics_nst_var_mod.o layout1.o gg_def.o  
+fld_collect.o : fld_collect.f resol_def.o mpi_def.o gfs_physics_sfc_flx_mod.o layout1.o  
+fld_collect_nst.o : fld_collect_nst.f resol_def.o mpi_def.o gfs_physics_nst_var_mod.o layout1.o  
+gbphys_adv_hyb_gc.o : gbphys_adv_hyb_gc.f coordinate_def.o resol_def.o  
+gbphys_adv_hyb_gc_h.o : gbphys_adv_hyb_gc_h.f coordinate_def.o resol_def.o  
+gcycle.o : gcycle.f namelist_physics_def.o resol_def.o gfs_physics_sfc_flx_mod.o  
+get_lats_node_shuff_r_fix.o : get_lats_node_shuff_r_fix.f resol_def.o layout1.o  
+getcon_physics.o : getcon_physics.f namelist_physics_def.o resol_def.o layout1.o gg_def.o  
+gfs_phy_states_mod.o : gfs_phy_states_mod.f namelist_physics_def.o gfs_physics_grid_create_mod.o gfs_physics_g2d_mod.o gfs_physics_err_msg_mod.o gfs_physics_internal_state_mod.o gfs_physics_namelist_mod.o gfs_physics_add_get_state_ESMFField_mod.o gg_def.o  ../../../ESMFVersionDefine.h
+gfs_physics_add_get_state_ESMFField_mod.o : gfs_physics_add_get_state_ESMFField_mod.f  ../../../ESMFVersionDefine.h
+gfs_physics_aoi_var_mod.o : gfs_physics_aoi_var_mod.f  
+gfs_physics_err_msg_mod.o : gfs_physics_err_msg_mod.f  ../../../ESMFVersionDefine.h
+gfs_physics_finalize_mod.o : gfs_physics_finalize_mod.f gfs_physics_internal_state_mod.o  
+gfs_physics_g2d_mod.o : gfs_physics_g2d_mod.f  
+gfs_physics_g3d_mod.o : gfs_physics_g3d_mod.f  
+gfs_physics_getcf_mod.o : gfs_physics_getcf_mod.f gfs_physics_err_msg_mod.o gfs_physics_internal_state_mod.o  ../../../ESMFVersionDefine.h
+gfs_physics_grid_comp_mod.o : gfs_physics_grid_comp_mod.f namelist_physics_def.o resol_def.o mpi_def.o gfs_physics_finalize_mod.o gfs_physics_initialize_mod.o gfs_physics_err_msg_mod.o gfs_phy_states_mod.o gfs_physics_internal_state_mod.o gfs_physics_getcf_mod.o gfs_physics_run_mod.o gfs_physics_grid_create_mod.o gfs_physics_output.o layout1.o  ../../../ESMFVersionDefine.h
+gfs_physics_grid_create_mod.o : gfs_physics_grid_create_mod.f gfs_physics_internal_state_mod.o  ../../../ESMFVersionDefine.h
+gfs_physics_gridgr_mod.o : gfs_physics_gridgr_mod.f  
+gfs_physics_initialize_mod.o : gfs_physics_initialize_mod.f namelist_physics_def.o gfs_physics_sfc_flx_set_mod.o mod_state.o gfs_physics_gridgr_mod.o sfcio_module.o gfs_physics_nst_var_mod.o coordinate_def.o resol_def.o gfs_physics_g2d_mod.o mpi_def.o gfs_physics_internal_state_mod.o d3d_def.o gfs_physics_aoi_var_mod.o vert_def.o gfs_physics_g3d_mod.o layout1.o gg_def.o  ../../../ESMFVersionDefine.h
+gfs_physics_internal_state_mod.o : gfs_physics_internal_state_mod.f gfs_physics_gridgr_mod.o gfs_physics_nst_var_mod.o gfs_physics_g2d_mod.o gfs_physics_sfc_flx_mod.o gfs_physics_namelist_mod.o gfs_physics_aoi_var_mod.o gfs_physics_g3d_mod.o  
+gfs_physics_namelist_mod.o : gfs_physics_namelist_mod.f  
+gfs_physics_nst_var_mod.o : gfs_physics_nst_var_mod.f  
+gfs_physics_output.o : gfs_physics_output.f namelist_physics_def.o mod_state.o coordinate_def.o resol_def.o gfs_physics_err_msg_mod.o gfs_physics_internal_state_mod.o  ../../../ESMFVersionDefine.h
+gfs_physics_run_mod.o : gfs_physics_run_mod.f namelist_physics_def.o resol_def.o gfs_physics_internal_state_mod.o layout1.o  
+gfs_physics_sfc_flx_mod.o : gfs_physics_sfc_flx_mod.f  
+gfs_physics_sfc_flx_set_mod.o : gfs_physics_sfc_flx_set_mod.f gfs_physics_sfc_flx_mod.o  
+gfs_physics_start_time_get_mod.o : gfs_physics_start_time_get_mod.f sfcio_module.o  ../../../ESMFVersionDefine.h
+gg_def.o : gg_def.f  
+glats_physics.o : glats_physics.f  
+gloopb.o : gloopb.f namelist_physics_def.o gfs_physics_gridgr_mod.o gfs_physics_nst_var_mod.o coordinate_def.o resol_def.o mpi_def.o d3d_def.o gfs_physics_sfc_flx_mod.o gfs_physics_aoi_var_mod.o vert_def.o gfs_physics_g3d_mod.o layout1.o gg_def.o  
+gloopr.o : gloopr.f namelist_physics_def.o gfs_physics_gridgr_mod.o resol_def.o d3d_def.o gfs_physics_aoi_var_mod.o gfs_physics_g3d_mod.o layout1.o gg_def.o  
+gribit_gsm.o : gribit_gsm.f namelist_physics_def.o  
+hpmdummy.o : hpmdummy.f  
+info.o : info.f resol_def.o layout1.o  
+lats_shuff.o : lats_shuff.f resol_def.o layout1.o  
+layout1.o : layout1.f  
+lon_lat_para.o : lon_lat_para.f resol_def.o layout1.o gg_def.o  
+mod_state.o : mod_state.f  
+mpi_def.o : mpi_def.f  
+mpi_quit.o : mpi_quit.f mpi_def.o  
+namelist_physics_def.o : namelist_physics_def.f  
+nstio_module.o : nstio_module.f  
+para_fixio_w.o : para_fixio_w.f resol_def.o gfs_physics_sfc_flx_mod.o layout1.o  
+para_nst_w.o : para_nst_w.f gfs_physics_nst_var_mod.o resol_def.o layout1.o  
+read_fix.o : read_fix.f namelist_physics_def.o mod_state.o sfcio_module.o gfs_physics_nst_var_mod.o nstio_module.o coordinate_def.o resol_def.o mpi_def.o gfs_physics_sfc_flx_mod.o layout1.o  
+reduce_lons_grid_module.o : reduce_lons_grid_module.f  
+resol_def.o : resol_def.f  
+setlats.o : setlats.f resol_def.o layout1.o  
+setlats_r_slg.o : setlats_r_slg.f resol_def.o layout1.o  
+sfcio_module.o : sfcio_module.f  
+sortrx.o : sortrx.f  
+vert_def.o : vert_def.f  
+wrt3d.o : wrt3d.f namelist_physics_def.o resol_def.o d3d_def.o layout1.o  
+wrt3d_hyb.o : wrt3d_hyb.f namelist_physics_def.o resol_def.o d3d_def.o layout1.o  
+wrtout_physics.o : wrtout_physics.f namelist_physics_def.o mod_state.o sfcio_module.o nstio_module.o gfs_physics_nst_var_mod.o gfs_physics_output.o resol_def.o gfs_physics_g2d_mod.o mpi_def.o gfs_physics_sfc_flx_mod.o layout1.o  
