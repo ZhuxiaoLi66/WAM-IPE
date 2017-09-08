@@ -31,8 +31,8 @@
   eDensityColorMap = reds( nColors );
 
   % TEC
-  TECMin = 3.0*10^15;
-  TECMax = 8.0*10^17;
+  TECMin = 0.0;
+  TECMax = 100;
   TECColorMap = reds( nColors );
 
   % nmf2
