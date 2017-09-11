@@ -332,6 +332,7 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !t      if (IAM_ROOT()) then
       CALL ESMF_LogWrite("sub-initialize_IPE: open_output_files", ESMF_LOGMSG_INFO, rc=rc)	
       CALL open_output_files ( )
+PRINT*, 'JAS : Finished open_output_files'
 !t      endif
 !!SMS$SERIAL END
 !g      ret = gptlstop  ('open_output_files')
@@ -340,6 +341,7 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !g      ret = gptlstart ('init_plasma_grid')
       CALL ESMF_LogWrite("sub-initialize_IPE: init_plasma_grid", ESMF_LOGMSG_INFO, rc=rc)
       CALL init_plasma_grid ( )
+PRINT*, 'JAS : Finished init_plasma_grid'
 !g      ret = gptlstop  ('init_plasma_grid')
 
 !!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-1")

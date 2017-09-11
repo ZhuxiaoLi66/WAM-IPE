@@ -473,6 +473,7 @@ new_restart_ipe(){
   elif [ $MACHINE_ID = yellowstone ] ; then
      echo "This machine currently not supported for this operation."
   fi
+  _setup_ipe_nml
 }
 
 new_setup_ipe(){
@@ -499,6 +500,7 @@ new_setup_ipe(){
   elif [ $MACHINE_ID = yellowstone ] ; then
      echo "This Machine currently not supported for this operation."
   fi
+  _setup_ipe_nml
 }
 
 
@@ -522,6 +524,7 @@ cp -f /scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/fort.1051
     ln -s /glade/u/home/naomi/work/ipe/IPEDATA/data/stup* ${RUNDIR}/.
     ln -s /glade/u/home/naomi/work/ipe/IPEDATA/data/ipe_grid ${RUNDIR}/.
   fi
+  _setup_ipe_nml
 }
 
 setup_spaceweather(){
@@ -650,6 +653,7 @@ restart_ipe(){
 ###  cp -f ${RESTART_DIR}/stup_ut_rec ${RUNDIR}/.
   cp -f ${RESTART_DIR}/ut_rec  ${RUNDIR}/stup_ut_rec
   ln -s ${RESTART_DIR}/ipe_grid ${RUNDIR}/ipe_grid
+  _setup_ipe_nml
 }
 
 restart_spaceweather(){
