@@ -35,6 +35,7 @@ export atm_model=gsm
 export atm_petlist_bounds="0 15" # 16
 export ipm_model=ipe
 export ipm_petlist_bounds="16 31" # 16
+export ipm_petlayout="2 8"
 export med_model=spaceweather
 export med_petlist_bounds="32 39" # 8
 export coupling_interval_fast_sec=180.0
@@ -62,5 +63,5 @@ export LIST_FILES="IPE.inp SMSnamelist \
                    plasma05 plasma06 plasma07 plasma08 plasma09 \
                    plasma10 plasma11 plasma12 plasma13 plasma14 \
                    plasma15 plasma16 \
-                   wam3dgridnew2.nc ipe3dgrid2.nc wam2dmesh.nc"
+                   wam3dgridnew2.nc wam2dmesh.nc"
 
