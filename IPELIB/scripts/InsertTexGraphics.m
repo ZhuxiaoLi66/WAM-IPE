@@ -16,11 +16,20 @@
 
    fprintf( fileID, ['\\subsection{',caption,'}\n'] );
    fprintf( fileID, ['\\begin{figure}\n'] );
+   fprintf( fileID, ['\\begin{center}\n'] );
    for i = 1:length(graphicsFiles)
      fprintf( fileID, ['\\includegraphics[width=0.3\\textwidth]{',graphicsFiles(i).name,'}\n'] );
+     if( mod( i, 3 ) == 0 )
+       fprintf( fileID, ['\\end{center}\n'] );
+       fprintf( fileID, ['\\end{figure}\n\n'] );
+       fprintf( fileID, ['\\begin{figure}\n'] );
+       fprintf( fileID, ['\\begin{center}\n'] );
+     end
    end 
-   fprintf( fileID, ['\\caption{',caption,'}\n\n'] );
-   fprintf( fileID, ['\\end{figure}\n'] );
+
+   if( mod( i, 3 ) ~= 0 )
+     fprintf( fileID, ['\\end{figure}\n'] );
+   end
 
 
 
