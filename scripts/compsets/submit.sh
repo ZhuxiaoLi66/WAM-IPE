@@ -1,9 +1,9 @@
 #!/bin/bash
 
-CONFIG=$1
+pwd=$(pwd)
 
 ## source config
-. $CONFIG
+. $pwd/config/workflow.sh $pwd/$1
 
 ## create job file
 tmp=temp_job.sh
@@ -32,7 +32,7 @@ cd $SCRIPTSDIR
 ## source config file
 ##-------------------------------------------------------
 
-. $CONFIG
+. $pwd/config/workflow.sh $pwd/$1
 
 ##-------------------------------------------------------
 ## execute forecast
