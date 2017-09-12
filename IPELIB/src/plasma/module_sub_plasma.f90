@@ -43,7 +43,7 @@
       INTEGER (KIND=int_prec) :: jth  
       integer :: status
 
-      character(len=13), INTENT(IN) :: timestamp_for_IPE
+      character(len=12), INTENT(IN) :: timestamp_for_IPE
 
 
 !---------------

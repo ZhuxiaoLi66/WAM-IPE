@@ -612,7 +612,7 @@ CONTAINS
    INTEGER :: tn_varid, u_varid, v_varid, w_varid, on_varid, n2n_varid, o2n_varid
 
    CHARACTER( LEN(TRIM(plasmaFile)) ) :: shortenedFile
-   CHARACTER( 13 )                    :: timeStamp
+   CHARACTER( 12 )                    :: timeStamp
 
 
       NF90_PREC = NF90_DOUBLE
