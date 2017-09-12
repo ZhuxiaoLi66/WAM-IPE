@@ -1,4 +1,5 @@
 #!/bin/bash
+re='^[0-9]+$' # used to check for integers
 
 ## should probably compartmentalize this file
 echo "running checks for $FMID"
@@ -80,6 +81,15 @@ if [ $IDEA = .true. ] ; then
 			if [ $NPROCIPE = $i ] ; then valid=1 ; fi
 		done
 		[ $valid = 0 ] && echo "   could not match NPROCIPE against the list of allowed configurations, check ipe.config! exiting." && exit 1
+
+		echo "checking IPEDECOMP against NPROCIPE: (${IPEDECOMPARR[0]}x${IPEDECOMPARR[1]})"
+		if [[ ${#IPEDECOMPARR[*]} -ne 2 ]] || ! [[ ${IPEDECOMPARR[0]} =~ $re ]] || ! [[ ${IPEDECOMPARR[1]} =~ $re ]] ; then
+			echo "   bad IPEDECOMP, must be two space-separated integers! exiting." ; exit 1
+		else
+			if [[ $((${IPEDECOMPARR[0]}*${IPEDECOMPARR[1]})) != $NPROCIPE ]] ; then
+				echo "IPEDECOMP (${IPEDECOMPARR[0]}x${IPEDECOMPARR[1]}) inconsistent with NPROCIPE: ${NPROCIPE}! exiting." ; exit 1
+			fi
+		fi
 		if [ ! -z $IPEDATETIME ] ; then
 			echo "checking to make sure IPEDATETIME is a valid length: $IPEDATETIME"
 			if [ ${#IPEDATETIME} != 12 ] ; then # also y10k problem!

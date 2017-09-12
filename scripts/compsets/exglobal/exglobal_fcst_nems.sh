@@ -1004,6 +1004,7 @@ if [[ $ENS_NUM -le 1 ]] ; then
   done
 # IPE
   if [[ $WAM_IPE_COUPLING = .true. ]] ; then
+    CIPEDATE=${CIPEDATE:-$CDATE${IPEMINUTES:-00}}
     STEPS=$((FHMAX*60*60/IPEFREQ))
     STEP=1
     while [[ $STEP -le $STEPS ]] ; do
@@ -1332,7 +1333,7 @@ cat > SMSnamelist <<EOF
   load_balance_method=2,1
   load_balance_on=f,f
   load_balance_size=40,0
-  process_layout=1,$NPROCIPE
+  process_layout=${IPEDECOMPARR[0]},${IPEDECOMPARR[1]}
   set_process_layout=t
 /
 EOF
@@ -1384,7 +1385,7 @@ cat  > IPE.inp <<EOF
   start_time=${START_UT_SEC}
   time_step=180
 /
-  &nmmsis
+&nmmsis
   ap(1)=${AP3HR}
   ap(2)=${AP3HR}
   ap(3)=${AP3HR}
@@ -1433,6 +1434,12 @@ cat  > IPE.inp <<EOF
   sw_record_number=2
   sw_th_or_r=1
   ut_start_perp_trans=${START_UT_SEC}
+/
+&ipecap
+  mesh_height_min = 0.
+  mesh_height_max = 782.
+  mesh_write      = 0
+  mesh_write_file = 'ipemesh'
 /
 EOF
 
