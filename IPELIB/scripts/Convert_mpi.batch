@@ -2,17 +2,17 @@
 #set -ax
 # ********* Settings that you should modify ********* #
 # Set the MODEL variable to IPE or WAM-IPE
-MODEL='IPE'
+MODEL='WAM-IPE'
 # Set the TAG to the appropriate Git Tag for the version of the code you are testing
 TAG='V0.1'
 # Set the path to the base WAM-IPE directory (containing IPELIB)
 WAMIPEDIR=`pwd`/../..
 # Set the path to the directory where your IPE output can be found
-IPE_RUNDIR='/scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_33673/swpc%20130316_5day_spacewx_gsm%wam%T62_ipe%80x170_restart/'
+IPE_RUNDIR='/scratch3/NCEPDEV/swpc/noscrub/Joseph.Schoonover/WAM-IPE_20130306_1hr_development/'
 # Set the path to where you want the NetCDF output.
-OUTDIR='/scratch3/NCEPDEV/swpc/noscrub/Adam.Kubaryk/V0.1_netcdf/'
+OUTDIR='/scratch3/NCEPDEV/swpc/noscrub/Joseph.Schoonover/WAM-IPE_20130306_1hr_development/netcdf/'
 # Set the path to where you want the eps files and the Latex file.
-PLOTDIR='/scratch3/NCEPDEV/swpc/noscrub/Adam.Kubaryk/V0.1_plots/'
+PLOTDIR='/scratch3/NCEPDEV/swpc/noscrub/Joseph.Schoonover/WAM-IPE_20130306_1hr_development_plots/'
 # Set the full path to the restart directory with the grid files can be found.
 RESDIR='/scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/2013160300/grid_80x170/'
 # *************************************************** #
