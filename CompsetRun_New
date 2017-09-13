@@ -354,8 +354,14 @@ setup_wam_T62_2013111500(){
 }
 
 setup_wam_T62_2013031600(){
-  cp -f ${DATADIR}/WAM/T62_2013031600/*anl* ${RUNDIR}/.
-  cp -f ${DATADIR}/WAM/T62_2013031600/wam_input_f107_kp.txt ${RUNDIR}/. 
+#  cp -f ${DATADIR}/WAM/T62_2013031600/*anl* ${RUNDIR}/.
+#  cp -f ${DATADIR}/WAM/T62_2013031600/wam_input_f107_kp.txt ${RUNDIR}/. 
+
+  cp -f /scratch3/NCEPDEV/stmp1/Zhuxiao.Li/WAM/WAM-IPE_NEMS201606-20170302/data/WAM/T62_2013031600/siganl.2013031600 ${RUNDIR}/.
+  cp -f /scratch3/NCEPDEV/stmp1/Zhuxiao.Li/WAM/WAM-IPE_NEMS201606-20170302/data/WAM/T62_2013031600/sfcanl.2013031600 ${RUNDIR}/.
+  cp -f /scratch3/NCEPDEV/stmp1/Zhuxiao.Li/WAM/WAM-IPE_NEMS201606-20170302/data/WAM/T62_2013031600/wam_input_f107_kp.txt ${RUNDIR}/. 
+
+
   cp -f ${ROOTDIR}/RT_WAM/*_in ${RUNDIR}/.
 #
   cp -f ${ROOTDIR}/RT_WAM/ionprof ${RUNDIR}/.
@@ -420,8 +426,14 @@ _setup_ipe_nml(){
 new_restart_wam_T62_2013031600(){
   cp -f /scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/fort.1051 ${RUNDIR}/.
 
-  cp -f ${DATADIR}/WAM/T62_2013031600/*anl* ${RUNDIR}/.
-  cp -f ${DATADIR}/WAM/T62_2013031600/wam_input_f107_kp.txt ${RUNDIR}/. 
+#  cp -f ${DATADIR}/WAM/T62_2013031600/*anl* ${RUNDIR}/.
+#  cp -f ${DATADIR}/WAM/T62_2013031600/wam_input_f107_kp.txt ${RUNDIR}/. 
+
+  cp -f /scratch3/NCEPDEV/stmp1/Zhuxiao.Li/WAM/WAM-IPE_NEMS201606-20170302/data/WAM/T62_2013031600/siganl.2013031600 ${RUNDIR}/.
+  cp -f /scratch3/NCEPDEV/stmp1/Zhuxiao.Li/WAM/WAM-IPE_NEMS201606-20170302/data/WAM/T62_2013031600/sfcanl.2013031600 ${RUNDIR}/.
+  cp -f /scratch3/NCEPDEV/stmp1/Zhuxiao.Li/WAM/WAM-IPE_NEMS201606-20170302/data/WAM/T62_2013031600/wam_input_f107_kp.txt ${RUNDIR}/. 
+
+
   cp -f ${ROOTDIR}/RT_WAM/*_in ${RUNDIR}/.
 #
   cp -f ${ROOTDIR}/RT_WAM/ionprof ${RUNDIR}/.
@@ -489,6 +501,7 @@ new_setup_ipe(){
     # Get IPE ops version
     # TODO: put this under IPE
     cp -f /scratch3/NCEPDEV/swpc/noscrub/Robert.Oehmke/IPE_IC/input_files/IPE.inp-ops ${RUNDIR}/IPE.inp
+#    cp -f /scratch3/NCEPDEV/swpc/noscrub/Robert.Oehmke/IPE_IC/input_files/IPE.inp-ops_nodensities ${RUNDIR}/IPE.inp
 
     # Copy IC data to restart directory, because that's where IPE is hardcoded to get it
     # eventually it might be nice to have IPE get the data from the rundir to be more consistent 
