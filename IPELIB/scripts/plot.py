@@ -49,7 +49,7 @@ def make_plot(data,title,lon,lat,mymin,mymax,myticks,ncolors,ncontours,mycolorma
 	plt.ylabel('Geographic Latitude ($^o$N)',  fontsize=18, fontname=fontfam)
 	plt.title(title+'\n'+timestamp, fontsize=20, fontname=fontfam)
 	# output
-	plt.savefig(path.join(args.output_directory,savename+'_'+timestamp+'.eps'))
+	plt.savefig(path.join(args.output_directory,savename+'.'+timestamp+'.eps'))
 	plt.close()
 
 def make_plots(i):
@@ -62,19 +62,21 @@ def make_plots(i):
 	## make plots
 	# Electron Density at 300km
 	make_plot(dataset.variables['e'][0,42,:,:],'Electron Density at 300km',lon,lat,eDensityMin,eDensityMax,
-		 eDensityTicks,nColors,nContours,eDensityColorMap,timestamp,'ElectronDensity300km')
+		  eDensityTicks,nColors,nContours,eDensityColorMap,timestamp,'ElectronDensity300km')
 	# TEC
 	make_plot(dataset.variables['TEC'][0,:,:],'Total Electron Count',lon,lat,TECMin,TECMax,
-		 TECTicks,nColors,nContours,TECColorMap,timestamp,'TEC')
+		  TECTicks,nColors,nContours,TECColorMap,timestamp,'TEC')
 	# Nmf2
 	make_plot(dataset.variables['nmf2'][0,:,:],'NmF2',lon,lat,nmf2Min,nmf2Max,
-		 nmf2Ticks,nColors,nContours,TECColorMap,timestamp,'NmF2')
-	# Temperature
+		  nmf2Ticks,nColors,nContours,TECColorMap,timestamp,'NmF2')
+	# Temperature at 300km
 	make_plot(dataset.variables['tn'][0,42,:,:],'Temperature at 300km',lon,lat,tempMin,tempMax,
-		 tempTicks,nColors,nContours,tempColorMap,timestamp,'ThermosphereTemperature')
+		  tempTicks,nColors,nContours,tempColorMap,timestamp,'ThermosphereTemperature')
 	
 def writetex():
+	# file name definitions to search for
 	types=['ElectronDensity','NmF2','TEC','ThermosphereTemperature']
+	# open .tex file
 	with open(path.join(args.output_directory,'Report.tex'),'w') as f:
 		# start
 		f.write('\\documentclass[12pt,a4paper]{article}\n')
@@ -140,10 +142,10 @@ tempMax = 1100
 tempColorMap = 'Reds'
 tempTicks = 8
 
-### parsing options
+## parsing options
 parser = ArgumentParser(description='Make plots from height-gridded NetCDF IPE output', formatter_class=ArgumentDefaultsHelpFormatter)
-parser.add_argument('-i', '--input_directory',  help='directory where IPE files are stored', type=str, required=True)
-parser.add_argument('-o', '--output_directory', help='directory where output files are stored', type=str, required=True)
+parser.add_argument('-i', '--input_directory',  help='directory where IPE height-gridded NetCDF files are stored', type=str, required=True)
+parser.add_argument('-o', '--output_directory', help='directory where plots are stored', type=str, required=True)
 args = parser.parse_args()
 
 ## get our list of files
