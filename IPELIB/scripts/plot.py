@@ -12,17 +12,10 @@ import numpy as np
 from netCDF4 import Dataset
 from os import listdir, path
 import re
-from multiprocessing import Pool,Process
+from multiprocessing import Pool
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-def reds(nColors):
-	map = np.ones((nColors,3))
-	gradient = np.linspace(1,0,nColors)
-	map[:,1] = gradient
-	map[:,2] = gradient
-	return map
-
-def file_match(directory,r):
+def get_matching_files(directory,r):
 	return filter(r.match,listdir(directory))
 
 def get_timestamp(input_file):
@@ -96,7 +89,7 @@ def writetex():
 			f.write('\\subsection{'+type+'}\n') 
 			f.write('\\begin{figure}\n') 
 			f.write('\\begin{center}\n')
-			figures = file_match(args.output_directory,re.compile(re.escape(type)+r'.*?'))
+			figures = get_matching_files(args.output_directory,re.compile(re.escape(type)+r'.*?'))
 			for i,figure in enumerate(figures):
 				f.write('\\includegraphics[width=0.3\\textwidth]{'+figure+'}\n')
 				if ( (i+1) % 3 == 0 ):
@@ -149,7 +142,7 @@ parser.add_argument('-o', '--output_directory', help='directory where plots are 
 args = parser.parse_args()
 
 ## get our list of files
-ipeFiles = file_match(args.input_directory,re.compile(r'^.*?\.nc$'))
+ipeFiles = get_matching_files(args.input_directory,re.compile(r'^.*?\.nc$'))
 
 ## run the program
 main()
