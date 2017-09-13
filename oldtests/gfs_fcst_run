@@ -4,8 +4,8 @@ set -x
 #
 #
 RT_DEBUG=
-if [[ -e  /scratch3/NCEPDEV/swpc/noscrub/Robert.Oehmke/bob_ms06_commit/NEMS/src/conf/modules.nems ]]; then
-  source /scratch3/NCEPDEV/swpc/noscrub/Robert.Oehmke/bob_ms06_commit/NEMS/src/conf/modules.nems.sh
+if [[ -e  /scratch3/NCEPDEV/swpc/noscrub/Robert.Oehmke/V0.1_new/NEMS/src/conf/modules.nems ]]; then
+  source /scratch3/NCEPDEV/swpc/noscrub/Robert.Oehmke/V0.1_new/NEMS/src/conf/modules.nems.sh
   module list
 fi
 if [[ "${RT_DEBUG:-NO}" == YES ]] ; then
@@ -57,12 +57,12 @@ fi
  export FHMAX_HF=0
  export SLG=.false.
  echo SLG=$SLG
- export F107_KP_SIZE=56
+ export F107_KP_SIZE=4800
  export F107_KP_DATA_SIZE=56
  export F107_KP_INTERVAL=10800
  export WAM_IPE_COUPLING=.true.
  export HEIGHT_DEPENDENT_G=.true.
- export F107_KP_SKIP_SIZE=24
+ export F107_KP_SKIP_SIZE=0
 
 # GSM export fields
  export NGRID_A2OI=48
@@ -138,14 +138,14 @@ fi
  fi
 
 # restart default is coldstart
- export fcst_begin=.false.
+ export fcst_begin=YES
  export fcst_begin=${fcst_begin:-YES}
 #read one time step input data
 # export FHROT=
 # restart file output frequency
- export FHRES=1
- export FHOUT=1
- export FHZER=1
+ export FHRES=120
+ export FHOUT=120
+ export FHZER=120
 # stochastic physics
   export skeb_import=
   export sppt_import=
@@ -230,8 +230,8 @@ fi
 #
  export ENS_NUM=1
 #
-#tasks=40  
- export PE1=40  
+#tasks=104  
+ export PE1=104  
 
  export MEMBER_NAMES=c00
 
@@ -256,7 +256,7 @@ export MP_COREFILE_FORMAT=lite
 #
 #    Set up experiment and directory names
 #
-export expt=/scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_83696/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart
+export expt=/scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_87128/swpc%20130316_5day_spacewx_gsm%wam%T62_ipe%80x170
 export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/Robert.Oehmke/restart_directory/
  
 #
@@ -297,9 +297,9 @@ fi
 #    needs to be specified. ndays is the Length of #orecast in days
 #    begining from nhourb
 #
-NDAYS=10
+NDAYS=20
 ndays=${NDAYS:-0}
-NHRS=2
+NHRS=120
 export restart_ndays=${restart_ndays:-1}
 if [[ ${fcst_begin} = YES ]] ; then
  export nhourb=0
@@ -392,7 +392,7 @@ fi
 #
 #     Forecast script and executable name
 #
-srcdir=/scratch3/NCEPDEV/swpc/noscrub/Robert.Oehmke/bob_ms06_commit/NEMS
+srcdir=/scratch3/NCEPDEV/swpc/noscrub/Robert.Oehmke/V0.1_new/NEMS
 export FCSTSCRIPT=$srcdir/oldtests/exglobal_fcst_nems.sh
 export FCSTEXEC=$srcdir/exe/NEMS.x
 
@@ -411,7 +411,7 @@ cd $RUNDIR
 #
 if [ $SCHEDULER = 'moab' ]; then
    export FIXGLOBAL=${FIXGLOBAL:-/lustre/f1/unswept/ncep/Shrinivas.Moorthi/para/fix/fix_am}
-   export FCST_LAUNCHER='aprun -n 40'
+   export FCST_LAUNCHER='aprun -n 104'
 elif [ $SCHEDULER = 'pbs' ]; then
   if [ $MACHINE_ID = 'theia' ]; then
     export FIXGLOBAL=/scratch4/NCEPDEV/global/save/Shrinivas.Moorthi/para/fix/fix_am
