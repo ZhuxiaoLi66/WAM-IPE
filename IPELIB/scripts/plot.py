@@ -12,17 +12,10 @@ import numpy as np
 from netCDF4 import Dataset
 from os import listdir, path
 import re
-from multiprocessing import Pool,Process
+from multiprocessing import Pool
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-def reds(nColors):
-	map = np.ones((nColors,3))
-	gradient = np.linspace(1,0,nColors)
-	map[:,1] = gradient
-	map[:,2] = gradient
-	return map
-
-def file_match(directory,r):
+def get_matching_files(directory,r):
 	return filter(r.match,listdir(directory))
 
 def get_timestamp(input_file):
@@ -49,7 +42,7 @@ def make_plot(data,title,lon,lat,mymin,mymax,myticks,ncolors,ncontours,mycolorma
 	plt.ylabel('Geographic Latitude ($^o$N)',  fontsize=18, fontname=fontfam)
 	plt.title(title+'\n'+timestamp, fontsize=20, fontname=fontfam)
 	# output
-	plt.savefig(path.join(args.output_directory,savename+'_'+timestamp+'.eps'))
+	plt.savefig(path.join(args.output_directory,savename+'.'+timestamp+'.eps'))
 	plt.close()
 
 def make_plots(i):
@@ -62,19 +55,21 @@ def make_plots(i):
 	## make plots
 	# Electron Density at 300km
 	make_plot(dataset.variables['e'][0,42,:,:],'Electron Density at 300km',lon,lat,eDensityMin,eDensityMax,
-		 eDensityTicks,nColors,nContours,eDensityColorMap,timestamp,'ElectronDensity300km')
+		  eDensityTicks,nColors,nContours,eDensityColorMap,timestamp,'ElectronDensity300km')
 	# TEC
 	make_plot(dataset.variables['TEC'][0,:,:],'Total Electron Count',lon,lat,TECMin,TECMax,
-		 TECTicks,nColors,nContours,TECColorMap,timestamp,'TEC')
+		  TECTicks,nColors,nContours,TECColorMap,timestamp,'TEC')
 	# Nmf2
 	make_plot(dataset.variables['nmf2'][0,:,:],'NmF2',lon,lat,nmf2Min,nmf2Max,
-		 nmf2Ticks,nColors,nContours,TECColorMap,timestamp,'NmF2')
-	# Temperature
+		  nmf2Ticks,nColors,nContours,TECColorMap,timestamp,'NmF2')
+	# Temperature at 300km
 	make_plot(dataset.variables['tn'][0,42,:,:],'Temperature at 300km',lon,lat,tempMin,tempMax,
-		 tempTicks,nColors,nContours,tempColorMap,timestamp,'ThermosphereTemperature')
+		  tempTicks,nColors,nContours,tempColorMap,timestamp,'ThermosphereTemperature')
 	
 def writetex():
+	# file name definitions to search for
 	types=['ElectronDensity','NmF2','TEC','ThermosphereTemperature']
+	# open .tex file
 	with open(path.join(args.output_directory,'Report.tex'),'w') as f:
 		# start
 		f.write('\\documentclass[12pt,a4paper]{article}\n')
@@ -94,7 +89,7 @@ def writetex():
 			f.write('\\subsection{'+type+'}\n') 
 			f.write('\\begin{figure}\n') 
 			f.write('\\begin{center}\n')
-			figures = file_match(args.output_directory,re.compile(re.escape(type)+r'.*?'))
+			figures = get_matching_files(args.output_directory,re.compile(re.escape(type)+r'.*?'))
 			for i,figure in enumerate(figures):
 				f.write('\\includegraphics[width=0.3\\textwidth]{'+figure+'}\n')
 				if ( (i+1) % 3 == 0 ):
@@ -140,14 +135,14 @@ tempMax = 1100
 tempColorMap = 'Reds'
 tempTicks = 8
 
-### parsing options
+## parsing options
 parser = ArgumentParser(description='Make plots from height-gridded NetCDF IPE output', formatter_class=ArgumentDefaultsHelpFormatter)
-parser.add_argument('-i', '--input_directory',  help='directory where IPE files are stored', type=str, required=True)
-parser.add_argument('-o', '--output_directory', help='directory where output files are stored', type=str, required=True)
+parser.add_argument('-i', '--input_directory',  help='directory where IPE height-gridded NetCDF files are stored', type=str, required=True)
+parser.add_argument('-o', '--output_directory', help='directory where plots are stored', type=str, required=True)
 args = parser.parse_args()
 
 ## get our list of files
-ipeFiles = file_match(args.input_directory,re.compile(r'^.*?\.nc$'))
+ipeFiles = get_matching_files(args.input_directory,re.compile(r'^.*?\.nc$'))
 
 ## run the program
 main()
