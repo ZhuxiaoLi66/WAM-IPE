@@ -41,3 +41,6 @@ routinesNotUsed/
 data/
 .svn*
 .svnignore
+NEMS.x
+*.mk
+*.log

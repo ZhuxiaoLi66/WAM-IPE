@@ -2,7 +2,8 @@
 !r
 !r   chui_model.f       Chiu ionosphere, to return electron density.
 !r                      Converted to run F90, but not changed. mjh
-!r
+!r   tiros_ionize_data  added the scaling of qiont with large GW and high tiros_activity_level
+!r                      Zhuxiao Li, 8/31/2017 
 !r
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       SUBROUTINE Earth_CHIU_MODEL(sda,sza,thmag,phimr,rlt,rlat,         
@@ -359,6 +360,12 @@ cc  **
       l = tiros_activity_level - 2
       IF ( l.LT.1 ) l = 1
       IF ( l.GT.7 ) l = 7
+! define dfac to scale qiont later with large GW and tiros_activity_level
+! Added by Zhuxiao.Li
+      dfac = 1.0
+      IF (tiros_activity_level.gt.9 .and. GW.gt.96.0)
+     &   dfac = GW/96.0
+ 
 cc  **
       ri = essa1/18.0 + 11.
       i1 = ri                   ! i1 =int(ri) ?
@@ -511,6 +518,10 @@ c
      &*WIDTH_maxwell/RANGE_en/E0
   110 CONTINUE
       qiont(i) = qiont(i) + qion_maxwell(i)
+
+!  the qiont scaled by dfac with large GW and tiros_activity level
+!  added by Zhuxiao
+       qiont(i) = qiont(i)*dfac
 !
 !vay-2016, extra security >0 and non-zero
 !
@@ -620,6 +631,11 @@ c
 !
       IF ( l.LT.1 ) l = 1
       IF ( l.GT.7 ) l = 7
+! define dfac to scale qiont later with large GW and tiros_activity_level
+! Added by Zhuxiao.Li
+      dfac = 1.0
+      IF (tiros_activity_level.gt.9 .and. GW.gt.96.0)
+     &   dfac = GW/96.0
 !
 ! What's this VAY
 !
@@ -802,6 +818,10 @@ c
   110 CONTINUE   !  loop for300eV as Maxwellian with ch, and eflux
 !
       qiont(i) = qiont(i) + qion_maxwell(i)
+!  the qiont scaled by dfac with large GW and tiros_activity level
+!  added by Zhuxiao
+       qiont(i) = qiont(i)*dfac
+
 !vay-2016
       if (rr.gt.0.) then 
          eden_aurora1D(i)=sqrt(qiont(i)/rr)

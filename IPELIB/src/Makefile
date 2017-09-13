@@ -155,7 +155,7 @@ endif
     FCS       = ifort
     CC        = icc
     OPT_FLAGS = -O3  -fpp 
-    SMS       = /contrib/sms/legacy/SMSr825-intel
+    SMS       = /scratch3/NCEPDEV/swpc/noscrub/sms/SMSr825-intel_14.0.2-mpi_5.1.2.150
     ifeq ($(DEBUG),yes)
       DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0 -fpp
       OPT_FLAGS = -g -O0 -traceback -check all -debug all -fpp
@@ -194,7 +194,7 @@ endif
     FCP       = mpfort
     FCS       = mpfort
     OPT_FLAGS = -O3 -fp-model precise -fpp
-    SMS       = /swpc/noscrub/George.Millward/SMSr854legacy
+    SMS       = /gpfs/hps/emc/global/save/Adam.Kubaryk/sms/SMSr825-intel_O3
     ifeq ($(DEBUG),yes)
       DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0
     endif

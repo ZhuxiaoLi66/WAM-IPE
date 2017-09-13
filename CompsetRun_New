@@ -411,6 +411,7 @@ _setup_ipe_nml(){
 	EOF
   fi
 }
+
 # Weiyu thought that the f107 file was still needed and he wasn't sure about the *anl* files, so 
 # keep copying them until we're sure. If we just need the f107, it would be nice to eventually just
 # copy that to the restart directory, so this subroutine isn't specific to the date 
@@ -476,8 +477,8 @@ new_restart_ipe(){
   _setup_ipe_nml
 }
 
+
 new_setup_ipe(){
-  # create SMSnamelist with the current domain decomposition
   _setup_ipe_sms
   cp -f ${ROOTDIR}/IPE/coeff_hflux.dat ${RUNDIR}/.
   cp -f ${ROOTDIR}/IPE/coeff_lflux.dat ${RUNDIR}/.

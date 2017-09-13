@@ -466,11 +466,11 @@ n2n_m3( ihTopS:IS,lp,mp) = fracWamD*WamField(ihTopS:IS,lp,mp, jjth) + (1.-fracWa
          end do jth_loop !jth=1,3 !2:4 for WamField,swNeuPar            
 
            !nm20170424 wind output corrected
-           jth_loop4wind: do jth=1,3
-              flux_tube0: do i=IN,IS
-                 vn_ms1_4output(i-IN+1,lp,mp,jth)=vn_ms1(jth,i-IN+1)
-              end do flux_tube0
-           end do jth_loop4wind
+           !jth_loop4wind: do jth=1,3
+           !   flux_tube0: do i=IN,IS
+           !      vn_ms1_4output(i-IN+1,lp,mp,jth)=vn_ms1(jth,i-IN+1)
+           !   end do flux_tube0
+           !end do jth_loop4wind
 !
 
            if(sw_debug)then 
@@ -491,6 +491,12 @@ n2n_m3( ihTopS:IS,lp,mp) = fracWamD*WamField(ihTopS:IS,lp,mp, jjth) + (1.-fracWa
         end if !      if ( sw_neutral == 3
 
 
+           !nm20170424 wind output corrected
+           jth_loop4wind: do jth=1,3
+              flux_tube0: do i=IN,IS
+                 vn_ms1_4output(i-IN+1,lp,mp,jth)=vn_ms1(jth,i-IN+1)
+              end do flux_tube0
+           end do jth_loop4wind
 
 
          !nm20151130

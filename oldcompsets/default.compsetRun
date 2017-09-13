@@ -1,6 +1,11 @@
 # Coupled IPE-WAM Space Weather Application
 # 
 
+swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170
+swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart
+
+#swpc%20170714_1hr_spacewx_gsm%wam%T62_ipe%80x170
+#swpc%20170714_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart
 
 # test compsets
 # *** side-by-side ***

@@ -110,7 +110,7 @@ runscript_theia() {
   echo "export $envvars"
   echo "$($modcmd $machine $compiler)"
   echo "module list"
-  echo "export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/"
+  echo "export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/2013160300/grid_80x170/"
   echo "echo $RESDIR"
   test $parallelism == parallel && extra="mpirun -np $tasks "
   echo "time $extra./$(basename $exe) >output 2>&1 && echo 'ipe finished' && exit 0"
@@ -263,10 +263,10 @@ case $machine in
 #    setc IPEDATA /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/20090115_1hr_spacewx_80x170
     setc IPEDATA /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/20090115_1day_spacewx_80x170 
     echo "IPEDATA=" $IPEDATA
-    setc IPEQUEUE debug
-#    setc IPEQUEUE batch
+#    setc IPEQUEUE debug
+    setc IPEQUEUE batch
     echo "IPEQUEUE=" $IPEQUEUE
-    setc IPETIME  08:00:00
+    setc IPETIME  05:00:00
     if [ $IPEQUEUE = debug ]; then
       setc IPETIME  00:30:00
     fi
@@ -323,7 +323,7 @@ if [ $sw_neutral -eq 3 ]; then
 fi
 ###nm20170809 george's new startup files
 #linksafe /scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/ipe_grid_plasma_params $rundir/ipe_grid_plasma_params
-export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/
+export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/2013160300/grid_80x170/
 echo "RESDIR=" $RESDIR
 
 

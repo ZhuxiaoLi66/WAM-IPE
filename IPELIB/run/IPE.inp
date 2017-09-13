@@ -37,7 +37,7 @@
   ip_freq_eldyn=180
   ip_freq_msis=180
   ip_freq_plasma=180
-  ip_freq_output=1800
+  ip_freq_output=3600
   nday=71
   nyear=2000
   start_time=432000
@@ -54,7 +54,7 @@
   kp_eld=3.
 /
 &nmswitch
-  duration=3600
+  duration=86400
   fac_bm=1.00
   iout(1)=1
   iout(2)=60
@@ -83,7 +83,7 @@
   swNeuPar(7)=t
   swEsmfTime=f
   sw_output_fort167=f
-  sw_output_wind=f
+  sw_output_wind=t
   sw_output_plasma_grid=f
   sw_para_transport=1
   sw_pcp=0

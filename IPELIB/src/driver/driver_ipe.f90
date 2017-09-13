@@ -95,6 +95,10 @@ PROGRAM  test_plasma
        PRINT *,'after CALL io_plasma_bin finished! READ: start_time=', start_time,stop_time
      END IF
 
+    ! Write the initial conditions to file
+    WRITE( iterChar, '(I8.8)' )start_time
+    CALL io_plasma_bin ( 1, start_time, 'iter_'//iterChar )
+
 
 ! initialization of electrodynamic module:
 ! read in E-field
@@ -338,8 +342,8 @@ PROGRAM  test_plasma
 #endif
 !SMS$IGNORE END
 
-       IF( MOD(REAL(utime_driver,real_prec),dumpFrequency)==0)THEN
-          WRITE( iterChar, '(I8.8)' )utime_driver
+       IF( MOD(utime_driver-start_time+time_step,ip_freq_output)==0)THEN
+          WRITE( iterChar, '(I8.8)' )utime_driver+time_step
           CALL io_plasma_bin ( 1, utime_driver, 'iter_'//iterChar )
        ENDIF
        ret = gptlstart ('output')

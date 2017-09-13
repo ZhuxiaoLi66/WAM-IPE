@@ -3,7 +3,7 @@
  solar_file = 'wam_nems_feuv_2012.nc'
  Dir_swpc = '/scratch3/NCEPDEV/swpc/save/'
  Dir_uid =  'Valery.Yudin/SVN_VAY/WAM-IPE_NEMS201606/RT_WAM/'
- f107_fix = 70., f107d_fix=70.,  kp_fix=1., ap_fix = 3.
+ f107_fix = 70., f107a_fix= 70.,  kp_fix=3., ap_fix = 15.
  noeof_file='/scratch3/NCEPDEV/swpc/save/Valery.Yudin/SVN_VAY/WAM-IPE_NEMS201606/RT_WAM/snoe_eof.nc'
  wxdan_file='/scratch3/NCEPDEV/swpc/save/Valery.Yudin/SVN_VAY/WAM-IPE_NEMS201606/RT_WAM/wasolar_dan_20161019.nc'
  wam2012_file='/scratch3/NCEPDEV/swpc/save/Valery.Yudin/SVN_VAY/WAM-IPE_NEMS201606/RT_WAM/wam_nems_feuv_2012_366d_by_24hr.nc'
