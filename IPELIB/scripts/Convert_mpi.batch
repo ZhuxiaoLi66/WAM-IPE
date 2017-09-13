@@ -66,8 +66,8 @@ cat >> $tmp << EOF
 #!/bin/bash --login
 #
 #PBS -l procs=$TASKS
-#PBS -l walltime=00:10:00
-#PBS -q debug
+#PBS -l walltime=00:05:00
+#PBS -q batch
 #PBS -A swpc
 #PBS -N convert_ipe
 #PBS -j oe
