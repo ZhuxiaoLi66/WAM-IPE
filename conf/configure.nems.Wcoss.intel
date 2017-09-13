@@ -65,8 +65,7 @@ EXTLIBS_POST = $(POST_LIB) \
                $(NETCDF_LIB) \
                $(SYS_LIB)
 
-FC          = mpiifort -g -qopenmp -mkl=sequential -align array32byte -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -diag-disable 8290,8291
-# FC          = mpiifort -g -openmp -mkl=sequential -align array32byte -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm
+FC          = mpiifort -qopenmp -mkl=sequential -align array32byte -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -diag-disable 8290,8291
 FPP         = -fpp
 FREE        = -free
 FIXED       = -fixed
@@ -79,11 +78,10 @@ TRAPS       =
 
 FFLAGS      = $(TRAPS) $(FINCS) -convert big_endian -assume byterecl -fp-model precise -xAVX
 
-OPTS_NMM    = -O2
-# OPTS_GFS    = -O0 -traceback
+OPTS_NMM    = -O3
 OPTS_GFS    = -O3
-OPTS_GEN    = -O2
-OPTS_FIM    = -O2
+OPTS_GEN    = -O3
+OPTS_FIM    = -O3
 
 FFLAGS_NMM  = $(OPTS_NMM) $(FFLAGS)
 FFLAGS_GFS  = $(OPTS_GFS) $(FFLAGS) $(FREE)

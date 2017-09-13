@@ -23,7 +23,7 @@ $(error Environment variable ESMFMKFILE was not set.)
 endif
 
 include $(ESMFMKFILE)
-IPE_INCFLAGS= -I$(IPE)/include 
+IPE_INCFLAGS= -I$(IPE)/include
 IPE_LDFLAGS= -L $(IPE)/lib -lipe
 SMS_INCFLAGS= -I$(SMS)/include
 SMS_LDFLAGS= -L$(SMS)/lib -lsms

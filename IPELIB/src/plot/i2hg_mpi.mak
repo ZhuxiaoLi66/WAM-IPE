@@ -1,10 +1,10 @@
 
 
-FC  = ifort
-OPT = -O3 -fpp
-#OPT = -O0 -g -fpp
-LIB = -L/apps/netcdf/4.3.0-intel/lib -lnetcdff -lnetcdf
-INC = -I/apps/netcdf/4.3.0-intel/include
+FC  = mpiifort
+OPT = -O3 -fpp 
+#OPT = -O0 -g -traceback -fpp
+LIB = -L${NETCDF}/lib -lnetcdff -lnetcdf
+INC = -I${NETCDF}/include
 
 OBJS = module_precision.o \
        module_IPE_dimension.o \
@@ -21,15 +21,15 @@ OBJS = module_precision.o \
        get_flip_grid.o \
        get_sinim.o \
        module_unit_conversion.o \
-       IPEToHeightGrid.o
+       IPEToHeightGrid_mpi.o
 
-i2hg : ${OBJS}	
+i2hg_mpi : ${OBJS}	
 	${FC} ${OPT} ${OBJS} ${LIB} ${INC} -o $@
 	mv $@ ../../bin/
 
-IPEToHeightGrid.o : IPEToHeightGrid.f90 module_precision.o module_IPE_dimension.o module_input_parameters.o \
+IPEToHeightGrid_mpi.o : IPEToHeightGrid_mpi.f90 module_precision.o module_IPE_dimension.o module_input_parameters.o \
                     module_FIELD_LINE_GRID_MKS.o module_init_plasma_grid.o
-	${FC} ${OPT} -c IPEToHeightGrid.f90 ${LIB} ${INC} -o $@
+	${FC} ${OPT} -c IPEToHeightGrid_mpi.f90 ${LIB} ${INC} -o $@
 
 allocate_arrays.o : ../main/allocate_arrays.f90 \
                     module_precision.o module_IPE_dimension.o module_FIELD_LINE_GRID_MKS.o \
