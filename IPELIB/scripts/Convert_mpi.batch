@@ -66,8 +66,8 @@ cat >> $tmp << EOF
 #!/bin/bash --login
 #
 #PBS -l procs=$TASKS
-#PBS -l walltime=00:03:00
-#PBS -q batch
+#PBS -l walltime=00:10:00
+#PBS -q debug
 #PBS -A swpc
 #PBS -N convert_ipe
 #PBS -j oe
@@ -88,16 +88,16 @@ ulimit -s unlimited
 mpirun -np $TASKS $I2HG_EXE --plasma-file tmp_plasma --neutral-file tmp_neutral --output-dir $OUTDIR --grid-file ${RESDIR}GIP_Fixed_GEO_grid_lowres_corrected.bin
 
 # Start plotting routine
-#module load matlab
+module load anaconda
 #
 ## Run the matlab plotting script
-#matlab -nodesktop -nosplash -nodisplay -r "$mcmd; exit;" -logfile IPEPlotsDriver.log
+python plot.py --input_directory $OUTDIR --output_directory $PLOTDIR
 
 ## Tar up the output directory
 #tar -cvzf ${PLOTDIR::-1}.tar.gz ${PLOTDIR}
 
 # Clean up this directory
-#rm ipe_grid IPE.inp fort.* tmp* *log
+rm ipe_grid IPE.inp fort.* tmp* *log
 
 exit 0
 EOF
