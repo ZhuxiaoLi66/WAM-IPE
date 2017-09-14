@@ -118,30 +118,23 @@ fi
 # check for ROTDIR
 echo "checking for ROTDIR: $ROTDIR"
 if [ -z $ROTDIR  ] || [ ! -d $ROTDIR ] ; then
-	"   ROTDIR not found. creating $ROTDIR"
+	echo "   ROTDIR not found. creating $ROTDIR"
 	mkdir -p $ROTDIR
 fi
 # check if ICs are in place
 if [ $RESTART = .false. ] ; then # cold start
-	echo "checking for atmospheric/surface initial conditions in ROTDIR"
-	if [ $NEMSIO_IN = .true. ] ; then # nemsio initial conditions
-		IC_SEARCH=$NEMSIOSEARCH
-		echo "   assuming nemsio format for NEMSIO_IN=.true., searching for $IC_SEARCH$CDATE"
-	else
-		IC_SEARCH=$SIGSFCIOSEARCH
-		echo "   assuming sigio/sfcio format for NEMSIO_IN=.false., searching for $IC_SEARCH$CDATE"
-	fi
+	echo "checking for atmospheric/surface initial conditions in ROTDIR: $SEARCH$CDATE"
 	# this [ -n "$(ls $VAR)" ] format is the best way I found to reliably search for wildcard matches
 	# could probably be improved upon?
-	if ! [[ -n "$(ls $ROTDIR/$IC_SEARCH$CDATE)" ]] ; then
+	if ! [[ -n "$(ls $ROTDIR/$SEARCH$CDATE)" ]] ; then
 		echo "   ICs not found in ROTDIR. checking for IC_DIR"
 		if [ ! -z $IC_DIR ] ; then
 			echo "   IC_DIR has been set to $IC_DIR"
-			if ! [[ -n "$(ls $IC_DIR/$IC_SEARCH$CDATE)" ]] ; then
+			if ! [[ -n "$(ls $IC_DIR/$SEARCH$CDATE)" ]] ; then
 				echo "   but ICs for $CDATE are not found! exiting." ; exit 1
 			else
 				echo "   found ICs! copying over."
-				$NCP $IC_DIR/$IC_SEARCH$CDATE $ROTDIR/.
+				$NCP $IC_DIR/$SEARCH$CDATE $ROTDIR/.
 			fi
 		else # IC_DIR is unset, we don't know where to look
 			echo "   IC_DIR has not been set: cannot find initial conditions! exiting." ; exit 1
@@ -149,16 +142,14 @@ if [ $RESTART = .false. ] ; then # cold start
 	fi
 	# now we check to see that the surface idate&fhour match the atmospheric idate&fhour
 	echo "making sure our ICs match idate and fhour"
+	export ATMIN=`ls $ROTDIR/${ATM}*$CDATE | head -1`
+	export SFCIN=`ls $ROTDIR/${SFC}*$CDATE | head -1`
 	if [ $NEMSIO_IN = .true. ] ; then
-		export ATMIN=`ls $ROTDIR/${NEMSIOATM}*$CDATE | head -1`
-		export SFCIN=`ls $ROTDIR/${NEMSIOSFC}*$CDATE | head -1`
 		if [ $($NEMSIOGET $ATMIN fhour) != $($NEMSIOGET $SFCIN fhour) ] || \
 		   [ $($NEMSIOGET $ATMIN idate) != $($NEMSIOGET $SFCIN idate) ] ; then
 			echo "   $ATMIN and $SFCIN do not have matching fhour and idate! exiting." ; exit 1
 		fi
 	else
-		export ATMIN=`ls $ROTDIR/${SIGIOATM}*$CDATE | head -1`
-		export SFCIN=`ls $ROTDIR/${SFCIOSFC}*$CDATE | head -1`
 		if [ $($SIGHDR $ATMIN fhour) != $($SFCHDR $SFCIN fhour) ] || \
 		   [ $($SIGHDR $ATMIN idate) != $($SFCHDR $SFCIN idate) ] ; then
 			echo "   $ATMIN and $SFCIN do not have matching fhour and idate! exiting." ; exit 1

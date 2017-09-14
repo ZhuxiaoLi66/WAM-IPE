@@ -1269,11 +1269,15 @@ if [ $IDEA = .true. ]; then
   ${NLN} $FIX_IDEA/global_idea* .
 
   # copy in xml kp/f107
+  if [ -e $WAMINDIR/wam_input-${INI_YEAR6}${INI_MONTH6}${INI_DAY6}T${INI_HOUR6}15.xml ] ; then
   ${NCP} $WAMINDIR/wam_input-${INI_YEAR6}${INI_MONTH6}${INI_DAY6}T${INI_HOUR6}15.xml ./wam_input2.xsd
   # convert to ascii
   $BASE_NEMS/../scripts/parse_f107_xml/parse.py
   # now f107
   ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
+  else
+  ${NLN} $COMOUT/wam_input_f107_kp.txt ${DATA}
+  fi
 
   # RT_WAM
   ${NLN} $RT_WAM/* $DATA
@@ -1314,6 +1318,12 @@ if [ $IDEA = .true. ]; then
       fi
    done
    echo 'F107AVG, F107DAY, KP3HR, AP3HR = ' ${F107AVG}, ${F107DAY}, ${KP3HR}, ${AP3HR}
+
+   # Fallback variables in case the above hase failed.
+   F107AVG=${F107AVG:-$F107AVGFB}
+   F107DAY=${F107DAY:-$F107DAYFB}
+   KP3HR=${KP3HR:-$KP3HRFB}
+   AP3HR=${AP3HR:-$AP3HRFB}
 
    #To avoid storm for now - storm may crash the model
    if [ ${KP3HR} -ge 3 ]; then
@@ -1957,8 +1967,7 @@ $NLN atm_namelist.rc ./model_configure
     eval $CHGSFCFHREXEC $SFCI $CDATE_SIG $FHINI
  fi
 
-# cp /global/noscrub/Adam.Kubaryk/rt_17198/swpc%20170714_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart_wcoss/atm_namelist .
- eval $FCSTENV $PGM $REDOUT$PGMOUT $REDERR$PGMERR
+eval $FCSTENV $PGM $REDOUT$PGMOUT $REDERR$PGMERR
 
 
  if [ $DOIAU = YES ]; then
