@@ -16,7 +16,8 @@ from multiprocessing import Pool
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 def get_matching_files(directory,r):
-	return filter(r.match,listdir(directory))
+	# takes in string: directory and re.compile(search_pattern): r
+	return sorted(filter(r.match,listdir(directory)))
 
 def get_timestamp(input_file):
 	regex = re.compile(r'\.(.*?)\.nc$')
