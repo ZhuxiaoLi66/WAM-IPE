@@ -37,6 +37,7 @@ export atm_model=gsm
 export atm_petlist_bounds="0 15" # 16
 export ipm_model=ipe
 export ipm_petlist_bounds="16 31" # 16
+export ipm_petlayout="1 16"
 export med_model=spaceweather
 export med_petlist_bounds="32 39" # 8
 export coupling_interval_fast_sec=180.0
