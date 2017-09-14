@@ -98,6 +98,7 @@ def writetex():
 					f.write('\\begin{figure}\n')
 					f.write('\\begin{center}\n')
 			if( (len(figures)+1) % 3 != 0 ):
+	                        f.write('\\end{center}\n')
 				f.write('\\end{figure}\n')
 		# finalize
 		f.write('\\end{document}\n')
