@@ -8,6 +8,7 @@ import matplotlib
 matplotlib.use('agg') # cannot plt.show() with this, but pyplot fails on the compute nodes without an X Server
 import matplotlib.pyplot as plt
 from matplotlib import ticker
+from mpl_toolkits.basemap import Basemap
 import numpy as np
 from netCDF4 import Dataset
 from os import listdir, path
@@ -29,15 +30,27 @@ def fmt(x, pos):
 	b = int(b)
 	return r'${} \times 10^{{{}}}$'.format(a, b)
 
-def make_plot(data,title,lon,lat,mymin,mymax,myticks,ncolors,ncontours,mycolormap,timestamp,savename):
+def make_plot(data,title,cbartitle,lon,lat,mymin,mymax,myticks,ncolors,ncontours,mycolormap,timestamp,savename,ufield=None,vfield=None):
 	fontfam='serif'
 	plt.figure()
+	# basemap
+	m = Basemap(llcrnrlon=lon[0],llcrnrlat=lat[0],urcrnrlon=lon[-1],urcrnrlat=lat[-1],projection='cyl')
+	lon,lat = np.meshgrid(lon,lat)
+	x,y = m(lon,lat)
+	m.drawcoastlines()
+	m.drawstates()
+	m.drawcountries()
 	# contouring
-	cmap = plt.contourf(lon, lat, data, np.linspace(mymin, mymax, ncolors), cmap=mycolormap)
-	plt.contour(lon, lat, data, np.linspace(mymin, mymax, ncontours), colors='black', linewidths=3)	
+	cmap = m.contourf(x,y, data, np.linspace(mymin, mymax, ncolors), cmap=mycolormap)
+	m.contour(x,y, data, np.linspace(mymin, mymax, ncontours), colors='black', linewidths=3)	
 	# colorbar
-	cbar = plt.colorbar(cmap, ticks=np.linspace(mymin,mymax,myticks), format=ticker.FuncFormatter(fmt))
-	cbar.ax.tick_params(labelsize=16)
+	cbar = m.colorbar(cmap, ticks=np.linspace(mymin,mymax,myticks))#, format=ticker.FuncFormatter(fmt))
+	cbar.ax.yaxis.label.set_font_properties(matplotlib.font_manager.FontProperties(family=fontfam,size=16))
+	cbar.ax.set_title(cbartitle)
+	# neutral wind vectors if supplied
+	if ufield is not None and vfield is not None:
+		speed = np.sqrt(ufield*ufield+vfield*vfield)
+		m.quiver(x,y,ufield,vfield,speed,latlon=True)
 	# standard labeling
 	plt.xlabel('Geographic Longitude ($^o$E)', fontsize=18, fontname=fontfam)
 	plt.ylabel('Geographic Latitude ($^o$N)',  fontsize=18, fontname=fontfam)
@@ -55,17 +68,18 @@ def make_plots(i):
 	lat = dataset.variables['latitude'][:]
 	## make plots
 	# Electron Density at 300km
-	make_plot(dataset.variables['e'][0,42,:,:],'Electron Density at 300km',lon,lat,eDensityMin,eDensityMax,
-		  eDensityTicks,nColors,nContours,eDensityColorMap,timestamp,'ElectronDensity300km')
+	make_plot(np.clip(dataset.variables['e'][0,42,:,:]/1E12,eDensityMin,eDensityMax),'Electron Density at 300km','[$10^{12} m^{-3}$]',
+		  lon,lat,eDensityMin,eDensityMax,eDensityTicks,nColors,nContours,eDensityColorMap,timestamp,'ElectronDensity300km')
 	# TEC
-	make_plot(dataset.variables['TEC'][0,:,:],'Total Electron Count',lon,lat,TECMin,TECMax,
-		  TECTicks,nColors,nContours,TECColorMap,timestamp,'TEC')
+	make_plot(np.clip(dataset.variables['TEC'][0,:,:],TECMin,TECMax),'Total Electron Content','[TECU]',
+		  lon,lat,TECMin,TECMax,TECTicks,nColors,nContours,TECColorMap,timestamp,'TEC')
 	# Nmf2
-	make_plot(dataset.variables['nmf2'][0,:,:],'NmF2',lon,lat,nmf2Min,nmf2Max,
-		  nmf2Ticks,nColors,nContours,TECColorMap,timestamp,'NmF2')
+	make_plot(np.clip(dataset.variables['nmf2'][0,:,:]/1E12,nmf2Min,nmf2Max),'NmF2','[$10^{12} m^{-3}$]',
+		  lon,lat,nmf2Min,nmf2Max,nmf2Ticks,nColors,nContours,TECColorMap,timestamp,'NmF2')
 	# Temperature at 300km
-	make_plot(dataset.variables['tn'][0,42,:,:],'Temperature at 300km',lon,lat,tempMin,tempMax,
-		  tempTicks,nColors,nContours,tempColorMap,timestamp,'ThermosphereTemperature')
+	make_plot(np.clip(dataset.variables['tn'][0,42,:,:],tempMin,tempMax),'Temperature at 300km','[K]',
+		  lon,lat,tempMin,tempMax,tempTicks,nColors,nContours,tempColorMap,timestamp,'ThermosphereTemperature',
+		  dataset.variables['vn_zonal'][0,42,:,:],dataset.variables['vn_meridional'][0,42,:,:])
 	
 def writetex():
 	# file name definitions to search for
@@ -118,7 +132,7 @@ nColors = 200
 nContours = 7
 # electron density
 eDensityMin = 0.0
-eDensityMax = 3.0E12
+eDensityMax = 3.0
 eDensityColorMap = 'Reds'
 eDensityTicks = 7
 # total electron count
@@ -128,7 +142,7 @@ TECColorMap = 'Reds'
 TECTicks = 5
 # nmf2
 nmf2Min = 0.0
-nmf2Max = 4.0E12
+nmf2Max = 4.0
 nmf2ColorMap = 'Reds'
 nmf2Ticks = 9
 # neutral temperature
