@@ -467,8 +467,6 @@ new_restart_wam(){
 new_restart_ipe(){
   # create SMSnamelist with the current domain decomposition
   _setup_ipe_sms
-  # this implementation assumes that IPE is right under ROOTDIR
-  cat ${ROOTDIR}/IPE/SMSnamelist.IN | sed s:_petCount_:$petCount:g > ${RUNDIR}/SMSnamelist
   cp -f ${ROOTDIR}/IPE/coeff_hflux.dat ${RUNDIR}/.
   cp -f ${ROOTDIR}/IPE/coeff_lflux.dat ${RUNDIR}/.
   cp -f ${ROOTDIR}/IPE/wei96.cofcnts ${RUNDIR}/.
