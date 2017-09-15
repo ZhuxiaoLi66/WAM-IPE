@@ -2,6 +2,7 @@
 !
 !  Authors : George Millward  (george.millward@noaa.gov)
 !            Joe Schoonover   (joseph.schoonover@noaa.gov)
+!            Adam Kubaryk     (adam.kubaryk@noaa.gov)
 !
 !  Cooperative Institute for Research in Environmental Sciences (CIRES)
 !  National Oceanographic and Atmospheric Administration (NOAA)
@@ -13,11 +14,9 @@
 PROGRAM IPEtoHeightGrid
 
 USE module_precision
-USE module_IPE_dimension,ONLY: NMP, NLP, NPTS2D, ISTOT
+USE module_IPE_dimension,ONLY: NMP, NLP, NPTS2D
 USE module_input_parameters
-USE module_FIELD_LINE_GRID_MKS,ONLY: MaxFluxTube, JMIN_IN, JMAX_IS, JMIN_ING, JMAX_ISG
 USE module_init_plasma_grid
-
 USE netcdf
 
   IMPLICIT NONE
@@ -39,6 +38,7 @@ USE netcdf
   INTEGER :: i, iheight, iup, ido, ih, ip
   INTEGER :: l, m, mp, lp, in1, in2
   INTEGER :: ifile, the_index
+  INTEGER :: my_pe, num_pe, iprovided, iret
 
   REAL(kind=real_prec8)                                 :: dtotinv, factor, d, fac
   REAL(kind=real_prec8),DIMENSION(:,:,:,:), ALLOCATABLE :: facfac_interface,dd_interface
@@ -99,10 +99,15 @@ USE netcdf
 
   LOGICAL :: plasmaFileGiven, neutralFileGiven, outputDirGiven, gridFileGiven
 
+    include 'mpif.h'
+
+    CALL MPI_Init_thREAD(MPI_THREAD_SERIALIZED,iprovided,iret)
+    CALL MPI_Comm_rank(MPI_COMM_WORLD,my_pe,iret)
+    CALL MPI_Comm_size(MPI_COMM_WORLD,num_pe,iret)
 
     CALL InitializeFromCommandLine( )
 
-    CALL read_input_parameters ( )
+    CALL READ_input_parameters ( )
 
     PRINT*, "AllocateArrays"
     CALL AllocateArrays( )
@@ -113,20 +118,22 @@ USE netcdf
     PRINT*, "InterpolateOntoFixedHeightGrid"
     CALL InterpolateOntoFixedHeightGrid( )
 
+!    CALL MPI_Barrier(MPI_COMM_WORLD, iret)
+    
     PRINT*,"WriteToNetCDF"
     CALL WriteToNetCDF( )
 
     PRINT*,"CleanupArrays"
     CALL CleanupArrays( )
 
-
+    CALL MPI_Finalize(iret)
 
 CONTAINS
  SUBROUTINE InitializeFromCommandLine( )
    IMPLICIT NONE
 
-   INTEGER        :: nArg, argID
-   CHARACTER(500) :: argname
+   INTEGER        :: nArg, argID, io
+   CHARACTER(500) :: argname, neutralFileFile, plasmaFileFile
    LOGICAL        :: fileExists
    LOGICAL        :: plasmaGiven, neutralsGiven,  gridGiven, outputGiven
 
@@ -166,13 +173,23 @@ CONTAINS
                IF( plasmaGiven )THEN
 
                   plasmaFileGiven = .TRUE.
-                  plasmaFile  = TRIM(argName) ! Capture the directory name
+                  plasmaFileFile  = TRIM(argName) ! capture list of plasma files
+                  OPEN(1, file=plasmaFileFile)
+                  DO i=0,my_pe
+                     READ(1,'(a)',advance='NO',iostat=io) plasmaFile
+                  END DO
+                  CLOSE(1)
                   plasmaGiven = .FALSE.
 
                ELSEIF( neutralsGiven )THEN
 
                   neutralFileGiven = .TRUE.
-                  neutralFile  = TRIM(argName) ! Capture the directory name
+                  neutralFileFile  = TRIM(argName) ! capture list of neutral files
+                  OPEN(2, file=neutralFileFile)
+                  DO i=0,my_pe
+                     READ(2,'(a)',advance='NO',iostat=io) neutralFile
+                  END DO
+                  CLOSE(2)
                   neutralsGiven = .FALSE.
 
                ELSEIF( gridGiven )THEN
@@ -357,24 +374,46 @@ CONTAINS
    REAL(real_prec), ALLOCATABLE :: on_ms1(:,:,:)
    REAL(real_prec), ALLOCATABLE :: n2n_ms1(:,:,:)
    REAL(real_prec), ALLOCATABLE :: o2n_m3(:,:,:)
+   INTEGER,DIMENSION(:,:), ALLOCATABLE :: JMIN_IN_ALL, JMAX_IS_ALL
+   INTEGER,DIMENSION(:  ), ALLOCATABLE :: JMIN_IN, JMAX_IS, JMIN_ING, JMAX_ISG
+   INTEGER ierr, MaxFluxTube
  
-    CALL init_plasma_grid( )
+    allocate(JMIN_IN_ALL(NMP,NLP),JMAX_IS_ALL(NMP,NLP),JMIN_IN(NLP),JMAX_IS(NLP),JMIN_ING(NLP),JMAX_ISG(NLP))
+    if ( my_pe .eq. 0 ) then
+    OPEN(UNIT=20,file=TRIM(gridFile),form='unformatted',status='old')
+       READ(20) facfac_interface
+       READ(20) dd_interface
+       READ(20) ii1_interface
+       READ(20) ii2_interface
+       READ(20) ii3_interface
+       READ(20) ii4_interface
+    CLOSE(20)
 
+    OPEN(UNIT=20, file='ipe_grid', form='formatted', status='old')
+       READ (20, FMT=*) JMIN_IN_all, JMAX_IS_all
+       JMIN_ING = JMIN_IN_all(1,:)
+       JMAX_ISG = JMAX_IS_all(1,:)
+       JMIN_IN = 1
+       JMAX_IS = JMAX_ISG - JMIN_ING + 1
+    CLOSE(20)
+    end if
+    call MPI_Bcast(facfac_interface,3*nheights*nlat*nlon,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+    call MPI_Bcast(dd_interface    ,3*nheights*nlat*nlon,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+    call MPI_Bcast(ii1_interface   ,3*nheights*nlat*nlon,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+    call MPI_Bcast(ii2_interface   ,3*nheights*nlat*nlon,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+    call MPI_Bcast(ii3_interface   ,3*nheights*nlat*nlon,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+    call MPI_Bcast(ii4_interface   ,3*nheights*nlat*nlon,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+    call MPI_Bcast(JMIN_IN ,NLP,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+    call MPI_Bcast(JMIN_ING,NLP,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+    call MPI_Bcast(JMAX_IS ,NLP,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+    call MPI_Bcast(JMAX_ISG,NLP,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+    MaxFluxTube = maxval(JMAX_ISG-JMIN_ING+1)
+    
     ALLOCATE( tn_k(MaxFluxTube,NLP,NMP), &
               vn_ms1(MaxFluxTube,NLP,NMP,1:3), &
               on_ms1(MaxFluxTube,NLP,NMP), &
               n2n_ms1(MaxFluxTube,NLP,NMP), &
               o2n_m3(MaxFluxTube,NLP,NMP) )
-
-    OPEN(UNIT=20,file=TRIM(gridFile),form='unformatted',status='old')
-      read(20) facfac_interface
-      read(20) dd_interface
-      read(20) ii1_interface
-      read(20) ii2_interface
-      read(20) ii3_interface
-      read(20) ii4_interface
-   close(20)
-
 
 
      OPEN(UNIT   = 20, &
@@ -406,8 +445,8 @@ CONTAINS
      READ(20) n2n_ms1
      READ(20) o2n_m3 
 
-     DO mp=1,mpstop
-       DO lp=1,nlp
+     DO mp=1,MPSTOP
+       DO lp=1,NLP
 
         tn_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)     = tn_k(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
         vn_ft(JMIN_ING(lp):JMAX_ISG(lp),mp,1:3) = vn_ms1(JMIN_IN(lp):JMAX_IS(lp),lp,mp,1:3)
@@ -620,9 +659,8 @@ CONTAINS
       shortenedFile = TRIM(plasmaFile)
       timestamp     = shortenedFile( LEN(shortenedFile)-11:LEN(shortenedFile) )
 
-      CALL Check( nf90_create( PATH=TRIM(outputDir)//'IPE_State.'//TRIM(timestamp)//'.nc',&
-                               CMODE=OR(nf90_clobber,nf90_64bit_offset),&
-                               NCID=ncid ) )
+      CALL Check( nf90_create( TRIM(outputDir)//'IPE_State.'//TRIM(timestamp)//'.nc',&
+                               NF90_NETCDF4,ncid))
 
       CALL Check( nf90_def_dim( ncid, "z", nheights, z_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "longitude", nlon, x_dimid ) ) 
@@ -805,7 +843,6 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, o2n_varid, "units","[#/m^3]" ) )
       CALL Check( nf90_put_att( ncid, o2n_varid, "_FillValue",fillValue) )
       CALL Check( nf90_put_att( ncid, o2n_varid,"coordinates", "latitude longitude z" ) )
-
       ! End the Define Mode
       CALL Check( nf90_enddef(ncid) )
       ! 
@@ -823,7 +860,6 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, tec_varid, total_electron_content ) )
       CALL Check( nf90_put_var( ncid, nmf2_varid, nmf2 ) )
       CALL Check( nf90_put_var( ncid, hmf2_varid, hmf2 ) )
-
       CALL Check( nf90_put_var( ncid, tn_varid, tn_fixed ) )
       CALL Check( nf90_put_var( ncid, u_varid, vn_fixed(:,:,:,1) ) )
       CALL Check( nf90_put_var( ncid, v_varid, vn_fixed(:,:,:,2) ) )
@@ -831,7 +867,6 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, on_varid, on_fixed ) )
       CALL Check( nf90_put_var( ncid, n2n_varid, n2n_fixed ) )
       CALL Check( nf90_put_var( ncid, o2n_varid, o2n_fixed ) )
-
 
       CALL Check( nf90_close( ncid ) )
 

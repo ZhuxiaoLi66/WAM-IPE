@@ -1,11 +1,11 @@
 &ion_parms_nl
- GW_fix=140., tiros_activity_fix=7, idea_imf_fix=1
+ GW_fix=30., tiros_activity_fix=7, idea_imf_fix=1
  tiros_file  = 'tiros_tjr.nc'
  dation_file = 'iondata_tjr.nc'
  imf_file='wam_nems_imf_2012.nc'
- Dir_swpc = './'
- Dir_uid  = './'
- Dir_imf  = './'
+ Dir_swpc = '/scratch3/NCEPDEV/swpc/save/'
+ Dir_uid =  'Valery.Yudin/SVN_VAY/WAM-IPE_NEMS201606/RT_WAM/'
+ Dir_imf = '/scratch3/NCEPDEV/swpc/save/Valery.Yudin/SVN_VAY/WAM-IPE_NEMS201606/RT_WAM/'
 /      
 !namelist /ion_parms_nl/ GW_fix, tiros_activity_fix, idea_imf_fix
 !     &        dation_file, tiros_file, imf_file, Dir_swpc, Dir_uid, Dir_imf

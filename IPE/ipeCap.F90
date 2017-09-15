@@ -1455,8 +1455,8 @@ module ipeCap
        if (slice > 1) then
 
           ! Init to values bigger and smaller than expected
-          min_field(n)=1.0e100
-          max_field(n)=-1.0e100
+          min_field(n)=HUGE(wamfield)
+          max_field(n)=-HUGE(wamfield)
 
           ! Loop checking values
        	  do j=1,ipedims(2)
@@ -1469,26 +1469,38 @@ module ipeCap
 
 		        ! Make sure that there aren't any uninitialized points
                         if (wamfield(ii,j,startlon+k-1,n) .eq. BAD_VALUE) then
-		        	 write(*,*) "ERROR BAD_VALUE found (", wamfield(ii,j,startlon+k-1,n), &
+		        	 write(*,*) "ERROR ipeCap BAD_VALUE found (", wamfield(ii,j,startlon+k-1,n), &
                                  ") at ",plasma_grid_Z(ii,j),ii,j,startlon+k-1,trim(fieldNameList(n))
 		        endif
 
 		        ! Make sure that there aren't any approx uninitialized points
                         if (abs(wamfield(ii,j,startlon+k-1,n) - (BAD_VALUE)) < 0.1) then
-		        	 write(*,*) "ERROR approx BAD_VALUE found (", wamfield(ii,j,startlon+k-1,n), &
+		        	 write(*,*) "ERROR ipeCap approx BAD_VALUE found (", wamfield(ii,j,startlon+k-1,n), &
                                  ") at ",plasma_grid_Z(ii,j),ii,j,startlon+k-1,trim(fieldNameList(n))
 		        endif
 
 		        ! Make sure that there aren't any nans
                         if (.not. (wamfield(ii,j,startlon+k-1,n) .eq. wamfield(ii,j,startlon+k-1,n))) then
-		        	 write(*,*) "ERROR NaN found (", wamfield(ii,j,startlon+k-1,n), &
+		        	 write(*,*) "ERROR ipeCap NaN found (", wamfield(ii,j,startlon+k-1,n), &
                                  ") at ",plasma_grid_Z(ii,j),ii,j,startlon+k-1,trim(fieldNameList(n))
 		        endif
+
+		        ! Make sure that there aren't any Infinities
+                        if (wamfield(ii,j,startlon+k-1,n) .gt. HUGE(wamfield)) then
+		        	 write(*,*) "ERROR ipeCap +Infinity found (", wamfield(ii,j,startlon+k-1,n), &
+                                 ") at ",plasma_grid_Z(ii,j),ii,j,startlon+k-1,trim(fieldNameList(n))
+		        endif
+
+                        if (wamfield(ii,j,startlon+k-1,n) .lt. -HUGE(wamfield)) then
+		        	 write(*,*) "ERROR ipeCap -Infinity found (", wamfield(ii,j,startlon+k-1,n), &
+                                 ") at ",plasma_grid_Z(ii,j),ii,j,startlon+k-1,trim(fieldNameList(n))
+		        endif
+
 
 			! Check temps
 			if (n .eq. 1) then
                            if (wamfield(ii,j,startlon+k-1,n) <= 0.0) then
-		        	 write(*,*) "ERROR temp <= 0.0 (", wamfield(ii,j,startlon+k-1,n),") found in ", &
+		        	 write(*,*) "ERROR ipeCap temp <= 0.0 (", wamfield(ii,j,startlon+k-1,n),") found in ", &
                                  " wamfield"
         		   endif
                         endif
@@ -1496,7 +1508,7 @@ module ipeCap
 			! Check O density
 			if (n .eq. 5) then
                            if (wamfield(ii,j,startlon+k-1,n) <= 0.0) then
-		        	 write(*,*) "ERROR O density <= 0.0 (", wamfield(ii,j,startlon+k-1,n),") found in ", &
+		        	 write(*,*) "ERROR ipeCap O density <= 0.0 (", wamfield(ii,j,startlon+k-1,n),") found in ", &
                                  " wamfield"
         		   endif
                         endif
@@ -1504,7 +1516,7 @@ module ipeCap
 			! Check O2 density
 			if (n .eq. 6) then
                            if (wamfield(ii,j,startlon+k-1,n) <= 0.0) then
-		        	 write(*,*) "ERROR O2 density <= 0.0 (", wamfield(ii,j,startlon+k-1,n),") found in ", &
+		        	 write(*,*) "ERROR ipeCap O2 density <= 0.0 (", wamfield(ii,j,startlon+k-1,n),") found in ", &
                                  " wamfield"
         		   endif
                         endif
@@ -1512,7 +1524,7 @@ module ipeCap
 			! Check N2 density
 			if (n .eq. 7) then
                            if (wamfield(ii,j,startlon+k-1,n) <= 0.0) then
-		        	 write(*,*) "ERROR N2 density <= 0.0 (", wamfield(ii,j,startlon+k-1,n),") found in ", &
+		        	 write(*,*) "ERROR ipeCap N2 density <= 0.0 (", wamfield(ii,j,startlon+k-1,n),") found in ", &
                                  " wamfield"
         		   endif
                         endif

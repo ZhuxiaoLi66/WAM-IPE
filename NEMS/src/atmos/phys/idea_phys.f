@@ -54,8 +54,11 @@
       use wam_ion,          only : idea_ion
       use  wam_f107_kp_mod, only : f107_wy, kp_wy, kdt_3h
 
-      use  wam_f107_kp_mod, only : f107_fix, f107d_fix, kp_fix
-
+!     Changed by Zhuxiao.Li(05/2017) for back to the path to read in F10.7 and Kp
+!     from solar_in namelist instead of from wam_f107_kp_mod.f
+!     use  wam_f107_kp_mod, only : f107_fix, f107d_fix, kp_fix
+      use  idea_solar_input,only : f107_fix, f107a_fix, kp_fix 
+!
       use  wam_f107_kp_mod, only : fix_spweather_data
 !     use  wam_f107_kp_mod, only : swpcf107_fix, swpcf107d_fix, swpckp_fix
 !
@@ -129,7 +132,8 @@
 !
       integer, parameter  :: ntrac_i=2                  ! number of 2 WAM chem. tracers (O-O2)
 !
-      real    :: f107_curdt, f107d_curdt, kp_curdt
+!     real    :: f107_curdt, f107d_curdt, kp_curdt, f107a_fix    
+      real    :: f107_curdt, f107d_curdt, kp_curdt    
       integer :: Mjdat(ndwam)                           ! IDAT_WAM + FHOUR
       real    :: Hcur                                   !  current hour+min+sec real 
 !
@@ -235,17 +239,17 @@
 !for now fixed
             f107_curdt  = f107_fix
             kp_curdt    = kp_fix
-            f107d_curdt = f107d_fix
+            f107d_curdt = f107a_fix
 !
       ENDIF     !'sair_wam'
 !===============================================
 ! option 3:  SPW_DRIVERS ='wam_climate': fixed values
 !
        if (trim(SPW_DRIVERS)=='wam_climate') then
-          call fix_spweather_data
+!          call fix_spweather_data
           f107_curdt  = f107_fix
           kp_curdt    = kp_fix
-          f107d_curdt = f107d_fix
+          f107d_curdt = f107a_fix
        endif
 !
 !===============================================
@@ -256,16 +260,17 @@
 ! Real data for F107/Kp [2000-2016]: option from VAY available under request
 !         
 !         CALL solar_waccmx_advance(mpi_id, Mjdat, Hcur, Kstep)   !wf107_s,  wkp_s
+!
 !         f107_curdt  =wf107_s
 !         kp_curdt    = wkp_s
 !         f107d_curdt = wf107a_s
 !
 ! For standard WAM-IPE version, fixed values from "solar_in" namelist
 !
-          call fix_spweather_data
+!          call fix_spweather_data
           f107_curdt = f107_fix
           kp_curdt   = kp_fix
-          f107d_curdt = f107d_fix
+          f107d_curdt = f107a_fix
         endif
 !
 
