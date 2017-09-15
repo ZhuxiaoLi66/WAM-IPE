@@ -71,8 +71,8 @@ EXTLIBS_POST = $(NEMSIO_LIB)  \
                $(NETCDF_LIB)  \
                $(SYS_LIB)
 ###
-FC          = ifort -lmpi -xSSE4.2 -g -traceback -openmp -mkl=sequential -align array32byte -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -openmp -convert big_endian -assume byterecl -mkl=sequential
-F77         = ifort -lmpi -xSSE4.2 -g -traceback -openmp -mkl=sequential -align array32byte -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -openmp -convert big_endian -assume byterecl -mkl=sequential
+FC          = ifort -lmpi -xSSE4.2 -g -qopenmp -mkl=sequential -align array32byte -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -convert big_endian -assume byterecl -mkl=sequential
+F77         = ifort -lmpi -xSSE4.2 -g -qopenmp -mkl=sequential -align array32byte -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -convert big_endian -assume byterecl -mkl=sequential
 FREE         = -free
 FIXED        = -fixed
 R8           = -r8

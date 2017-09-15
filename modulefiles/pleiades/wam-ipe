@@ -4,4 +4,4 @@
 # the NUOPC Layer version used in NEMS.
 
 module use -a /u/akubaryk/modulefiles
-module load comp-intel mpi-sgi/mpt.2.14r19 hdf4/4.2.12 hdf5/1.8.18_serial netcdf/4.4.1.1_serial
+module load comp-intel mpi-sgi/mpt.2.14r19 hdf4/4.2.12 hdf5/1.8.18_serial netcdf/4.4.1.1_serial esmf/7.1.0bs34
