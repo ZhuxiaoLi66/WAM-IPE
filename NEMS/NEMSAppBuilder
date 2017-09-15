@@ -1092,7 +1092,6 @@ if [[ $appCounter != 1 && "$tool" != autobuild ]]; then
   bailFlag=true
   while [ $bailFlag == "true" ] ; do
   bailFlag=false
-  echo $tool
   "$tool" --clear --backtitle "NEMS Application Builder" \
     --title "Welcome" --msgbox "Welcome to the NOAA Environmental Modeling System (NEMS) \
 Application Builder. \
