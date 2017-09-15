@@ -14,16 +14,12 @@ global_name='NEMSAppBuilder'
 global_version='version 1.1.0'
 global_capabilities='autobuild dialog whiptail FV3 HYCOM MOM5 CICE IPE WRFHYDRO WW3 LIS IMP GSM NMMB KISS NOAH NOAHMP LegacyGSM LegacyNMM'
 
-# determine whether dialog or whiptail is available
-read dialog <<< "$(which dialog 2> /dev/null)"
-read whiptail <<< "$(which whiptail 2> /dev/null)"
-
-# use whichever tool was found
+# use whichever tool we can find (dialog or whiplash)
 if [[ "$#" -gt 0 ]] ; then
   tool=autobuild
   toolflag=autobuild
-elif [ -n $dialog ] ; then
-  tool=$dialog
+elif type "dialog" > /dev/null 2>&1; then
+  tool=`which dialog`
   toolflag="dialog"
   if [[ "$tool" =~ "scratch4/NCEPDEV/nems/save/Gerhard.Theurich/bin" ]]; then
     # Special Theia case here of avoiding branches below that spawn multiple 
@@ -31,8 +27,8 @@ elif [ -n $dialog ] ; then
     # for some reason!
     toolflag="NOTdialog"
   fi
-elif [ -n $whiptail ] ; then
-  tool=$whiptail
+elif type "whiptail" > /dev/null 2>&1; then
+  tool=`which whiptail`
   toolflag="whiptail"
 else
   echo "ABORT: Neither dialog nor whiptail found." 1>&2
@@ -1096,6 +1092,7 @@ if [[ $appCounter != 1 && "$tool" != autobuild ]]; then
   bailFlag=true
   while [ $bailFlag == "true" ] ; do
   bailFlag=false
+  echo $tool
   "$tool" --clear --backtitle "NEMS Application Builder" \
     --title "Welcome" --msgbox "Welcome to the NOAA Environmental Modeling System (NEMS) \
 Application Builder. \
