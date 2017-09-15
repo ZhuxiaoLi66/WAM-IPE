@@ -93,27 +93,26 @@ def writetex():
 		f.write('\\usepackage{amsfonts}\n')
 		f.write('\\usepackage{amssymb}\n')
 		f.write('\\usepackage{graphicx}\n')
-		f.write('\\usepackage[margin=3cm]{geometry}\n')
+		f.write('\\usepackage[margin=1in]{geometry}\n')
 		f.write('\\title{IPE V0.1 Updates and assessments}\n') # need to make this args.whatever
 		f.write('\\begin{document}\n')
 		f.write('\\maketitle\n')
-		f.write('\\section{Summary of updates}\n\n')
 		f.write('\\section{Model Output}\n\n')
 		# figures
 		for type in types:
-			f.write('\\subsection{'+type+'}\n') 
-			f.write('\\begin{figure}\n') 
-			f.write('\\begin{center}\n')
+			f.write('\\begin{figure}[!htb]\n') 
 			figures = get_matching_files(args.output_directory,re.compile(re.escape(type)+r'.*?'))
 			for i,figure in enumerate(figures):
-				f.write('\\includegraphics[width=0.3\\textwidth]{'+figure+'}\n')
-				if ( (i+1) % 3 == 0 ):
-					f.write('\\end{center}\n')
+				f.write('\\minipage{0.5\\textwidth}\n')
+				f.write('\\includegraphics[width=\\linewidth]{'+figure+'}\n')
+				f.write('\\endminipage')
+				if ( (i+1) % 2 == 0 ):
+					f.write('\n')
 					f.write('\\end{figure}\n\n')
-					f.write('\\begin{figure}\n')
-					f.write('\\begin{center}\n')
+					f.write('\\begin{figure}[!htb]\n')
+				else:
+					f.write('\\hfill\n')
 			if( (len(figures)+1) % 3 != 0 ):
-	                        f.write('\\end{center}\n')
 				f.write('\\end{figure}\n')
 		# finalize
 		f.write('\\end{document}\n')
@@ -122,7 +121,7 @@ def main():
 	## plotting
 	num_i = len(ipeFiles)
 	p = Pool(num_i)
-	p.map(make_plots,range(num_i))
+#	p.map(make_plots,range(num_i))
 	## LaTeXing
 	writetex()	
 
