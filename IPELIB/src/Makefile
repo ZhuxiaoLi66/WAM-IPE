@@ -27,12 +27,13 @@ TARGETS = clean                   \
           trillian_pgi_parallel   \
           trillian_pgi_serial     \
           theia_intel_parallel    \
-          theia_intel_serial \
-          wcoss_intel_parallel \
-          wcoss_intel_serial \
-          generic_pgi_serial \
-          generic_gnu_serial \
-          generic_intel_serial
+          theia_intel_serial      \
+          wcoss_intel_parallel    \
+          wcoss_intel_serial      \
+          generic_pgi_serial      \
+          generic_gnu_serial      \
+          generic_intel_serial    \
+          pleiades_intel_parallel
 
 # Dynamic / Conditional variables
 
@@ -201,6 +202,17 @@ endif
   endif
 endif
 
+# pleiades stanza
+ifeq ($(MACHINE),pleiades)
+  GPTL_USE_GPTL = no
+  MAKEJOBS = 1
+  MODCMD = . /usr/local/lib/init/global.profile && module purge && module load comp-intel mpi-sgi/mpt
+  FCP = ifort -lmpi
+  FCS = ifort
+  OPT_FLAGS = -O3 -fp-model precise -fpp
+  SMS = /nobackupp8/akubaryk/save/sms/SMSr825-intel
+endif
+
 # These statements are machine/compiler independent
 ifeq ($(TESTING),yes)
   OPT_FLAGS+= -DTESTING
@@ -303,6 +315,13 @@ ifeq ($(TESTING),yes)
 	make --directory=integration_testing/ -f cmdi.mak clean
 endif
 	$(MAKE) ipe MACHINE=generic COMPILER=intel PARALLELISM=serial
+
+pleiades_intel_parallel:
+ifeq ($(TESTING),yes)
+	$(MAKE) cmdi MACHINE=pleiades COMPILER=intel PARALLELISM=parallel
+	make --directory=integration_testing/ -f cmdi.mak clean
+endif
+	$(MAKE) ipe MACHINE=pleiades COMPILER=intel PARALLELISM=parallel
 
 ipe:
 	$(if $(filter 0,$(MAKELEVEL)),$(call USAGE))

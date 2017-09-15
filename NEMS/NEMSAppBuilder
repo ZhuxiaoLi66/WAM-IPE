@@ -14,16 +14,12 @@ global_name='NEMSAppBuilder'
 global_version='version 1.1.0'
 global_capabilities='autobuild dialog whiptail FV3 HYCOM MOM5 CICE IPE WRFHYDRO WW3 LIS IMP GSM NMMB KISS NOAH NOAHMP LegacyGSM LegacyNMM'
 
-# determine whether dialog or whiptail is available
-read dialog <<< "$(which dialog 2> /dev/null)"
-read whiptail <<< "$(which whiptail 2> /dev/null)"
-
-# use whichever tool was found
+# use whichever tool we can find (dialog or whiplash)
 if [[ "$#" -gt 0 ]] ; then
   tool=autobuild
   toolflag=autobuild
-elif ["${dialog}x" != "x" ] ; then
-  tool=$dialog
+elif type "dialog" > /dev/null 2>&1; then
+  tool=`which dialog`
   toolflag="dialog"
   if [[ "$tool" =~ "scratch4/NCEPDEV/nems/save/Gerhard.Theurich/bin" ]]; then
     # Special Theia case here of avoiding branches below that spawn multiple 
@@ -31,8 +27,8 @@ elif ["${dialog}x" != "x" ] ; then
     # for some reason!
     toolflag="NOTdialog"
   fi
-elif [ "${whiptail}x" != "x" ] ; then
-  tool=$whiptail
+elif type "whiptail" > /dev/null 2>&1; then
+  tool=`which whiptail`
   toolflag="whiptail"
 else
   echo "ABORT: Neither dialog nor whiptail found." 1>&2
@@ -78,9 +74,11 @@ elif [[ -e /pan2 && -e /lfs3 ]] ; then
     FULL_MACHINE_ID=jet
     MACHINE_ID=jet
 elif ( hostname | grep -i gaea ) ; then
-    # Default to GAEA until we add more platforms
     FULL_MACHINE_ID=gaea
     MACHINE_ID=gaea
+elif [[ -e /nobackupp8 ]] ; then
+    FULL_MACHINE_ID=pleiades
+    MACHINE_ID=pleiades
 else
     # Unknown platform
     FULL_MACHINE_ID=unknown
@@ -561,11 +559,11 @@ build_checkloop(){
       while read line
       do
         procline=`echo $line | grep -v "\.mk"`  # exclude .mk from comparing
-        if [ "x$procline" != "x" ]; then
+        if [ -n $procline ]; then
           # valid line
           checksum=`echo $procline | awk ' { print $1 } '`
           check=`grep $checksum $COMP.install.md5sum.$MACHINE_ID.tmp`
-          if [ "x$check" == "x" ]; then
+          if [ -z $check ]; then
             # did not find the checksum -> failed check
             reuse=false_failchecksum
           fi
@@ -817,7 +815,7 @@ build_cice(){
     export SYSTEM_USERDIR=`pwd`
     export SRCDIR=`pwd`
     export EXEDIR=`pwd`
-    if [ "${NEMS_GRID}x" != "x" ] ; then
+    if [ -n $NEMS_GRID ]; then
       export NEMS_GRID="$NEMS_GRID"
     else
       export NEMS_GRID=T126_mx5
@@ -913,6 +911,9 @@ build_ipe(){
     elif [[ $MACHINE_ID == wcoss ]] ; then
        export SMS=/gpfs/hps/emc/global/save/Adam.Kubaryk/sms/SMSr825-intel_O3
        make wcoss_intel_parallel
+    elif [[ $MACHINE_ID == pleiades ]] ; then
+       export SMS=/nobackupp8/akubaryk/save/sms/SMSr825-intel
+       make pleiades_intel_parallel
     else
        echo "Machine not currently supported in NEMSAppBuilder."
        exit
@@ -1049,7 +1050,7 @@ shopt -s nullglob # all expansion to null string
 defaultSelect=NULL
 highestPriority=0
 for i in "$ROOTDIR"/*.appBuilder; do
-   if [ "x$i" != "x" ]; then
+   if [ -n $i ]; then
       sortingPriority=0
       prioline=$( grep sortingPriority "$i" | head -1 )
       eval $prioline
@@ -1063,7 +1064,7 @@ for i in "$ROOTDIR"/*.appBuilder; do
 done
 
 for i in "$ROOTDIR"/*.appBuilder; do
-  if [ "x$i" != "x" ]; then
+  if [ -n $i ]; then
     let appCounter++
     title=`head -1 $i`
     title=${title#"#"}
@@ -1116,7 +1117,7 @@ if [ $appCounter == 0 ]; then
   appCounter=1
   # check the AppBuilder subdirectory for more appBuilder files
   for i in "$ROOTDIR/AppBuilder/"*.appBuilder; do
-    if [ "x$i" != "x" ]; then
+    if [ -n $i ]; then
       let appCounter++
       title=`head -1 $i`
       title=${title#"#"}
@@ -1273,7 +1274,7 @@ while [ $bailFlag == "true" ] ; do
 bailFlag=false
 # NOTE: machine detection is now done at the top of this script
 # and does not use detect_machine.sh
-if [ "${MACHINE_ID}x" == "x" ] ; then
+if [ -z $MACHINE_ID ]; then
   "$tool" --clear --backtitle "NEMS Application Builder" \
   --title "Unknown machine" --yesno \
   "Need to add NEMS configuration for this machine before trying again!\
@@ -1297,8 +1298,8 @@ fi
 cd $NEMSDIR/src
 autonote "CONFOPT=$CONFOPT MAKEOPT=$MAKEOPT"
 AUTOCONFOPT=$( autoconfopt )
-if [[ "${AUTOCONFOPT}Q" == Q ]] ; then
-    if [[ "${CONFOPT}Q" == Q ]] ; then
+if [[ -z $AUTOCONFOPT ]] ; then
+    if [[ -z $CONFOPT ]] ; then
         conf_mode="coupled"
         CONFOPT="coupled_$COMPILER$MACHINE_ID"
     else
@@ -1325,7 +1326,7 @@ Please use the CHOSEN_MODULE variable instead." \
   14 25  "Invalid appBuilder file"
   exit 10
 fi
-if [[ "Q$CHOSEN_MODULE" == "Q" ]] ; then
+if [[ -z $CHOSEN_MODULE ]] ; then
     fail "The appBuilder file did not set the CHOSEN_MODULE variable. Please add a module in the modulefiles directory and set the CHOSEN_MODULE variable in your appBuilder file to a path relative to the app-level modulefiles directory.  This is usually as simple as copying the environment_<platform>() function contents into modulefiles, one file per platform." \
 19 60
     exit 11
@@ -1540,7 +1541,7 @@ elif ( [[ $legacyNmmFlag == "true" ]] ); then
 fi
 
 # turn COMP into a single string with commas
-if [[ "x$COMP" != "x" ]] ; then
+if [[ -n $COMP ]] ; then
   COMPOPT="COMP=,${COMP#","},"
 else
   COMPOPT=""
