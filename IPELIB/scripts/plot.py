@@ -121,7 +121,7 @@ def main():
 	## plotting
 	num_i = len(ipeFiles)
 	p = Pool(num_i)
-#	p.map(make_plots,range(num_i))
+	p.map(make_plots,range(num_i))
 	## LaTeXing
 	writetex()	
 
