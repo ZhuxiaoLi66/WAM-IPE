@@ -46,7 +46,7 @@ def make_plot(data,title,cbartitle,lon,lat,mymin,mymax,myticks,ncolors,ncontours
 	# colorbar
 	cbar = m.colorbar(cmap, ticks=np.linspace(mymin,mymax,myticks))#, format=ticker.FuncFormatter(fmt))
 	cbar.ax.yaxis.label.set_font_properties(matplotlib.font_manager.FontProperties(family=fontfam,size=16))
-	cbar.ax.set_title(cbartitle, labelpad=1)
+	cbar.ax.set_title(cbartitle,y=1.04)
 	# neutral wind vectors if supplied
 	if ufield is not None and vfield is not None:
 		speed = np.sqrt(ufield*ufield+vfield*vfield)
@@ -80,7 +80,7 @@ def make_plots(i):
 	make_plot(np.clip(dataset.variables['nmf2'][0,:,:]/1E12,nmf2Min,nmf2Max),'NmF2','[$10^{12} m^{-3}$]',
 		  lon,lat,nmf2Min,nmf2Max,nmf2Ticks,nColors,nContours,TECColorMap,timestamp,'NmF2')
 	# Temperature at 300km
-	make_plot(np.clip(dataset.variables['tn'][0,42,:,:],tempMin,tempMax),'Temperature at 300km','[K]',
+	make_plot(np.clip(dataset.variables['tn'][0,42,:,:],tempMin,tempMax),'Temperature, Neutral Wind at 300km','[K]',
 		  lon,lat,tempMin,tempMax,tempTicks,nColors,nContours,tempColorMap,timestamp,'ThermosphereTemperature',
 		  dataset.variables['vn_zonal'][0,42,:,:],dataset.variables['vn_meridional'][0,42,:,:])
 	
