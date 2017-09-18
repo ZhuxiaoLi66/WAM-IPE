@@ -98,16 +98,15 @@ USE netcdf
   LOGICAL :: plasmaFileGiven, neutralFileGiven, outputDirGiven, gridFileGiven
 
     include 'mpif.h'
-    print*, "MPI"
+
     CALL MPI_Init_thREAD(MPI_THREAD_SERIALIZED,iprovided,iret)
     CALL MPI_Comm_rank(MPI_COMM_WORLD,my_pe,iret)
     CALL MPI_Comm_size(MPI_COMM_WORLD,num_pe,iret)
-    print*, "INIT"
-    CALL InitializeFromCommandLine( )
-    print*, "READ"
-    CALL ReadInputParameters ( )
 
-    PRINT*, "AllocateArrays"
+    CALL InitializeFromCommandLine( )
+
+    CALL ReadInputParameters( )
+
     CALL AllocateArrays( )
 
     PRINT*, "ReadGridAndPlasmaFiles"
@@ -116,12 +115,9 @@ USE netcdf
     PRINT*, "InterpolateOntoFixedHeightGrid"
     CALL InterpolateOntoFixedHeightGrid( )
 
-!    CALL MPI_Barrier(MPI_COMM_WORLD, iret)
-    
     PRINT*,"WriteToNetCDF"
     CALL WriteToNetCDF( )
 
-    PRINT*,"CleanupArrays"
     CALL CleanupArrays( )
 
     CALL MPI_Finalize(iret)
