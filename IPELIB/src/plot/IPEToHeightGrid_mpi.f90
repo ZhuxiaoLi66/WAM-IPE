@@ -642,8 +642,8 @@ CONTAINS
    ! Local
    INTEGER :: NF90_PREC
    INTEGER :: ncid
-   INTEGER :: x_dimid, y_dimid, z_dimid, rec_dimid
-   INTEGER :: x_varid, y_varid, z_varid
+   INTEGER :: x_dimid, y_dimid, z_dimid, time_dimid
+   INTEGER :: x_varid, y_varid, z_varid, time_varid
    INTEGER :: oplus_varid, hplus_varid, heplus_varid
    INTEGER :: nplus_varid, noplus_varid, o2plus_varid
    INTEGER :: n2plus_varid, tec_varid, nmf2_varid, hmf2_varid
@@ -665,7 +665,7 @@ CONTAINS
       CALL Check( nf90_def_dim( ncid, "z", nheights, z_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "longitude", nlon, x_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "latitude", nlat, y_dimid ) ) 
-      CALL Check( nf90_def_dim( ncid, "time", NF90_UNLIMITED, rec_dimid ) )
+      CALL Check( nf90_def_dim( ncid, "time", NF90_UNLIMITED, time_dimid ) )
 
       ! Create variables -- here we need to create arrays for the dimensions
       CALL Check( nf90_def_var( ncid, "z", NF90_PREC, z_dimid, z_varid ) )
@@ -688,8 +688,14 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, x_varid, "_FillValue", fillValue) )
       CALL Check( nf90_put_att( ncid, x_varid, "missing_value", fillValue) )
 
+      CALL Check( nf90_def_var( ncid, "time", NF90_PREC, time_dimid, time_varid ) )
+      CALL Check( nf90_put_att( ncid, time_varid, "long_name", "time" ) )
+      CALL Check( nf90_put_att( ncid, time_varid, "units", "hours since "//timestamp(1:4)//"-"//timestamp(5:6)//"-"//timestamp(7:8)//" "//timestamp(9:10)//":"//timestamp(11:12)//":00" ) )
+      CALL Check( nf90_put_att( ncid, time_varid, "_FillValue", fillValue) )
+      CALL Check( nf90_put_att( ncid, time_varid, "missing_value", fillValue) )
+
       CALL Check( nf90_def_var( ncid, "O+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                oplus_varid ) )
       CALL Check( nf90_put_att( ncid, oplus_varid, "long_name","Density of positively chared Oxygen ions" ) )
       CALL Check( nf90_put_att( ncid, oplus_varid, "units","[unknown]" ) )
@@ -698,7 +704,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "H+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                hplus_varid ) )
       CALL Check( nf90_put_att( ncid, hplus_varid, "long_name","Density of positively chared Hydrogen ions" ) )
       CALL Check( nf90_put_att( ncid, hplus_varid, "units","[unknown]" ) )
@@ -707,7 +713,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "He+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                heplus_varid ) )
       CALL Check( nf90_put_att( ncid, heplus_varid, "long_name","Density of positively chared Helium ions" ) )
       CALL Check( nf90_put_att( ncid, heplus_varid, "units","[unknown]" ) )
@@ -716,7 +722,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "N+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                nplus_varid ) )
       CALL Check( nf90_put_att( ncid, nplus_varid, "long_name","Density of positively charged Nitrogen ions" ) )
       CALL Check( nf90_put_att( ncid, nplus_varid, "units","[unknown]" ) )
@@ -725,7 +731,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "NO+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                noplus_varid ) )
       CALL Check( nf90_put_att( ncid, noplus_varid, "long_name","Density of Nitrilooxnium." ) )
       CALL Check( nf90_put_att( ncid, noplus_varid, "units","[unknown]" ) )
@@ -734,7 +740,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "O2+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                o2plus_varid ) )
       CALL Check( nf90_put_att( ncid, o2plus_varid, "long_name","Density of Dioxygenyl." ) )
       CALL Check( nf90_put_att( ncid, o2plus_varid, "units","[unknown]" ) )
@@ -743,7 +749,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "N2+", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                n2plus_varid ) )
       CALL Check( nf90_put_att( ncid, n2plus_varid, "long_name","Density of positively charged Nitrogen ions" ) )
       CALL Check( nf90_put_att( ncid, n2plus_varid, "units","[unknown]" ) )
@@ -752,7 +758,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "e", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                edens_varid ) )
       CALL Check( nf90_put_att( ncid, edens_varid, "long_name","Total electron density" ) )
       CALL Check( nf90_put_att( ncid, edens_varid, "units","[unknown]" ) )
@@ -761,7 +767,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "TEC", NF90_PREC,&
-                               (/ x_dimid, y_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, time_dimid /),&
                                tec_varid ) )
       CALL Check( nf90_put_att( ncid, tec_varid, "long_name","Total electron content" ) )
       CALL Check( nf90_put_att( ncid, tec_varid, "units","TECu" ) )
@@ -770,7 +776,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "nmf2", NF90_PREC,&
-                               (/ x_dimid, y_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, time_dimid /),&
                                nmf2_varid ) )
       CALL Check( nf90_put_att( ncid, nmf2_varid, "long_name","Maximum electron density in the F layer." ) )
       CALL Check( nf90_put_att( ncid, nmf2_varid, "units","[unknown]" ) )
@@ -779,7 +785,7 @@ CONTAINS
 
 
       CALL Check( nf90_def_var( ncid, "hmf2", NF90_PREC,&
-                               (/ x_dimid, y_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, time_dimid /),&
                                hmf2_varid ) )
       CALL Check( nf90_put_att( ncid, hmf2_varid, &
                                 "long_name","Height of the maximum electron density in the F layer." ) )
@@ -789,7 +795,7 @@ CONTAINS
          
 
       CALL Check( nf90_def_var( ncid, "tn", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                tn_varid ) )
       CALL Check( nf90_put_att( ncid, tn_varid, "long_name","Thermosphere temperature" ) )
       CALL Check( nf90_put_att( ncid, tn_varid, "units","[K]" ) )
@@ -797,7 +803,7 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, tn_varid,"coordinates", "latitude longitude z" ) )
 
       CALL Check( nf90_def_var( ncid, "vn_zonal", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                u_varid ) )
       CALL Check( nf90_put_att( ncid, u_varid, "long_name","Geographic Zonal wind (positive eastward)" ) )
       CALL Check( nf90_put_att( ncid, u_varid, "units","[m/s]" ) )
@@ -805,7 +811,7 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, u_varid,"coordinates", "latitude longitude z" ) )
 
       CALL Check( nf90_def_var( ncid, "vn_meridional", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                v_varid ) )
       CALL Check( nf90_put_att( ncid, v_varid, "long_name","Geographic Meridional wind (positive northward)" ) )
       CALL Check( nf90_put_att( ncid, v_varid, "units","[m/s]" ) )
@@ -813,7 +819,7 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, v_varid,"coordinates", "latitude longitude z" ) )
 
       CALL Check( nf90_def_var( ncid, "vn_vertical", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                w_varid ) )
       CALL Check( nf90_put_att( ncid, w_varid, "long_name","Geographic Vertical wind (positive upward)" ) )
       CALL Check( nf90_put_att( ncid, w_varid, "units","[m/s]" ) )
@@ -821,7 +827,7 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, w_varid,"coordinates", "latitude longitude z" ) )
 
       CALL Check( nf90_def_var( ncid, "O", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                on_varid ) )
       CALL Check( nf90_put_att( ncid, on_varid, "long_name","Oxygen density" ) )
       CALL Check( nf90_put_att( ncid, on_varid, "units","[#/m^3]" ) )
@@ -829,7 +835,7 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, on_varid,"coordinates", "latitude longitude z" ) )
 
       CALL Check( nf90_def_var( ncid, "N2", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                n2n_varid ) )
       CALL Check( nf90_put_att( ncid, n2n_varid, "long_name","Molecular Nitrogen density" ) )
       CALL Check( nf90_put_att( ncid, n2n_varid, "units","[#/m^3]" ) )
@@ -837,7 +843,7 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, n2n_varid,"coordinates", "latitude longitude z" ) )
 
       CALL Check( nf90_def_var( ncid, "O2", NF90_PREC,&
-                               (/ x_dimid, y_dimid, z_dimid, rec_dimid /),&
+                               (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
                                o2n_varid ) )
       CALL Check( nf90_put_att( ncid, o2n_varid, "long_name","Molecular Oxygen density" ) )
       CALL Check( nf90_put_att( ncid, o2n_varid, "units","[#/m^3]" ) )
@@ -849,6 +855,8 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, z_varid, z ) )
       CALL Check( nf90_put_var( ncid, y_varid, y ) )
       CALL Check( nf90_put_var( ncid, x_varid, x ) )
+      CALL Check( nf90_put_var( ncid, time_varid, 0.0 ) )
+
       CALL Check( nf90_put_var( ncid, oplus_varid, oplus_fixed ) )
       CALL Check( nf90_put_var( ncid, hplus_varid, hplus_fixed ) )
       CALL Check( nf90_put_var( ncid, heplus_varid, heplus_fixed ) )
