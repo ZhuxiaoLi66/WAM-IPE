@@ -23,7 +23,7 @@ module module_sub_myIPE_Init
   contains
   !-----------------------------------------------------------------------------
   
-  subroutine myIPE_Init ( gridComp, importState, exportState, clock, rc )
+  subroutine myIPE_Init ( clock, rc )
   use ESMF
 !nm20160307 SMS should be included
   use nnt_types_module
@@ -45,9 +45,6 @@ module module_sub_myIPE_Init
 !g  include "gptl.inc"
   include "mpif.h"
 !---
-  type(ESMF_GridComp)  :: gridComp
-  type(ESMF_State)     :: importState
-  type(ESMF_State)     :: exportState
   type(ESMF_Clock)     :: clock
   integer, intent(out) :: rc
 !---MPI communicator
@@ -337,6 +334,7 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !t      if (IAM_ROOT()) then
       CALL ESMF_LogWrite("sub-initialize_IPE: open_output_files", ESMF_LOGMSG_INFO, rc=rc)	
       CALL open_output_files ( )
+PRINT*, 'JAS : Finished open_output_files'
 !t      endif
 !!SMS$SERIAL END
 !g      ret = gptlstop  ('open_output_files')
@@ -345,6 +343,7 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !g      ret = gptlstart ('init_plasma_grid')
       CALL ESMF_LogWrite("sub-initialize_IPE: init_plasma_grid", ESMF_LOGMSG_INFO, rc=rc)
       CALL init_plasma_grid ( )
+PRINT*, 'JAS : Finished init_plasma_grid'
 !g      ret = gptlstop  ('init_plasma_grid')
 
 !!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-1")
@@ -444,7 +443,7 @@ END IF
         endif
 !g        ret = gptlstart ('io_plasma_bin')
         CALL ESMF_LogWrite("sub-initialize_IPE: io_plasma_bin", ESMF_LOGMSG_INFO, rc=rc)
-        CALL io_plasma_bin ( 2, start_time )
+        CALL io_plasma_bin ( 2, start_time, model_start_time )
 !g        ret = gptlstop  ('io_plasma_bin')
         if (IAM_ROOT()) then
           print *,'after CALL io_plasma_bin finished! READ: start_time=', start_time,' stop_time=',stop_time

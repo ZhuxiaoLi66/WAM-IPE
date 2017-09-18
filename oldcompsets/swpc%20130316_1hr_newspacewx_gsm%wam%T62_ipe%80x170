@@ -4,17 +4,15 @@
 #
 ###############################################################################
 
-export TEST_DESCR="WAM-IPE 1h coupled run"
+export TEST_DESCR="WAM-IPE 1h coupled run. New IPE 3D mesh and &ipecap namelist"
 
 # - gsm configuration ---
 export_gsm
-export CDATE=2017071400
+export CDATE=2013031600
 export WLCLK=30
 export QUEUE=debug
 export NHRS=1
 export FHOUT=1
-export FHZER=1
-export FHRES=1
 export TASKS=40
 export PE1=32
 export THRD=1
@@ -37,7 +35,7 @@ export atm_model=gsm
 export atm_petlist_bounds="0 15" # 16
 export ipm_model=ipe
 export ipm_petlist_bounds="16 31" # 16
-export ipm_petlayout="1 16"
+export ipm_petlayout="2 8"
 export med_model=spaceweather
 export med_petlist_bounds="32 39" # 8
 export coupling_interval_fast_sec=180.0
@@ -48,10 +46,9 @@ export F107_KP_INTERVAL=10800
 export WAM_IPE_COUPLING=.true.
 export HEIGHT_DEPENDENT_G=.true.
 export F107_KP_SKIP_SIZE=24
-export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/${USER}/restart_directory/
 
 # - component specific setup calls ---
-setup_wam_T62_2017071400
+setup_wam_T62_2013031600
 setup_ipe
 setup_spaceweather_gsm%wam%T62_ipe%80x170
 
@@ -66,5 +63,5 @@ export LIST_FILES="IPE.inp SMSnamelist \
                    plasma05 plasma06 plasma07 plasma08 plasma09 \
                    plasma10 plasma11 plasma12 plasma13 plasma14 \
                    plasma15 plasma16 \
-                   wam3dgridnew2.nc ipe3dgrid2.nc wam2dmesh.nc"
+                   wam3dgridnew2.nc wam2dmesh.nc"
 

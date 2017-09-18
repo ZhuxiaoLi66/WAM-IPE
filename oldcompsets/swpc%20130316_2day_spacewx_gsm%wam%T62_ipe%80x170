@@ -36,6 +36,7 @@ export med_model=spaceweather
 export med_petlist_bounds="16 23"  #  8
 export ipm_model=ipe
 export ipm_petlist_bounds="24 103"  # 80
+export ipm_petlayout="1 80"
 export coupling_interval_fast_sec=180.0
 export coupling_interval_sec=180.0
 

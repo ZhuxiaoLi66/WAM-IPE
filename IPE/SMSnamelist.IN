@@ -65,6 +65,6 @@
   load_balance_method=2,1
   load_balance_on=f,f
   load_balance_size=40,0
-  process_layout=1,_petCount_
+  process_layout=_petLayout_
   set_process_layout=t
 /

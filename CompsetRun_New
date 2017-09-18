@@ -375,6 +375,48 @@ setup_wam_T62_2013031600(){
   cp -f ${ROOTDIR}/RT_WAM/wam_rm3_globcomp.nc ${RUNDIR}/.
 }
 
+_setup_ipe_sms(){
+  local _petCount
+  local _petDecomp
+  local _petlayout
+  local -a _petlist_bounds
+  # determine number of PETs for IPE
+  _petlist_bounds=($ipm_petlist_bounds)
+  _petCount=$((_petlist_bounds[1]-_petlist_bounds[0]+1))
+  # setup domain decomposition
+  if [ -z "${ipm_petlayout}" ] ; then
+    _petlayout="1,${_petCount}"
+  else
+    _petDecomp=(${ipm_petlayout})
+    if [ ${#_petDecomp[*]} -ne 2 ] ; then
+      echo "ipm_petlayout must include 2 space-separated numerical entries (now: ${ipm_petlayout})"
+      echo "... bailing out!"
+      exit 1
+    fi
+    if [ $((_petDecomp[0]*_petDecomp[1])) -eq ${_petCount} ]; then
+      _petlayout="${_petDecomp[0]},${_petDecomp[1]}"
+    else
+      echo "ipm_petlayout (${_petDecomp[0]}x${_petDecomp[1]}) inconsistent with total # of PETs in ipe_petlist_bounds (${_petCount})."
+      echo "... bailing out!"
+      exit 1
+    fi
+  fi
+  cat ${ROOTDIR}/IPE/SMSnamelist.IN | sed s:_petLayout_:${_petlayout}:g > ${RUNDIR}/SMSnamelist
+}
+
+_setup_ipe_nml(){
+  # - add new &ipecap namelist with default settings to IPE.inp if missing
+  if ! ( grep -qiw \&ipecap ${RUNDIR}/IPE.inp > /dev/null 2>&1 ) ; then
+  cat <<-EOF >> ${RUNDIR}/IPE.inp
+	&ipecap
+	  mesh_height_min = 0.
+	  mesh_height_max = 782.
+	  mesh_write      = 0
+	  mesh_write_file = 'ipemesh'
+	/
+	EOF
+  fi
+}
 
 # Weiyu thought that the f107 file was still needed and he wasn't sure about the *anl* files, so 
 # keep copying them until we're sure. If we just need the f107, it would be nice to eventually just
@@ -423,11 +465,8 @@ new_restart_wam(){
 
 
 new_restart_ipe(){
-  # determine number of PETs for IPE
-  petlist_bounds=($ipm_petlist_bounds)
-  petCount=$((petlist_bounds[1]-petlist_bounds[0]+1))
-  # this implementation assumes that IPE is right under ROOTDIR
-  cat ${ROOTDIR}/IPE/SMSnamelist.IN | sed s:_petCount_:$petCount:g > ${RUNDIR}/SMSnamelist
+  # create SMSnamelist with the current domain decomposition
+  _setup_ipe_sms
   cp -f ${ROOTDIR}/IPE/coeff_hflux.dat ${RUNDIR}/.
   cp -f ${ROOTDIR}/IPE/coeff_lflux.dat ${RUNDIR}/.
   cp -f ${ROOTDIR}/IPE/wei96.cofcnts ${RUNDIR}/.
@@ -445,14 +484,12 @@ new_restart_ipe(){
   elif [ $MACHINE_ID = yellowstone ] ; then
      echo "This machine currently not supported for this operation."
   fi
+  _setup_ipe_nml
 }
 
+
 new_setup_ipe(){
-  # determine number of PETs for IPE
-  petlist_bounds=($ipm_petlist_bounds)
-  petCount=$((petlist_bounds[1]-petlist_bounds[0]+1))
-  # this implementation assumes that IPE is right under ROOTDIR
-  cat ${ROOTDIR}/IPE/SMSnamelist.IN | sed s:_petCount_:$petCount:g > ${RUNDIR}/SMSnamelist
+  _setup_ipe_sms
   cp -f ${ROOTDIR}/IPE/coeff_hflux.dat ${RUNDIR}/.
   cp -f ${ROOTDIR}/IPE/coeff_lflux.dat ${RUNDIR}/.
   cp -f ${ROOTDIR}/IPE/wei96.cofcnts ${RUNDIR}/.
@@ -475,17 +512,15 @@ new_setup_ipe(){
   elif [ $MACHINE_ID = yellowstone ] ; then
      echo "This Machine currently not supported for this operation."
   fi
+  _setup_ipe_nml
 }
 
 
 
 
 setup_ipe(){
-  # determine number of PETs for IPE
-  petlist_bounds=($ipm_petlist_bounds)
-  petCount=$((petlist_bounds[1]-petlist_bounds[0]+1))
-  # this implementation assumes that IPE is right under ROOTDIR
-  cat ${ROOTDIR}/IPE/SMSnamelist.IN | sed s:_petCount_:$petCount:g > ${RUNDIR}/SMSnamelist
+  # create SMSnamelist with the current domain decomposition
+  _setup_ipe_sms
   cp -f ${ROOTDIR}/IPE/coeff_hflux.dat ${RUNDIR}/.
   cp -f ${ROOTDIR}/IPE/coeff_lflux.dat ${RUNDIR}/.
   cp -f ${ROOTDIR}/IPE/wei96.cofcnts ${RUNDIR}/.
@@ -501,6 +536,7 @@ cp -f /scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/fort.1051
     ln -s /glade/u/home/naomi/work/ipe/IPEDATA/data/stup* ${RUNDIR}/.
     ln -s /glade/u/home/naomi/work/ipe/IPEDATA/data/ipe_grid ${RUNDIR}/.
   fi
+  _setup_ipe_nml
 }
 
 setup_spaceweather(){
@@ -571,11 +607,8 @@ restart_wam(){
 }
 
 restart_ipe(){
-  # determine number of PETs for IPE
-  petlist_bounds=($ipm_petlist_bounds)
-  petCount=$((petlist_bounds[1]-petlist_bounds[0]+1))
-  # Still grab the SMSnamelist.In from the data directory
-  cat ${ROOTDIR}/IPE/SMSnamelist.IN | sed s:_petCount_:$petCount:g > ${RUNDIR}/SMSnamelist
+  # create SMSnamelist with the current domain decomposition
+  _setup_ipe_sms
 
   # Grab the rest from the restart directory
   cp -f ${RESTART_DIR}/coeff_hflux.dat ${RUNDIR}/.
@@ -632,6 +665,7 @@ restart_ipe(){
 ###  cp -f ${RESTART_DIR}/stup_ut_rec ${RUNDIR}/.
   cp -f ${RESTART_DIR}/ut_rec  ${RUNDIR}/stup_ut_rec
   ln -s ${RESTART_DIR}/ipe_grid ${RUNDIR}/ipe_grid
+  _setup_ipe_nml
 }
 
 restart_spaceweather(){
