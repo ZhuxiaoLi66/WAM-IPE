@@ -618,7 +618,7 @@ CONTAINS
       NF90_PREC = NF90_DOUBLE
 
       shortenedFile = TRIM(plasmaFile)
-      timestamp     = shortenedFile( LEN(shortenedFile)-12:LEN(shortenedFile) )
+      timestamp     = shortenedFile( LEN(shortenedFile)-11:LEN(shortenedFile) )
 
       CALL Check( nf90_create( PATH=TRIM(outputDir)//'IPE_State.'//TRIM(timestamp)//'.nc',&
                                CMODE=OR(nf90_clobber,nf90_64bit_offset),&
