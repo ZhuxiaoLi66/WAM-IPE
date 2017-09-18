@@ -677,14 +677,14 @@ CONTAINS
 
       CALL Check( nf90_def_var( ncid, "latitude", NF90_PREC, y_dimid, y_varid ) )
       CALL Check( nf90_put_att( ncid, y_varid, "long_name", "Geographic Latitude" ) )
-      CALL Check( nf90_put_att( ncid, y_varid, "units", "Degrees North" ) )
+      CALL Check( nf90_put_att( ncid, y_varid, "units", "degrees_north" ) )
       CALL Check( nf90_put_att( ncid, y_varid, "_FillValue", fillValue) )
       CALL Check( nf90_put_att( ncid, y_varid, "missing_value", fillValue) )
 
 
       CALL Check( nf90_def_var( ncid, "longitude", NF90_PREC, x_dimid, x_varid ) )
       CALL Check( nf90_put_att( ncid, x_varid, "long_name", "Geographic Longitude" ) )
-      CALL Check( nf90_put_att( ncid, x_varid, "units", "Degrees East" ) )
+      CALL Check( nf90_put_att( ncid, x_varid, "units", "degrees_east" ) )
       CALL Check( nf90_put_att( ncid, x_varid, "_FillValue", fillValue) )
       CALL Check( nf90_put_att( ncid, x_varid, "missing_value", fillValue) )
 
