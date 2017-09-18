@@ -14,9 +14,6 @@
 PROGRAM IPEtoHeightGrid
 
 USE module_precision
-USE module_IPE_dimension,ONLY: NMP, NLP, NPTS2D
-USE module_input_parameters
-USE module_init_plasma_grid
 USE netcdf
 
   IMPLICIT NONE
@@ -39,6 +36,7 @@ USE netcdf
   INTEGER :: l, m, mp, lp, in1, in2
   INTEGER :: ifile, the_index
   INTEGER :: my_pe, num_pe, iprovided, iret
+  INTEGER :: NMP, NLP, NPTS2D
 
   REAL(kind=real_prec8)                                 :: dtotinv, factor, d, fac
   REAL(kind=real_prec8),DIMENSION(:,:,:,:), ALLOCATABLE :: facfac_interface,dd_interface
@@ -100,14 +98,14 @@ USE netcdf
   LOGICAL :: plasmaFileGiven, neutralFileGiven, outputDirGiven, gridFileGiven
 
     include 'mpif.h'
-
+    print*, "MPI"
     CALL MPI_Init_thREAD(MPI_THREAD_SERIALIZED,iprovided,iret)
     CALL MPI_Comm_rank(MPI_COMM_WORLD,my_pe,iret)
     CALL MPI_Comm_size(MPI_COMM_WORLD,num_pe,iret)
-
+    print*, "INIT"
     CALL InitializeFromCommandLine( )
-
-    CALL READ_input_parameters ( )
+    print*, "READ"
+    CALL ReadInputParameters ( )
 
     PRINT*, "AllocateArrays"
     CALL AllocateArrays( )
@@ -285,6 +283,16 @@ CONTAINS
 
  END SUBROUTINE InitializeFromCommandLine
 !
+ SUBROUTINE ReadInputParameters( )
+   IMPLICIT NONE
+   CHARACTER(LEN=*),PARAMETER :: INPTNMLT='IPE.inp'
+   INTEGER ierr
+   NAMELIST/IPEDIMS/NLP,NMP,NPTS2D
+   OPEN(1,FILE=INPTNMLT,STATUS='OLD',IOSTAT=ierr)
+   READ(1,NML=IPEDIMS,IOSTAT=ierr)
+   CLOSE(1)
+ END SUBROUTINE ReadInputParameters
+!
  SUBROUTINE AllocateArrays( )
    IMPLICIT NONE
 
@@ -445,7 +453,7 @@ CONTAINS
      READ(20) n2n_ms1
      READ(20) o2n_m3 
 
-     DO mp=1,MPSTOP
+     DO mp=1,NMP
        DO lp=1,NLP
 
         tn_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)     = tn_k(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
