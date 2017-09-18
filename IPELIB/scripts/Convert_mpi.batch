@@ -8,13 +8,13 @@ TAG='V0.1'
 # Set the path to the base WAM-IPE directory (containing IPELIB)
 WAMIPEDIR=`pwd`/../..
 # Set the path to the directory where your IPE output can be found
-IPE_RUNDIR='/scratch3/NCEPDEV/swpc/noscrub/Joseph.Schoonover/WAM-IPE_20130306_1hr_development/'
+IPE_RUNDIR="/scratch3/NCEPDEV/swpc/noscrub/Joseph.Schoonover/WAM-IPE_20130306_1hr_ipe_nuopc_2d_petlayout/"
 # Set the path to where you want the NetCDF output.
-OUTDIR='/scratch3/NCEPDEV/swpc/noscrub/Joseph.Schoonover/WAM-IPE_20130306_1hr_development/netcdf/'
+OUTDIR="/scratch3/NCEPDEV/swpc/noscrub/$USER/WAM-IPE_20130306_1hr_development/netcdf/"
 # Set the path to where you want the eps files and the Latex file.
-PLOTDIR='/scratch3/NCEPDEV/swpc/noscrub/Joseph.Schoonover/WAM-IPE_20130306_1hr_development_plots/'
+PLOTDIR="/scratch3/NCEPDEV/swpc/noscrub/$USER/WAM-IPE_20130306_1hr_development/plots/"
 # Set the full path to the restart directory with the grid files can be found.
-RESDIR='/scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/2013160300/grid_80x170/'
+RESDIR="/scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/2013160300/grid_80x170/"
 # *************************************************** #
 
 # //////////////////////////////////////////////////////////////////////// #
@@ -49,12 +49,8 @@ ln -sf ${RESDIR}ipe_grid ./
 cp ${IPE_RUNDIR}IPE.inp ./
 
 # Make the output and plot directories if they don't already exist
-if [ ! -d "$OUTDIR" ]; then
-  mkdir -p $OUTDIR
-fi
-if [ ! -d "$PLOTDIR" ]; then
-  mkdir -p $PLOTDIR
-fi
+[ ! -d $OUTDIR ]  && mkdir -p $OUTDIR
+[ ! -d $PLOTDIR ] && mkdir -p $PLOTDIR
 
 
 ## Create job file.
