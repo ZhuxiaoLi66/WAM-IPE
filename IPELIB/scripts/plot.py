@@ -42,18 +42,21 @@ def make_plot(data,title,cbartitle,lon,lat,mymin,mymax,myticks,ncolors,ncontours
 	m.drawcountries()
 	# contouring
 	cmap = m.contourf(x,y, data, np.linspace(mymin, mymax, ncolors), cmap=mycolormap)
-	m.contour(x,y, data, np.linspace(mymin, mymax, ncontours), colors='black', linewidths=3)	
+	m.contour(x,y, data, np.linspace(mymin, mymax, ncontours), colors='black', linewidths=1)	
 	# colorbar
 	cbar = m.colorbar(cmap, ticks=np.linspace(mymin,mymax,myticks))#, format=ticker.FuncFormatter(fmt))
 	cbar.ax.yaxis.label.set_font_properties(matplotlib.font_manager.FontProperties(family=fontfam,size=16))
-	cbar.ax.set_title(cbartitle)
+	cbar.ax.set_title(cbartitle, labelpad=1)
 	# neutral wind vectors if supplied
 	if ufield is not None and vfield is not None:
 		speed = np.sqrt(ufield*ufield+vfield*vfield)
 		m.quiver(x,y,ufield,vfield,speed,latlon=True)
 	# standard labeling
-	plt.xlabel('Geographic Longitude ($^o$E)', fontsize=18, fontname=fontfam)
-	plt.ylabel('Geographic Latitude ($^o$N)',  fontsize=18, fontname=fontfam)
+	#plt.xlabel('Geographic Longitude ($^o$E)', fontsize=18, fontname=fontfam)
+	#plt.ylabel('Geographic Latitude ($^o$N)',  fontsize=18, fontname=fontfam)
+        plt.xticks([0, 90, 180, 270, 360],['$0^o E$', '$90^o E$', '$180^o E$', '$270^o E$', '$360^o E$'])
+        plt.yticks([-90, -45, 0, 45, 90],['$90^o S$', '$45^o S$', '$0^o$', '$45^o N$', '$90^o N$'])
+        plt.grid()
 	plt.title(title+'\n'+timestamp, fontsize=20, fontname=fontfam)
 	# output
 	plt.savefig(path.join(args.output_directory,savename+'.'+timestamp+'.eps'))
