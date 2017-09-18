@@ -18,6 +18,8 @@ for var in SIGHDR SFCHDR NEMSIOGET APRUN NDATE MDATE FIXGLOBAL BASE_NEMS FCSTEXE
 	fi
 done
 
+## !AMK! should check to make sure NDATE and MDATE actually function as intended...
+
 # frequency checks
 echo "checking properties of the frequency options (FHOUT, FHRES, FHDFI, FHCYC, FHZER)"
 if [ -z $FHOUT ] || [ $FHOUT -gt $FHMAX ] ; then

@@ -194,7 +194,7 @@ endif
     MODCMD    = $(shell ./modcmd wcoss intel)
     FCP       = mpfort
     FCS       = mpfort
-    OPT_FLAGS = -O3 -fp-model precise -fpp
+    OPT_FLAGS = -O3 -fp-model precise -fpp -xCORE-AVX2
     SMS       = /gpfs/hps/emc/global/save/Adam.Kubaryk/sms/SMSr825-intel_O3
     ifeq ($(DEBUG),yes)
       DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0
@@ -209,7 +209,7 @@ ifeq ($(MACHINE),pleiades)
   MODCMD = . /usr/local/lib/init/global.profile && module purge && module load comp-intel mpi-sgi/mpt
   FCP = ifort -lmpi
   FCS = ifort
-  OPT_FLAGS = -O3 -fp-model precise -fpp
+  OPT_FLAGS = -O3 -fp-model precise -fpp -xCORE-AVX2
   SMS = /nobackupp8/akubaryk/save/sms/SMSr825-intel
 endif
 
