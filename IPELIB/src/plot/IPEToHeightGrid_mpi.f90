@@ -494,7 +494,7 @@ CONTAINS
   INTEGER         :: i1, i2, i3, i_max_location
 
     dlat = 180.0_real_prec/REAL( nlat-1,real_prec8 ) 
-    dlon = 360.0_real_prec/REAL( nlon-1,real_prec8 ) 
+    dlon = 360.0_real_prec/REAL( nlon,real_prec8 ) 
 
     do l=1,nlat
       y(l) = -90.0_real_prec + REAL(l-1,real_prec8)*dlat
@@ -508,7 +508,7 @@ CONTAINS
       do l=1,nlat
           do m=1,nlon
 
-              height_km = ((iheight - 1) * 5) + nlat
+              height_km = ((iheight - 1) * 5) + nlat-1
               z(iHeight) = REAL( height_km, real_prec8 ) 
               oplus_fixed(m,l,iheight) = 0.0
               hplus_fixed(m,l,iheight) = 0.0
