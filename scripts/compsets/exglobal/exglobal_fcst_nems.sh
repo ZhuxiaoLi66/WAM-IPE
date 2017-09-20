@@ -412,12 +412,12 @@ export ENS_NUM=${ENS_NUM:-1}
 export FM=${FM}
 
 #  Command line arguments.
-if [ $NEMSIO_IN = .false. ] ; then
- export SIGI=${1:-${SIGI:-?}}
-else
- export GRDI=${1:-${GRDI:-?}}
- export SIGI=${1:-${GRDI:-?}}
-fi
+#if [ $NEMSIO_IN = .false. ] ; then
+# export SIGI=${1:-${SIGI:-?}}
+#else
+# export GRDI=${1:-${GRDI:-?}}
+# export SIGI=${1:-${GRDI:-?}}
+#fi
 
 export SFCI=${2:-${SFCI:-?}}
 export SIGO=${3:-${SIGO}}
@@ -948,6 +948,9 @@ if [[ $ENS_NUM -le 1 ]] ; then
     ln -fs $NEUTI ipe_grid_neutral_params
     if [ $FHROT -gt 0 ] ; then
       export RESTART=.true.
+      ln -fs $GRDI  grid_ini
+      ln -fs $GRDI2 grid_ini2
+      ln -fs $SIGI2 sig_ini2
     else
       export RESTART=.false.
     fi
@@ -1209,25 +1212,6 @@ else
     INI_DAY=$(echo $CDATE_SIG | cut -c7-8)
     INI_HOUR=$(echo $CDATE_SIG | cut -c9-10)
     export CDATE=$CDATE_SIG
-
-
-#wanghj
- CDATE6=`$NDATE +06 $CDATE`
-
- INI_YEAR6=$(echo $CDATE6 | cut -c1-4)
- INI_MONTH6=$(echo $CDATE6 | cut -c5-6)
- INI_DAY6=$(echo $CDATE6 | cut -c7-8)
- INI_HOUR6=$(echo $CDATE6 | cut -c9-10)
-
- CDATE3=`$NDATE +03 $CDATE`
- INI_YEAR3=$(echo $CDATE3 | cut -c1-4)
- INI_MONTH3=$(echo $CDATE3 | cut -c5-6)
- INI_DAY3=$(echo $CDATE3 | cut -c7-8)
- INI_HOUR3=$(echo $CDATE3 | cut -c9-10)
-
- START_UT_SEC=`expr ${INI_HOUR3} \* 3600`
-
-
 fi
 
 ## copy configure files needed for NEMS GFS
@@ -1265,18 +1249,39 @@ fi
 # Add time dependent variables F10.7 and kp into the WAM model.
 #--------------------------------------------------------------
 if [ $IDEA = .true. ]; then
+  mod6=$((6-INI_HOUR%6))
+  mod3=$((3-INI_HOUR%6))
+  CDATE6=`$NDATE $mod6 $CDATE`
+
+  INI_YEAR6=$(echo $CDATE6 | cut -c1-4)
+  INI_MONTH6=$(echo $CDATE6 | cut -c5-6)
+  INI_DAY6=$(echo $CDATE6 | cut -c7-8)
+  INI_HOUR6=$(echo $CDATE6 | cut -c9-10)
+
+  CDATE3=`$NDATE $mod3 $CDATE`
+  INI_YEAR3=$(echo $CDATE3 | cut -c1-4)
+  INI_MONTH3=$(echo $CDATE3 | cut -c5-6)
+  INI_DAY3=$(echo $CDATE3 | cut -c7-8)
+  INI_HOUR3=$(echo $CDATE3 | cut -c9-10)
+
+  START_UT_SEC=`expr ${INI_HOUR3} \* 3600`
+
   # global_idea fix files
   ${NLN} $FIX_IDEA/global_idea* .
 
   # copy in xml kp/f107
   if [ -e $WAMINDIR/wam_input-${INI_YEAR6}${INI_MONTH6}${INI_DAY6}T${INI_HOUR6}15.xml ] ; then
-  ${NCP} $WAMINDIR/wam_input-${INI_YEAR6}${INI_MONTH6}${INI_DAY6}T${INI_HOUR6}15.xml ./wam_input2.xsd
-  # convert to ascii
-  $BASE_NEMS/../scripts/parse_f107_xml/parse.py
-  # now f107
-  ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
+    ${NCP} $WAMINDIR/wam_input-${INI_YEAR6}${INI_MONTH6}${INI_DAY6}T${INI_HOUR6}15.xml ./wam_input2.xsd
+    # convert to ascii
+    $BASE_NEMS/../scripts/parse_f107_xml/parse.py
+    # now f107
+    ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
   else
-  ${NLN} $COMOUT/wam_input_f107_kp.txt ${DATA}
+    if [ -e $COMOUT/wam_input_f107_kp.txt ] ; then
+      ${NCP} $COMOUT/wam_input_f107_kp.txt ${DATA}
+    else
+      echo "failed, no f107 file" ; exit 1
+    fi
   fi
 
   # RT_WAM

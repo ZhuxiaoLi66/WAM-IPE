@@ -18,6 +18,12 @@ export CONFIGDIR=`pwd`/config
 # load non-machine-specific general configuration: dependent directories, executables, etc.
 . $CONFIGDIR/general.config
 
+if [ $RESTART = .true. ] ; then
+. $CONFIGDIR/restart.config
+else
+. $CONFIGDIR/coldstart.config
+fi
+
 # load ESMF variables
 . $CONFIGDIR/esmf.config
 
@@ -33,12 +39,6 @@ if [ $WAM_IPE_COUPLING = .true. ] ; then
 
 # load the namelist options
 . $CONFIGDIR/wam-ipe_dpnamelist.config
-fi
-
-if [ $RESTART = .true. ] ; then
-. $CONFIGDIR/restart.config
-else
-. $CONFIGDIR/coldstart.config
 fi
 
 # run our checks to make sure we're not walking into any walls before we try to run a job

@@ -201,7 +201,7 @@ if [ $WAM_IPE_COUPLING = .true. ] ; then
 			iday=`  printf "%02d" $(echo $idate | cut -d' ' -f 3)`
 			ihour=` printf "%02d" $(echo $idate | cut -d' ' -f 4)`
 			idate=${iyear}${imonth}${iday}${ihour}
-			CIPEDATE=`$NDATE $NFHOUR_ARR $idate`
+			CIPEDATE=`$NDATE $NFHOUR_ARR $idate`${IPE_MINUTES:-00}
 			# NDATE adds NFHOUR_ARR[0] to idate properly
 		fi
 	fi
