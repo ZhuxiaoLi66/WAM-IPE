@@ -50,5 +50,5 @@ echo "fcst done"
 exit $status
 EOF
 
-#$SCHEDULER_SUB < $tmp
-#rm -rf $tmp
+$SCHEDULER_SUB < $tmp
+rm -rf $tmp
