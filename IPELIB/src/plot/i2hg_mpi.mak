@@ -1,8 +1,6 @@
-
-
 FC  = mpiifort
 OPT = -O3 -fpp 
-#OPT = -O0 -g -traceback -fpp
+#OPT = -O0 -g -traceback -fpe0
 LIB = -L${NETCDF}/lib -lnetcdff -lnetcdf
 INC = -I${NETCDF}/include
 
@@ -18,3 +16,6 @@ IPEToHeightGrid_mpi.o : IPEToHeightGrid_mpi.f90
 
 module_precision.o : ../main/module_precision.f90
 	${FC} ${OPT} -c ../main/module_precision.f90 -o $@
+
+clean :
+	rm -rf *.mod *.o
