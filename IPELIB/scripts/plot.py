@@ -112,10 +112,12 @@ def writetex():
 				if ( (i+1) % 2 == 0 ):
 					f.write('\n')
 					f.write('\\end{figure}\n\n')
+					if ( (i+1) % 18 == 0 ):
+						f.write('\\clearpage\n\n')
 					f.write('\\begin{figure}[!htb]\n')
 				else:
 					f.write('\\hfill\n')
-			if( (len(figures)+1) % 3 != 0 ):
+			if( (len(figures)+1) % 2 != 0 ):
 				f.write('\\end{figure}\n')
 		# finalize
 		f.write('\\end{document}\n')
