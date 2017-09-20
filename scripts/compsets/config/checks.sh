@@ -123,6 +123,11 @@ if [ -z $ROTDIR  ] || [ ! -d $ROTDIR ] ; then
 	echo "   ROTDIR not found. creating $ROTDIR"
 	mkdir -p $ROTDIR
 fi
+echo "checking for RESTARTDIR: $RESTARTDIR"
+if [ -z $RESTARTDIR  ] || [ ! -d $RESTARTDIR ] ; then
+        echo "   RESTARTDIR not found. creating $RESTARTDIR"
+        mkdir -p $RESTARTDIR
+fi
 # check if ICs are in place
 if [ $RESTART = .false. ] ; then # cold start
 	echo "checking for atmospheric/surface initial conditions in ROTDIR: $SEARCH$CDATE"
