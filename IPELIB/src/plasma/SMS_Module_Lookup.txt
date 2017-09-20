@@ -28,3 +28,6 @@ module_sub_PLASMA ../plasma/module_sub_plasma.f90
 module_sub_plasma ./module_sub_plasma_sms.f.tmp
 module_sunloc ../eldyn/module_sunloc.f
 module_unit_conversion ../main/module_unit_conversion.f90
+module_deplete_flux_tube ./module_deplete_flux_tube_sms.f.tmp
+module_calcpoleval ./calcPoleVal_sms.f.tmp
+module_preppoleval ../main/prepPoleVal_sms.f.tmp

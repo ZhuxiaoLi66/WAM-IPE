@@ -32,6 +32,8 @@
       USE module_SetModel ,ONLY: SetModel
       USE module_GET_TILT ,ONLY: GET_TILT
       USE module_ADJUST ,ONLY: ADJUST
+      use module_input_parameters,only:sw_ctip_input,lpi,swbt,swangle   &
+     &,swvel,sw_debug,mype
 !-----------------------------------------------------------------
 !  local variables
 !-----------------------------------------------------------------
@@ -62,15 +64,21 @@ c     if(debug) write(iulog,*) 'prep_weimer: day->day of month',
 c    &iday,imo,iday_m,ut
       tilt = get_tilt( iyear, imo, iday_m, ut )
 
-c      if(debug) then
-c       write(iulog,"(/,'efield prep_weimer:')")
-c       write(iulog,*)  '  Bz   =',bz
-c       write(iulog,*)  '  By   =',by
-c       write(iulog,*)  '  Bt   =',bt
-c       write(iulog,*)  '  angle=',angle
-c       write(iulog,*)  '  VSW  =',v_sw
-c       write(iulog,*)  '  tilt =',tilt
-c      end if
+      if ( sw_ctip_input ) then
+        bt    = swbt(LPI)
+        angle = swangle(LPI)
+        v_sw  = swvel(LPI)
+
+
+      if (mype==0) then
+      print"('Wei:LPI',i4,'Bt',f6.1,'ang',f8.0,'Vsw',f8.0,'tlt',e11.2)" &
+     &,lpi,bt,angle,v_sw,tilt
+!       write(6,*)  '  Bz   =',bz
+!       write(6,*)  '  By   =',by
+       write(unit=1001,FMT='(i8,3f8.2,e12.4)')INT(ut*3600.)             &
+     &,bt,angle,v_sw,tilt
+      end if                    !mype
+      end if !( sw_ctip_input ) then
 
       call SetModel( angle, bt, tilt, v_sw )
 

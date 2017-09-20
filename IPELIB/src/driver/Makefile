@@ -4,24 +4,17 @@ TOP = ..
 
 PSRCS = driver_ipe.f90
 
-MODS   = $(wildcard $(addprefix ../,$(addsuffix /*.mod,$(filter-out driver,$(DIRS)))))
-OBJS   = $(wildcard $(addprefix ../,$(addsuffix /*.o,  $(filter-out driver,$(DIRS)))))
+OBJS   = $(wildcard $(addprefix ../,$(addsuffix /*.o,$(filter-out driver,$(DIRS)))))
 
-.PHONY: all includes
+.PHONY: exe
 
-all: $(EXE) includes
+exe: $(EXE)
 
 include $(TOP)/Makefile.common
 
-$(EXE): driver_ipe.o $(LIB)
+$(EXE): driver_ipe.o $(OBJS)
 ifeq ($(PARALLELISM),parallel)
-	$(FCP) $(FFLAGS) $(INCS) -o $@ $^ -L$(dir $(LIB)) -lipe $(SMS_INCFLAGS) $(SMS_LDFLAGS)
+	$(MODCMD) && $(FCP) $(FFLAGS) $(INCS) -o $@ $^ $(SMS_INCFLAGS) $(SMS_LDFLAGS)
 else
-	$(FCS) $(FFLAGS) $(INCS) -o $@ $^ -L$(dir $(LIB)) -lipe 
+	$(MODCMD) && $(FCP) $(FFLAGS) $(INCS) -o $@ $^ $(GPTL_LDFLAGS)
 endif
-
-$(LIB): $(OBJS)
-	ar ruv $@ $(OBJS)
-
-includes: $(MODS)
-	cp -uv $^ $(INCDIR)

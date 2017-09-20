@@ -30,10 +30,10 @@
       INTEGER (KIND=int_prec),INTENT(IN) :: lp
 !---
 
-      REAL(KIND=real_prec) :: phi_t0(2) !magnetic longitude,phi[rad] at T0(previous time step)
-      REAL(KIND=real_prec) :: theta_t0(2) !magnetic latitude,theta[rad] at T0
+      REAL(KIND=real_prec8) :: phi_t0(2) !magnetic longitude,phi[rad] at T0(previous time step)
+      REAL(KIND=real_prec8) :: theta_t0(2) !magnetic latitude,theta[rad] at T0
       INTEGER (KIND=int_prec),DIMENSION(2,2) :: mp_t0,lp_t0 !1st dim:ihem;2nd dim:i0/i1
-      REAL(KIND=real_prec) :: r0_apex ![meter]
+      REAL(KIND=real_prec8) :: r0_apex ![meter]
 
 !---
 
@@ -41,34 +41,36 @@
 !&,plasma_grid_3d(IN,mp)%GL, plasma_grid_3d(IS,mp)%GL       
 
 ! calculate where the flux tube is coming from (semi-lagulangian issue)
- IF ( sw_th_or_R==0 ) THEN
-      CALL stepback_mag_th ( mp,lp &
-!d     &, mlon_rad(mp) &
-!d     &, plasma_grid_3d(IN,mp)%GL, plasma_grid_3d(IS,mp)%GL &
-     &, phi_t0      , theta_t0 ) 
-!if(sw_debug) print *,'stepback_mag finished!'
+!dbg20140617
+!t IF ( sw_th_or_R==0 ) THEN
+!t      CALL stepback_mag_th ( mp,lp &
+!t!d     &, mlon_rad(mp) &
+!t!d     &, plasma_grid_3d(IN,mp)%GL, plasma_grid_3d(IS,mp)%GL &
+!t     &, phi_t0      , theta_t0 ) 
+!t if(sw_debug) print *,'stepback_mag th finished!'
 
- ELSE IF ( sw_th_or_R==1 ) THEN
+!t  ELSE IF ( sw_th_or_R==1 ) THEN
       CALL stepback_mag_R (utime, mp,lp, phi_t0 , theta_t0, r0_apex )
 if(sw_debug) print *,'stepback_magR finished!'
- END IF !( sw_th_or_R==1 ) THEN
+!t  END IF !( sw_th_or_R==1 ) THEN
 
- IF ( sw_th_or_R==0 ) THEN
-      CALL find_neighbor_grid_th ( mp,lp  &
-     &, phi_t0  , theta_t0 &
-     &,  mp_t0  ,    lp_t0)
-!if(sw_debug) print *,'find_neighbor_grid_th finished!'
+!t  IF ( sw_th_or_R==0 ) THEN
+!t      CALL find_neighbor_grid_th ( mp,lp  &
+!t     &, phi_t0  , theta_t0 &
+!t     &,  mp_t0  ,    lp_t0)
+!t if(sw_debug) print *,'find_neighbor_grid_th finished!'
 
- ELSE IF ( sw_th_or_R==1 ) THEN
+!t ELSE IF ( sw_th_or_R==1 ) THEN
       CALL find_neighbor_grid_R ( mp,lp, phi_t0, theta_t0, r0_apex &
      &, mp_t0,lp_t0 )
 if(sw_debug) print *,'find_neighbor_grid R finished!'
- END IF !( sw_th_or_R==1 ) THEN
+!t END IF !( sw_th_or_R==1 ) THEN
 
 
 ! prepare all the parameters along the flux tube by interpolation, in addition to the adiabatic term, compressional term
       CALL interpolate_flux_tube ( mp,lp, phi_t0,theta_t0, r0_apex &
-     &, mp_t0,lp_t0 )
+     &, mp_t0,lp_t0 ,&
+& utime) !dbg20141209
 if(sw_debug) print *,'interpolate_flux_tube finished!' 
 
       END SUBROUTINE perpendicular_transport

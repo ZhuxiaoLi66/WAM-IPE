@@ -6,7 +6,7 @@ PSRCS = get_efield90km.f           \
         module_cal_monthday.f      \
         module_efield_init.f       \
         module_eldyn.f             \
-        module_init_eldyn.f90        \
+        module_init_eldyn.f        \
         module_read_acoef.f        \
         module_sub_eldyn.f
 

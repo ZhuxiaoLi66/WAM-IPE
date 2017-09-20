@@ -29,10 +29,10 @@
       INTEGER (KIND=int_prec), INTENT(IN) :: mp  !mag-lon index
       INTEGER (KIND=int_prec), INTENT(IN) :: lp  !mag-lat index
 !      REAL(KIND=real_prec), INTENT(IN) :: DT  ! time step [second]      
-      REAL(KIND=real_prec) :: phi_t1  !magnetic longitude,phi at T1
+      REAL(KIND=real_prec8) :: phi_t1  !magnetic longitude,phi at T1
       REAL(KIND=real_prec) :: theta_t1(2)!magnetic latitude,theta at T1
 ! OUTPUT
-      REAL(KIND=real_prec), INTENT(OUT) :: phi_t0(2)!magnetic longitude,phi[rad] at T0
+      REAL(KIND=real_prec8), INTENT(OUT) :: phi_t0(2)!magnetic longitude,phi[rad] at T0
       REAL(KIND=real_prec), INTENT(OUT) :: theta_t0(2) !magnetic latitude,theta[rad] at T0
 !---local variables---
       REAL(KIND=real_prec) :: v_e(2)  !1:ed2/be3 (4.18) ;2: -ed1/be3 (4.19)

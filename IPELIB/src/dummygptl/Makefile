@@ -12,7 +12,7 @@ $(ARCV): $(OBJS)
 	ar rc $@ $^
 
 %.o: %.F90
-	$(FCS) -c $<
+	$(MODCMD) && $(FCS) -c $<
 
 clean:
 	$(RM) *.o *.a

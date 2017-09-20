@@ -28,7 +28,7 @@
 !--- INPUT ---
       INTEGER (KIND=int_prec ),INTENT(IN) :: mp
       INTEGER (KIND=int_prec ),INTENT(IN) :: lp
-      REAL    (KIND=real_prec),INTENT(IN) :: phi_t0(2)  !magnetic longitude,phi[rad] at T0(previous time step)
+      REAL    (KIND=real_prec8),INTENT(IN) :: phi_t0(2)  !magnetic longitude,phi[rad] at T0(previous time step)
       REAL    (KIND=real_prec),INTENT(IN) :: theta_t0(2)!magnetic latitude,theta[rad] at T0
 !---local
       INTEGER (KIND=int_prec ) :: ihem,ihem_max

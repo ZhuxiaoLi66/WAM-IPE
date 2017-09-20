@@ -1,8 +1,8 @@
 #!/bin/bash
 
+echo $1 $2 $3 $4
 # Control variables
 
-sw_grid=1
 sw_neutral=1
 
 # Functions
@@ -71,28 +71,6 @@ runscript_trillian() {
   echo "echo 'ipe failed' && exit 23"
 }
 
-runscript_zeus() {
-
-  # Produce a script to run IPE on zeus.
-
-  echo "#!/bin/bash -x"
-  echo "#PBS -A $acct"
-  echo "#PBS -d $PWD"
-  echo "#PBS -j oe"
-  echo "#PBS -l procs=$taskreq"
-  echo "#PBS -l walltime=$IPETIME"
-  echo "#PBS -N $jobname"
-  echo "#PBS -o output.batch"
-  echo "#PBS -q $IPEQUEUE"
-  echo "#PBS -W umask=022"
-  echo "export $envvars"
-  echo "$($modcmd $machine $compiler)"
-  echo "module list"
-  test $parallelism == parallel && extra="mpiexec_mpt -np $tasks "
-  echo "time $extra./$(basename $exe) >output 2>&1 && echo 'ipe finished' && exit 0"
-  echo "echo 'ipe failed' && exit 23"
-}
-
 runscript_theia() {
 
   # Produce a script to run IPE on theia.
@@ -110,7 +88,7 @@ runscript_theia() {
   echo "export $envvars"
   echo "$($modcmd $machine $compiler)"
   echo "module list"
-  echo "export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/2013160300/grid_80x170/"
+  echo "export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/"
   echo "echo $RESDIR"
   test $parallelism == parallel && extra="mpirun -np $tasks "
   echo "time $extra./$(basename $exe) >output 2>&1 && echo 'ipe finished' && exit 0"
@@ -151,12 +129,13 @@ scr=$(basename $0)
 # namelist files.
 
 ipe_sets=""
+ipe_setsSw=""
 sms_sets=""
 
 # Set up some lists of valid options for error checking.
 
 compilers="cray intel lahey pgi"
-machines="trillian zeus yellowstone theia"
+machines="trillian yellowstone theia"
 parallelisms="parallel serial"
 
 # Set variables for command-line arguments.
@@ -186,7 +165,7 @@ test $tasks -lt 2 && taskreq=2 || taskreq=$tasks
 
 # Handle SMS compare_var option. For a compare_var run, execute e.g.
 #
-#  COMPARE_VAR=1,2 qsubipe zeus intel parallel 3
+#  COMPARE_VAR=1,2 qsubipe intel parallel 3
 #
 # for a 1-task-vs-2-task run. The final core request must be the sum of the two
 # numbers assigned to the COMPARE_VAR environment variable.
@@ -208,13 +187,9 @@ case $machine in
     compiler_check "cray intel pgi" $compiler $machine
     setc IPEDATA  /mnt/lustre/lus0/space/madden/IPE/data
     setc IPEQUEUE workq
-    setc IPETIME  00:30:00
+    setc IPETIME  08:00:00
     setc IPEWIND  $IPEDATA
     queue_cmd=qsub
-    case $sw_grid in
-      0) gridfile=$IPEDATA/ipe_grid             ;;
-      *) fail "$0: Grid ID '$sw_grid' unknown." ;;
-    esac
     case $compiler in
       cray)
         envvars="OMP_NUM_THREADS=1"
@@ -225,63 +200,33 @@ case $machine in
     esac
     ;;
 
-  # zeus stanza
-
-  "zeus")
-    compiler_check "intel lahey" $compiler $machine
-    setc IPEDATA  /scratch1/portfolios/NCEPDEV/swpc/noscrub/Naomi.Maruyama/IPEdata/data
-    setc IPEQUEUE batch
-    setc IPETIME  00:30:00
-    setc IPEWIND  /scratch1/portfolios/NCEPDEV/swpc/noscrub/Naomi.Maruyama/IPEdata/wind
-    acct=swpc
-    griddir=/scratch1/portfolios/NCEPDEV/swpc/noscrub/Naomi.Maruyama/grid
-    queue_cmd=qsub
-    case $sw_grid in
-      0) gridfile=$IPEDATA/ipe_grid                                               ;;
-      1) gridfile=$griddir/apex/GIP_apex_coords_global_lowres_new20120705         ;;
-      2) gridfile=$griddir/apex/GIP_apex_coords_global_lowres_new_2dynamo20120709 ;;
-      3) gridfile=$griddir/tldp/GIP_apex_coords_global_lowres_new_tilt20120709    ;;
-      *) fail "$0: Grid ID '$sw_grid' unknown."                                   ;;
-    esac
-    case $compiler in
-      intel)
-        envvars="MPI_BUFS_PER_HOST=2048 MPI_BUFS_PER_PROC=256"
-        ;;
-      lahey)
-        envvars="MPI_BUFS_PER_HOST=1024 MPI_BUFS_PER_PROC=128"
-        ipe_sets+=" -s nmswitch:mpstop=2"
-        ;;
-    esac
-    ;;
-
   # theia stanza
 
   "theia")
     compiler_check "intel pgi" $compiler $machine
-#    setc IPEDATA  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/IPEdata/data
-#    setc IPEDATA  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/runs/tmp20150730/trunk/run/1444997033_ipe_theia_intel_parallel_80
-#    setc IPEDATA /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/20090115_1hr_spacewx_80x170
-    setc IPEDATA /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/20090115_1day_spacewx_80x170 
+#note20151116: IPEDATA,IPEQUEUE,IPETIME can be overridden by the setup(setenv) in script
+#0)    setc IPEDATA  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/IPEdata/data
+#1)    setc IPEDATA  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/runs/tmp20150730/trunk/run/1444997033_ipe_theia_intel_parallel_80
+#    setc IPEDATA  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/runs/tmp20150730/trunk/run/1447671826_ipe_theia_intel_parallel2_80
+#    setc IPEDATA  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/runs/tmp20150730/trunk/run/1459115822_ipe_theia_intel_parallel2_80
+#    storm is run1
+#    setc IPEDATA  /scratch3/NCEPDEV/stmp2/Naomi.Maruyama/mpi20160330v2/run1/1461436195_ipe_theia_intel_parallel2_93
+#    no storm is run2
+#    setc IPEDATA  /scratch3/NCEPDEV/stmp2/Naomi.Maruyama/mpi20160330v2/run2/1462657622_ipe_theia_intel_parallel2_93
+#    setc IPEDATA  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/runs/tmp20150730/trunk/run/1469880705_ipe_theia_intel_parallel1_80
+#    setc IPEDATA /scratch3/NCEPDEV/stmp2/Naomi.Maruyama/20170314Init4Jacques/run/1491413416_ipe_theia_intel_parallel1_80
+    setc IPEDATA /scratch3/NCEPDEV/stmp2/Naomi.Maruyama/20170314Init4Jacques/run/1490799959_ipe_theia_intel_parallel1_80/
+
     echo "IPEDATA=" $IPEDATA
-#    setc IPEQUEUE debug
     setc IPEQUEUE batch
     echo "IPEQUEUE=" $IPEQUEUE
-    setc IPETIME  05:00:00
-    if [ $IPEQUEUE = debug ]; then
-      setc IPETIME  00:30:00
-    fi
+    setc IPETIME  08:00:00
     echo "IPETIME=" $IPETIME
     setc IPEWIND  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/IPEdata/wind
     acct=swpc
     griddir=/scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/grid
     queue_cmd=qsub
-    case $sw_grid in
-      0) gridfile=$IPEDATA/ipe_grid                                               ;;
-      1) gridfile=$griddir/apex/1/GIP_apex_coords_global_lowres_new20120705         ;;
-      2) gridfile=$griddir/apex/2/GIP_apex_coords_global_lowres_new_2dynamo20120709 ;;
-      3) gridfile=$griddir/tldp/GIP_apex_coords_global_lowres_new_tilt20120709    ;;
-      *) fail "$0: Grid ID '$sw_grid' unknown."                                   ;;
-    esac
+    gridfile=$griddir/apex/1/GIP_apex_coords_global_lowres_new20120705 
     case $compiler in
       intel)
         envvars="MPI_BUFS_PER_HOST=2048 MPI_BUFS_PER_PROC=256"
@@ -289,6 +234,7 @@ case $machine in
       lahey)
         envvars="MPI_BUFS_PER_HOST=1024 MPI_BUFS_PER_PROC=128"
         ipe_sets+=" -s nmswitch:mpstop=2"
+        ipe_setsSw+=" -s nmswitch:mpstop=2"
         ;;
     esac
     ;;
@@ -307,8 +253,9 @@ test "$parallelism" = "parallel" && rundir+="_$tasks"
 mkdir $rundir || fail
 echo Created run directory: $rundir
 inp=IPE.inp
+inpSw=IPEsw.inp
 smsnl=SMSnamelist
-for x in $exe coef* GPTLnamelist $inp load_balance_groups1 $smsnl wei96.cofcnts; do
+for x in $exe coef* GPTLnamelist $inp $inpSw load_balance_groups1 $smsnl wei96.cofcnts; do
   cp $x $rundir || fail
 done
 linksafe $gridfile $rundir/ipe_grid
@@ -321,34 +268,57 @@ if [ $sw_neutral -eq 3 ]; then
   linksafe $IPEWIND/ut_input $rundir/ut_input2009017
   linksafe $IPEWIND/wind_input $rundir/wind_input2009017
 fi
+linksafe  /home/Naomi.Maruyama/aurora/20150810/ionprof        $rundir/ionprof
+linksafe  /home/Naomi.Maruyama/aurora/20150810/tiros_spectra  $rundir/tiros_spectra
 ###nm20170809 george's new startup files
 #linksafe /scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/ipe_grid_plasma_params $rundir/ipe_grid_plasma_params
-export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/2013160300/grid_80x170/
+export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/
 echo "RESDIR=" $RESDIR
-
 
 # Enter the run directory, edit SMSnamelist, create and submit the run script.
 
 cd $rundir || fail
-if [ $parallelism == parallel ]; then
-  if [ -n "$COMPARE_VAR" ]; then
-    sms_sets+=" -s smsnamelist:compare_var_on=t"
-    sms_sets+=" -s smsnamelist:compare_var_ntasks_1=$cv1"
-    sms_sets+=" -s smsnamelist:compare_var_ntasks_2=$cv2"
-    sms_sets+=" -s smsnamelist:set_process_layout=f"
-    jobname+="_cv"
-  else
-    sms_sets="-s smsnamelist:process_layout=1,$tasks"
-  fi
-  $(nml) -i $smsnl -o $smsnl $sms_sets || fail "$0: Could not edit $smsnl"
-fi
-$(nml) -i $inp -o $inp $ipe_sets || fail "$0: Could not edit $inp"
+#if [ $parallelism == parallel ]; then
+#  if [ -n "$COMPARE_VAR" ]; then
+#    sms_sets+=" -s smsnamelist:compare_var_on=t"
+#    sms_sets+=" -s smsnamelist:compare_var_ntasks_1=$cv1"
+#    sms_sets+=" -s smsnamelist:compare_var_ntasks_2=$cv2"
+#    sms_sets+=" -s smsnamelist:set_process_layout=f"
+#    jobname+="_cv"
+#  else
+#dbg20160415    sms_sets="-s smsnamelist:process_layout=1,$tasks"
+#   sms_sets="-s smsnamelist:process_layout=$tasks,1"
+#  fi
+#  $(nml) -i $smsnl -o $smsnl $sms_sets || fail "$0: Could not edit $smsnl"
+#fi
+#$(nml) -i $inp   -o $inp   $ipe_sets   || fail "$0: Could not edit $inp"
+$(nml) -i $inpSw -o $inpSw $ipe_setsSw || fail "$0: Could not edit $inpSw"
 modcmd=../../src/modcmd # for manual runs
 test -x $modcmd || modcmd=../modcmd # for test-suite runs
 echo "$(runscript_$machine)" > runscript
 chmod 755 runscript
-jobid=$($queue_cmd runscript || echo FAIL)
+
+###20151209 continuous runs
+#echo "(1)job_number" $job_number
+#job_number=5681824.bqs3
+#echo "(2)job_number" $job_number
+#optDep=-W depend=afterok:$job_number
+#echo "optDep=" $optDep
+
+
+#if [ $job_number == 9999 ]; then 
+#  # original
+#  echo "original"
+  jobid=$($queue_cmd runscript || echo FAIL)
+  #exit 10
+#else
+#  echo "W Depend"
+#  jobid=$($queue_cmd  -W depend=afterok:$job_number  runscript || echo FAIL)
+#  #exit 11
+#fi
+### does not work! why?
+###jobid=$($queue_cmd ${optDep} runscript || echo FAIL)
 test $jobid == FAIL && fail "$0: Failed to submit job."
 echo "The job $jobid has been submitted."
-qstat -a |grep Naomi
+qstat -u Naomi.Maruyama
 exit 0

@@ -18,8 +18,7 @@
 !,  ON_m3_msis, N2N_m3_msis, O2N_m3_msis, TN_k_msis &
 !nm20170424 wind output corrected
 &,vn_ms1_4output
-      USE module_input_parameters,ONLY : parallelBuild, &
-        hTop_m => mesh_height_max
+      USE module_input_parameters,ONLY : parallelBuild
 
       IMPLICIT NONE
 
@@ -70,6 +69,8 @@
       REAL (KIND=real_prec) :: dum0(NPTS2D)
 !dbg20120313
       INTEGER(KIND=int_prec) :: utime_dum
+!include WAM fields options
+      real(KIND=real_prec), parameter :: hTop_m=7.82E+05 !m
 !1:O,2:O2;3:N2
       INTEGER(KIND=int_prec) :: ihTopN,ihTopS,ihTop,jth,jjth
       INTEGER(KIND=int_prec) :: ihem,iStep,midPoints
@@ -159,13 +160,13 @@
      &                 , Vn_ms1_msis(1:3,1:NPTS)  )
      
 !SMS$IGNORE BEGIN
-#ifdef DEBUG
+!#ifdef DEBUG
           if (mp == 1 .and. lp == 1) then
              do i = in , is
                 print *,'THISS ',i,tn_k_msis(i),tn_k(i,mp,lp)
              enddo
           endif
-#endif
+!#endif
 !SMS$IGNORE END
 
 
@@ -203,17 +204,17 @@
 !dbg20160715: temporarily change the code to use MSIS/HWM for the 1st time step, because wamfield is not ready for the 1st time step for a reason...
 
 !SMS$IGNORE BEGIN
-#ifdef DEBUG
+!#ifdef DEBUG
              print*,' YAMPA0 BEFORE utime',ut_start_perp_trans,' if block ',utime
-#endif
+!#endif
 !SMS$IGNORE END
 
              if ( utime==ut_start_perp_trans ) then
 
 !SMS$IGNORE BEGIN
-#ifdef DEBUG
+!#ifdef DEBUG
                 print*,mype,mp,lp,'MSIS utime=',utime      
-#endif
+!#endif
 !SMS$IGNORE END
 !
 ! copy across the msis parameters:
@@ -465,12 +466,7 @@ n2n_m3( ihTopS:IS,lp,mp) = fracWamD*WamField(ihTopS:IS,lp,mp, jjth) + (1.-fracWa
 
          end do jth_loop !jth=1,3 !2:4 for WamField,swNeuPar            
 
-           !nm20170424 wind output corrected
-           !jth_loop4wind: do jth=1,3
-           !   flux_tube0: do i=IN,IS
-           !      vn_ms1_4output(i-IN+1,lp,mp,jth)=vn_ms1(jth,i-IN+1)
-           !   end do flux_tube0
-           !end do jth_loop4wind
+
 !
 
            if(sw_debug)then 
@@ -490,13 +486,13 @@ n2n_m3( ihTopS:IS,lp,mp) = fracWamD*WamField(ihTopS:IS,lp,mp, jjth) + (1.-fracWa
              STOP
         end if !      if ( sw_neutral == 3
 
+        !nm20170424 wind output corrected
+        jth_loop4wind: do jth=1,3
+           flux_tube0: do i=IN,IS
+              vn_ms1_4output(i-IN+1,lp,mp,jth)=vn_ms1(jth,i-IN+1)
+           end do flux_tube0
+        end do jth_loop4wind
 
-           !nm20170424 wind output corrected
-           jth_loop4wind: do jth=1,3
-              flux_tube0: do i=IN,IS
-                 vn_ms1_4output(i-IN+1,lp,mp,jth)=vn_ms1(jth,i-IN+1)
-              end do flux_tube0
-           end do jth_loop4wind
 
 
          !nm20151130
@@ -590,69 +586,40 @@ IF ( sw_debug ) THEN
       print "(' vn_east_ms1  = ',2F10.4)",vn_ms1(1,1), vn_ms1(1,npts)
       print "(' vn_north_ms1 = ',2F10.4)",vn_ms1(2,1), vn_ms1(2,npts)
 
-!dbg20110923      print "(' un_meast_ms1     = ',2F10.4)",un_ms1(IN,lp,mp,1), un_ms1(IS,lp,mp,1)
-!dbg20110923      print "(' un_down/eq_ms1   = ',2F10.4)",un_ms1(IN,lp,mp,2), un_ms1(IS,lp,mp,2)
+
       print "(' un_para_ms1      = ',2F10.4)",un_ms1(IN,lp,mp,3), un_ms1(IS,lp,mp,3)
 END IF !( sw_debug ) THEN 
 
 
-!nm20110822: no more allocatable arrays
-!          IF ( ALLOCATED( glon_deg ) )  DEALLOCATE( glon_deg )
-!          IF ( ALLOCATED( glat_deg ) )  DEALLOCATE( glat_deg )
-!          IF ( ALLOCATED( alt_km   ) )  DEALLOCATE( alt_km  )
-!          IF ( ALLOCATED( Vn_ms1   ) )  DEALLOCATE( Vn_ms1   )
+if (mp==10.and.lp==10) then
+!SMS$IGNORE BEGIN
+!#ifdef DEBUG
+	print *,mype, ' GEORGE JMIN_IN TOTAL ', JMIN_IN
+	print *,mype, ' GEORGE JMIN_IN(10) ', JMIN_IN(lp)
+	print *,mype, ' GEORGE JMAX_IS TOTAL ', JMAX_IS
+	print *,mype, ' GEORGE JMAX_IS(10) ', JMAX_IS(lp)
+  print *,mype,'*** GEORGE IN NEUTRAL ',tn_k(JMIN_IN(10)+2,lp,mp)
+  print *,mype,'*** GEORGE IN NEUTRAL ',tn_k_msis(JMIN_IN(lp)+2)
+	print *,mype,'***** THIS BNOW ',tn_k(JMIN_IN(lp)+2,lp,mp)
+	print *,mype,'***** THIS BNOW2 ',Un_ms1(JMIN_IN(lp)+2,lp,mp,1),Un_ms1(JMIN_IN(lp)+2,lp,mp,2),Un_ms1(JMIN_IN(lp)+2,lp,mp,3)
+	print *,mype,'***** THIS BNOW3 ',on_m3(JMIN_IN(lp)+2,lp,mp)
+  print *,mype,'***** THIS BNOW4 ',n2n_m3(JMIN_IN(lp)+2,lp,mp)
+  print *,mype,'***** THIS BNOW5 ',o2n_m3(JMIN_IN(lp)+2,lp,mp)
+!#endif
+!SMS$IGNORE END
+end if !(mp==10) then
+
 
         END DO  apex_latitude_height_loop !: DO lp = 1,NLP
 
-!nm20120312 output wind
-!write (6000,fmt=*) utime, Un_ms1(1:NPTS2D,mp,3) 
-if ( sw_neutral==2  ) then
-!write (6000,fmt=*) utime, Un_ms1(1:NPTS2D,mp,3) 
-  if(parallelBuild) then
-    print*,'module_neutral: sw_neutral=2 disabled for parallel runs'
-    print*,'stopping in module_neutral'
-    stop
-  else
-    if ( utime==start_time ) then
-      luntmp3=6003
-      filename="wind_input"
-      FORM_dum="formatted  "
-      STATUS_dum="old"
-      CALL open_file ( filename, luntmp3, FORM_dum, STATUS_dum ) 
-    endif
-!read (unit=luntmp3,fmt=*) utime_dum, Un_ms1(1:NPTS2D,mp,3) 
-    read (unit=luntmp3,fmt=*) utime_dum, dum0 
-    if( utime_dum /=utime ) then 
-      print *,"sub-neutral: !STOP! INVALID utime_dum!",utime_dum
-      STOP
-    endif
-    do lp=1,NLP
-      Un_ms1(JMIN_IN(lp):JMAX_IS(lp),lp,mp,3) = dum0(JMIN_ING(lp):JMAX_ISG(lp))
-    enddo
 
-    if( utime==stop_time )   CLOSE(UNIT=luntmp3)
-  endif ! parallelBuild
 
-end if !sw_neutral
+
 
       END DO  apex_longitude_loop  !: DO mp = 1,NMP
 !SMS$PARALLEL END
 
-!SMS$IGNORE BEGIN
-#ifdef DEBUG
-	print *, ' GEORGE JMIN_IN TOTAL ', JMIN_IN
-	print *, ' GEORGE JMIN_IN(10) ', JMIN_IN(10)
-	print *, ' GEORGE JMAX_IS TOTAL ', JMAX_IS
-	print *, ' GEORGE JMAX_IS(10) ', JMAX_IS(10)
-  print *,'*** GEORGE IN NEUTRAL ',tn_k(JMIN_IN(10)+2,10,10)
-  print *,'*** GEORGE IN NEUTRAL ',tn_k_msis(JMIN_IN(10)+2)
-	print *,'***** THIS BNOW ',tn_k(JMIN_IN(10)+2,10,10)
-	print *,'***** THIS BNOW2 ',Un_ms1(JMIN_IN(10)+2,10,10,1),Un_ms1(JMIN_IN(10)+2,10,10,2),Un_ms1(JMIN_IN(10)+2,10,10,3)
-	print *,'***** THIS BNOW3 ',on_m3(JMIN_IN(10)+2,10,10)
-  print *,'***** THIS BNOW4 ',n2n_m3(JMIN_IN(10)+2,10,10)
-  print *,'***** THIS BNOW5 ',o2n_m3(JMIN_IN(10)+2,10,10)
-#endif
-!SMS$IGNORE END
+
       end subroutine neutral
 
       END MODULE module_NEUTRAL_MKS
