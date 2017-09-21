@@ -52,3 +52,4 @@ NEMS/**/*.f90
 NEMS/**/*.F90
 NEMS/**/depend
 NEMS/src/conf/*nems*
+!NEMS/src/conf/configure.nems.NUOPC
