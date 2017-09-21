@@ -1346,13 +1346,24 @@ cat > SMSnamelist <<EOF
   compare_var_on=f
   exact_parallel_sum=f
   load_balance_method=2,1
-  load_balance_on=f,f
-  load_balance_size=40,0
+  load_balance_on=t,f
+  load_balance_size=58,0
   process_layout=${IPEDECOMPARR[0]},${IPEDECOMPARR[1]}
   set_process_layout=t
 /
 EOF
-
+cat > load_balance_groups1 <<EOF
+           1           2           3           4           5           6
+           7           8           9          10          11          12
+          13          14          15          16          17          19
+          21          23          25          27          29          31
+          33          35          37          39          41          43
+          45          48          51          54          57          60
+          63          66          69          73          77          81
+          85          89          92          95          98         101
+         104         107         110         113         116         119
+         123         131         144         170
+EOF
 cat  > IPE.inp <<EOF
 &ipedims
   nlp=170
@@ -1381,34 +1392,34 @@ cat  > IPE.inp <<EOF
   sw_neutral_heating_flip=0
   sw_ohpls=1
   sw_optw_flip=t
+  sw_pe2s=1
   sw_tei=1
   sw_wind_flip=1
   zlbdy_flip=120.00
   zlbnp_inp=115.00
 /
 &nmipe
-  f107av=${F107AVG}
-  f107d=${F107DAY}
+  f107av=113.0
+  f107d=126.0
   internalTimeLoopMax=1
-  ip_freq_eldyn=$DELTIM
-  ip_freq_msis=$DELTIM
-  ip_freq_plasma=$DELTIM
-  ip_freq_output=$IPEFREQ
-  dumpFrequency=3600
-  nday=$DOY
+  ip_freq_eldyn=60
+  ip_freq_msis=900
+  ip_freq_plasma=10
+  ip_freq_output=900
+  ip_freq_paraTrans=60
+  nday=76
   nyear=2000
-  start_time=${START_UT_SEC}
-  time_step=$DELTIM
+  start_time=0
+  time_step=10
 /
 &nmmsis
-  ap(1)=${AP3HR}
-  ap(2)=${AP3HR}
-  ap(3)=${AP3HR}
-  ap(4)=${AP3HR}
-  ap(5)=${AP3HR}
-  ap(6)=${AP3HR}
-  ap(7)=${AP3HR}
-  kp_eld=${KP3HR}
+  ap(1)=4.
+  ap(2)=4.
+  ap(3)=4.
+  ap(4)=4.
+  ap(5)=4.
+  ap(6)=4.
+  ap(7)=4.
 /
 &nmswitch
   duration=43200
@@ -1422,6 +1433,8 @@ cat  > IPE.inp <<EOF
   mpstop=80
   peFort167=56
   record_number_plasma_start=0
+  sw_aurora=1
+  sw_ctip_input=t
   sw_dbg_perp_trans=f
   sw_debug=f
   sw_debug_mpi=f
@@ -1430,25 +1443,27 @@ cat  > IPE.inp <<EOF
   sw_exb_up=1
   sw_grid=0
   sw_ksi=2
-  sw_neutral=1
-  swNeuPar(1)=t
-  swNeuPar(2)=t
-  swNeuPar(3)=t
-  swNeuPar(4)=t
-  swNeuPar(5)=t
-  swNeuPar(6)=t
-  swNeuPar(7)=t
-  swEsmfTime=t
+  sw_neutral=3
+  swNeuPar(1)=f
+  swNeuPar(2)=f
+  swNeuPar(3)=f
+  swNeuPar(4)=f
+  swNeuPar(5)=f
+  swNeuPar(6)=f
+  swNeuPar(7)=f
+  swEsmfTime=f
   sw_output_fort167=f
-  sw_output_wind=t
+  sw_output_wind=f
   sw_output_plasma_grid=f
-  sw_use_wam_fields_for_restart=t
+  sw_use_wam_fields_for_restart=f
   sw_para_transport=1
   sw_pcp=0
-  sw_perp_transport=1
-  sw_record_number=2
-  sw_th_or_r=1
+  sw_perp_transport=2
+  sw_record_number=1
+  sw_th_or_r=0
   ut_start_perp_trans=${START_UT_SEC}
+  utime0LPI=0
+  barriersOn=f
 /
 &ipecap
   mesh_height_min = 0.
