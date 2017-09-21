@@ -11,7 +11,7 @@ PSRCS = get_efield90km.f           \
         module_sub_eldyn.f
 
 SSRCS = apex_sunloc.f              \
-        efield.f                   \
+        efield_ipe.f                   \
         module_adj_S_a.f           \
         module_ADJUST.f            \
         module_bnd_sinus.f         \

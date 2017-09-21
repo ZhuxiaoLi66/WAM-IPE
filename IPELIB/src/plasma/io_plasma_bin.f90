@@ -70,10 +70,10 @@ IF ( switch==1 ) THEN !1:Output the 16 plasma* files
 
 ! ghgm - open the new plasma file unit......
 !SMS$IGNORE BEGIN
-!#ifdef DEBUG
+#ifdef DEBUG
   ! If debugging is enabled, the activity throughout the code is logged.
-  WRITE( UNIT=*, FMT=*) 'opening file: ipe_grid_plasma_params.'//timestamp_for_IPE
-!#endif
+  WRITE( UNIT=LUN_LOG, FMT=*) 'opening file: ipe_grid_plasma_params.'//timestamp_for_IPE
+#endif
 !SMS$IGNORE END
   OPEN( UNIT = 5999, &
         FILE = 'ipe_grid_plasma_params.'//timestamp_for_IPE, &
@@ -106,10 +106,10 @@ IF ( switch==1 ) THEN !1:Output the 16 plasma* files
   
   ! ghgm - and then close the file
 !SMS$IGNORE BEGIN
-!#ifdef DEBUG
+#ifdef DEBUG
     ! If debugging is enabled, the activity throughout the code is logged.
-    WRITE( UNIT=*, FMT=*) 'Closing file: ipe_grid_plasma_params.'//timestamp_for_IPE
-!#endif
+    WRITE( UNIT=LUN_LOG, FMT=*) 'Closing file: ipe_grid_plasma_params.'//timestamp_for_IPE
+#endif
 !SMS$IGNORE END  
   CLOSE(unit=5999)
 
@@ -125,10 +125,10 @@ IF ( switch==1 ) THEN !1:Output the 16 plasma* files
 
 !SMS$SERIAL(<tn_k,vn_ms1_4output,on_m3,n2n_m3,o2n_m3,IN>:default=ignore) BEGIN
 !SMS$IGNORE BEGIN
-!#ifdef DEBUG
+#ifdef DEBUG
     ! If debugging is enabled, the activity throughout the code is logged.
-    WRITE( UNIT=*, FMT=*) 'opening file: ipe_grid_neutral_params.'//timestamp_for_IPE//' for writing.'
-!#endif
+    WRITE( UNIT=LUN_LOG, FMT=*) 'opening file: ipe_grid_neutral_params.'//timestamp_for_IPE//' for writing.'
+#endif
 !SMS$IGNORE END
     OPEN( UNIT = 5998, &
         FILE = 'ipe_grid_neutral_params.'//timestamp_for_IPE, &
@@ -147,10 +147,10 @@ IF ( switch==1 ) THEN !1:Output the 16 plasma* files
     WRITE (unit=5998) o2n_m3
     
 !SMS$IGNORE BEGIN
-!#ifdef DEBUG
+#ifdef DEBUG
     ! If debugging is enabled, the activity throughout the code is logged.
-    WRITE( UNIT=*, FMT=*) 'Closing file: ipe_grid_neutral_params.'//timestamp_for_IPE
-!#endif    
+    WRITE( UNIT=LUN_LOG, FMT=*) 'Closing file: ipe_grid_neutral_params.'//timestamp_for_IPE
+#endif    
 !SMS$IGNORE END
     CLOSE (unit=5998)
 !SMS$SERIAL END
@@ -167,10 +167,10 @@ ELSE IF ( switch==2 ) THEN !2:RESTART:
 !SMS$SERIAL BEGIN
 ! ghgm - read in saved plasma_3d data.....
 !SMS$IGNORE BEGIN
-!#ifdef DEBUG
+#ifdef DEBUG
   ! If debugging is enabled, the activity throughout the code is logged.
-  WRITE( UNIT=*, FMT=*) 'Opening file: ipe_grid_plasma_params for reading'
-!#endif
+  WRITE( UNIT=LUN_LOG, FMT=*) 'Opening file: ipe_grid_plasma_params for reading'
+#endif
 !SMS$IGNORE END  
 
   OPEN( UNIT = 5997, &
@@ -196,10 +196,10 @@ ELSE IF ( switch==2 ) THEN !2:RESTART:
   END DO j_loop3
 
 !SMS$IGNORE BEGIN
-!#ifdef DEBUG
+#ifdef DEBUG
     ! If debugging is enabled, the activity throughout the code is logged.
-    WRITE( UNIT=*, FMT=*) 'Closing file: ipe_grid_plasma_params.'
-!#endif
+    WRITE( UNIT=LUN_LOG, FMT=*) 'Closing file: ipe_grid_plasma_params.'
+#endif
 !SMS$IGNORE END  
   CLOSE (5997)
 
@@ -209,10 +209,10 @@ ELSE IF ( switch==2 ) THEN !2:RESTART:
 ! ghgm - read in saved WAM neutral parameters.....
 
 !SMS$IGNORE BEGIN
-!#ifdef DEBUG
+#ifdef DEBUG
   ! If debugging is enabled, the activity throughout the code is logged.
-  WRITE( UNIT=*, FMT=*) 'Opening file: ipe_grid_neutral_params for reading'
-!#endif  
+  WRITE( UNIT=LUN_LOG, FMT=*) 'Opening file: ipe_grid_neutral_params for reading'
+#endif  
 !SMS$IGNORE END
 
   OPEN( UNIT = 5996, &

@@ -16,7 +16,7 @@
 !     & h_r  = 130.0e3,    ! reference height [m] (same as for apex.F90)     
       SUBROUTINE GET_EFIELD90km ( utime )
       USE module_precision
-      USE efield,ONLY: nmlat,ylatm,dlonm,potent,ylonm,nmlon
+      USE efield_ipe,ONLY: nmlat,ylatm,dlonm,potent,ylonm,nmlon
       USE module_physical_constants,ONLY:pi,rtd,dtr,earth_radius,zero
       USE module_eldyn,ONLY:j0,j1,theta90_rad,ed1_90,ed2_90,coslam_m
       USE module_IPE_dimension,ONLY: NMP,NLP

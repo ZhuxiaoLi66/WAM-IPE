@@ -73,7 +73,7 @@ c     use cam_logfile,   only: iulog
 ! Author: A. Maute Dec 2003  am 12/17/03 
 !-----------------------------------------------------------------------
 !nm20121003
-      USE efield !,ONLY:
+      USE efield_ipe !,ONLY:
       USE module_interp_poten ,ONLY: interp_poten
       USE module_efield_mid ,ONLY:efield_mid
       USE module_prep_weimer ,ONLY:prep_weimer

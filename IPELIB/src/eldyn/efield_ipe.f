@@ -1,7 +1,7 @@
 !Jan2011:original code was provided from Astrid from WACCM.
 !Aug2011:this code was provided from Fei Wu from the WAM version.
 !--------------------------------------------  
-      module efield
+      module efield_ipe
 !--------------------------------------------------------------------- 
 ! description: calculates the electric potential for a given year,
 !      day of year,UT, F10.7, B_z(K_p)
@@ -177,4 +177,4 @@
 
 !nm20121003:subroutines are separated into sub_efield.f.
 
-      end module efield
+      end module efield_ipe

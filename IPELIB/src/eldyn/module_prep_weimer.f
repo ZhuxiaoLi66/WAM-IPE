@@ -28,7 +28,7 @@
 ! Author: A. Maute Nov 2003  am 11/20/03
 !-----------------------------------------------------------------
 !nm20121003
-      USE efield !,ONLY:
+      USE efield_ipe !,ONLY:
       USE module_SetModel ,ONLY: SetModel
       USE module_GET_TILT ,ONLY: GET_TILT
       USE module_ADJUST ,ONLY: ADJUST
