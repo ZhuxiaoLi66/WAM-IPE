@@ -127,8 +127,8 @@ endif
     MODCMD    = $(shell ./modcmd wcoss intel)
     FCP       = mpfort
     FCS       = mpfort
-    OPT_FLAGS = -O3 -fp-model precise
-    SMS       = /swpc/noscrub/George.Millward/SMSr854legacy
+    OPT_FLAGS = -O3 -fp-model precise -fpp -xAVX
+    SMS       = /gpfs/hps3/emc/global/save/Adam.Kubaryk/sms/SMSr825-intel_O3
     ifeq ($(DEBUG),yes)
       DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0
     endif

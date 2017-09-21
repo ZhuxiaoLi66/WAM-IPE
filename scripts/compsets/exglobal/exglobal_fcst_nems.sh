@@ -1264,7 +1264,7 @@ if [ $IDEA = .true. ]; then
   INI_DAY3=$(echo $CDATE3 | cut -c7-8)
   INI_HOUR3=$(echo $CDATE3 | cut -c9-10)
 
-  START_UT_SEC=`expr ${INI_HOUR3} \* 3600`
+  START_UT_SEC=$((INI_HOUR*3600))
 
   # global_idea fix files
   ${NLN} $FIX_IDEA/global_idea* .
@@ -1301,10 +1301,10 @@ if [ $IDEA = .true. ]; then
    export FILE_IO_FORM="'grib' 'bin4' 'grib'"
 
    # used for ipe namelist
-   export DOY=`date -d ${INI_MONTH3}/${INI_DAY3}/${INI_YEAR3} +%j`
+   export DOY=`date -d ${INI_MONTH}/${INI_DAY}/${INI_YEAR} +%j`
    F107AVG=`grep 'F10 81 Day Avg' $DATA/wam_input_f107_kp.txt | awk '{print $5}'`
-   F107DAY=`grep ${INI_YEAR3}-${INI_MONTH3}-${INI_DAY3}T${INI_HOUR3} wam_input_f107_kp.txt | awk '{print $2}'`
-   KP3HR=`grep ${INI_YEAR3}-${INI_MONTH3}-${INI_DAY3}T${INI_HOUR3} wam_input_f107_kp.txt | awk '{print $3}'`
+   F107DAY=`grep ${INI_YEAR}-${INI_MONTH}-${INI_DAY}T${INI_HOUR} wam_input_f107_kp.txt | awk '{print $2}'`
+   KP3HR=`grep ${INI_YEAR}-${INI_MONTH}-${INI_DAY}T${INI_HOUR} wam_input_f107_kp.txt | awk '{print $3}'`
 
    #convert from kp to ap
    AP3HR=`expr ${KP3HR} \* 4`
@@ -1398,7 +1398,7 @@ cat  > IPE.inp <<EOF
   nday=$DOY
   nyear=2000
   start_time=${START_UT_SEC}
-  time_step=180
+  time_step=$DELTIM
 /
 &nmmsis
   ap(1)=${AP3HR}
