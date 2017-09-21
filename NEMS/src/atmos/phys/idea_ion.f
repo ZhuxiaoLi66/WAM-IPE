@@ -543,7 +543,7 @@
 !
       subroutine idea_geteb(im, dayno,utsec,f107,kp,maglat,maglon,    
      &   essa,ee1,ee2)
-      use efield         !  iday,iyear,iday_m,imo,f107d,by,bz,ut,v_sw     
+      use efield_wam      !  iday,iyear,iday_m,imo,f107d,by,bz,ut,v_sw     
 !
 ! vay-2016: another interpolation for the Electric fields
 !                           to model-based maglon-maglat  

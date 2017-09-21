@@ -107,7 +107,7 @@
       use mersenne_twister
       use idea_composition, only: prlog,pr_idea,amgm,amgms,nlev_co2,k43,
      &                            nlevc_h2o,k71,gg,prsilvl
-      use efield,           only: efield_init
+      use efield_wam,           only: efield_init
       USE IDEA_WAM_CONTROL,        only : SPW_DRIVERS
       USE namelist_wamphysics_def, only : wam_control_default
 !
