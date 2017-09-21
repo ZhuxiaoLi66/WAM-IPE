@@ -34,7 +34,7 @@ IMPLICIT NONE
 
 INTEGER (KIND=int_prec ),INTENT(IN) :: switch !2:read; 1:write
 INTEGER (KIND=int_prec ),INTENT(IN) :: utime !universal time [sec]
-CHARACTER(len=13), INTENT(IN)       :: timestamp_for_IPE
+CHARACTER(len=12), INTENT(IN)       :: timestamp_for_IPE
 INTEGER (KIND=int_prec ),PARAMETER  :: n_max=10000
 INTEGER (KIND=int_prec )            :: stat_alloc
 INTEGER (KIND=int_prec )            :: jth,mp,lp,npts

@@ -206,6 +206,15 @@
       INTEGER(KIND=int_prec) , PUBLIC :: SMScomm,sendCount,NumPolevalProcs
       INTEGER, PUBLIC :: MPI_COMM_IPE        
 
+! --- NUOPC cap input parameters
+      INTEGER,                 PARAMETER :: str_len_max     = 256            ! max string length for VTK base name
+      REAL(KIND=real_prec),       PUBLIC :: mesh_height_min =   0._real_prec !  min mesh height (km)
+      REAL(KIND=real_prec),       PUBLIC :: mesh_height_max = 782._real_prec !  max mesh height (km)
+      INTEGER,                    PUBLIC :: mesh_write      = 0              ! write mesh to VTK file(s): 1=yes, 0=no
+      CHARACTER(LEN=str_len_max), PUBLIC :: mesh_write_file = 'ipemesh'      !  default base name for VTK file(s)
+!
+!---
+
       NAMELIST/IPEDIMS/NLP,NMP,NPTS2D
       NAMELIST/NMIPE/start_time &
      &,stop_time &
@@ -301,7 +310,11 @@
       NAMELIST/NMTIROS/  &
      & GWatts &
      &,LevPI
-
+     NAMELIST/IPECAP/ &
+              mesh_height_min, &
+              mesh_height_max, &
+              mesh_write,      &
+              mesh_write_file
 
 
       PRIVATE
@@ -378,6 +391,10 @@
         READ(LUN_nmlt2,NML=NMWEIM,ERR=222,IOSTAT=IOST_RD)
         REWIND LUN_nmlt2
         READ(LUN_nmlt2,NML=NMTIROS,ERR=222,IOSTAT=IOST_RD)
+        IF (sw_neutral == 1) THEN
+          REWIND LUN_nmlt
+          READ(LUN_nmlt,NML=IPECAP   ,ERR=222,IOSTAT=IOST_RD)
+        END IF
 
         OPEN(UNIT=LUN_LOG0,FILE=filename,STATUS='unknown',FORM='formatted',IOSTAT=istat)
         IF ( istat /= 0 ) THEN

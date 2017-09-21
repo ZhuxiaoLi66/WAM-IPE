@@ -295,7 +295,7 @@ module module_update_IPE
      write (s_str,fmt) S
      timestamp_for_IPE_output_files = trim(yy_str)//trim(mm_str)//trim(dd_str)//trim(h_str)//trim(m_str)                  
 
-        CALL plasma ( utime, timestamp_for_IPE_output_files )
+        CALL plasma ( utime )
 
         if(swEsmfTime) then
 	  CALL ESMF_VMWtime(end_time)
