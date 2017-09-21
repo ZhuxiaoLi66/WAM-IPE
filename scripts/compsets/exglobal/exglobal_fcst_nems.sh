@@ -951,6 +951,7 @@ if [[ $ENS_NUM -le 1 ]] ; then
       ln -fs $GRDI  grid_ini
       ln -fs $GRDI2 grid_ini2
       ln -fs $SIGI2 sig_ini2
+      ln -fs $FORT1051 fort.1051
     else
       export RESTART=.false.
     fi
@@ -1307,9 +1308,6 @@ if [ $IDEA = .true. ]; then
    KP3HR=`grep ${INI_YEAR}-${INI_MONTH}-${INI_DAY}T${INI_HOUR} wam_input_f107_kp.txt | awk '{print $3}'`
 
    #convert from kp to ap
-   AP3HR=`expr ${KP3HR} \* 4`
-
-   #now a better one
    KPX=(0 1 2  3  4  5  6   7   8   9)
    APX=(0 4 7 15 27 48 80 132 207 400)
 
@@ -1411,7 +1409,7 @@ cat  > IPE.inp <<EOF
   kp_eld=${KP3HR}
 /
 &nmswitch
-  duration=43200
+  duration=$(((FHMAX-FHINI)*3600))
   fac_bm=1.00
   iout(1)=1
   iout(2)=60
