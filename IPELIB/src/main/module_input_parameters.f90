@@ -369,11 +369,9 @@
 
 !!!>>>>2.WAM-IPE version:
 !!!set up MPI communicator for SMS
-!!!(1) when NEMS is not used, pass MPI_COMM_WORLD into SET_COMMUNICATOR()
-!!!>>>>>>>>>>>SMS$INSERT         MPI_COMM_IPE = MPI_COMM_WORLD
-!!!(2) when NEMS is used, my_comm=mpiCommunicator has been assigned already in sub-myIPE_Init
-!!!        print *, 'sub-read_input_para:my_comm=', my_comm
-!!!SMS$SET_COMMUNICATOR( MPI_COMM_IPE )
+!(1) when NEMS is used, MPI_COMM_IPE=mpiCommunicator has been assigned already in sub-myIPE_Init
+!(2) when IPE Standalone is used, MPI_COMM_IPE=MPI_COMM_WORLD is set in driver_ipe
+!SMS$SET_COMMUNICATOR( MPI_COMM_IPE )
 
 
 !SMS$CREATE_DECOMP(dh,<NLP,NMP>,<lpHaloSize,mpHaloSize>: <NONPERIODIC, PERIODIC>)
