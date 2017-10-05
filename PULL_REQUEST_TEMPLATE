@@ -5,6 +5,7 @@ The changes brought in by this feature include :
 * New variables or variable name changes
 * New source code or scripts
 
+Before issuing this pull request, I < have/have not > brought in the latest changes from < destination branch >.
 This branch has been tested on :
 * < compute cluster > with < compilers > on the < test case name >.
 * " "
