@@ -1,0 +1,14 @@
+### Observed Behavior
+Provide details on what machine you are running on, what configuration (initial conditions and compset scripts)
+
+Indicate the hash ID and branch where you first noticed the problem. 
+
+Describe the incorrect behavior of the WAM-IPE, 
+identifying particular source code (if possible) that may be the culprit
+
+### Expected Behavior
+When using the same machine and model configuration, indicate what should happen in the source code
+
+If possible, indicate the last known working version on that branch.
+
+Feel free to include additional comments, figures, plots that help describe your issue.
