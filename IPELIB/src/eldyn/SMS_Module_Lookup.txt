@@ -21,6 +21,7 @@ module_output ../main/module_output.f90
 module_physical_constants ../main/module_physical_constants.f90
 module_PLASMA ../plasma/module_plasma.f90
 module_precision ../main/module_precision.f90
+module_prep_pnm ./module_prep_pnm.f
 module_read_acoef ./module_read_acoef_sms.f.tmp
 module_read_plasma_grid_global ../main/module_read_plasma_grid_global_sms.f.tmp
 module_sub_eldyn ./module_sub_eldyn_sms.f.tmp
