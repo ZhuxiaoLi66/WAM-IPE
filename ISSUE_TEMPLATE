@@ -12,3 +12,7 @@ When using the same machine and model configuration, indicate what should happen
 If possible, indicate the last known working version on that branch.
 
 Feel free to include additional comments, figures, plots that help describe your issue.
+
+@mentions should be used to draw attention to developers you think can help resolve the issue most effectively.
+
+## Be sure to delete this line and indicate the severity of the problem using the labels
