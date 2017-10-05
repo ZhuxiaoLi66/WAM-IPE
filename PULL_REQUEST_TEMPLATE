@@ -1,0 +1,16 @@
+This pull request is to merge  < name of feature branch > into < name of destination branch > .
+The changes brought in by this feature include :
+* Modifications to existing source code
+* Modifications to existing compset scripts
+* New variables or variable name changes
+* New source code or scripts
+
+This branch has been tested on :
+* < compute cluster > with < compilers > on the < test case name >.
+* " "
+* " "
+
+Model output and difference plots with the current version of the < name of destination branch > can be found at : 
+< link to documentation of testing >
+
+For this pull request, I am requesting review from @mentions.
