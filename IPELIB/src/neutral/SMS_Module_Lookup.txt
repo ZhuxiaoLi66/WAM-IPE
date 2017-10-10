@@ -4,6 +4,7 @@ module_decomp ../main/module_decomp_sms.f.tmp
 module_ELDYN ../eldyn/module_eldyn.f
 module_field_line_grid_mks ../main/module_field_line_grid_sms.f.tmp
 module_heating_rate ../neutral/module_heating_rate.f90
+module_index_quiet ../eldyn/module_index_quiet.f
 module_init_plasma_grid ../main/module_init_plasma_grid_sms.f.tmp
 module_input_parameters ../main/module_input_parameters_sms.f.tmp
 module_io ../main/module_io.f90
