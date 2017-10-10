@@ -1,6 +1,7 @@
 efield ../eldyn/efield.f
 module_cal_monthday ./module_cal_monthday_sms.f.tmp
 module_close_files ../main/module_close_files.f90
+module_constants ./module_constants.f
 module_decomp ../main/module_decomp_sms.f.tmp
 module_efield_init ../eldyn/module_efield_init.f
 module_ELDYN ../eldyn/module_eldyn.f
@@ -8,6 +9,7 @@ module_eldyn ./module_eldyn_sms.f.tmp
 module_field_line_grid_mks ../main/module_field_line_grid_sms.f.tmp
 module_get_efield ../eldyn/module_get_efield.f
 module_heating_rate ../neutral/module_heating_rate.f90
+module_index_quiet ./module_index_quiet.f
 module_init_eldyn ./module_init_eldyn_sms.f.tmp
 module_init_plasma_grid ../main/module_init_plasma_grid_sms.f.tmp
 module_input_parameters ../main/module_input_parameters_sms.f.tmp
@@ -21,7 +23,10 @@ module_output ../main/module_output.f90
 module_physical_constants ../main/module_physical_constants.f90
 module_PLASMA ../plasma/module_plasma.f90
 module_precision ../main/module_precision.f90
+module_prep_fk ./module_prep_fk.f
+module_prep_pnm ./module_prep_pnm.f
 module_read_acoef ./module_read_acoef_sms.f.tmp
+module_readcoef ./module_ReadCoef.f
 module_read_plasma_grid_global ../main/module_read_plasma_grid_global_sms.f.tmp
 module_sub_eldyn ./module_sub_eldyn_sms.f.tmp
 module_sub_PLASMA ../plasma/module_sub_plasma.f90
