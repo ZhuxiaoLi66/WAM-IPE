@@ -548,13 +548,27 @@ module module_MEDSpaceWeather
          return  ! bail out
 
     ! Set 3D Cartesian unit vectors for IPE
-    ! USE CART VERSION BECAUSE OF A BUG IN MESHREDIST() IN ESMF 7.0.0, ONCE IN 7.1.0 USE NON-CART VERSION
-    call Set_Field_Cardinal_UVecsCart(is%wrap%ipe_north_uvec, is%wrap%ipe_east_uvec, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-         line=__LINE__, &
-         file=__FILE__)) &
-         return  ! bail out
+    ! USE CART VERSION BECAUSE OF A BUG IN MESHREDIST() IN ESMF 7.0.0 and before, once in 7.1.0 USE NON-CART VERSION
+    if (ESMF_VERSION_MAJOR > 7) then
+       call Set_Field_Cardinal_UVecs(is%wrap%ipe_north_uvec, is%wrap%ipe_east_uvec, rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__, &
+            file=__FILE__)) &
+            return  ! bail out
 
+    else if ((ESMF_VERSION_MAJOR == 7) .and. (ESMF_VERSION_MINOR > 0)) then
+       call Set_Field_Cardinal_UVecs(is%wrap%ipe_north_uvec, is%wrap%ipe_east_uvec, rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__, &
+            file=__FILE__)) &
+            return  ! bail out
+    else
+       call Set_Field_Cardinal_UVecsCart(is%wrap%ipe_north_uvec, is%wrap%ipe_east_uvec, rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__, &
+            file=__FILE__)) &
+            return  ! bail out
+    endif
 
     ! Create Fields to hold Cartesian versions of wind
     is%wrap%wam_wind_3Dcart_vec=ESMF_FieldCreate(is%wrap%wamMesh,typekind=ESMF_TYPEKIND_R8, &
@@ -1619,7 +1633,10 @@ subroutine RunRegrid(model, importState, exportState, rc)
   if ((extrap_start_level>inlevels) .or. &
       (extrap_start_level<1)) then
     call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, & 
-                 msg="- extrap_start_level out of range") 
+         msg="- extrap_start_level out of range", &
+         line=__LINE__, &
+         file=__FILE__,  &
+         rcToReturn=rc)
     return
   endif			       
 
@@ -2171,6 +2188,8 @@ end subroutine convert2Sphdeg
 subroutine Set_Field_Cardinal_UVecs(north_field, east_field, rc)
   type(ESMF_Field) :: north_field, east_field
   type(ESMF_Mesh) :: mesh
+  type(ESMF_VM) :: vm
+  integer :: localPet
   integer :: numNodes
   real(ESMF_KIND_R8), allocatable :: nodeCoords(:)
   real(ESMF_KIND_R8), pointer :: north_field_ptr(:,:)
@@ -2179,11 +2198,11 @@ subroutine Set_Field_Cardinal_UVecs(north_field, east_field, rc)
   integer :: localDECount, i
   integer :: rc
   
-  ! debug
-  real(ESMF_KIND_R8) :: max_lat, max_lon
-  real(ESMF_KIND_R8) :: min_lat, min_lon
-  
-  
+  ! Error checking
+  real(ESMF_KIND_R8) :: max_coord(2), g_max_coord(2)
+  real(ESMF_KIND_R8) :: min_coord(2), g_min_coord(2)
+    
+
   ! debug
   real(ESMF_KIND_R8) :: len
 
@@ -2241,7 +2260,10 @@ subroutine Set_Field_Cardinal_UVecs(north_field, east_field, rc)
        (lbound(north_field_ptr,2) .ne. 1) .or. &
        (ubound(north_field_ptr,2) .ne. numNodes)) then
      call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, & 
-          msg="north Field bounds wrong") 
+          msg="north Field bounds wrong", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
      return     
   endif
 
@@ -2261,17 +2283,16 @@ subroutine Set_Field_Cardinal_UVecs(north_field, east_field, rc)
        (lbound(east_field_ptr, 2) .ne. 1) .or. &
        (ubound(east_field_ptr, 2) .ne. numNodes)) then
      call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, & 
-          msg="east Field bounds wrong") 
+          msg="east Field bounds wrong", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
      return     
   endif
 
-  ! Debug
-  min_lon= 1000.00
-  max_lon=-1000.00
-
-  min_lat= 1000.00
-  max_lat=-1000.00
-
+  ! For error checking
+  min_coord= HUGE(min_coord)
+  max_coord=-HUGE(max_coord)
 
   ! Loop setting unit vectors
   do i=1,numNodes
@@ -2280,14 +2301,15 @@ subroutine Set_Field_Cardinal_UVecs(north_field, east_field, rc)
      lon=nodeCoords(3*(i-1)+1)
      lat=nodeCoords(3*(i-1)+2)
 
-     if (lon < min_lon) min_lon=lon
-     if (lon > max_lon) max_lon=lon
-     if (lat < min_lat) min_lat=lat
-     if (lat > max_lat) max_lat=lat
+     ! Get min/max of coord for error checking     
+     if (lon < min_coord(1)) min_coord(1)=lon
+     if (lon > max_coord(1)) max_coord(1)=lon
+     if (lat < min_coord(2)) min_coord(2)=lat
+     if (lat > max_coord(2)) max_coord(2)=lat
 
-     ! Get position on sphere
-     lon=nodeCoords(3*(i-1)+1)*ESMF_COORDSYS_DEG2RAD
-     lat=nodeCoords(3*(i-1)+2)*ESMF_COORDSYS_DEG2RAD
+     ! Convert to radians
+     lon=lon*ESMF_COORDSYS_DEG2RAD
+     lat=lat*ESMF_COORDSYS_DEG2RAD
      
      ! Set east vector
      east_field_ptr(1,i)=cos(lon)
@@ -2301,8 +2323,55 @@ subroutine Set_Field_Cardinal_UVecs(north_field, east_field, rc)
 
   enddo
 
-  write(*,*) "w min/max lon=",min_lon,max_lon
-  write(*,*) "w min/max lat=",min_lat,max_lat
+
+  ! Get current vm
+  call ESMF_VMGetCurrent(vm, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  ! set up local pet info
+  call ESMF_VMGet(vm, localPet=localPet, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+
+  ! Compute global max
+  call ESMF_VMAllReduce(vm, max_coord, g_max_coord, 2, &
+       ESMF_REDUCE_MAX, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  call ESMF_VMAllReduce(vm, min_coord, g_min_coord, 2, &
+       ESMF_REDUCE_MIN, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  ! Report error
+  if ((g_max_coord(1) - g_min_coord(1)) < 20.0) then
+     call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, & 
+ msg="Longitude range of grid unexpectedly small (< 20 deg) possibly using radians or 7.1.0 snapshot before 16", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
+     return     
+  endif
+
+  if ((g_max_coord(2) - g_min_coord(2)) < 20.0) then
+     call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, & 
+msg="Latitude range of grid unexpectedly small (< 20 deg) possibly using radians or 7.1.0 snapshot before 16", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
+     return     
+  endif
 
   ! Get rid of coordinates
   deallocate(nodeCoords)
@@ -2331,12 +2400,6 @@ subroutine Set_Field_Cardinal_UVecsCart(north_field, east_field, rc)
   real(ESMF_KIND_R8),parameter :: two_pi=6.28318530717959_ESMF_KIND_R8
 
   ! debug
-  real(ESMF_KIND_R8) :: max_lat, max_lon
-  real(ESMF_KIND_R8) :: min_lat, min_lon
-
-  
-  
-  ! debug
   real(ESMF_KIND_R8) :: len
 
   ! Get mesh
@@ -2393,7 +2456,10 @@ subroutine Set_Field_Cardinal_UVecsCart(north_field, east_field, rc)
        (lbound(north_field_ptr,2) .ne. 1) .or. &
        (ubound(north_field_ptr,2) .ne. numNodes)) then
      call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, & 
-          msg="north Field bounds wrong") 
+          msg="north Field bounds wrong", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
      return     
   endif
 
@@ -2413,17 +2479,12 @@ subroutine Set_Field_Cardinal_UVecsCart(north_field, east_field, rc)
        (lbound(east_field_ptr, 2) .ne. 1) .or. &
        (ubound(east_field_ptr, 2) .ne. numNodes)) then
      call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, & 
-          msg="east Field bounds wrong") 
+          msg="east Field bounds wrong", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
      return     
   endif
-
-  ! Debug
-  min_lon= 1000.00
-  max_lon=-1000.00
-
-  min_lat= 1000.00
-  max_lat=-1000.00
-
 
   ! Loop setting unit vectors
   do i=1,numNodes
@@ -2441,12 +2502,6 @@ subroutine Set_Field_Cardinal_UVecsCart(north_field, east_field, rc)
 
      lat=half_pi-acos(z/r)
 
-     
-     if (lon < min_lon) min_lon=lon
-     if (lon > max_lon) max_lon=lon
-     if (lat < min_lat) min_lat=lat
-     if (lat > max_lat) max_lat=lat
-
      ! Set east vector
      east_field_ptr(1,i)=cos(lon)
      east_field_ptr(2,i)=sin(lon)
@@ -2458,9 +2513,6 @@ subroutine Set_Field_Cardinal_UVecsCart(north_field, east_field, rc)
      north_field_ptr(3,i)= cos(lat)
 
   enddo
-
-  write(*,*) "i min/max lon=",min_lon*ESMF_COORDSYS_RAD2DEG,max_lon*ESMF_COORDSYS_RAD2DEG
-  write(*,*) "i min/max lat=",min_lat*ESMF_COORDSYS_RAD2DEG,max_lat*ESMF_COORDSYS_RAD2DEG
 
   ! Get rid of coordinates
   deallocate(nodeCoords)
@@ -2557,9 +2609,7 @@ subroutine Cardinal_to_Cart3D(north_field, east_field, &
 
 #if 0
         cart_vec_ptr(1,i)=east_uvec_ptr(1,i)
-
         cart_vec_ptr(2,i)=east_uvec_ptr(2,i)
-
         cart_vec_ptr(3,i)=east_uvec_ptr(3,i)
 #endif
 
@@ -2711,7 +2761,10 @@ subroutine Copy_data_into_Field(field, data, rc)
   ! Should only be 1 localDE
   if (localDECount > 1) then
      call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, & 
-          msg="Only Fields with one or less localDEs supported") 
+          msg="Only Fields with one or less localDEs supported", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
      return     
   endif
 
@@ -2729,7 +2782,10 @@ subroutine Copy_data_into_Field(field, data, rc)
   if ((cubnd(1)-clbnd(1)+1) .ne. &
        size(data)) then
      call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, & 
-          msg="Size of data array is different than size of Field") 
+          msg="Size of data array is different than size of Field", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
      return     
   endif
 
@@ -2766,7 +2822,10 @@ subroutine Write_Field(field, rc)
   ! Should only be 1 localDE
   if (localDECount > 1) then
      call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, & 
-          msg="Only Fields with one or less localDEs supported") 
+          msg="Only Fields with one or less localDEs supported", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
      return     
   endif
 
@@ -2788,8 +2847,6 @@ subroutine Write_Field(field, rc)
   rc=ESMF_SUCCESS
 
 end subroutine Write_Field
-
-
 
 subroutine Set_Tst_Cardinal_Vecs(north_field, east_field, rc)
   type(ESMF_Field) :: north_field, east_field
@@ -2869,6 +2926,7 @@ subroutine Set_Tst_Cardinal_Vecs(north_field, east_field, rc)
      lon=nodeCoords(3*(i-1)+1)
      lat=nodeCoords(3*(i-1)+2)
      
+
      ! Get x,y,z coordinates
      call c_esmc_sphdeg_to_cart(lon, lat, &
                x, y, z, &
@@ -2919,6 +2977,10 @@ subroutine Cmp_Tst_Cardinal_Vecs(north_field, east_field, rc)
   real(ESMF_KIND_R8),parameter :: half_pi=1.5707963267949_ESMF_KIND_R8
   real(ESMF_KIND_R8),parameter :: two_pi=6.28318530717959_ESMF_KIND_R8
   
+
+  ! debug
+  real(ESMF_KIND_R8) :: max_lat, max_lon
+  real(ESMF_KIND_R8) :: min_lat, min_lon
 
   ! Get mesh
   call ESMF_FieldGet(north_field, mesh=mesh, &
@@ -2979,6 +3041,14 @@ subroutine Cmp_Tst_Cardinal_Vecs(north_field, east_field, rc)
         return  ! bail out
 
 
+  ! Debug
+  min_lon= 1000.00
+  max_lon=-1000.00
+
+  min_lat= 1000.00
+  max_lat=-1000.00
+
+
   ! Init max
   max_relerr= -HUGE(max_relerr)
   max_err= -HUGE(max_err)
@@ -2988,17 +3058,34 @@ subroutine Cmp_Tst_Cardinal_Vecs(north_field, east_field, rc)
   do i=1,numNodes
 
      ! Get position on sphere
-     x=nodeCoords(3*(i-1)+1)
-     y=nodeCoords(3*(i-1)+2)
-     z=nodeCoords(3*(i-1)+3)
+     if (ESMF_VERSION_MAJOR > 7) then
+        lon=nodeCoords(3*(i-1)+1)*ESMF_COORDSYS_DEG2RAD
+        lat=nodeCoords(3*(i-1)+2)*ESMF_COORDSYS_DEG2RAD
+        r=nodeCoords(3*(i-1)+3)
+     else if ((ESMF_VERSION_MAJOR == 7) .and. (ESMF_VERSION_MINOR > 0)) then
+        lon=nodeCoords(3*(i-1)+1)*ESMF_COORDSYS_DEG2RAD
+        lat=nodeCoords(3*(i-1)+2)*ESMF_COORDSYS_DEG2RAD
+        r=nodeCoords(3*(i-1)+3)
+     else 
+        ! Get position on sphere
+        x=nodeCoords(3*(i-1)+1)
+        y=nodeCoords(3*(i-1)+2)
+        z=nodeCoords(3*(i-1)+3)
+        
+        ! convert to lon/lat/r
+        r=sqrt(x*x+y*y+z*z)
+        
+        lon=atan2(y,x)
+        if (lon < 0.0) lon = lon + two_pi
+        lat=half_pi-acos(z/r)
+     endif
 
-     ! convert to lon/lat/r
-     r=sqrt(x*x+y*y+z*z)
 
-     lon=atan2(y,x)
-     if (lon < 0.0) lon = lon + two_pi
-
-     lat=half_pi-acos(z/r)
+     ! Debug     
+     if (lon < min_lon) min_lon=lon
+     if (lon > max_lon) max_lon=lon
+     if (lat < min_lat) min_lat=lat
+     if (lat > max_lat) max_lat=lat
 
 
      ! calc exact values
@@ -3100,13 +3187,15 @@ subroutine Cmp_Tst_Cardinal_Vecs(north_field, east_field, rc)
        file=__FILE__)) &
        return  ! bail out
   
-
   
   ! Only write out if Pet 0
   if (localPet==0) then
      write(*,*) "max relerr (north/east)=",g_max_relerr(1),g_max_relerr(2)
      write(*,*) "max err    (north/east)=",g_max_err(1),g_max_err(2)
   endif
+
+  !write(*,*) "c min/max lon=",min_lon,max_lon
+  !write(*,*) "c min/max lat=",min_lat,max_lat
 
 
   ! Get rid of coordinates
