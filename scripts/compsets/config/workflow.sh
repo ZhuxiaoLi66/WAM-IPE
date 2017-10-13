@@ -39,6 +39,11 @@ if [ $WAM_IPE_COUPLING = .true. ] ; then
 
 # load the namelist options
 . $CONFIGDIR/wam-ipe_dpnamelist.config
+
+else
+# load the WAM namelist options
+. $CONFIGDIR/wam_dpnamelist.config
+
 fi
 
 # run our checks to make sure we're not walking into any walls before we try to run a job
