@@ -909,7 +909,7 @@ build_ipe(){
        export SMS=/scratch3/NCEPDEV/swpc/noscrub/sms/SMSr825-intel_14.0.2-mpi_5.1.2.150
        make theia_intel_parallel
     elif [[ $MACHINE_ID == wcoss ]] ; then
-       export SMS=/gpfs/hps3/emc/global/save/Adam.Kubaryk/sms/SMSr825-intel_O3
+       export SMS=/global/save/Adam.Kubaryk/sms/SMSr825-intel_O3
        make wcoss_intel_parallel
     elif [[ $MACHINE_ID == pleiades ]] ; then
        export SMS=/nobackupp8/akubaryk/save/sms/SMSr825-intel
