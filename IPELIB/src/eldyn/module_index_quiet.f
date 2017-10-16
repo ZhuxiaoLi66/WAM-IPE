@@ -45,10 +45,10 @@
 ! Author: A. Maute Dec 2003  am 12/30/03 
 !------------------------------------------------------------------------------ 
 
-c     use shr_kind_mod,  only: r8 => shr_kind_r8
-c     use physconst,     only: pi
-c     use abortutils,    only: endrun
-c     use cam_logfile,   only: iulog
+!     use shr_kind_mod,  only: r8 => shr_kind_r8
+!     use physconst,     only: pi
+!     use abortutils,    only: endrun
+!     use cam_logfile,   only: iulog
    
       implicit none
 
@@ -114,11 +114,11 @@ c     use cam_logfile,   only: iulog
 
       imax = i - 1  
       if(imax /= ni ) then    ! check if imax == ni 
-c       write(iulog,'(a19,i5,a18,i5)') 'index_quiet: imax= ',imax,  
-c    &     ' not equal to ni =',ni 
+!       write(iulog,'(a19,i5,a18,i5)') 'index_quiet: imax= ',imax,  
+!    &     ' not equal to ni =',ni 
         stop
       end if							
-c     if(debug) write(iulog,*) 'imax=',imax
+!     if(debug) write(iulog,*) 'imax=',imax
 
       end subroutine index_quiet                                                           
 

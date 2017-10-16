@@ -46,10 +46,10 @@
 ! Author: A. Maute Dec 2003  am 12/30/03 
 !------------------------------------------------------------------------------ 
 
-c     use shr_kind_mod,  only: r8 => shr_kind_r8
-c     use physconst,     only: pi
-c     use abortutils,    only: endrun
-c     use cam_logfile,   only: iulog
+!     use shr_kind_mod,  only: r8 => shr_kind_r8
+!     use physconst,     only: pi
+!     use abortutils,    only: endrun
+!     use cam_logfile,   only: iulog
    
       implicit none
 
@@ -70,11 +70,11 @@ c     use cam_logfile,   only: iulog
 ! NCAR addition (Jan 97):  initialize constants used in GECMP
 !-----------------------------------------------------------------------
 !
-c     use shr_kind_mod,  only: r8 => shr_kind_r8
-c     use ioFileMod,     only : getfil
-c     use units,         only : getunit, freeunit
-c     use abortutils,    only : endrun
-c     use cam_logfile,   only : iulog
+!     use shr_kind_mod,  only: r8 => shr_kind_r8
+!     use ioFileMod,     only : getfil
+!     use units,         only : getunit, freeunit
+!     use abortutils,    only : endrun
+!     use cam_logfile,   only : iulog
       implicit none 
 !
 !-------------------------------Commons---------------------------------
@@ -127,22 +127,22 @@ c     use cam_logfile,   only : iulog
 !          End NCAR addition
 ! 
 !  get coeff_file  
-c     unit= getunit()
+!     unit= getunit()
       unit= 200
-c     write(iulog,*) 'Weimer: getting file ',trim(wei96_file),
-c    &' unit ',unit
-c     call getfil( wei96_file, locfn, 0 )
+!     write(iulog,*) 'Weimer: getting file ',trim(wei96_file),
+!    &' unit ',unit
+!     call getfil( wei96_file, locfn, 0 )
       locfn= wei96_file
 !      
-c     write(iulog,*) 'Weimer: opening file ',trim(locfn),
-c    &' unit ',unit	
+!     write(iulog,*) 'Weimer: opening file ',trim(locfn),
+!    &' unit ',unit	
       OPEN(unit=unit,file=trim(locfn),  
      &     status = 'old',iostat = ios)
-c     if(ios.gt.0) then
-c      write(iulog,*) 'Weimer: error in opening wei96.cofcnts',
-c    &' unit ',unit
-c       call endrun
-c     endif
+!     if(ios.gt.0) then
+!      write(iulog,*) 'Weimer: error in opening wei96.cofcnts',
+!    &' unit ',unit
+!       call endrun
+!     endif
       
   900 FORMAT(A15)
  1000 FORMAT(3I8)
@@ -150,15 +150,15 @@ c     endif
  3000 FORMAT(2I2,4E15.6)
 
 !     READ(udat,900) skip
-c     write(iulog,*) 'Weimer: reading file ',trim(locfn),
-c    &' unit ',unit	
+!     write(iulog,*) 'Weimer: reading file ',trim(locfn),
+!    &' unit ',unit	
       READ(unit,1000,iostat = ios) MaxL,MaxM,MaxN
-c     if(ios.gt.0) then
-c     write(iulog,*) 
-c    &'ReadCoef: error in reading wei96.cofcnts file',
-c    &' unit ',unit	
-c       call endrun
-c     endif
+!     if(ios.gt.0) then
+!     write(iulog,*) 
+!    &'ReadCoef: error in reading wei96.cofcnts file',
+!    &' unit ',unit	
+!       call endrun
+!     endif
       DO l=0,MaxL
         IF(l.LT.MaxM)THEN
           mlimit=l
@@ -173,16 +173,16 @@ c     endif
           ENDIF
           DO k=0,klimit
             READ(unit,2000,iostat = ios) ll,mm,kk
-c           if(ios.gt.0) then
-c     	      write(iulog,*) 
-c    &'ReadCoef: error in reading wei96.cofcnts file',' unit ',
-c    &unit	
-c             call endrun
-c           endif
-c           IF(ll.NE.l .OR. mm.NE.m .OR. kk.NE.k)THEN
-c             WRITE(IULOG,*)'Data File Format Error'
-c             CALL ENDRUN
-c           ENDIF
+!           if(ios.gt.0) then
+!     	      write(iulog,*) 
+!    &'ReadCoef: error in reading wei96.cofcnts file',' unit ',
+!    &unit	
+!             call endrun
+!           endif
+!           IF(ll.NE.l .OR. mm.NE.m .OR. kk.NE.k)THEN
+!             WRITE(IULOG,*)'Data File Format Error'
+!             CALL ENDRUN
+!           ENDIF
             DO n=0,MaxN
               IF(n.LT.1)THEN
         	ilimit=0
@@ -191,15 +191,15 @@ c           ENDIF
               ENDIF
               DO i=0,ilimit
         	READ(unit,3000,iostat = ios) nn,ii,C
-c               if(ios.gt.0) then
-c     	          write(iulog,*) 'ReadCoef: error in reading',  
-c    &                 ' wei96.cofcnts file',' unit ',unit	
-c                 call endrun
-c               endif
-c       	IF(nn.NE.n .OR. ii.NE.i)THEN
-c       	  WRITE(IULOG,*)'Data File Format Error'
-c       	  CALL ENDRUN
-c       	ENDIF
+!               if(ios.gt.0) then
+!     	          write(iulog,*) 'ReadCoef: error in reading',  
+!    &                 ' wei96.cofcnts file',' unit ',unit	
+!                 call endrun
+!               endif
+!       	IF(nn.NE.n .OR. ii.NE.i)THEN
+!       	  WRITE(IULOG,*)'Data File Format Error'
+!       	  CALL ENDRUN
+!       	ENDIF
         	Cn(0,i,n,k,l,m)=C(0)
         	Cn(1,i,n,k,l,m)=C(1)
         	Cn(2,i,n,k,l,m)=C(2)
@@ -211,7 +211,7 @@ c       	ENDIF
       ENDDO
 !      
       close(unit)
-c     call freeunit(unit)
+!     call freeunit(unit)
 !    
       RETURN
       END SUBROUTINE ReadCoef
