@@ -38,11 +38,11 @@ if [ $WAM_IPE_COUPLING = .true. ] ; then
 . $CONFIGDIR/coupled.config
 
 # load the namelist options
-. $CONFIGDIR/wam-ipe_dpnamelist.config
-
+if [ $NAMELIST_VER = 'compset' ] ; then
+. $CONFIGDIR/wam-ipe_ocr_dpnamelist.config
 else
-# load the WAM namelist options
-. $CONFIGDIR/wam_dpnamelist.config
+. $CONFIGDIR/wam-ipe_dpnamelist.config
+fi
 
 fi
 
