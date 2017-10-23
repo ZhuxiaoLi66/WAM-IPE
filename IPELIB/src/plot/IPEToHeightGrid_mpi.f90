@@ -437,30 +437,33 @@ CONTAINS
 
      CLOSE(20)
 
-     OPEN( UNIT = 20, &
-           FILE = TRIM(neutralFile), &
-           FORM = 'UNFORMATTED', &
-           STATUS = 'OLD' )
+     IF( neutralFileGiven )THEN
+       OPEN( UNIT = 20, &
+             FILE = TRIM(neutralFile), &
+             FORM = 'UNFORMATTED', &
+             STATUS = 'OLD' )
 
 
-     READ(20) tn_k
-     READ(20) vn_ms1
-     READ(20) on_ms1
-     READ(20) n2n_ms1
-     READ(20) o2n_m3 
+       READ(20) tn_k
+       READ(20) vn_ms1
+       READ(20) on_ms1
+       READ(20) n2n_ms1
+       READ(20) o2n_m3 
+     
+       CLOSE(20)
 
-     DO mp=1,NMP
-       DO lp=1,NLP
+       DO mp=1,NMP
+         DO lp=1,NLP
 
-        tn_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)     = tn_k(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
-        vn_ft(JMIN_ING(lp):JMAX_ISG(lp),mp,1:3) = vn_ms1(JMIN_IN(lp):JMAX_IS(lp),lp,mp,1:3)
-        on_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)     = on_ms1(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
-        n2n_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)    = n2n_ms1(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
-        o2n_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)    = o2n_m3(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
+          tn_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)     = tn_k(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
+          vn_ft(JMIN_ING(lp):JMAX_ISG(lp),mp,1:3) = vn_ms1(JMIN_IN(lp):JMAX_IS(lp),lp,mp,1:3)
+          on_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)     = on_ms1(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
+          n2n_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)    = n2n_ms1(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
+          o2n_ft(JMIN_ING(lp):JMAX_ISG(lp),mp)    = o2n_m3(JMIN_IN(lp):JMAX_IS(lp),lp,mp)
 
-      ENDDO 
-     ENDDO
-
+        ENDDO 
+       ENDDO
+     ENDIF
 
 
 #ifdef DEBUG

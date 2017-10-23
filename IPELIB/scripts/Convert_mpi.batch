@@ -32,10 +32,12 @@ export I2HG_EXE=${WAMIPEDIR}/IPELIB/bin/i2hg_mpi
 # Build our list of files.
 for plasmafile in ${IPE_RUNDIR}ipe_grid_plasma_params.*
 do
-  timestamp=$( echo $plasmafile | awk -F'.' '{print $NF}')
-  neutralfile=${IPE_RUNDIR}ipe_grid_neutral_params.$timestamp
-  echo $plasmafile  >> tmp_plasma
-  echo $neutralfile >> tmp_neutral
+  if [ -e $plasmafile ] ; then
+    timestamp=$( echo $plasmafile | awk -F'.' '{print $NF}')
+    neutralfile=${IPE_RUNDIR}ipe_grid_neutral_params.$timestamp
+    echo $plasmafile  >> tmp_plasma
+    echo $neutralfile >> tmp_neutral
+  fi
 done
 
 # Create some more variables that are used below.

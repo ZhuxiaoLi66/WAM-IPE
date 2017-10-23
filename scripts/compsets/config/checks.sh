@@ -143,6 +143,7 @@ if [ $RESTART = .false. ] ; then # cold start
 			else
 				echo "   found ICs! copying over."
 				$NCP $IC_DIR/$SEARCH$CDATE $ROTDIR/.
+				$NCP $IC_DIR/wam_input_f107_kp.txt $ROTDIR/.
 			fi
 		else # IC_DIR is unset, we don't know where to look
 			echo "   IC_DIR has not been set: cannot find initial conditions! exiting." ; exit 1

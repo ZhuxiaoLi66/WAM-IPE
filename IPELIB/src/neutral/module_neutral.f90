@@ -108,22 +108,6 @@
      END IF
 
 
-! array initialization - don't do this......
-!SMS$IGNORE BEGIN
-!      ON_m3  = zero
-!      HN_m3  = zero
-!      N2N_m3 = zero
-!      O2N_m3 = zero
-!      HE_m3  = zero
-!      N4S_m3 = zero
-!      TN_k   = zero
-!      TINF_k = zero
-!      Un_ms1 = zero
-!      on_m3_msis = zero
-!      o2n_m3_msis = zero
-!      n2n_m3_msis = zero
-!      tn_k_msis = zero
-!SMS$IGNORE END
 
 !SMS$PARALLEL(dh, lp, mp) BEGIN
       apex_longitude_loop: DO mp = 1,mpstop
@@ -220,9 +204,14 @@
 ! copy across the msis parameters:
 !
                 if ( sw_use_wam_fields_for_restart ) then
-                   print*, '**** GEORGE **** First Call of IPE, Using Read-in WAM fields', mp,lp
+
+                   do jth=1,3
+                     do i=IN,IS
+                       vn_ms1(jth,i-IN+1) = vn_ms1_4output(i-IN+1,lp,mp,jth)
+                     end do
+                   end do
+
                 else
-                   print *, '**** GEORGE **** First Call of IPE, Using MSIS ', mp,lp
 
                    on_m3( IN:IS,lp,mp) =  on_m3_msis(IN:IS)
                    o2n_m3(IN:IS,lp,mp) = o2n_m3_msis(IN:IS)

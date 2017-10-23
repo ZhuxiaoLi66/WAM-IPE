@@ -150,10 +150,10 @@ nmf2Max = 4.0
 nmf2ColorMap = 'Reds'
 nmf2Ticks = 9
 # neutral temperature
-tempMin = 750
+tempMin = 600
 tempMax = 1100
 tempColorMap = 'Reds'
-tempTicks = 8
+tempTicks = 11
 
 ## parsing options
 parser = ArgumentParser(description='Make plots from height-gridded NetCDF IPE output', formatter_class=ArgumentDefaultsHelpFormatter)
