@@ -1362,6 +1362,16 @@ cat > load_balance_groups1 <<EOF
          104         107         110         113         116         119
          123         131         144         170
 EOF
+cat > GPTLnamelist << EOF
+&gptlnl
+ print_method = 'full_tree' ! print full call tree
+ utr          = 'nanotime'  ! fastest available underlying timer (Intel processors only)
+! eventlist   = 'PAPI_FP_OPS','GPTL_CI' ! PAPI-based counters (only if PAPI is available)
+/
+EOF
+# ridiculous file
+cp /scratch3/BMC/gsd-hpcs/Jacques.Middlecoff/IPEr420/run/1492798870_ipe_theia_intel_parallel_464/IPEsw.inp .
+#
 cat  > IPE.inp <<EOF
 &ipedims
   nlp=170
