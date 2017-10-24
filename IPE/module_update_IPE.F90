@@ -106,7 +106,7 @@ module module_update_IPE
 
 
       if (IAM_ROOT()) then
-        print"('Utime=',2i7,f11.4,' nTimeStep',2i2)",utime,(MOD(utime,86400)),(MOD(utime,86400)/3600.),nTimeStep,ncnt
+        print"('Utime=',2i7,f11.4,' nTimeStep',2i7)",utime,(MOD(utime,86400)),(MOD(utime,86400)/3600.),nTimeStep,ncnt
         if(swEsmfTime) write(unit=9999,FMT=*)'update_IPE',nTimeStep,':ut=',utime
       endif
 !!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-5")
