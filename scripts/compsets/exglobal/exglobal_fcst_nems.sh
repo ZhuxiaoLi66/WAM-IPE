@@ -1369,8 +1369,10 @@ cat > GPTLnamelist << EOF
 ! eventlist   = 'PAPI_FP_OPS','GPTL_CI' ! PAPI-based counters (only if PAPI is available)
 /
 EOF
-# ridiculous file
+# raw_high_lat specific files
 cp /scratch3/BMC/gsd-hpcs/Jacques.Middlecoff/IPEr420/run/1492798870_ipe_theia_intel_parallel_464/IPEsw.inp .
+cp /scratch3/BMC/gsd-hpcs/Jacques.Middlecoff/IPEr420/run/1492798870_ipe_theia_intel_parallel_464/tiros_spectra .
+cp /scratch3/BMC/gsd-hpcs/Jacques.Middlecoff/IPEr420/run/1492798870_ipe_theia_intel_parallel_464/ionprof .
 #
 cat  > IPE.inp <<EOF
 &ipedims
