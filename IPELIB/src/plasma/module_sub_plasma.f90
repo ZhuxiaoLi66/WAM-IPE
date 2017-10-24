@@ -88,12 +88,13 @@
       ret = gptlstop  ('EXCHANGE')
 !sms$compare_var(plasma_3d,"module_sub_plasma.f90 - plasma_3d-2")
 
+        IF ( sw_neutral_heating_flip==1 )  THEN
+           hrate_mks3d(:,:,:,:)=zero!0.0_real_prec
+        ENDIF
+
 !     apex_longitude_loop: DO mp = mpstrt,mpstop,mpstep !1,NMP
       apex_longitude_loop: DO mp = 1,mpstop
 !nm20121115        mp_save=mp
-        IF ( sw_neutral_heating_flip==1 )  THEN
-           hrate_mks3d(:,:,mp,:)=0.0_real_prec
-        ENDIF
         if ( sw_debug )  WRITE (0,"('sub-p: mp=',I4)")mp
 !d        n0_2dbg(:)=zero
 !       apex_latitude_height_loop: DO lp = lpstrt,lpstop,lpstep
