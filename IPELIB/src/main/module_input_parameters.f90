@@ -359,21 +359,6 @@
 !SMS$INSERT lpHaloSize=1
 !SMS$INSERT mpHaloSize=2
 
-!nm20170906: i must find a way to consolidate these two options to get it to work for wam-ipe.
-!>>>>1.IPEOptimization version:
-!SMS$INSERT call MPI_COMM_RANK(MPI_COMM_WORLD,mype,istat)
-!SMS$ignore begin
-!SMS$INSERT print*,'mype,mod(mype,48)',mype,mod(mype,48)
-!SMS$ignore end
-!!SMS$INSERT call set_affinity (mod(mype,48)) !Pin MPI rank mype to core mod(mype,48)
-
-!!!>>>>2.WAM-IPE version:
-!!!set up MPI communicator for SMS
-!(1) when NEMS is used, MPI_COMM_IPE=mpiCommunicator has been assigned already in sub-myIPE_Init
-!(2) when IPE Standalone is used, MPI_COMM_IPE=MPI_COMM_WORLD is set in driver_ipe
-!SMS$SET_COMMUNICATOR( MPI_COMM_IPE )
-
-
 !SMS$CREATE_DECOMP(dh,<NLP,NMP>,<lpHaloSize,mpHaloSize>: <NONPERIODIC, PERIODIC>)
 
 !SMS$SERIAL(<IOST_RD,istat,OUT>) BEGIN
