@@ -1250,8 +1250,8 @@ fi
 # Add time dependent variables F10.7 and kp into the WAM model.
 #--------------------------------------------------------------
 if [ $IDEA = .true. ]; then
-  mod6=$((6-INI_HOUR%6))
-  mod3=$((3-INI_HOUR%6))
+  mod6=$((6-10#$INI_HOUR%6))
+  mod3=$((3-10#$INI_HOUR%6))
   CDATE6=`$NDATE $mod6 $CDATE`
 
   INI_YEAR6=$(echo $CDATE6 | cut -c1-4)
@@ -1265,7 +1265,7 @@ if [ $IDEA = .true. ]; then
   INI_DAY3=$(echo $CDATE3 | cut -c7-8)
   INI_HOUR3=$(echo $CDATE3 | cut -c9-10)
 
-  START_UT_SEC=$((INI_HOUR*3600))
+  START_UT_SEC=$((10#$INI_HOUR*3600))
 
   # global_idea fix files
   ${NLN} $FIX_IDEA/global_idea* .
@@ -1409,7 +1409,7 @@ cat  > IPE.inp <<EOF
   kp_eld=${KP3HR}
 /
 &nmswitch
-  duration=$(((FHMAX-FHINI)*3600))
+  duration=$(((10#$FHMAX-10#$FHINI)*3600))
   fac_bm=1.00
   iout(1)=1
   iout(2)=60
