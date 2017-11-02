@@ -1,15 +1,15 @@
 Starting :
-Mon Aug 28 21:43:23 UTC 2017
+Wed Nov  1 19:24:12 UTC 2017
 ======================================================================
 Setting up to run NEMS on compset: 'swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170'.
-RUNDIR: '/scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_83696/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170'.
+RUNDIR: '/scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_100054/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170'.
 Test 
 WAM-IPE 1h coupled run
 GFS, 40 proc, 1 thread
 
 
-baseline dir = /scratch4/NCEPDEV/nems/noscrub/emc.nemspara/RT/WAM-IPE/WAM-IPE_NEMS201606-20170302/data/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_V0003
-working dir  = /scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_83696/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170
+baseline dir = /scratch4/NCEPDEV/nems/noscrub/Weiyu.Yang/REGRESSION_TEST/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_V0003
+working dir  = /scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_100054/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170
 Checking test  results ....
  Comparing IPE.inp............MISSING baseline
  Comparing SMSnamelist............MISSING baseline
@@ -37,7 +37,6 @@ Checking test  results ....
  Comparing plasma15............MISSING file
  Comparing plasma16............MISSING file
  Comparing wam3dgridnew2.nc............MISSING baseline
- Comparing ipe3dgrid2.nc............MISSING baseline
  Comparing wam2dmesh.nc............MISSING baseline
 Test  FAIL 
 
@@ -45,14 +44,14 @@ Test  FAIL
 
 ======================================================================
 Setting up to run NEMS on compset: 'swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart'.
-RUNDIR: '/scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_83696/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart'.
+RUNDIR: '/scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_100054/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart'.
 Test 
 WAM-IPE 1h coupled run
 GFS, 40 proc, 1 thread
 
 
-baseline dir = /scratch4/NCEPDEV/nems/noscrub/emc.nemspara/RT/WAM-IPE/WAM-IPE_NEMS201606-20170302/data/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_V0003
-working dir  = /scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_83696/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart
+baseline dir = /scratch4/NCEPDEV/nems/noscrub/Weiyu.Yang/REGRESSION_TEST/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_V0003
+working dir  = /scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_100054/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart
 Checking test  results ....
  Comparing IPE.inp............MISSING baseline
  Comparing SMSnamelist............MISSING baseline
@@ -80,11 +79,10 @@ Checking test  results ....
  Comparing plasma15............MISSING file
  Comparing plasma16............MISSING file
  Comparing wam3dgridnew2.nc............MISSING baseline
- Comparing ipe3dgrid2.nc............MISSING baseline
  Comparing wam2dmesh.nc............MISSING baseline
 Test  FAIL 
 
 
 
 ======================================================================
-Mon Aug 28 22:09:52 UTC 2017
+Wed Nov  1 20:06:22 UTC 2017
