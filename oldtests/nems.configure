@@ -10,7 +10,7 @@ EARTH_attributes::
 
 # MED #
 MED_model:                      spaceweather
-MED_petlist_bounds:             16 23
+MED_petlist_bounds:             32 39
 MED_attributes::
   Verbosity = max
   DumpFields = false
@@ -26,7 +26,7 @@ ATM_attributes::
 
 # IPM #
 IPM_model:                      ipe
-IPM_petlist_bounds:             24 103
+IPM_petlist_bounds:             16 31
 IPM_attributes::
   Verbosity = max
   CheckFields = true
