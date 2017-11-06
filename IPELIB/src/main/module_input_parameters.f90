@@ -346,38 +346,31 @@
         !MPI communicator to be passed to SMS
      !   INTEGER (KIND=int_prec) :: MPI_COMM_IPE        
 
-!SMS$IGNORE BEGIN
-PRINT*, "JAS : Here0!"
-!SMS$IGNORE END
-
-!SMS$IGNORE BEGIN
-PRINT*, "JAS : Here1!"
-!SMS$IGNORE END
 
 !SMS$INSERT lpHaloSize=1
 !SMS$INSERT mpHaloSize=2
 
-!SMS$IGNORE BEGIN
-PRINT*, "JAS : Here2!"
-!SMS$IGNORE END
-
 !SMS$SET_COMMUNICATOR( MPI_COMM_IPE )
 
+
+! This statement is moved here since the IPE dimensions need to be known before 
+! calling SMS decomp.
+
 !SMS$IGNORE BEGIN
-PRINT*, "JAS : Here3!"
-!SMS$IGNORE END
-
-!SMS$CREATE_DECOMP(dh,<NLP,NMP>,<lpHaloSize,mpHaloSize>: <NONPERIODIC, PERIODIC>)
-
-!SMS$SERIAL(<IOST_RD,istat,OUT>) BEGIN
-!!!!SMS$IGNORE BEGIN
-        OPEN(LUN_nmlt, FILE=INPTNMLT,ERR=222,IOSTAT=IOST_OP,STATUS='OLD')
-        OPEN(LUN_nmlt2,FILE=INPTNMLT2,ERR=222,IOSTAT=IOST_OP,STATUS='OLD')
+        OPEN(LUN_nmlt, FILE='IPE.inp',ERR=222,IOSTAT=IOST_OP,STATUS='OLD')
+        OPEN(LUN_nmlt2,FILE='IPEsw.inp',ERR=222,IOSTAT=IOST_OP,STATUS='OLD')
         REWIND LUN_nmlt
         READ(LUN_nmlt,NML=IPEDIMS,ERR=222,IOSTAT=IOST_RD)
         REWIND LUN_nmlt
         READ(LUN_nmlt,NML=NMIPE ,ERR=222,IOSTAT=IOST_RD)
-!!!!SMS$IGNORE END
+!SMS$IGNORE END
+
+
+!SMS$CREATE_DECOMP(dh,<NLP,NMP>,<lpHaloSize,mpHaloSize>: <NONPERIODIC, PERIODIC>)
+
+
+
+!SMS$SERIAL(<IOST_RD,istat,OUT>) BEGIN
         IOST_RD = 0
         istat   = 0
         REWIND LUN_nmlt
@@ -413,10 +406,10 @@ PRINT*, "JAS : Here3!"
         CLOSE(LUN_nmlt)
         CLOSE(LUN_nmlt2)
 222     IF ( IOST_OP /= 0 ) THEN
-          WRITE(UNIT=LUN_nmlt, FMT=*) "OPEN NAMELIST FAILED!", IOST_OP
+          WRITE(UNIT=*, FMT=*) "OPEN NAMELIST FAILED!", IOST_OP
           STOP
         ELSEIF ( IOST_RD /= 0 ) THEN
-          WRITE(UNIT=LUN_nmlt, FMT=*) "READ NAMELIST FAILED!", IOST_RD
+          WRITE(UNIT=*, FMT=*) "READ NAMELIST FAILED!", IOST_RD
           STOP
         ENDIF
 
