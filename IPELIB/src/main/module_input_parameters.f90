@@ -413,6 +413,9 @@
           STOP
         ENDIF
 
+        ! convert min/max mesh height from km to meters
+        mesh_height_min = 1.e+03_real_prec * mesh_height_min
+        mesh_height_max = 1.e+03_real_prec * mesh_height_max
 
 stop_time=start_time+duration
 
