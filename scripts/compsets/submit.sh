@@ -38,6 +38,7 @@ cd $SCRIPTSDIR
 ## execute forecast
 ##-------------------------------------------------------
 
+rm -rf $RUNDIR
 mkdir -p $RUNDIR
 cd $RUNDIR
 

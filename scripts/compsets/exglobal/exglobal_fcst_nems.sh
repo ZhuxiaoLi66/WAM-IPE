@@ -1018,8 +1018,7 @@ if [[ $ENS_NUM -le 1 ]] ; then
     done
   fi
   echo $FORT1051
-  #eval ln -fs $FORT1051 fort.1051
-  cp $FORT1051 fort.1051
+  eval ln -fs $FORT1051 fort.1051
   eval ln -fs $GRDR1 GRDR1
   eval ln -fs $GRDR2 GRDR2
   eval ln -fs $SIGR1 SIGR1
