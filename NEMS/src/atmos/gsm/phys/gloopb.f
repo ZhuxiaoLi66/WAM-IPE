@@ -71,6 +71,7 @@
 !                   new idea_init
 !                   new call of idea_phys, no Unified GW physics
 !  Aug 17 2016       P Pegion - add logic for not doing mass tracer fix if in iau interval
+! September 2017    Weiyu - Add the IPE back coupling to WAM code.
 !======================================================================
       use resol_def
       use layout1
@@ -110,6 +111,9 @@
       use efield_wam,           only: efield_init
       USE IDEA_WAM_CONTROL,        only : SPW_DRIVERS
       USE namelist_wamphysics_def, only : wam_control_default
+      USE module_IPE_to_WAM,       only : lowst_ipe_level, 
+     &                                    ZMT, MMT, JHR, SHR, O2DR,
+     &                                    ipe_to_wam_coupling
 !
       use mersenne_twister
 !================================================================= WAM-related 201702
@@ -132,6 +136,8 @@
       real(kind=kind_phys), dimension(ngptc)       :: dpshc, pgr
       real(kind=kind_phys), dimension(ngptc,levs)  :: prsl, prslk
      &,                           phil, gu, gv, gt, adu, adv, adt
+      real(kind=kind_phys), dimension(ngptc,lowst_ipe_level:levs)  ::
+     &                            gzmt, gmmt, gjhr, gshr, go2dr
       real(kind=kind_phys), dimension(ngptc,levs+1) :: prsi, prsik
      &,                           phii
 !!
@@ -399,6 +405,9 @@
 !***************************************idea below*****************************************
         if ( lsidea ) then
 
+           print*, 'in gloopb, kdt, ipe_to_wam_coupling=',
+     &         kdt, ipe_to_wam_coupling
+
        if (me==0) write(6,*) 'VAY WAM SPW_DRIVERS:',trim(SPW_DRIVERS)
 
          if (trim(SPW_DRIVERS)=='swpc_fst') then
@@ -622,7 +631,6 @@
 !    &     
 !---------------------------main latitude loop starts---------------------------------
 !
-
       do lan=1,lats_node_r
          lat         = global_lats_r(ipt_lats_node_r-1+lan)
          lon_dim     = lon_dims_r(lan)
@@ -709,6 +717,19 @@
               vvel(i,k)   = grid_fld%dpdt(item,lan,k) ! pascal/sec
             enddo
           enddo
+
+          IF(lsidea .AND. ipe_to_wam_coupling) THEN
+            do k = lowst_ipe_level, LEVS
+              do i = 1, njeff
+                item = lon+i-1
+                gzmt(i,k)     = zmt(item,lan,k) 
+                gmmt(i,k)     = mmt(item,lan,k) 
+                gjhr(i,k)     = jhr(item,lan,k) 
+                gshr(i,k)     = shr(item,lan,k) 
+                go2dr(i,k)    = o2dr(item,lan,k) 
+              enddo
+            enddo
+          END IF
 
 !     write(0,*)' mintem=',minval(gt(1:njeff,:))
 !    &,' maxtem=',maxval(gt(1:njeff,:)),' lan=',lan
@@ -850,7 +871,8 @@
      &                     sfc_fld%oro(lon,lan),flx_fld%coszen(lon,lan),
      &                     swh(1,1,iblk,lan),hlw(1,1,iblk,lan),hlwd,
      &                     thermodyn_id,sfcpress_id,gen_coord_hybrid,
-     &                     me,mpi_r_io_r,MPI_COMM_ALL, fhour, kdt)
+     &                     me,mpi_r_io_r,MPI_COMM_ALL, fhour, kdt,
+     &                     gzmt, gmmt, gjhr, gshr, go2dr)
 !
 !
 !
