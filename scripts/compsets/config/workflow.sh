@@ -18,10 +18,12 @@ export CONFIGDIR=`pwd`/config
 # load non-machine-specific general configuration: dependent directories, executables, etc.
 . $CONFIGDIR/general.config
 
+# setup input I/O. note: some values are overwritten if RESTART=.true.
+. $CONFIGDIR/coldstart.config
+
+# overwrite the input files and adjust FH* settings for restart if in use
 if [ $RESTART = .true. ] ; then
 . $CONFIGDIR/restart.config
-else
-. $CONFIGDIR/coldstart.config
 fi
 
 # load ESMF variables
