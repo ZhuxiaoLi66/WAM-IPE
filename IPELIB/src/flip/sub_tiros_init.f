@@ -1,7 +1,7 @@
 !date 20150810
 !written by Tim Fuller Rowell
 !purpose: initialization of tiros routine
-      subroutine tiros_init()
+      subroutine tiros_init_ipe()
       use tirosdata
       CHARACTER (LEN=*), parameter :: filename3='ionprof'
       CHARACTER (LEN=*), parameter :: filename7='tiros_spectra'
@@ -38,5 +38,5 @@
       CLOSE(UNIT=UNIT3)
       CLOSE(UNIT=UNIT7)
          return
-      end subroutine tiros_init
+      end subroutine tiros_init_ipe
        
