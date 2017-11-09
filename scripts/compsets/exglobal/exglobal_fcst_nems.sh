@@ -1462,7 +1462,7 @@ cat  > IPE.inp <<EOF
   swNeuPar(5)=t
   swNeuPar(6)=t
   swNeuPar(7)=t
-  swEsmfTime=t
+  swEsmfTime=f
   sw_output_fort167=f
   sw_output_wind=t
   sw_output_plasma_grid=f
