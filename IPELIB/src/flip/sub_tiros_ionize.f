@@ -1,4 +1,4 @@
-      subroutine tiros_ionize(flipdim,z,gr,on,o2n,
+      subroutine tiros_ionize_ipe(flipdim,z,gr,on,o2n,
      &n2n,hn,hen,tn,gm_lat,mlt
      &,tiros_activity_level,GW
      &,qiont,qiont_O,qiont_O2,qiont_N2,sw_debug)
@@ -227,5 +227,5 @@ c
       if(sw_debug)print *,'end tiros_ionize',MAXVAL(qiont_O)
      &,MINVAL(qiont_O)
       RETURN
-      END subroutine tiros_ionize
+      END subroutine tiros_ionize_ipe
 
