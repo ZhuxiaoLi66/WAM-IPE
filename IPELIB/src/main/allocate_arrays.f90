@@ -59,9 +59,9 @@
      &,           vn_ms1_4output(MaxFluxTube,NLP,NMP,3) )
 
 !nm20170424 wind output corrected
-        if ( sw_neutral==0.or.sw_neutral==1 ) then
+!t        if ( sw_neutral==0.or.sw_neutral==1 ) then
            allocate( WamField(MaxFluxTube,NLP,NMP,7) )
-        end if
+!t        end if
 
         IF ( sw_neutral_heating_flip==1 ) THEN
           ALLOCATE(hrate_mks3d(MaxFluxTube,NLP,NMP,7),STAT=stat_alloc)
@@ -141,9 +141,9 @@
      &,           vn_ms1_4output )
 
 !nm20170424 wind output corrected
-       if ( sw_neutral==0.or.sw_neutral==1 ) then 
+!t       if ( sw_neutral==0.or.sw_neutral==1 ) then 
           DEallocate( WamField )
-       end if
+!t       end if
 
 !---neutral heating
        IF ( sw_neutral_heating_flip==1 ) THEN

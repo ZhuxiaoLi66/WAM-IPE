@@ -689,7 +689,7 @@ c      ENDIF
       !.. O+, H+ solution
       ret = gptlstart ('CTIPINT DLOOPS')
       IF( sw_OHPLS>0) ! .AND. Z(midpoint)>120.00 )
-     >  CALL DLOOPS(JMIN,JMAX,FLDIM,Z,N,TI,DT,DTMIN,EFLAG)   !$$$  
+     >  CALL DLOOPS(JMIN,JMAX,FLDIM,Z,N,TI,DT,DTMIN,EFLAG,mp,lp)   !$$$  
       ret = gptlstop  ('CTIPINT DLOOPS')
 !----------------------
       if ( sw_optw_flip ) then
@@ -841,14 +841,14 @@ C... Written by P. Richards September 2010
      >  ,2X,'Time step less than minimum.mp=',i4,'lp=',i4,i7)
       IF(EFLAG(1,2).NE.0) then
 !dbg110210:
-        WRITE(PRUNIT,*)'EFLAG(1,2)',EFLAG(1,2),mype
+        WRITE(PRUNIT,*)'EFLAG(1,2)',EFLAG(1,2),'mype=',mype
         WRITE(PRUNIT,12)mp,lp
-        IF ( sw_ERSTOP_flip==1 ) THEN
+!t        IF ( sw_ERSTOP_flip==1 ) THEN
 !sms$ignore begin
-          print*,"(12)ERSTOP FLIP",mp,lp,mype
+          print*,"(12)ERSTOP FLIP:mp=",mp,' lp=',lp,' mype=',mype
 !sms$ignore end
-          STOP
-        END IF !( sw_ERSTOP_flip==1 )
+          STOP 'STOP!WRITE.EFLAG12!'
+!t        END IF !( sw_ERSTOP_flip==1 )
       end IF !(EFLAG(1,2).NE.0)
  12   FORMAT(/'  Convergence failure in Temperature solution (TLOOPS).'
      >  ,2X,'Incorrect input to the band solver BDSLV.mp=',i3,'lp=',i4)     

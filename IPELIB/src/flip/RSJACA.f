@@ -63,11 +63,11 @@ C
 !sms$ignore begin
   112 WRITE(PRUNIT,919)I,mype
 !sms$ignore end
-919   FORMAT('    IN BDSLV, ROW',I6,' IS ZERO IN INPUT MATRIX',i10)
+919   FORMAT('    IN BDSLV, ROW',I6,' IS ZERO IN INPUT MATRIXmype=',i10)
       NFLAG=2
 !dbg20140610: code must stop if this error happens!
 !nm20170111: commented out to get WAM-IPE keep going at the initial trial stage by loosening error stop.
-!      sw_ERSTOP_flip=1
+!t      sw_ERSTOP_flip=1
       RETURN
 114   SCALE(I)=1./BIG
 115   CONTINUE

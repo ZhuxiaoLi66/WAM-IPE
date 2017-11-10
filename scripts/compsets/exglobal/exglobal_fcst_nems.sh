@@ -1371,9 +1371,9 @@ cat > GPTLnamelist << EOF
 /
 EOF
 # raw_high_lat specific files
-cp /scratch3/BMC/gsd-hpcs/Jacques.Middlecoff/IPEr420/run/1492798870_ipe_theia_intel_parallel_464/IPEsw.inp .
-cp /scratch3/BMC/gsd-hpcs/Jacques.Middlecoff/IPEr420/run/1492798870_ipe_theia_intel_parallel_464/tiros_spectra .
-cp /scratch3/BMC/gsd-hpcs/Jacques.Middlecoff/IPEr420/run/1492798870_ipe_theia_intel_parallel_464/ionprof .
+cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/IPEsw.inp .
+cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/tiros_spectra .
+cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/ionprof .
 #
 cat  > IPE.inp <<EOF
 &ipedims
@@ -1412,12 +1412,12 @@ cat  > IPE.inp <<EOF
 &nmipe
   f107av=113.0
   f107d=126.0
-  internalTimeLoopMax=1
-  ip_freq_eldyn=60
-  ip_freq_msis=900
+  internalTimeLoopMax=18
+  ip_freq_eldyn=10
+  ip_freq_msis=10
   ip_freq_plasma=10
-  ip_freq_output=900
-  ip_freq_paraTrans=60
+  ip_freq_output=10
+  ip_freq_paraTrans=10
   nday=76
   nyear=2000
   start_time=0
@@ -1439,13 +1439,13 @@ cat  > IPE.inp <<EOF
   iout(2)=60
   lpFort167=57
   lpmax_perp_trans=151
-  lpmin_perp_trans=15
+  lpmin_perp_trans=1
   mpFort167=71
   mpstop=80
   peFort167=56
   record_number_plasma_start=0
-  sw_aurora=1
-  sw_ctip_input=t
+  sw_aurora=0
+  sw_ctip_input=f
   sw_dbg_perp_trans=f
   sw_debug=f
   sw_debug_mpi=f
@@ -1454,14 +1454,14 @@ cat  > IPE.inp <<EOF
   sw_exb_up=1
   sw_grid=0
   sw_ksi=2
-  sw_neutral=1
-  swNeuPar(1)=t
-  swNeuPar(2)=t
-  swNeuPar(3)=t
-  swNeuPar(4)=t
-  swNeuPar(5)=t
-  swNeuPar(6)=t
-  swNeuPar(7)=t
+  sw_neutral=3
+  swNeuPar(1)=f
+  swNeuPar(2)=f
+  swNeuPar(3)=f
+  swNeuPar(4)=f
+  swNeuPar(5)=f
+  swNeuPar(6)=f
+  swNeuPar(7)=f
   swEsmfTime=f
   sw_output_fort167=f
   sw_output_wind=t
