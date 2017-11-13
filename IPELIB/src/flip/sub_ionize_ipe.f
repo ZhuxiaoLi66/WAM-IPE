@@ -5,7 +5,7 @@
      &,tiros_activity_level,GW
      &,qiont_O,qiont_O2,qiont_N2
      &,sw_debug)
-      use tirosdata
+!      use tirosdata_ipe
       implicit none
 !
       CHARACTER (LEN=*), parameter :: filename0='N'
@@ -87,7 +87,7 @@
 ! characteristic energy CMAPS, and TIROS spectra DJSPECTRA
 ! read in emaps and cmaps and spectra
 !
-       call tiros_init()
+       call tiros_init_ipe()
 !
 ! tiros_ionize returns ionization rates for O, O2, and N2 for a given 
 ! geomagnetic latitude GL and magnetic local time MLT based on 
@@ -119,7 +119,7 @@
 !
       if(sw_debug)print *,'before tiros: flipdim=',flipdim,gm_lat,mlt
      &,maxval(qiont_o),minval(qiont_o)
-      call tiros_ionize(flipdim,z,gr,on,o2n,n2n,hn,hen,tn
+      call tiros_ionize_ipe(flipdim,z,gr,on,o2n,n2n,hn,hen,tn
      &,gm_lat,mlt,
      &tiros_activity_level,GW,qiont_total,qiont_O,qiont_O2,qiont_N2
      &,sw_debug)

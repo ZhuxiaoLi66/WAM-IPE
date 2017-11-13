@@ -835,40 +835,47 @@ C... Written by P. Richards September 2010
       IF(EFLAG(1,1).NE.0) THEN
         WRITE(PRUNIT,11)mp,lp,mype
 !(11)
-!t        IF ( sw_ERSTOP_flip==1 )  STOP
+!        IF ( sw_ERSTOP_flip==1 ) THEN
+!sms$ignore begin
+!          print*,"(11)ERSTOP FLIP:mp=",mp,' lp=',lp,' mype=',mype
+!sms$ignore end
+!          STOP 'STOP! sub-WRITE_EFLAG11'
+!        END IF
       END IF
  11   FORMAT(/'  Convergence failure in Temperature solution (TLOOPS).'
-     >  ,2X,'Time step less than minimum.mp=',i4,'lp=',i4,i7)
+     >  ,2X,'Time step less than minimum.mp=',i4,'lp=',i4,'mype=',i7)
       IF(EFLAG(1,2).NE.0) then
 !dbg110210:
         WRITE(PRUNIT,*)'EFLAG(1,2)',EFLAG(1,2),'mype=',mype
-        WRITE(PRUNIT,12)mp,lp
-!t        IF ( sw_ERSTOP_flip==1 ) THEN
+        WRITE(PRUNIT,12)mp,lp,mype
+        IF ( sw_ERSTOP_flip==1 ) THEN
 !sms$ignore begin
           print*,"(12)ERSTOP FLIP:mp=",mp,' lp=',lp,' mype=',mype
 !sms$ignore end
-          STOP 'STOP!WRITE.EFLAG12!'
-!t        END IF !( sw_ERSTOP_flip==1 )
-      end IF !(EFLAG(1,2).NE.0)
+          STOP 'STOP! sub-WRITE_EFLAG12'
+        END IF !( sw_ERSTOP_flip==1 )
+      end IF                    !(EFLAG(1,2).NE.0)
  12   FORMAT(/'  Convergence failure in Temperature solution (TLOOPS).'
-     >  ,2X,'Incorrect input to the band solver BDSLV.mp=',i3,'lp=',i4)     
+     >  ,2X,'Incorrect input to the band solver BDSLV.mp=',i3,'lp=',i4
+     &,'mype=',i7)     
 
       IF(EFLAG(2,1).NE.0) THEN
-         WRITE(PRUNIT,21)lp,mp,ltime,UTIME,mype
+         WRITE(PRUNIT,21)mp,lp,ltime,UTIME,mype
 !         print*,'JFM',prunit,mype,lp,mp,ltime,UTIME,mype
 !(3)
 !t         IF ( sw_ERSTOP_flip==1 )  STOP
 
       END IF
  21   FORMAT(/'  Convergence failure in O+ - H+ (DLOOPS).'
-     &,'TimeStep less than minimum:lp=',i3,'mp=',i3,f7.2,2i7)
+     &,'TimeStep less than minimum:mp=',i3,'lp=',i3,'LT=',f7.2
+     &,'UT=',2i7)
       IF(EFLAG(2,2).NE.0) THEN
          WRITE(PRUNIT,22)mp,lp,mype
          IF ( sw_ERSTOP_flip==1 ) THEN
 !sms$ignore begin
-           print *,"(22)ERSTOP FLIP",mp,lp,mype
+           print*,"(22)ERSTOP FLIP",mp,lp,mype
 !sms$ignore end
-           STOP
+           STOP 'STOP! sub-WRITE_EFLAG22'
         END IF
 
 
@@ -889,7 +896,7 @@ C... Written by P. Richards September 2010
 !sms$ignore begin
            print*,"(32)ERSTOP FLIP",mp,lp,mype
 !sms$ignore end
-           STOP
+           STOP 'STOP! sub-WRITE_EFLAG32'
          END IF !( sw_ERSTOP_flip==1 ) THEN
 
       END IF !(EFLAG(3,2).NE.0) THEN
@@ -898,10 +905,12 @@ C... Written by P. Richards September 2010
 
       IF(EFLAG(4,1).NE.0) THEN
          WRITE(PRUNIT,41)mp,lp,mype
-!t         IF ( sw_ERSTOP_flip==1 ) THEN
-!t           print *,"(7)ERSTOP FLIP",mp,lp            
-!t           STOP
-!t        END IF
+         IF ( sw_ERSTOP_flip==1 ) THEN
+!sms$ignore begin
+           print*,"(7)ERSTOP FLIP",mp,lp,mype            
+!sms$ignore end
+           STOP 'STOP! sub-WRITE_EFLAG7'
+        END IF
       END IF !      IF(EFLAG(4,1).NE.0) THEN
  41   FORMAT(/'  Convergence failure in N+ solution (XION).'
      >  ,2X,'Time step less than minimum.mp',i3,'lp',i4,i7)
@@ -912,7 +921,7 @@ C... Written by P. Richards September 2010
 !SMS$ignore begin
            print*,"(42)ERSTOP FLIP",mp,lp,mype
 !SMS$ignore end
-           STOP
+           STOP 'STOP! sub-WRITE_EFLAG42'
          END IF !( sw_ERSTOP_flip==1 )  THEN
 
       END IF !(EFLAG(4,2).NE.0) THEN

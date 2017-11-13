@@ -2,7 +2,7 @@
      &n2n,hn,hen,tn,gm_lat,mlt
      &,tiros_activity_level,GW
      &,qiont,qiont_O,qiont_O2,qiont_N2,sw_debug)
-      use tirosdata
+      use tirosdata_ipe
       implicit none
 !
       INTEGER :: j, i, m, l, iband
@@ -60,10 +60,12 @@ c
 !
 ! check the energy influx is normalized to 1 erg/cm2/s 
       do 17 m=1,15
-   17 TE15(iband)=TE15(iband)+djspectra(m,iband)*en(m)*width(m)*1.6E-06
+   17 TE15(iband)=TE15(iband)+
+     &djspectra_ipe(m,iband)*en(m)*width(m)*1.6E-06
 ! normalize with the energy influx 300eV to 20keV
       do 18 m=1,11
-   18 TE11(iband)=TE11(iband)+djspectra(m,iband)*en(m)*width(m)*1.6E-06
+   18 TE11(iband)=TE11(iband)+
+     &djspectra_ipe(m,iband)*en(m)*width(m)*1.6E-06
 !      print *, iband, TE11(iband), TE15(iband)
       enddo
       bz = 1.38e-23
@@ -117,15 +119,15 @@ cc  **
       rj = rj - j1
       j2 = j1 + 1
 c
-      eflux = rj*ri*EMAps(j2,i2,l) + (1.-rj)*ri*EMAps(j1,i2,l)
-     &        + rj*(1.-ri)*EMAps(j2,i1,l) + (1.-rj)*(1.-ri)
-     &        *EMAps(j1,i1,l)
+      eflux = rj*ri*Emaps_Ipe(j2,i2,l) + (1.-rj)*ri*Emaps_Ipe(j1,i2,l)
+     &        + rj*(1.-ri)*Emaps_Ipe(j2,i1,l) + (1.-rj)*(1.-ri)
+     &        *Emaps_Ipe(j1,i1,l)
       eflux = 10.**(eflux)/1000.
       if(sw_debug) write(6001,*) 'eflux   ', eflux
 cc  **
 c
-      ch = rj*ri*CMAps(j2,i2,l) + (1.-rj)*ri*CMAps(j1,i2,l) + rj*(1.-ri)
-     &     *CMAps(j2,i1,l) + (1.-rj)*(1.-ri)*CMAps(j1,i1,l)
+      ch = rj*ri*Cmaps_Ipe(j2,i2,l) + (1.-rj)*ri*Cmaps_Ipe(j1,i2,l) + rj*(1.-ri)
+     &     *Cmaps_Ipe(j2,i1,l) + (1.-rj)*(1.-ri)*Cmaps_Ipe(j1,i1,l)
        if(sw_debug) write(6001,*) 'ch   ', ch
 ! validation tests:
 ! to compare with figure 5 F-R and Evans 1987
@@ -172,8 +174,8 @@ c
 ! loop through all energy bands
       DO 10 L=1,15
 !      DL(L)=RNO*en(l)*EXP(-EN(L)/ALPHA)
-      DL_lower = djspectra(L,K)
-      DL_upper = djspectra(L,KK)
+      DL_lower = djspectra_ipe(L,K)
+      DL_upper = djspectra_ipe(L,KK)
       RANGE=4.57E-05*EN(L)**1.75
       PR=RANGE*grav(i)
       RATIOZ=PRES(i)/PR
