@@ -5,4 +5,4 @@
 
 # This script is responsible for loading modules for GSM build with ESMF v7
 
- module load intel/15.1.133 impi/5.0.3.048 netcdf/4.3.0 szip esmf/7.0.2
+ module load intel/16.1.150 impi netcdf/4.3.0 szip esmf/7.0.2
