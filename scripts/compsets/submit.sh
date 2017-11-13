@@ -75,4 +75,4 @@ exit $status
 EOF
 
 $SCHEDULER_SUB < $tmp
-#rm -rf $tmp
+rm -rf $tmp
