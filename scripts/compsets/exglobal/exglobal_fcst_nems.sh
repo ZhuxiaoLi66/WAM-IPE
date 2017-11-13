@@ -1372,8 +1372,8 @@ cat > GPTLnamelist << EOF
 EOF
 # raw_high_lat specific files
 cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/IPEsw.inp .
-cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/tiros_spectra .
-cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/ionprof .
+cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/tiros_spectra_ipe .
+cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/ionprof_ipe .
 #
 cat  > IPE.inp <<EOF
 &ipedims
@@ -1413,11 +1413,11 @@ cat  > IPE.inp <<EOF
   f107av=113.0
   f107d=126.0
   internalTimeLoopMax=18
-  ip_freq_eldyn=10
-  ip_freq_msis=10
+  ip_freq_eldyn=60
+  ip_freq_msis=180
   ip_freq_plasma=10
-  ip_freq_output=10
-  ip_freq_paraTrans=10
+  ip_freq_output=180
+  ip_freq_paraTrans=60
   nday=76
   nyear=2000
   start_time=0
@@ -1438,7 +1438,7 @@ cat  > IPE.inp <<EOF
   iout(1)=1
   iout(2)=60
   lpFort167=57
-  lpmax_perp_trans=151
+  lpmax_perp_trans=74
   lpmin_perp_trans=1
   mpFort167=71
   mpstop=80
@@ -1456,9 +1456,9 @@ cat  > IPE.inp <<EOF
   sw_ksi=2
   sw_neutral=3
   swNeuPar(1)=f
-  swNeuPar(2)=f
-  swNeuPar(3)=f
-  swNeuPar(4)=f
+  swNeuPar(2)=t
+  swNeuPar(3)=t
+  swNeuPar(4)=t
   swNeuPar(5)=f
   swNeuPar(6)=f
   swNeuPar(7)=f
@@ -1473,7 +1473,7 @@ cat  > IPE.inp <<EOF
   sw_record_number=1
   sw_th_or_r=0
   ut_start_perp_trans=${START_UT_SEC}
-  utime0LPI=0
+  utime0LPI=${START_UT_SEC}
   barriersOn=f
 /
 &ipecap
