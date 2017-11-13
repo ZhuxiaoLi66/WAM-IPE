@@ -2,6 +2,14 @@
 
 pwd=$(pwd)
 
+## set restart
+cycle=$2
+if [[ $cycle == 1 ]] ; then
+	export RESTART=.false.
+else
+	export RESTART=.true.
+fi
+
 ## source config
 . $pwd/config/workflow.sh $pwd/$1
 
@@ -28,6 +36,13 @@ set -ax
 
 cd $SCRIPTSDIR
 
+## set restart
+if [[ $cycle == 1 ]] ; then
+	export RESTART=.false.
+else
+	export RESTART=.true.
+fi
+
 ##-------------------------------------------------------
 ## source config file
 ##-------------------------------------------------------
@@ -48,8 +63,16 @@ export VERBOSE=YES
 if [ $? != 0 ]; then echo "forecast failed, exit"; exit; fi
 echo "fcst done"
 
+if [[ $((cycle+1)) -le $3 ]] ; then
+echo "resubmitting $1 for cycle $((cycle+1)) out of $3"
+cd $SCRIPTSDIR
+. $pwd/submit.sh $1 $((cycle+1)) $3
+else
+echo "cycle $((cycle+1)) > $3, done!"
+fi
+
 exit $status
 EOF
 
 $SCHEDULER_SUB < $tmp
-rm -rf $tmp
+#rm -rf $tmp
