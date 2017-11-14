@@ -55,7 +55,7 @@
       use idea_composition, only : nlev_h2o,nlevc_h2o, nlev_co2
       use idea_composition, only : mmr_min, amo, amo2, amo3, amn2
       use wam_ion,          only : idea_ion
-      use  wam_f107_kp_mod, only : f107_wy, kp_wy, kdt_3h
+      use  wam_f107_kp_mod, only : f107_wy, kp_wy, kdt_3h, interpolate_weight
 
 !     Changed by Zhuxiao.Li(05/2017) for back to the path to read in F10.7 and Kp
 !     from solar_in namelist instead of from wam_f107_kp_mod.f
@@ -209,8 +209,8 @@
 ! option 1:  SPW_DRIVERS ='swpc_fst'
 !
        if (trim(SPW_DRIVERS)=='swpc_fst') then
-          f107_curdt = f107_wy(kdt_3h)
-          kp_curdt   = kp_wy(kdt_3h)
+          f107_curdt = f107_wy(kdt_3h)*interpolate_weight + f107_wy(kdt_3h+1)*(1-interpolate_weight)
+          kp_curdt   = kp_wy(kdt_3h)*interpolate_weight + kp_wy(kdt_3h+1)*(1-interpolate_weight)
           f107d_curdt = f107_curdt
        endif
 !===============================================
@@ -271,7 +271,7 @@
 !         
 !         CALL solar_waccmx_advance(mpi_id, Mjdat, Hcur, Kstep)   !wf107_s,  wkp_s
 !
-!         f107_curdt  =wf107_s
+!         f107_curdt  = wf107_s
 !         kp_curdt    = wkp_s
 !         f107d_curdt = wf107a_s
 !

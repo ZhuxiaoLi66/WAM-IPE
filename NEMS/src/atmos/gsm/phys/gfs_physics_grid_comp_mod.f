@@ -69,7 +69,7 @@
       use GFS_Phy_States_Mod,             ONLY: gfs_physics_import2internal, &  
                                                 gfs_physics_internal2export  
       use gfs_phy_tracer_config,          ONLY: gfs_phy_tracer
-      use wam_f107_kp_mod,                ONLY: f107_kp_interval, kdt_3h
+      use wam_f107_kp_mod,                ONLY: f107_kp_interval, kdt_3h, interpolate_weight
 !
       implicit none
 
@@ -642,6 +642,7 @@
       donetime      = currtime - starttime
 !     int_state%kdt = nint(donetime/timeStep)
       int_state%kdt = nint(donetime/timeStep) + 1
+      interpolate_weight = 1 - real(mod((int_state%kdt-1)*timestep_sec,f107_kp_interval))/f107_kp_interval
       kdt_3h = ((int_state%kdt - 1) * timestep_sec / f107_kp_interval) + 1
 
 !      PRINT*, 'In phys grid comp, kdt, kdt_3h=', int_state%kdt, kdt_3h

@@ -18,6 +18,7 @@
       REAL, POINTER, DIMENSION(:) :: f107, kp
       REAL                        :: f107_fix, f107d_fix, kp_fix
       REAL                        :: swpcf107_fix, swpcf107d_fix, swpckp_fix
+      REAL                        :: interpolate_weight
       CONTAINs
 
       SUBROUTINE read_wam_f107_kp_txt
