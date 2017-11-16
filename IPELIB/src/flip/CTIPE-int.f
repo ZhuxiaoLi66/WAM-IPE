@@ -398,7 +398,7 @@ C.... Written by P. Richards June-September 2010.
       REAL,intent(IN) :: mlt
       INTEGER :: tiros_activity_level
       REAL :: gw
-      REAL*8,dimension(fldim,3) :: qiont !1:O;2:O2;3:N2 !units number/m3/s
+      REAL*8,dimension(3,fldim) :: qiont !1:O;2:O2;3:N2 !units number/m3/s
 
       ret = gptlstart ('CTIPINT init_params')
       CALL initialize_module_parameters ( )
@@ -488,7 +488,7 @@ C.... Written by P. Richards June-September 2010.
 !sms$ignore begin
            print *,jmax,jmin,tirosdim, midpoint,' GL1=',gm_lat
      &        ,mlt
-     &  , maxval(qiont(JMIN:midpoint,1)), minval(qiont(JMIN:midpoint,1))
+     &  , maxval(qiont(1,JMIN:midpoint)), minval(qiont(1,JMIN:midpoint))
 !sms$ignore end
          endif
          tiros_activity_level = LevPI(LPI)
@@ -502,8 +502,8 @@ C.... Written by P. Richards June-September 2010.
      &        ,tn(JMIN:midpoint)
      &        ,gm_lat,mlt
      &        ,tiros_activity_level,gw
-     &        ,qiont(JMIN:midpoint,1),qiont(JMIN:midpoint,2) !units number/m3/s
-     &        ,qiont(JMIN:midpoint,3) 
+     &        ,qiont(1,JMIN:midpoint),qiont(2,JMIN:midpoint) !units number/m3/s
+     &        ,qiont(3,JMIN:midpoint) 
      &        ,sw_debug)
          if(sw_debug) then
 !sms$ignore begin
@@ -563,7 +563,7 @@ C.... Written by P. Richards June-September 2010.
       !-- Sum the EUV, photoelectron, and auroral production rate
       ret = gptlstart ('CTIPINT SUMPRD')
       CALL SUMPRD(JMIN,JMAX
-     &,qiont(JMIN:JMAX,1:3) !units number/m3/s
+     &,qiont(1:3,JMIN:JMAX) !units number/m3/s
      &)
       ret = gptlstop  ('CTIPINT SUMPRD')
 
