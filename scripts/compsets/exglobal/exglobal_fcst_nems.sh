@@ -1245,6 +1245,11 @@ if [ $IDEA = .true. ]; then
     $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((10#$FHMAX-10#$FHINI)) -s $CDATE -p $PARAMETER_PATH
     if [ ! -e wam_input_f107_kp.txt ] ; then
        echo "failed, no f107 file" ; exit 1
+    else
+       LEN_F107=`wc -l wam_input_f107_kp.txt | cut -d' ' -f 1`
+       export F107_KP_DATA_SIZE=$((LEN_F107-6))
+       export F107_KP_SKIP_SIZE=0
+       export F107_KP_INTERVAL=60
     fi
   fi
 
@@ -1963,7 +1968,7 @@ $NLN atm_namelist.rc ./model_configure
     eval $CHGSFCFHREXEC $SFCI $CDATE_SIG $FHINI
  fi
 
-# eval $FCSTENV $PGM $REDOUT$PGMOUT $REDERR$PGMERR
+eval $FCSTENV $PGM $REDOUT$PGMOUT $REDERR$PGMERR
 
 
  if [ $DOIAU = YES ]; then
