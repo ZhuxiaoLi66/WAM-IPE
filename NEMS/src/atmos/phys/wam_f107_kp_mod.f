@@ -14,8 +14,8 @@
 ! mark them as f107_wy, kp_wy tp avoid mixture with real f107/kp
 ! add fixed sets for          f107_fix, f107d_fix, kp_fix
 !
-      REAL, POINTER, DIMENSION(:) :: f107_wy, kp_wy
-      REAL, POINTER, DIMENSION(:) :: f107, kp
+      REAL, POINTER, DIMENSION(:) :: f107_wy, kp_wy, kpa_wy, f107d_wy, hp_wy, hpi_wy
+      REAL, POINTER, DIMENSION(:) :: f107, kp, kpa, f107d, hp, hpi
       REAL                        :: f107_fix, f107d_fix, kp_fix
       REAL                        :: swpcf107_fix, swpcf107d_fix, swpckp_fix
       REAL                        :: interpolate_weight
@@ -33,9 +33,9 @@
       CHARACTER*20 :: issuedate, realdate(f107_kp_size)
       CHARACTER*20 :: realdate_work
       INTEGER      :: i, j
-      INTEGER      :: f107_flag_work, kp_flag_work 
+      INTEGER      :: f107_flag_work, kp_flag_work
       REAL         :: f107_81d_avg
-      REAL         :: f107_work, kp_work
+      REAL         :: f107_work, kp_work, f107d_work, kpa_work, hp_work, hpi_work
 
 ! Flags:   0=Forecast, 1=Estimated, 2=Observed
       INTEGER, DIMENSION(f107_kp_size) :: f107_flag, kp_flag 
@@ -51,8 +51,9 @@
       END DO
 
       DO i = 1, f107_kp_skip_size
-          READ(79, *) realdate_work, f107_work, kp_work,       &
-               f107_flag_work, kp_flag_work
+          READ(79, *) realdate_work, f107_work, kp_work,           &
+               f107_flag_work, kp_flag_work, f107d_work, kpa_work, &
+               hp_work, hpi_work
       END DO
 
 ! f107_kp_size is the forecast run length.
@@ -63,7 +64,8 @@
 !
 !old      DO i = 1, f107_kp_read_in_size
           READ(79, *) realdate(i), f107_wy(i), kp_wy(i),             &
-               f107_flag(i), kp_flag(i)
+               f107_flag(i), kp_flag(i), f107d_wy(i), kpa_wy(i),     &
+               hp_wy(i), hpi_wy(i)
       END DO
       CLOSE(79)
 !
@@ -71,8 +73,12 @@
 ! continuously
 !
       DO i = f107_kp_read_in_size + 1, f107_kp_size
-          f107_wy(i) = f107_wy(f107_kp_read_in_size)
-          kp_wy  (i) = kp_wy  (f107_kp_read_in_size)
+          f107_wy (i) = f107_wy (f107_kp_read_in_size)
+          kp_wy   (i) = kp_wy   (f107_kp_read_in_size)
+          hp_wy   (i) = hp_wy   (f107_kp_read_in_size)
+          f107d_wy(i) = f107d_wy(f107_kp_read_in_size)
+          hpi_wy  (i) = hpi_wy  (f107_kp_read_in_size)
+          kpa_wy  (i) = kpa_wy  (f107_kp_read_in_size)
       END DO
 !For testing.
 !------------

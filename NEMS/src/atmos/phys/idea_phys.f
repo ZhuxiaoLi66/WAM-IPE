@@ -55,7 +55,7 @@
       use idea_composition, only : nlev_h2o,nlevc_h2o, nlev_co2
       use idea_composition, only : mmr_min, amo, amo2, amo3, amn2
       use wam_ion,          only : idea_ion
-      use  wam_f107_kp_mod, only : f107_wy, kp_wy, kdt_3h, interpolate_weight
+      use  wam_f107_kp_mod, only : f107_wy, kp_wy, kdt_3h, interpolate_weight, kpa_wy, f107d_wy, hp_wy, hpi_wy
 
 !     Changed by Zhuxiao.Li(05/2017) for back to the path to read in F10.7 and Kp
 !     from solar_in namelist instead of from wam_f107_kp_mod.f
@@ -137,7 +137,7 @@
       integer, parameter  :: ntrac_i=2                  ! number of 2 WAM chem. tracers (O-O2)
 !
 !     real    :: f107_curdt, f107d_curdt, kp_curdt, f107a_fix    
-      real    :: f107_curdt, f107d_curdt, kp_curdt    
+      real    :: f107_curdt, f107d_curdt, kp_curdt, kpa_curdt, hp_curdt, hpi_curdt
       integer :: Mjdat(ndwam)                           ! IDAT_WAM + FHOUR
       real    :: Hcur                                   !  current hour+min+sec real 
 !
@@ -209,9 +209,16 @@
 ! option 1:  SPW_DRIVERS ='swpc_fst'
 !
        if (trim(SPW_DRIVERS)=='swpc_fst') then
-          f107_curdt = f107_wy(kdt_3h)*interpolate_weight + f107_wy(kdt_3h+1)*(1-interpolate_weight)
-          kp_curdt   = kp_wy(kdt_3h)*interpolate_weight + kp_wy(kdt_3h+1)*(1-interpolate_weight)
-          f107d_curdt = f107_curdt
+          f107_curdt  = f107_wy (kdt_3h) * interpolate_weight  + f107_wy (kdt_3h+1) * (1-interpolate_weight)
+          kp_curdt    = kp_wy   (kdt_3h) * interpolate_weight  + kp_wy   (kdt_3h+1) * (1-interpolate_weight)
+          f107d_curdt = f107d_wy(kdt_3h) * interpolate_weight  + f107d_wy(kdt_3h+1) * (1-interpolate_weight)
+          kpa_curdt   = kpa_wy  (kdt_3h) * interpolate_weight  + kpa_wy  (kdt_3h+1) * (1-interpolate_weight)
+          hp_curdt    = hp_wy   (kdt_3h) * interpolate_weight  + hp_wy   (kdt_3h+1) * (1-interpolate_weight)
+          hpi_curdt   = hpi_wy  (kdt_3h) * interpolate_weight  + hpi_wy  (kdt_3h+1) * (1-interpolate_weight)
+       else
+          kpa_curdt   = 0.0
+          hp_curdt    = 0.0
+          hpi_curdt   = 0.0
        endif
 !===============================================
 ! option 2:  SPW_DRIVERS ='sair_wam', only year of 2012
@@ -286,7 +293,7 @@
 
          if (me == 0 .and. kstep <= 1) then
             print *
-            print *, f107_curdt, kp_curdt, 'F107-kp-VAY'
+            print *, f107_curdt, f107d_curdt, kp_curdt, kpa_curdt, hp_curdt, hpi_curdt, interpolate_weight, 'F107-kp-VAY'
 !           print *, 'VAY-GW:',trim(IMPL_UNIF_GW)
             print *
             print *, 'ID-phys SPW-drivers option: ', trim(SPW_DRIVERS)
