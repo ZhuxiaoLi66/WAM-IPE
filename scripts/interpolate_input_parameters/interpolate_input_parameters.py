@@ -185,12 +185,12 @@ def output(file, start_date, kp, f107, f107d, kp_avg, hemi_pow, hemi_pow_idx):
   ## simply
   f = open(file,'w')
 
-  f.write('Issue Date          '+output_timestamp(start_date)+"\n")
-  f.write('F10 81 Day Avg      '+'122'+" \n") # placeholder
-  f.write('Flags:  0=Forecast, 1=Estimated, 2=Observed \n\n')
+  f.write("Issue Date          "+output_timestamp(start_date)+"\n")
+  f.write("F10 81 Day Avg      "+"122"+" \n") # placeholder
+  f.write("Flags:  0=Forecast, 1=Estimated, 2=Observed \n\n")
 
-  f.write(' Date_Time                   F10          Kp     F10Flag      KpFlag  F10_81dAvg   24HrKpAvg     HemiPow  HemiPowIdx   \n')
-  f.write('--------------------------------------------------------------------------------------------------------------------   \n')
+  f.write(" Date_Time                   F10          Kp     F10Flag      KpFlag  F10_81dAvg   24HrKpAvg     HemiPow  HemiPowIdx   \n")
+  f.write("--------------------------------------------------------------------------------------------------------------------   \n")
   for i in range(0,len(kp)):
     f.write('{0}{1:12.7f}{2:12.7f}{3:>12}{4:>12}{5:12.7f}{6:12.7f}{7:>12.7f}{8:>12}'.format( \
             output_timestamp(start_date,i+1), \
