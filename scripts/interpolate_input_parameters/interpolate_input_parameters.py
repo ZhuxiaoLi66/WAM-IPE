@@ -128,7 +128,7 @@ def get_hemispheric_power(dates):
 
   try:
     for cdate in dates:
-      with open(path.join(args.path, 'AURORAL_POWER', cdate[:4], hemi_date_fmt(cdate))) as file:
+      with open(path.join(args.path, 'AURORA_POWER', cdate[:4], hemi_date_fmt(cdate))) as file:
         for i, line in enumerate(file):
           if i > 94:
             split_line = line.split(' ')
