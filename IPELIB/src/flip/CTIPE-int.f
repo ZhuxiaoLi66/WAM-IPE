@@ -333,7 +333,7 @@ C.... Written by P. Richards June-September 2010.
 
       USE module_input_parameters,ONLY: sw_TEI,sw_OHPLS,sw_PE2S
      &, sw_DEBUG_flip,sw_debug,sw_output_fort167
-     &,mpfort167,lpfort167,mype,peFort167
+     &,mpfort167,lpfort167,mype
      &,sw_optw_flip
      &,start_time,ip_freq_output,sw_aurora,LPI,LevPI,GWatts
       USE module_IO,ONLY: LUN_FLIP1,LUN_FLIP2,LUN_FLIP3,LUN_FLIP4
@@ -606,13 +606,13 @@ C.... Written by P. Richards June-September 2010.
 
       !.. Debug write
       ret = gptlstart ('CTIPINT sw_output')
-      IF (mype==peFort167.AND.sw_output_fort167.AND.mp==mpfort167.AND.  &
-     &lp==lpfort167 ) THEN
+      IF ( sw_output_fort167.AND.mp==mpfort167.AND.lp==lpfort167 ) THEN
 !sms$ignore begin
         print*,'check unit#',LUN_FLIP1,LUN_FLIP3,LUN_FLIP2,LUN_FLIP4,   &
      &                       mype
 !sms$ignore end
-c      IF(JTI.EQ.1) THEN
+!c      IF(JTI.EQ.1) THEN
+!sms$ignore begin
         WRITE(UNIT=LUN_FLIP1,FMT=201)  
         WRITE(UNIT=LUN_FLIP3,FMT=201)
  201    FORMAT('   JMIN   JMAX   CTIPDIM  INNO  IHEPLS  INPLS')
@@ -637,10 +637,12 @@ c      IF(JTI.EQ.1) THEN
  204    FORMAT(5X,'Z         TN       UN       NNO'
      >    ,6X,'EHT      TI       TE       O+       H+      Min+'
      >    ,5X,'He+      PHION    PRODO+     N+     EQN2D   NPLSPRD')
+!sms$ignore end
 
         !.. Northern Hemisphere
         DO J=JMIN,(JMAX/2)+1
         N(4,J)=XIONN(3,J)
+!sms$ignore begin
         WRITE(UNIT=LUN_FLIP1,FMT='(F10.2,1P,E14.7,21E9.2)') Z(J),SL(J)
      &,GL(J),BM(J),GR(J),SZA(J),ON(J),HN(J),N2N(J),O2N(J),HE(J),N4S(J)
 
@@ -648,18 +650,13 @@ c      IF(JTI.EQ.1) THEN
      &,UN(J),NNO(J)
      >    ,EHT(3,J),TI(1,J),TI(3,J),N(1,J),N(2,J),N(3,J),XIONN(3,J)
      >    ,PHION(J),SUMION(1,7,J),XIONN(4,J),EQN2D(J),NPLSPRD(J) 
-!        WRITE(168,'(3F10.2,1P,9E9.2,E10.2,3E9.2)') Z(J),TNX(J),UN(J)
-!     &,NNO(J)
-!     >   ,EHT(3,J),TI(1,J),TI(3,J),N(1,J),N(2,J),N(3,J),N(4,J)
-!     >   ,PHION(J)
-!dbg20110404
-!     &   ,XIONV(1,J)
-!     &,SUMION(1,7,J),SUMION(2,4,J),SUMION(2,5,J)
+!sms$ignore end
         ENDDO
 
         !.. Southern Hemisphere
         DO J=JMAX,(JMAX/2)+1,-1
         N(4,J)=XIONN(3,J)
+!sms$ignore begin
         WRITE(UNIT=LUN_FLIP3,FMT='(F10.2,1P,E14.7,21E9.2)') Z(J),SL(J)
      &,GL(J),BM(J),GR(J),SZA(J),ON(J),HN(J),N2N(J),O2N(J),HE(J),N4S(J)
 
@@ -667,13 +664,7 @@ c      IF(JTI.EQ.1) THEN
      &,UN(J),NNO(J)
      >    ,EHT(3,J),TI(1,J),TI(3,J),N(1,J),N(2,J),N(3,J),XIONN(3,J)
      >    ,PHION(J),SUMION(1,7,J),XIONN(4,J),EQN2D(J),NPLSPRD(J) 
-!        WRITE(171,'(3F10.2,1P,9E9.2,E10.2,3E9.2)') Z(J),TNX(J),UN(J)
-!     &,NNO(J)
-!     >   ,EHT(3,J),TI(1,J),TI(3,J),N(1,J),N(2,J),N(3,J),N(4,J)
-!     >   ,PHION(J)
-!!dbg20110404
-!     &   ,XIONV(1,J)
-!     &,SUMION(1,7,J),SUMION(2,4,J),SUMION(2,5,J)
+!sms$ignore end
         ENDDO
       END IF                    !( sw_output_fort167.AND...
 

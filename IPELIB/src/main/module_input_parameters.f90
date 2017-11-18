@@ -139,7 +139,7 @@
       LOGICAL, PUBLIC :: barriersOn=.false. !true means turn on barriers.
       LOGICAL, PUBLIC :: sw_use_wam_fields_for_restart=.true. !unit=5000,5001
 
-      INTEGER(KIND=int_prec), PUBLIC :: peFort167=0 !default mype=0
+!nm20171117      INTEGER(KIND=int_prec), PUBLIC :: peFort167=0 !default mype=0
       INTEGER(KIND=int_prec), PUBLIC :: mpfort167=10
       INTEGER(KIND=int_prec), PUBLIC :: lpfort167=14
       INTEGER(KIND=int_prec), DIMENSION(2), PUBLIC :: iout
@@ -287,7 +287,7 @@
            &, sw_use_wam_fields_for_restart   & !nm20170728temporary commented out
            &, mpfort167   &
            &, lpfort167   &
-           &, peFort167   &
+!nm20171117           &, peFort167   &
            &, record_number_plasma_start   &
            &, sw_record_number   &
            &, ut_start_perp_trans   &
