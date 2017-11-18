@@ -104,7 +104,8 @@
 !
 !================================================================= WAM-related 201702
       use wam_f107_kp_mod,        ONLY: read_wam_f107_kp_txt, 
-     &                                  f107_wy, kp_wy, f107_kp_size
+     &                                  f107_wy, kp_wy, f107_kp_size, 
+     &                                  kpa_wy, f107d_wy, hp_wy, hpi_wy
       use mersenne_twister
       use idea_composition, only: prlog,pr_idea,amgm,amgms,nlev_co2,k43,
      &                            nlevc_h2o,k71,gg,prsilvl
@@ -413,8 +414,12 @@
          if (trim(SPW_DRIVERS)=='swpc_fst') then
 ! read the f10.7 and kp multi-time input data.
 !---------------------------------------------
-          IF(.NOT. ASSOCIATED(f107_wy)) ALLOCATE(f107_wy(f107_kp_size))
-          IF(.NOT. ASSOCIATED(kp_wy))   ALLOCATE(kp_wy (f107_kp_size))
+          IF(.NOT. ASSOCIATED(f107_wy))  ALLOCATE(f107_wy(f107_kp_size))
+          IF(.NOT. ASSOCIATED(kp_wy))    ALLOCATE(kp_wy(f107_kp_size))
+          IF(.NOT. ASSOCIATED(f107d_wy))ALLOCATE(f107d_wy(f107_kp_size))
+          IF(.NOT. ASSOCIATED(kpa_wy))   ALLOCATE(kpa_wy(f107_kp_size))
+          IF(.NOT. ASSOCIATED(hp_wy))    ALLOCATE(hp_wy(f107_kp_size))
+          IF(.NOT. ASSOCIATED(hpi_wy))   ALLOCATE(hpi_wy(f107_kp_size))
           call read_wam_f107_kp_txt
           if (me==0) write(6,*) 
      & ' SPW_DRIVERS => swpc_fst, 3-day forecasts:', trim(SPW_DRIVERS)

@@ -803,7 +803,11 @@ $LOGSCRIPT
 ${NCP:-cp} $FCSTEXEC $DATA
 
 #------------------------------------------------------------
-if [ $FHROT -gt 0 ] ; then export RESTART=.true. ; fi
+if [ $FHROT -gt 0 ] ; then
+  export RESTART=.true.
+  export NEMSIO_IN=.true.
+  export SIGIO_IN=.false.
+fi
 export RESTART=${RESTART:-.false.}
 if [ $RESTART = .false. ] ; then # when restarting should not remove - Weiyu
   rm -f NULL
@@ -1148,73 +1152,41 @@ done
 
 export wgrib=${wgrib:-$NWPROD/util/exec/wgrib}
 
-if [ $FHINI -eq 0 ]; then
-  if [[ $ENS_NUM -le 1 ]] ; then
-    if [ $NEMSIO_IN = .true. ]; then
-     if [ $ioform_sig = 'grib' ] ; then
+if [[ $ENS_NUM -le 1 ]] ; then
+  if [ $NEMSIO_IN = .true. ]; then
+    if [ $ioform_sig = 'grib' ] ; then # unsupported
       export CDATE_NEMS=$($wgrib -4yr $GRDI | grep -i hgt |awk -F: '{print $3}' |awk -F= '{print $2}')
-     else
-      export CDATE_NEMS=$($NEMSIOGET $GRDI idate |grep -i "idate" |awk -F= '{print $2}')
-     fi
     else
-      export CDATE_SIG=$(echo idate|$SIGHDR ${SIGI})
+      idate=` $NEMSIOGET $GRDI idate  | tr -s ' ' | cut -d' ' -f 3-7`
+      iyear=` echo $idate | cut -d' ' -f 1`
+      imonth=`printf "%02d" $(echo $idate | cut -d' ' -f 2)`
+      iday=`  printf "%02d" $(echo $idate | cut -d' ' -f 3)`
+      ihour=` printf "%02d" $(echo $idate | cut -d' ' -f 4)`
+      idate=${iyear}${imonth}${iday}${ihour}
+      nfhour=`$NEMSIOGET $GRDI nfhour | tr -s ' ' | cut -d' ' -f 3`
+      export CDATE=`$NDATE $nfhour $idate`
     fi
   else
-    MN=c00
-    if [ $NEMSIO_IN = .true. ]; then
-     if [ $ioform_sig = 'grib' ] ; then
-      export CDATE_NEMS=$($wgrib -4yr ${GRDI}${MN} | grep -i hgt |awk -F: '{print $3}' |awk -F= '{print $2}')
-     else
-      export CDATE_NEMS=$($NEMSIOGET $GRDI idate |grep -i "idate" |awk -F= '{print $2}')
-     fi
-    else
-      export CDATE_SIG=$(echo idate|$SIGHDR ${SIGI}i${MN})
-    fi
+    export CDATE=`$SIGHDR $SIGI idate`
+    export CDATE=`$NDATE \`$SIGHDR $SIGI fhour | cut -d'.' -f 1\` $CDATE`
   fi
-else
-  if [[ $ENS_NUM -le 1 ]] ; then
-    if [ $NEMSIO_IN = .true. ]; then
-     if [ $ioform_sig = 'grib' ] ; then
-      export CDATE_NEMS=$($wgrib -4yr $GRDI | grep -i hgt |awk -F: '{print $3}' |awk -F= '{print $2}')
-     else
-      export CDATE_NEMS=$($NEMSIOGET $GRDI idate | grep -i "idate" |awk -F= '{print $2}')
-     fi
+else # also unsupported
+  MN=c00
+  if [ $NEMSIO_IN = .true. ]; then
+    if [ $ioform_sig = 'grib' ] ; then
+      export CDATE_NEMS=$($wgrib -4yr ${GRDI}${MN} | grep -i hgt |awk -F: '{print $3}' |awk -F= '{print $2}')
     else
-      export CDATE_SIG=$(echo idate|$SIGHDR ${SIGI})
+      export CDATE_NEMS=$($NEMSIOGET $GRDI idate |grep -i "idate" |awk -F= '{print $2}')
     fi
   else
-    MN=c00
-    if [ $NEMSIO_IN = .true. ]; then
-     if [ $ioform_sig = 'grib' ] ; then
-      export CDATE_NEMS=$($wgrib -4yr ${GRDI}${MN} | grep -i hgt |awk -F: '{print $3}' |awk -F= '{print $2}')
-     else
-      export CDATE_NEMS=$($NEMSIOGET ${GRDI}${MN} idate | grep -i "idate" |awk -F= '{print $2}')
-     fi
-    else
-      export CDATE_SIG=$(echo idate|$SIGHDR ${SIGI}${MN})
-    fi
+    export CDATE_SIG=$(echo idate|$SIGHDR ${SIGI}i${MN})
   fi
 fi
 
-if [ $NEMSIO_IN = .true.  ]; then
-    INI_YEAR=$(echo $CDATE_NEMS | awk -F" " '{print $1}')
-    echo "cdate=$CDATE_NEMS, ini_year=${INI_YEAR}"
-    INI_MONTH=$(echo $CDATE_NEMS | awk -F" " '{print $2}')
-    INI_DAY=$(echo $CDATE_NEMS | awk -F" " '{print $3}')
-    INI_HOUR=$(echo $CDATE_NEMS | awk -F" " '{print $4}')
-    yyyy=$INI_YEAR
-    mm=$INI_MONTH; if [ $mm -lt 10 ]; then mm=0$mm ; fi
-    dd=$INI_DAY; if [ $dd -lt 10 ]; then dd=0$dd ; fi
-    hh=`expr $INI_HOUR + 0 `; if [ $hh -lt 10 ]; then hh=0$hh ; fi
-    export CDATE=${yyyy}${mm}${dd}${hh}
-else
-    INI_YEAR=$(echo $CDATE_SIG | cut -c1-4)
-    echo "cdate=$CDATE_SIG, ini_year=${INI_YEAR}"
-    INI_MONTH=$(echo $CDATE_SIG | cut -c5-6)
-    INI_DAY=$(echo $CDATE_SIG | cut -c7-8)
-    INI_HOUR=$(echo $CDATE_SIG | cut -c9-10)
-    export CDATE=$CDATE_SIG
-fi
+INI_YEAR=$(echo $CDATE  | cut -c1-4)
+INI_MONTH=$(echo $CDATE | cut -c5-6)
+INI_DAY=$(echo $CDATE   | cut -c7-8)
+INI_HOUR=$(echo $CDATE  | cut -c9-10)
 
 ## copy configure files needed for NEMS GFS
 ${NCP} ${MAPL:-$PARM_NGAC/MAPL.rc}                    MAPL.rc
@@ -1251,40 +1223,38 @@ fi
 # Add time dependent variables F10.7 and kp into the WAM model.
 #--------------------------------------------------------------
 if [ $IDEA = .true. ]; then
-  mod6=$((6-10#$INI_HOUR%6))
-  mod3=$((3-10#$INI_HOUR%6))
-  CDATE6=`$NDATE $mod6 $CDATE`
-
-  INI_YEAR6=$(echo $CDATE6 | cut -c1-4)
-  INI_MONTH6=$(echo $CDATE6 | cut -c5-6)
-  INI_DAY6=$(echo $CDATE6 | cut -c7-8)
-  INI_HOUR6=$(echo $CDATE6 | cut -c9-10)
-
-  CDATE3=`$NDATE $mod3 $CDATE`
-  INI_YEAR3=$(echo $CDATE3 | cut -c1-4)
-  INI_MONTH3=$(echo $CDATE3 | cut -c5-6)
-  INI_DAY3=$(echo $CDATE3 | cut -c7-8)
-  INI_HOUR3=$(echo $CDATE3 | cut -c9-10)
-
   START_UT_SEC=$((10#$INI_HOUR*3600))
+
+  if [ ${REALTIME:-NO} = YES ] ; then
+    # copy in xml kp/f107
+    if [ -e $WAMINDIR/wam_input-${INI_YEAR6}${INI_MONTH6}${INI_DAY6}T${INI_HOUR6}15.xml ] ; then
+      ${NCP} $WAMINDIR/wam_input-${INI_YEAR6}${INI_MONTH6}${INI_DAY6}T${INI_HOUR6}15.xml ./wam_input2.xsd
+      # convert to ascii
+      $BASE_NEMS/../scripts/parse_f107_xml/parse.py
+      # now f107
+      ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
+    else
+      if [ -e $COMOUT/wam_input_f107_kp.txt ] ; then
+        ${NCP} $COMOUT/wam_input_f107_kp.txt ${DATA}
+      else
+        echo "failed, no f107 file" ; exit 1
+      fi
+    fi
+  else
+    # work from the database
+    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((10#$FHMAX-10#$FHINI)) -s $CDATE -p $PARAMETER_PATH
+    if [ ! -e wam_input_f107_kp.txt ] ; then
+       echo "failed, no f107 file" ; exit 1
+    else
+       LEN_F107=`wc -l wam_input_f107_kp.txt | cut -d' ' -f 1`
+       export F107_KP_SIZE=$((LEN_F107-6))
+       export F107_KP_SKIP_SIZE=0
+       export F107_KP_INTERVAL=60
+    fi
+  fi
 
   # global_idea fix files
   ${NLN} $FIX_IDEA/global_idea* .
-
-  # copy in xml kp/f107
-  if [ -e $WAMINDIR/wam_input-${INI_YEAR6}${INI_MONTH6}${INI_DAY6}T${INI_HOUR6}15.xml ] ; then
-    ${NCP} $WAMINDIR/wam_input-${INI_YEAR6}${INI_MONTH6}${INI_DAY6}T${INI_HOUR6}15.xml ./wam_input2.xsd
-    # convert to ascii
-    $BASE_NEMS/../scripts/parse_f107_xml/parse.py
-    # now f107
-    ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
-  else
-    if [ -e $COMOUT/wam_input_f107_kp.txt ] ; then
-      ${NCP} $COMOUT/wam_input_f107_kp.txt ${DATA}
-    else
-      echo "failed, no f107 file" ; exit 1
-    fi
-  fi
 
   # RT_WAM
   ${NLN} $RT_WAM/* $DATA
