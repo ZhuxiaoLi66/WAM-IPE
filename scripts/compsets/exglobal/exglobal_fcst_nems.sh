@@ -1162,13 +1162,13 @@ if [[ $ENS_NUM -le 1 ]] ; then
       imonth=`printf "%02d" $(echo $idate | cut -d' ' -f 2)`
       iday=`  printf "%02d" $(echo $idate | cut -d' ' -f 3)`
       ihour=` printf "%02d" $(echo $idate | cut -d' ' -f 4)`
-      idate=${iyear}${imonth}${iday}${ihour}
+      export CDATE=${iyear}${imonth}${iday}${ihour}
       nfhour=`$NEMSIOGET $GRDI nfhour | tr -s ' ' | cut -d' ' -f 3`
-      export CDATE=`$NDATE $nfhour $idate`
+      export FDATE=`$NDATE $nfhour $CDATE`
     fi
   else
     export CDATE=`$SIGHDR $SIGI idate`
-    export CDATE=`$NDATE \`$SIGHDR $SIGI fhour | cut -d'.' -f 1\` $CDATE`
+    export FDATE=`$NDATE \`$SIGHDR $SIGI fhour | cut -d'.' -f 1\` $CDATE`
   fi
 else # also unsupported
   MN=c00
@@ -1183,10 +1183,15 @@ else # also unsupported
   fi
 fi
 
-INI_YEAR=$(echo $CDATE  | cut -c1-4)
-INI_MONTH=$(echo $CDATE | cut -c5-6)
-INI_DAY=$(echo $CDATE   | cut -c7-8)
-INI_HOUR=$(echo $CDATE  | cut -c9-10)
+INI_YEAR=$(echo $FDATE  | cut -c1-4)
+INI_MONTH=$(echo $FDATE | cut -c5-6)
+INI_DAY=$(echo $FDATE   | cut -c7-8)
+INI_HOUR=$(echo $FDATE  | cut -c9-10)
+
+C_YEAR=$(echo $CDATE    | cut -c1-4)
+C_MONTH=$(echo $CDATE   | cut -c5-6)
+C_DAY=$(echo $CDATE     | cut -c7-8)
+C_HOUR=$(echo $CDATE    | cut -c9-10)
 
 ## copy configure files needed for NEMS GFS
 ${NCP} ${MAPL:-$PARM_NGAC/MAPL.rc}                    MAPL.rc
@@ -1227,8 +1232,8 @@ if [ $IDEA = .true. ]; then
 
   if [ ${REALTIME:-NO} = YES ] ; then
     # copy in xml kp/f107
-    if [ -e $WAMINDIR/wam_input-${INI_YEAR6}${INI_MONTH6}${INI_DAY6}T${INI_HOUR6}15.xml ] ; then
-      ${NCP} $WAMINDIR/wam_input-${INI_YEAR6}${INI_MONTH6}${INI_DAY6}T${INI_HOUR6}15.xml ./wam_input2.xsd
+    if [ -e $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${INI_HOUR}15.xml ] ; then
+      ${NCP} $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${INI_HOUR}15.xml ./wam_input2.xsd
       # convert to ascii
       $BASE_NEMS/../scripts/parse_f107_xml/parse.py
       # now f107
@@ -1242,7 +1247,7 @@ if [ $IDEA = .true. ]; then
     fi
   else
     # work from the database
-    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((10#$FHMAX-10#$FHINI)) -s $CDATE -p $PARAMETER_PATH
+    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((10#$FHMAX-10#$FHINI)) -s $FDATE -p $PARAMETER_PATH
     if [ ! -e wam_input_f107_kp.txt ] ; then
        echo "failed, no f107 file" ; exit 1
     else
@@ -1613,10 +1618,10 @@ RUN_CONTINUE:            .false.
 dt_int:                  $DELTIM
 dt_num:                  0
 dt_den:                  1
-start_year:              $INI_YEAR
-start_month:             $INI_MONTH
-start_day:               $INI_DAY
-start_hour:              $INI_HOUR
+start_year:              $C_YEAR
+start_month:             $C_MONTH
+start_day:               $C_DAY
+start_hour:              $C_HOUR
 start_minute:            0
 start_second:            0
 nhours_fcst:             $FHMAX
