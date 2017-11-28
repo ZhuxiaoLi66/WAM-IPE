@@ -303,7 +303,7 @@ module module_MED_SWPC
 
     ! -- if ATM fields are defined on a mesh, the mesh needs to be replaced
     ! -- get min/max height from IPE mesh
-    call NamespaceGet("IPM", importState, mesh=mesh, rc=rc)
+    call NamespaceGet("IPM", exportState, mesh=mesh, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
