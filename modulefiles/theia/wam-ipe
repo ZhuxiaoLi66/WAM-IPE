@@ -2,5 +2,6 @@
 
 # This script is responsible for loading modules that are compatible with
 # the ESMF 7.0.0 API.
-
-  module load intel/16.1.150 impi netcdf esmf/7.0.2
+#
+  module use /scratch3/NCEPDEV/swpc/noscrub/Raffaele.Montuoro/dev/swmed/opt/modulefiles/
+  module load intel impi netcdf esmf/7.1.0dev
