@@ -270,6 +270,7 @@ endif
 ################################################################################
 
 CPPFLAGS += $(DEP_FRONTS)
+CPPFLAGS += -DESMF_NETCDF
 
 TARGET = ../exe/NEMS.x
 
