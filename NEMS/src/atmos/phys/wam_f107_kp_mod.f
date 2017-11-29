@@ -7,7 +7,7 @@
       INTEGER                     :: f107_kp_size, f107_kp_interval
       INTEGER                     :: f107_kp_skip_size
       INTEGER                     :: f107_kp_read_in_size
-      INTEGER                     :: kdt_3h
+      INTEGER                     :: kdt_interval
 !
       INTEGER                     :: f107_kp_data_size
 !
