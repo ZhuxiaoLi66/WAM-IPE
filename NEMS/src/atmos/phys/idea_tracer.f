@@ -461,7 +461,6 @@
       real, parameter:: pi = 3.141592653
       real, parameter:: kmax = 120.
 ! semiannual amp
-!      real, parameter:: kampsa = 40.
       real, parameter:: kampsa = 60.
 !      real, parameter:: dkeddy = 2.
       real, parameter:: dkeddy = 0.
@@ -480,7 +479,7 @@
             keddy(k)= kmax*exp(-((x-xmax)/dkeddy)**2)
          enddo
       endif
-      print *, 'kampsa=',kampsa,'keddy=', keddy(135)
+!      print *, 'kampsa=',kampsa,'keddy=', keddy(135)
 !-----------------------------------------------------------------------
 ! Boundary conditions
       a(1) = 0.
