@@ -57,7 +57,7 @@ end if
 
 ! save ut so that other subroutines can refer to it
       utime_save=utime
-      print *, 'GHGM IN PLASMA, UTIME : ', utime
+      print *, 'GHGM IN PLASMA ', utime, timestamp_for_IPE
 
       ret = gptlstart ('apex_lon_loop') !24772.857
 !SMS$PARALLEL(dh, lp, mp) BEGIN

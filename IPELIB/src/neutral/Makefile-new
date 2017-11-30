@@ -1,0 +1,9 @@
+# neutral Makefile
+
+TOP = ..
+
+PSRCS = module_neutral.f90
+
+SSRCS = nrlmsise00.f90 get_msis_hydrogen_and_helium.f90
+
+include $(TOP)/Makefile.common

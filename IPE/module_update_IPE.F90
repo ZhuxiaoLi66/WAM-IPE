@@ -28,7 +28,8 @@ module module_update_IPE
     use nnt_types_module
     use module_decomp
     USE module_precision
-    USE module_input_parameters,ONLY: sw_perp_transport,utime,start_time,time_step,ip_freq_msis,sw_debug,nTimeStep,mype,ip_freq_eldyn,ip_freq_plasma,swEsmfTime,internalTimeLoopMax, ip_freq_output, time_step
+    USE module_input_parameters,ONLY: sw_perp_transport,utime,start_time,time_step,ip_freq_msis, &
+                                      sw_debug,nTimeStep,mype,ip_freq_eldyn,ip_freq_plasma,swEsmfTime, ip_freq_output
     USE module_FIELD_LINE_GRID_MKS,ONLY: plasma_3d
 !SMS$IGNORE BEGIN
     USE module_sub_eldyn,ONLY: eldyn
@@ -68,9 +69,6 @@ module module_update_IPE
 !nm20161003: esmf timing lib
     real(ESMF_KIND_R8) :: beg_time, end_time
 !---
-!nm20161225: internal time loop
-    integer :: ncnt !internal time loop counter
-!---
        type(ESMF_Time) :: currTime
        type(ESMF_Time) :: stopTime
        integer(ESMF_KIND_I4) :: yy
@@ -99,14 +97,15 @@ module module_update_IPE
 !nm20160315---copied from driver_ipe_sms.f90
 
 
-!nm20161225 internal time loop
-      internalTimeLoop: DO ncnt=1,internalTimeLoopMax
-
 ! GHGM moved from the bottom of the loop - we need to update the time first...
 
+      utime = utime + time_step
+      nTimeStep = nTimeStep + 1
+
+      print *,'GHGM UTIME ', utime
 
       if (IAM_ROOT()) then
-        print"('Utime=',2i7,f11.4,' nTimeStep',2i2)",utime,(MOD(utime,86400)),(MOD(utime,86400)/3600.),nTimeStep,ncnt
+        print"('Utime=',2i7,f11.4,' nTimeStep',2i2)",utime,(MOD(utime,86400)),(MOD(utime,86400)/3600.),nTimeStep
         if(swEsmfTime) write(unit=9999,FMT=*)'update_IPE',nTimeStep,':ut=',utime
       endif
 !!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-5")
@@ -155,8 +154,10 @@ module module_update_IPE
       IF ( sw_perp_transport>=1.AND. MOD( (utime-start_time),ip_freq_eldyn)==0 ) THEN
         call ESMF_LogWrite("sub-update_IPE eldyn:", ESMF_LOGMSG_INFO, rc=rc)  
 
-        if(sw_debug.and.IAM_ROOT())print*,'call eldyn: utime=',utime,nTimeStep,ncnt
-        CALL eldyn ( utime )
+        if(sw_debug.and.IAM_ROOT())print*,'call eldyn: utime=',utime,nTimeStep
+        print *,'GHGM CALL ELDYN ', utime
+         CALL eldyn ( utime - time_step ) 
+        print *,'GHGM DONE ELDYN ', utime
       ENDIF
 !g      ret = gptlstop  ('eldyn')
 !!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-6")
@@ -202,7 +203,7 @@ module module_update_IPE
 !--- update neutral
         IF ( MOD( (utime-start_time),ip_freq_msis)==0 ) THEN 
 
-          if(sw_debug.and.IAM_ROOT())print*,ncnt,'call neutral: utime=',utime,nTimeStep
+          if(sw_debug.and.IAM_ROOT())print*,'call neutral: utime=',utime,nTimeStep
 
 !g          ret = gptlstart ('neutral')
           call ESMF_LogWrite("sub-update_IPE neutral:", ESMF_LOGMSG_INFO, rc=rc)
@@ -210,7 +211,9 @@ module module_update_IPE
 !nm20161003 esmf timing library
           if(swEsmfTime) CALL ESMF_VMWtime(beg_time)
 
-          CALL neutral ( utime )
+        print *,'GHGM CALL NEUTRAL ', utime
+          CALL neutral ( utime - time_step, start_time )
+        print *,'GHGM DONE NEUTRAL ', utime
 
           if(swEsmfTime) then  
             CALL ESMF_VMWtime(end_time)
@@ -271,7 +274,7 @@ module module_update_IPE
 !nm20161003 esmf timing library
         if(swEsmfTime) CALL ESMF_VMWtime(beg_time)
 
-        if(sw_debug.and.IAM_ROOT())print*,ncnt,'call plasma: utime=',utime,nTimeStep
+        if(sw_debug.and.IAM_ROOT())print*,'call plasma: utime=',utime,nTimeStep
 
      call ESMF_ClockGet(clock, currTime=currTime, rc=rc)
      call ESMF_TimeGet(currtime,yy=yy,mm=mm,dd=dd,h=h,m=m,s=s,rc=rc)                                 
@@ -295,6 +298,8 @@ module module_update_IPE
      write (s_str,fmt) S
      timestamp_for_IPE_output_files = trim(yy_str)//trim(mm_str)//trim(dd_str)//trim(h_str)//trim(m_str)                  
 
+      print *,'GHGM TIMESTAMP ', timestamp_for_IPE_output_files
+
         CALL plasma ( utime, timestamp_for_IPE_output_files )
 
         if(swEsmfTime) then
@@ -302,7 +307,7 @@ module module_update_IPE
           if(mype==0.or.mype==8)write(unit=9999,FMT=*)mype,nTimeStep,"plasma endT=",(end_time-beg_time)
         end if
 
-        if( MOD( utime+time_step, ip_freq_output) == 0) THEN
+        if( MOD( utime, ip_freq_output) == 0) THEN
           CALL io_plasma_bin( 1, utime, timestamp_for_IPE_output_files )
         endif
 
@@ -396,12 +401,7 @@ module module_update_IPE
       endif    ! end of SMS_DEBUGGING_ON()
 !---copy end
 
-!nm20160608: IPE internal time management
-      utime = utime + time_step
-      nTimeStep = nTimeStep + 1
 
-!nm20161225 internal time loop
-      end do internalTimeLoop !: ncnt=1,3
 
     call ESMF_LogWrite("sub-update_IPE finished:", ESMF_LOGMSG_INFO, rc=rc)
 

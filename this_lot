@@ -1,0 +1,524 @@
+IPE/module_sub_myIPE_Init.F90:  USE module_input_parameters, ONLY: read_input_parameters,utime,start_time,stop_time, &
+IPE/module_sub_myIPE_Init.F90:      utime = start_time
+Binary file IPE/module_sub_myIPE_Init.o matches
+Binary file IPE/module_update_IPE.o matches
+IPE/module_update_IPE.F90:    USE module_input_parameters,ONLY: sw_perp_transport,utime,start_time,time_step,ip_freq_msis,sw_debug,nTimeStep,mype,ip_freq_eldyn,ip_freq_plasma,swEsmfTime, ip_freq_output, time_step
+IPE/module_update_IPE.F90:!    INTEGER(KIND=int_prec)           :: utime !universal time [sec]
+IPE/module_update_IPE.F90:        print"('Utime=',2i7,f11.4,' nTimeStep',2i2)",utime,(MOD(utime,86400)),(MOD(utime,86400)/3600.),nTimeStep
+IPE/module_update_IPE.F90:        if(swEsmfTime) write(unit=9999,FMT=*)'update_IPE',nTimeStep,':ut=',utime
+IPE/module_update_IPE.F90:      IF ( sw_perp_transport>=1.AND. MOD( (utime-start_time),ip_freq_eldyn)==0 ) THEN
+IPE/module_update_IPE.F90:        if(sw_debug.and.IAM_ROOT())print*,'call eldyn: utime=',utime,nTimeStep
+IPE/module_update_IPE.F90:        CALL eldyn ( utime )
+IPE/module_update_IPE.F90:        IF ( MOD( (utime-start_time),ip_freq_msis)==0 ) THEN 
+IPE/module_update_IPE.F90:          if(sw_debug.and.IAM_ROOT())print*,'call neutral: utime=',utime,nTimeStep
+IPE/module_update_IPE.F90:          CALL neutral ( utime )
+IPE/module_update_IPE.F90:        END IF ! ( MOD( (utime-start_time),ip_freq_msis)==0 ) THEN
+IPE/module_update_IPE.F90:      IF ( MOD( (utime-start_time),ip_freq_plasma)==0 ) THEN 
+IPE/module_update_IPE.F90:        if(sw_debug.and.IAM_ROOT())print*,'call plasma: utime=',utime,nTimeStep
+IPE/module_update_IPE.F90:        print *, 'GHGM UPDATE IPE ', utime, timestamp_for_IPE_output_files
+IPE/module_update_IPE.F90:        CALL plasma ( utime, timestamp_for_IPE_output_files )
+IPE/module_update_IPE.F90:        if( MOD( utime+time_step, ip_freq_output) == 0) THEN
+IPE/module_update_IPE.F90:          CALL io_plasma_bin( 1, utime, timestamp_for_IPE_output_files )
+IPE/module_update_IPE.F90:      END IF   !  ( MOD( (utime-start_time),ip_freq_msis)==0 ) THEN 
+IPE/module_update_IPE.F90:! output UTIME to FLIP_ERR
+IPE/module_update_IPE.F90:        CALL output ( utime )
+IPE/module_update_IPE.F90:      utime = utime + time_step
+Binary file IPE/libipe_nuopc.a matches
+Binary file IPELIB/bin/ipe_theia_intel_parallel.exe matches
+Binary file IPELIB/include/module_input_parameters.mod matches
+Binary file IPELIB/include/module_output.mod matches
+Binary file IPELIB/include/module_neutral_mks.mod matches
+Binary file IPELIB/include/module_sub_eldyn.mod matches
+Binary file IPELIB/include/module_stepback_mag_r.mod matches
+Binary file IPELIB/include/module_plasma.mod matches
+Binary file IPELIB/include/module_sub_plasma.mod matches
+Binary file IPELIB/include/module_perpendicular_transport.mod matches
+Binary file IPELIB/lib/libipe.a matches
+IPELIB/src/driver/driver_ipe.f90:   INTEGER(KIND=int_prec)           :: utime_driver ! Universal Time [sec]
+IPELIB/src/driver/driver_ipe.f90:     DO utime_driver = start_time, stop_time, time_step
+IPELIB/src/driver/driver_ipe.f90:       PRINT*,'utime_driver=',utime_driver
+IPELIB/src/driver/driver_ipe.f90:         CALL eldyn ( utime_driver )
+IPELIB/src/driver/driver_ipe.f90:       IF ( MOD( (utime_driver-start_time),ip_freq_msis)==0 ) THEN 
+IPELIB/src/driver/driver_ipe.f90:         PRINT *,'CALL MSIS',utime_driver,start_time, &
+IPELIB/src/driver/driver_ipe.f90:                  ip_freq_msis,(utime_driver-start_time), &
+IPELIB/src/driver/driver_ipe.f90:                  MOD( (utime_driver-start_time),ip_freq_msis)
+IPELIB/src/driver/driver_ipe.f90:         CALL neutral ( utime_driver )
+IPELIB/src/driver/driver_ipe.f90:        CALL plasma ( utime_driver, 'dummytimestam' )
+IPELIB/src/driver/driver_ipe.f90:       IF( MOD(utime_driver-start_time+time_step,ip_freq_output)==0)THEN
+IPELIB/src/driver/driver_ipe.f90:          WRITE( iterChar, '(I8.8)' )utime_driver+time_step
+IPELIB/src/driver/driver_ipe.f90:          CALL io_plasma_bin ( 1, utime_driver, 'iter_'//iterChar )
+IPELIB/src/driver/driver_ipe.f90:       CALL output ( utime_driver )
+IPELIB/src/driver/driver_ipe_sms.f.tmp:   INTEGER(KIND=int_prec)           :: utime_driver ! Universal Time [sec]
+IPELIB/src/driver/driver_ipe_sms.f.tmp:     DO utime_driver = start_time, stop_time, time_step
+IPELIB/src/driver/driver_ipe_sms.f.tmp:       PRINT*,'utime_driver=',utime_driver
+IPELIB/src/driver/driver_ipe_sms.f.tmp:         CALL eldyn ( utime_driver )
+IPELIB/src/driver/driver_ipe_sms.f.tmp:       IF ( MOD( (utime_driver-start_time),ip_freq_msis)==0 ) THEN 
+IPELIB/src/driver/driver_ipe_sms.f.tmp:!         PRINT *,'CALL MSIS',utime_driver,start_time, &
+IPELIB/src/driver/driver_ipe_sms.f.tmp:!                  ip_freq_msis,(utime_driver-start_time), &
+IPELIB/src/driver/driver_ipe_sms.f.tmp:!                  MOD( (utime_driver-start_time),ip_freq_msis)
+IPELIB/src/driver/driver_ipe_sms.f.tmp:         CALL neutral ( utime_driver )
+IPELIB/src/driver/driver_ipe_sms.f.tmp:        CALL plasma ( utime_driver, 'dummytimestam' )
+IPELIB/src/driver/driver_ipe_sms.f.tmp:       IF( MOD(utime_driver-start_time+time_step,ip_freq_output)==0)THEN
+IPELIB/src/driver/driver_ipe_sms.f.tmp:          WRITE( iterChar, '(I8.8)' )utime_driver+time_step
+IPELIB/src/driver/driver_ipe_sms.f.tmp:          CALL io_plasma_bin ( 1, utime_driver, 'iter_'//iterChar )
+IPELIB/src/driver/driver_ipe_sms.f.tmp:       CALL output ( utime_driver )
+IPELIB/src/driver/driver_ipe_sms.f90:   INTEGER(KIND=int_prec)           :: utime_driver ! Universal Time [sec]
+IPELIB/src/driver/driver_ipe_sms.f90:     DO utime_driver = start_time, stop_time, time_step
+IPELIB/src/driver/driver_ipe_sms.f90:       PRINT*,'utime_driver=',utime_driver
+IPELIB/src/driver/driver_ipe_sms.f90:         CALL eldyn ( utime_driver )
+IPELIB/src/driver/driver_ipe_sms.f90:       IF ( MOD( (utime_driver-start_time),ip_freq_msis)==0 ) THEN 
+IPELIB/src/driver/driver_ipe_sms.f90:         PRINT *,'CALL MSIS',utime_driver,start_time, &
+IPELIB/src/driver/driver_ipe_sms.f90:                  ip_freq_msis,(utime_driver-start_time), &
+IPELIB/src/driver/driver_ipe_sms.f90:                  MOD( (utime_driver-start_time),ip_freq_msis)
+IPELIB/src/driver/driver_ipe_sms.f90:         CALL neutral ( utime_driver )
+IPELIB/src/driver/driver_ipe_sms.f90:        CALL plasma ( utime_driver, 'dummytimestam' )
+IPELIB/src/driver/driver_ipe_sms.f90:       IF( MOD(utime_driver-start_time+time_step,ip_freq_output)==0)THEN
+IPELIB/src/driver/driver_ipe_sms.f90:          WRITE( iterChar, '(I8.8)' )utime_driver+time_step
+IPELIB/src/driver/driver_ipe_sms.f90:          CALL io_plasma_bin ( 1, utime_driver, 'iter_'//iterChar )
+IPELIB/src/driver/driver_ipe_sms.f90:       CALL output ( utime_driver )
+Binary file IPELIB/src/driver/driver_ipe.o matches
+IPELIB/src/eldyn/get_efield90km.f:      SUBROUTINE GET_EFIELD90km ( utime )
+IPELIB/src/eldyn/get_efield90km.f:      INTEGER (KIND=int_prec),INTENT(IN)   :: utime !universal time [sec]
+IPELIB/src/eldyn/get_efield90km.f:      utsecs=REAL(utime, real_prec)
+IPELIB/src/eldyn/get_efield90km.f:      print *,'GHGM HERE INNIT ', utime, utsecs
+IPELIB/src/eldyn/module_sub_eldyn.f:      SUBROUTINE eldyn ( utime )
+IPELIB/src/eldyn/module_sub_eldyn.f:      INTEGER (KIND=int_prec),INTENT(IN)   :: utime !universal time [sec]
+IPELIB/src/eldyn/module_sub_eldyn.f:      ut = REAL(utime,real_prec)/3600.0
+IPELIB/src/eldyn/module_sub_eldyn.f:      if ( utime==start_time ) then
+IPELIB/src/eldyn/module_sub_eldyn.f:      IF ( utime==start_time ) THEN
+IPELIB/src/eldyn/module_sub_eldyn.f:      IF ( utime==start_time ) then
+IPELIB/src/eldyn/module_sub_eldyn.f:      CALL GET_EFIELD90km ( utime )
+IPELIB/src/eldyn/module_sub_eldyn.f:      IF ( utime==start_time ) THEN 
+IPELIB/src/eldyn/module_sub_eldyn.f:      IF ( MOD( (utime-start_time),ip_freq_output)==0 ) THEN
+IPELIB/src/eldyn/module_sub_eldyn.f:        write(unit=2010,FMT='(I12)')utime !sec
+IPELIB/src/eldyn/supim_exb.f:      SUBROUTINE supim_EXBV(utime,IFL,LT_SEC,r_apex,GLON_deg,VEXBup_out)
+IPELIB/src/eldyn/supim_exb.f:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/eldyn/supim_exb.f:      if(utime==start_time)
+IPELIB/src/eldyn/get_efield90km_sms.f.tmp:      SUBROUTINE GET_EFIELD90km ( utime )
+IPELIB/src/eldyn/get_efield90km_sms.f.tmp:      INTEGER (KIND=int_prec),INTENT(IN)   :: utime !universal time [sec]
+IPELIB/src/eldyn/get_efield90km_sms.f.tmp:      utsecs=REAL(utime, real_prec)
+IPELIB/src/eldyn/get_efield90km_sms.f.tmp:      print *,'GHGM HERE INNIT ', utime, utsecs
+IPELIB/src/eldyn/get_efield90km_sms.f90:      SUBROUTINE GET_EFIELD90km ( utime )
+IPELIB/src/eldyn/get_efield90km_sms.f90:      INTEGER (KIND=int_prec),INTENT(IN)   :: utime !universal time [sec]
+IPELIB/src/eldyn/get_efield90km_sms.f90:      utsecs=REAL(utime, real_prec)
+IPELIB/src/eldyn/get_efield90km_sms.f90:      print *,'GHGM HERE INNIT ', utime, utsecs
+IPELIB/src/eldyn/module_sub_eldyn_sms.f.tmp:      SUBROUTINE eldyn ( utime )
+IPELIB/src/eldyn/module_sub_eldyn_sms.f.tmp:      INTEGER (KIND=int_prec),INTENT(IN)   :: utime !universal time [sec]
+IPELIB/src/eldyn/module_sub_eldyn_sms.f.tmp:      ut = REAL(utime,real_prec)/3600.0
+IPELIB/src/eldyn/module_sub_eldyn_sms.f.tmp:      if ( utime==start_time ) then
+IPELIB/src/eldyn/module_sub_eldyn_sms.f.tmp:      IF ( utime==start_time ) THEN
+IPELIB/src/eldyn/module_sub_eldyn_sms.f.tmp:      IF ( utime==start_time ) then
+IPELIB/src/eldyn/module_sub_eldyn_sms.f.tmp:      CALL GET_EFIELD90km ( utime )
+IPELIB/src/eldyn/module_sub_eldyn_sms.f.tmp:      IF ( utime==start_time ) THEN 
+IPELIB/src/eldyn/module_sub_eldyn_sms.f.tmp:      IF ( MOD( (utime-start_time),ip_freq_output)==0 ) THEN
+IPELIB/src/eldyn/module_sub_eldyn_sms.f.tmp:        write(unit=2010,FMT='(I12)')utime !sec
+IPELIB/src/eldyn/module_sub_eldyn_sms.f90:      SUBROUTINE eldyn ( utime )
+IPELIB/src/eldyn/module_sub_eldyn_sms.f90:      INTEGER (KIND=int_prec),INTENT(IN)   :: utime !universal time [sec]
+IPELIB/src/eldyn/module_sub_eldyn_sms.f90:      ut = REAL(utime,real_prec)/3600.0
+IPELIB/src/eldyn/module_sub_eldyn_sms.f90:      if ( utime==start_time ) then
+IPELIB/src/eldyn/module_sub_eldyn_sms.f90:      IF ( utime==start_time ) THEN
+IPELIB/src/eldyn/module_sub_eldyn_sms.f90:      IF ( utime==start_time ) then
+IPELIB/src/eldyn/module_sub_eldyn_sms.f90:      CALL GET_EFIELD90km ( utime )
+IPELIB/src/eldyn/module_sub_eldyn_sms.f90:      IF ( utime==start_time ) THEN 
+IPELIB/src/eldyn/module_sub_eldyn_sms.f90:      IF ( MOD( (utime-start_time),ip_freq_output)==0 ) THEN
+IPELIB/src/eldyn/module_sub_eldyn_sms.f90:        write(unit=2010,FMT='(I12)')utime !sec
+Binary file IPELIB/src/eldyn/module_sub_eldyn.mod matches
+IPELIB/src/flip/CTIPE-int.f:     >                           lp,utime,ltime)
+IPELIB/src/flip/CTIPE-int.f:      INTEGER (KIND=int_prec),  INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/flip/CTIPE-int.f:         WRITE(PRUNIT,21)lp,mp,ltime,UTIME,mype
+IPELIB/src/flip/Neut_Heating.f:!JFM  USE module_PLASMA,ONLY: utime_save
+IPELIB/src/flip/Neut_Heating.f:!JFM &  MOD( (utime_save-start_time),ip_freq_output)==0) THEN
+IPELIB/src/flip/Neut_Heating.f:!JFM      IF ( mp_save==1 ) write(5000,*)utime_save
+IPELIB/src/ipe_gt/driver_ipe_gt.3d.f90:INTEGER (KIND=int_prec)   :: utime ! universal time [sec]      
+IPELIB/src/ipe_gt/driver_ipe_gt.3d.f90:REAL :: startCPUTime, endCPUTime
+IPELIB/src/ipe_gt/driver_ipe_gt.3d.f90: CALL CPU_TIME(startCPUTime)
+IPELIB/src/ipe_gt/driver_ipe_gt.3d.f90:skip_ipe : do utime = ipeFileStartTime, start_time - time_step, time_step ! =========================================
+IPELIB/src/ipe_gt/driver_ipe_gt.3d.f90:  print *,'driver : skipping ipe time = ',utime
+IPELIB/src/ipe_gt/driver_ipe_gt.3d.f90:time_loop: DO utime = (start_time + GT_timestep_in_seconds), stop_time, time_step ! =========================================
+IPELIB/src/ipe_gt/driver_ipe_gt.3d.f90:  print *, 'driver_ipe_gt.3d : utime  =  ', utime
+IPELIB/src/ipe_gt/driver_ipe_gt.3d.f90:   thermosphereLoop : DO gtLoopTime = utime, utime + (time_step-GT_timestep_in_seconds), &
+IPELIB/src/ipe_gt/driver_ipe_gt.3d.f90:      if (gtLoopTime == (utime + time_step-GT_timestep_in_seconds)) idump_gt = 1
+IPELIB/src/ipe_gt/driver_ipe_gt.3d.f90:          WRITE(unitCheckThermo,'(A, i5)') 'driver_ipe_gt.3d : utime =  ' , utime
+IPELIB/src/ipe_gt/driver_ipe_gt.3d.f90:END DO  time_loop !: DO utime = start_time, stop_time, time_step
+IPELIB/src/ipe_gt/driver_ipe_gt.3d.f90:CALL CPU_TIME(endCPUTime)
+IPELIB/src/ipe_gt/driver_ipe_gt.3d.f90:print *,'driver_ipe_gt.3d : total cpu time of driver = ', endCPUTime - startCPUTime
+IPELIB/src/ipe_gt/notes.txt: driver_ipe_gt.3d : utime  =        102660
+IPELIB/src/ipe_gt/read_ipe_ascii.f90:integer,PARAMETER :: rec_start=5 !utime=14400
+IPELIB/src/ipe_gt/read_ipe_ascii.f90:integer,PARAMETER :: rec_stop=7  !utime=16200
+IPELIB/src/main/module_output.f90:        SUBROUTINE output ( utime )
+IPELIB/src/main/module_output.f90:        INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/main/module_output.f90:          WRITE(UNIT=PRUNIT,FMT="('uts=',i7,i7)") utime,prunit
+IPELIB/src/main/module_input_parameters.f90:      INTEGER (KIND=int_prec), PUBLIC   :: utime           !UT[sec] IPE internal time management
+Binary file IPELIB/src/main/module_output.mod matches
+IPELIB/src/main/module_input_parameters_sms.f.tmp:      INTEGER (KIND=int_prec), PUBLIC   :: utime           !UT[sec] IPE internal time management
+IPELIB/src/main/module_input_parameters_sms.f90:      INTEGER (KIND=int_prec), PUBLIC   :: utime           !UT[sec] IPE internal time management
+Binary file IPELIB/src/main/module_input_parameters.o matches
+Binary file IPELIB/src/main/module_input_parameters.mod matches
+IPELIB/src/neutral/module_neutral.f90:      subroutine neutral (utime) 
+IPELIB/src/neutral/module_neutral.f90:      INTEGER(KIND=int_prec), INTENT(in) :: utime  !universal time[sec]
+IPELIB/src/neutral/module_neutral.f90:      INTEGER(KIND=int_prec) :: utime_dum
+IPELIB/src/neutral/module_neutral.f90:      ut_hour = REAL(utime)/3600. !convert from sec to hours
+IPELIB/src/neutral/module_neutral.f90:             if(lp==1)print*,mype,mp,'MSIS',sw_neutral,utime
+IPELIB/src/neutral/module_neutral.f90:             if ( utime==ut_start_perp_trans ) then
+IPELIB/src/neutral/module_neutral.f90:                print*,mype,mp,lp,'MSIS utime=',utime      
+IPELIB/src/neutral/module_neutral.f90:             else if ( utime>ut_start_perp_trans ) then
+IPELIB/src/neutral/module_neutral.f90:      print*,mype,utime,'!STOP! INVALID Tn MIN!',mp,lp,minloc(tn_k(IN:IS,lp,mp))
+IPELIB/src/neutral/module_neutral.f90:  fracWamD = ( REAL(utime)-UTMinWamD ) * 1.0/dUTWamD 
+IPELIB/src/neutral/module_neutral.f90:if(mp==1.and.lp==1)print*,'frac=',fracWamD,' dUT=',dUTWamD,' ut=',utime, UTMinWamD  
+IPELIB/src/neutral/module_neutral.f90:  print*,'!STOP! INVALID fracWamD',fracWamD,' dUT=',dUTWamD,' ut=',REAL(utime),UTMinWamD,(REAL(utime)-UTMinWamD)    
+IPELIB/src/neutral/module_neutral.f90:          end if !( utime==ut_start_perp_trans ) then
+IPELIB/src/neutral/module_neutral.f90:!write (6000,fmt=*) utime, Un_ms1(1:NPTS2D,mp,3) 
+IPELIB/src/neutral/module_neutral.f90:!write (6000,fmt=*) utime, Un_ms1(1:NPTS2D,mp,3) 
+IPELIB/src/neutral/module_neutral.f90:    if ( utime==start_time ) then
+IPELIB/src/neutral/module_neutral.f90:!read (unit=luntmp3,fmt=*) utime_dum, Un_ms1(1:NPTS2D,mp,3) 
+IPELIB/src/neutral/module_neutral.f90:    read (unit=luntmp3,fmt=*) utime_dum, dum0 
+IPELIB/src/neutral/module_neutral.f90:    if( utime_dum /=utime ) then 
+IPELIB/src/neutral/module_neutral.f90:      print *,"sub-neutral: !STOP! INVALID utime_dum!",utime_dum
+IPELIB/src/neutral/module_neutral.f90:    if( utime==stop_time )   CLOSE(UNIT=luntmp3)
+IPELIB/src/neutral/module_neutral_sms.f.tmp:      subroutine neutral (utime) 
+IPELIB/src/neutral/module_neutral_sms.f.tmp:      INTEGER(KIND=int_prec), INTENT(in) :: utime  !universal time[sec]
+IPELIB/src/neutral/module_neutral_sms.f.tmp:      INTEGER(KIND=int_prec) :: utime_dum
+IPELIB/src/neutral/module_neutral_sms.f.tmp:      ut_hour = REAL(utime)/3600. !convert from sec to hours
+IPELIB/src/neutral/module_neutral_sms.f.tmp:             if(lp==1)print*,mype,mp,'MSIS',sw_neutral,utime
+IPELIB/src/neutral/module_neutral_sms.f.tmp:             if ( utime==ut_start_perp_trans ) then
+IPELIB/src/neutral/module_neutral_sms.f.tmp:!                print*,mype,mp,lp,'MSIS utime=',utime      
+IPELIB/src/neutral/module_neutral_sms.f.tmp:             else if ( utime>ut_start_perp_trans ) then
+IPELIB/src/neutral/module_neutral_sms.f.tmp:!      print*,mype,utime,'!STOP! INVALID Tn MIN!',mp,lp,minloc(tn_k(IN:IS,lp,mp))
+IPELIB/src/neutral/module_neutral_sms.f.tmp:  fracWamD = ( REAL(utime)-UTMinWamD ) * 1.0/dUTWamD 
+IPELIB/src/neutral/module_neutral_sms.f.tmp:if(mp==1.and.lp==1)print*,'frac=',fracWamD,' dUT=',dUTWamD,' ut=',utime, UTMinWamD  
+IPELIB/src/neutral/module_neutral_sms.f.tmp:!  print*,'!STOP! INVALID fracWamD',fracWamD,' dUT=',dUTWamD,' ut=',REAL(utime),UTMinWamD,(REAL(utime)-UTMinWamD)    
+IPELIB/src/neutral/module_neutral_sms.f.tmp:          end if !( utime==ut_start_perp_trans ) then
+IPELIB/src/neutral/module_neutral_sms.f.tmp:!write (6000,fmt=*) utime, Un_ms1(1:NPTS2D,mp,3) 
+IPELIB/src/neutral/module_neutral_sms.f.tmp:!write (6000,fmt=*) utime, Un_ms1(1:NPTS2D,mp,3) 
+IPELIB/src/neutral/module_neutral_sms.f.tmp:    if ( utime==start_time ) then
+IPELIB/src/neutral/module_neutral_sms.f.tmp:!read (unit=luntmp3,fmt=*) utime_dum, Un_ms1(1:NPTS2D,mp,3) 
+IPELIB/src/neutral/module_neutral_sms.f.tmp:    read (unit=luntmp3,fmt=*) utime_dum, dum0 
+IPELIB/src/neutral/module_neutral_sms.f.tmp:    if( utime_dum /=utime ) then 
+IPELIB/src/neutral/module_neutral_sms.f.tmp:      print *,"sub-neutral: !STOP! INVALID utime_dum!",utime_dum
+IPELIB/src/neutral/module_neutral_sms.f.tmp:    if( utime==stop_time )   CLOSE(UNIT=luntmp3)
+IPELIB/src/neutral/module_neutral_sms.f90:      subroutine neutral (utime) 
+IPELIB/src/neutral/module_neutral_sms.f90:      INTEGER(KIND=int_prec), INTENT(in) :: utime  !universal time[sec]
+IPELIB/src/neutral/module_neutral_sms.f90:      INTEGER(KIND=int_prec) :: utime_dum
+IPELIB/src/neutral/module_neutral_sms.f90:      ut_hour = REAL(utime)/3600. !convert from sec to hours
+IPELIB/src/neutral/module_neutral_sms.f90:             if(lp==1)print*,mype,mp,'MSIS',sw_neutral,utime
+IPELIB/src/neutral/module_neutral_sms.f90:             if ( utime==ut_start_perp_trans ) then
+IPELIB/src/neutral/module_neutral_sms.f90:                print*,mype,mp,lp,'MSIS utime=',utime      
+IPELIB/src/neutral/module_neutral_sms.f90:             else if ( utime>ut_start_perp_trans ) then
+IPELIB/src/neutral/module_neutral_sms.f90:      print*,mype,utime,'!STOP! INVALID Tn MIN!',mp,lp,minloc(tn_k(IN:IS,lp,mp))
+IPELIB/src/neutral/module_neutral_sms.f90:  fracWamD = ( REAL(utime)-UTMinWamD ) * 1.0/dUTWamD 
+IPELIB/src/neutral/module_neutral_sms.f90:if(mp==1.and.lp==1)print*,'frac=',fracWamD,' dUT=',dUTWamD,' ut=',utime, UTMinWamD  
+IPELIB/src/neutral/module_neutral_sms.f90:  print*,'!STOP! INVALID fracWamD',fracWamD,' dUT=',dUTWamD,' ut=',REAL(utime),UTMinWamD,(REAL(utime)-UTMinWamD)    
+IPELIB/src/neutral/module_neutral_sms.f90:          end if !( utime==ut_start_perp_trans ) then
+IPELIB/src/neutral/module_neutral_sms.f90:!write (6000,fmt=*) utime, Un_ms1(1:NPTS2D,mp,3) 
+IPELIB/src/neutral/module_neutral_sms.f90:!write (6000,fmt=*) utime, Un_ms1(1:NPTS2D,mp,3) 
+IPELIB/src/neutral/module_neutral_sms.f90:    if ( utime==start_time ) then
+IPELIB/src/neutral/module_neutral_sms.f90:!read (unit=luntmp3,fmt=*) utime_dum, Un_ms1(1:NPTS2D,mp,3) 
+IPELIB/src/neutral/module_neutral_sms.f90:    read (unit=luntmp3,fmt=*) utime_dum, dum0 
+IPELIB/src/neutral/module_neutral_sms.f90:      call PPP_BCAST(utime_dum,NNT_INTEGER,PPP__GlobalSize,             &
+IPELIB/src/neutral/module_neutral_sms.f90:    if( utime_dum /=utime ) then 
+IPELIB/src/neutral/module_neutral_sms.f90:      print *,"sub-neutral: !STOP! INVALID utime_dum!",utime_dum
+IPELIB/src/neutral/module_neutral_sms.f90:    if( utime==stop_time )   CLOSE(UNIT=luntmp3)
+Binary file IPELIB/src/neutral/module_neutral.o matches
+Binary file IPELIB/src/neutral/module_neutral_mks.mod matches
+IPELIB/src/plasma/activate_perp_transport.f90JFM:      subroutine activate_perp_transport (utime,mp)
+IPELIB/src/plasma/activate_perp_transport.f90JFM:        INTEGER (KIND=int_prec),  INTENT(IN)  :: utime    !universal time [sec]
+IPELIB/src/plasma/activate_perp_transport.f90JFM:      ltime = REAL(utime,real_prec)/3600.0 + (plasma_grid_3d(midpoint,mp,IGLON)*180.0/pi)/15.0
+IPELIB/src/plasma/dbg_estimate_trans_error.f90:      subroutine dbg_estimate_trans_error ( utime )
+IPELIB/src/plasma/dbg_estimate_trans_error.f90:        INTEGER (KIND=int_prec),  INTENT(IN)  :: utime    !universal time [sec]
+IPELIB/src/plasma/dbg_estimate_trans_error.f90:write(5000,fmt=*) utime,MAXVAL(opmaxpc),MINVAL(opminpc)
+IPELIB/src/plasma/flux_tube_solver.f90:      SUBROUTINE flux_tube_solver ( utime,mp,lp )
+IPELIB/src/plasma/flux_tube_solver.f90:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/flux_tube_solver.f90:!d      IF ( lp==170.and.mp==1.and.MOD( (utime-start_time), ip_freq_output_fort)==0 ) THEN
+IPELIB/src/plasma/flux_tube_solver.f90:      CALL Get_SZA ( utime,mp,lp, SZA_dum )
+IPELIB/src/plasma/flux_tube_solver.f90:      IF ( utime == start_time ) THEN
+IPELIB/src/plasma/flux_tube_solver.f90:        IF ( sw_depleted_flip==1 .AND. utime == start_time_depleted ) THEN
+IPELIB/src/plasma/flux_tube_solver.f90:      ltime = REAL(utime)/3600.0 + (plasma_grid_3d(midpoint,lp,mp,IGLON)*180.0/pi)/15.0
+IPELIB/src/plasma/flux_tube_solver.f90:      WRITE(UNIT=LUN_FLIP1,FMT="('mp=',i3,' lp=',i3,' U',i3,' North, UT=',2F10.3)") mp,lp,LUN_FLIP1,REAL(UTIME)/3600., ltime
+IPELIB/src/plasma/flux_tube_solver.f90:      WRITE(UNIT=LUN_FLIP2,FMT="('mp=',i3,' lp=',i3,' U',i3,' North, UT=',2F10.3)") mp,lp,LUN_FLIP2,REAL(UTIME)/3600., ltime
+IPELIB/src/plasma/flux_tube_solver.f90:      WRITE(UNIT=LUN_FLIP3,FMT="('mp=',i3,' lp=',i3,' U',i3,' South, UT=',2F10.3)") mp,lp,LUN_FLIP3,REAL(UTIME)/3600., ltime
+IPELIB/src/plasma/flux_tube_solver.f90:      WRITE(UNIT=LUN_FLIP4,FMT="('mp=',i3,' lp=',i3,' U',i3,' South, UT=',2F10.3)") mp,lp,LUN_FLIP4,REAL(UTIME)/3600., ltime
+IPELIB/src/plasma/flux_tube_solver.f90:if(sw_debug) print*,'sub-fl: UTs=',UTIME,' LThr=',ltime,' mp',mp,' lp',lp
+IPELIB/src/plasma/flux_tube_solver.f90:         WRITE(UNIT=PRUNIT,FMT="('mp=',i6,' lp=',i6,' UT=',F10.2)") mp,lp,REAL(UTIME)/3600.,mype
+IPELIB/src/plasma/flux_tube_solver.f90:            &  MOD( (utime-start_time),ip_freq_output)==0) THEN
+IPELIB/src/plasma/flux_tube_solver.f90:!nm20121020               IF ( mp==1 ) write(5000,*) utime
+IPELIB/src/plasma/flux_tube_solver.f90:     &                         lp,utime,ltime )
+IPELIB/src/plasma/get_sza.f90:      SUBROUTINE Get_SZA ( utime,mp,lp,SZA_rad )
+IPELIB/src/plasma/get_sza.f90:        INTEGER (KIND=int_prec),  INTENT(IN)  :: utime    !universal time [sec]
+IPELIB/src/plasma/get_sza.f90:        REAL (KIND=real_prec) :: utime12   !.. time counting from 12UT [sec]
+IPELIB/src/plasma/get_sza.f90:          IF ( utime >= 12*3600 ) then
+IPELIB/src/plasma/get_sza.f90:             utime12 = REAL(utime) -12.0*3600.0
+IPELIB/src/plasma/get_sza.f90:          ELSE  !IF ( utime < 12*3600 ) then
+IPELIB/src/plasma/get_sza.f90:             utime12 = REAL(utime) +12.0*3600.0
+IPELIB/src/plasma/get_sza.f90:          ssa = plasma_grid_3d(i,lp,mp,IGLON)*180.0/pi + utime12/240.0  
+IPELIB/src/plasma/module_deplete_flux_tube.f90:subroutine deplete_flux_tube ( utime, mp, lp, HPEQ )
+IPELIB/src/plasma/module_deplete_flux_tube.f90:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/module_deplete_flux_tube.f90:         IF ( utime == start_time ) THEN
+IPELIB/src/plasma/module_deplete_flux_tube.f90:!nm20141027         IF ( utime < start_time_depleted ) THEN
+IPELIB/src/plasma/module_deplete_flux_tube.f90:         IF ( utime /= start_time_depleted ) THEN
+IPELIB/src/plasma/module_deplete_flux_tube.f90:            IF ( utime == start_time ) THEN
+IPELIB/src/plasma/module_deplete_flux_tube.f90:!nm20141027         ELSE !       IF ( utime >= start_time_depleted ) THEN
+IPELIB/src/plasma/module_deplete_flux_tube.f90:         ELSE !       IF ( utime == start_time_depleted ) THEN
+IPELIB/src/plasma/module_deplete_flux_tube.f90:print *,'utime=',utime,' mp=', mp,' lp=',lp,' mlat=',mlat,' HPEQ=',HPEQ,sw_depleted_flip, start_time, start_time_depleted,mlat_boundary
+IPELIB/src/plasma/module_deplete_flux_tube.f90:         END IF !( utime >= start_time_depleted ) THEN
+IPELIB/src/plasma/module_perpendicular_transport.f90:      SUBROUTINE perpendicular_transport ( utime, mp,lp )
+IPELIB/src/plasma/module_perpendicular_transport.f90:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/module_perpendicular_transport.f90:      CALL stepback_mag_R (utime, mp,lp, phi_t0 , theta_t0, r0_apex )
+IPELIB/src/plasma/module_plasma.f90:      INTEGER (KIND=int_prec),PUBLIC:: utime_save
+IPELIB/src/plasma/module_stepback_mag_R.f90:      SUBROUTINE stepback_mag_R (utime,mp,lp,phi_t0,theta_t0,r0_apex)
+IPELIB/src/plasma/module_stepback_mag_R.f90:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/module_stepback_mag_R.f90:          LT_SEC = utime + GLON_deg/15.*3600.
+IPELIB/src/plasma/module_stepback_mag_R.f90:          CALL supim_EXBV(utime,lp,LT_SEC,r_apex,GLON_deg,VEXBup(lp,mp))
+IPELIB/src/plasma/module_stepback_mag_R.f90:          if ( mp==1.and.lp==lpmin_perp_trans.and.MOD( (utime-start_time),900 )==0 )    CALL read_vexb ( utime,lp,mp )
+IPELIB/src/plasma/module_stepback_mag_R.f90:! print *,'sub-StR:',ihem,lp,mp,'v_exb_apex[m/s]',VEXBup(lp,mp)  ,utime
+IPELIB/src/plasma/module_stepback_mag_th.f90:!      SUBROUTINE stepback_mag_R (utime,mp,lp,phi_t0,theta_t0,r0_apex)
+IPELIB/src/plasma/plasma_vexb.f90:      SUBROUTINE plasma_vexb (utime,mp,lp,midpoint,r_apex,ihem )         
+IPELIB/src/plasma/plasma_vexb.f90:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/plasma_vexb.f90:          LT_SEC = utime + GLON_deg/15.*3600.
+IPELIB/src/plasma/plasma_vexb.f90:          CALL supim_EXBV(utime,lp,LT_SEC,r_apex,GLON_deg ,VEXB3D(2,midpoint,mp))
+IPELIB/src/plasma/read_vexb.f90:      subroutine read_vexb ( utime,lp,mp )
+IPELIB/src/plasma/read_vexb.f90:        INTEGER (KIND=int_prec),  INTENT(IN)  :: utime    !universal time [sec]
+IPELIB/src/plasma/read_vexb.f90:        INTEGER (KIND=int_prec) :: record_number_plasma_dum,utime_dum,lpin,mpin
+IPELIB/src/plasma/read_vexb.f90:if( utime==start_time ) then 
+IPELIB/src/plasma/read_vexb.f90:      READ (UNIT=luntmp1,FMT=*) record_number_plasma_dum, utime_dum
+IPELIB/src/plasma/read_vexb.f90:print *,'check ut', utime_dum,' utime-172800=',(utime-172800)
+IPELIB/src/plasma/read_vexb.f90:if ( utime_dum /= (utime-172800) ) then
+IPELIB/src/plasma/read_vexb.f90:print *,'check ut', utime_dum,' utime-172800=',(utime-172800)
+IPELIB/src/plasma/read_vexb.f90:print *,'check EXB lp=135',mp, vexbup(135,mp) ,utime
+IPELIB/src/plasma/read_vexb.f90:if( utime==stop_time ) then 
+IPELIB/src/plasma/io_plasma_bin.f90:SUBROUTINE io_plasma_bin ( switch, utime, timestamp_for_IPE )
+IPELIB/src/plasma/io_plasma_bin.f90:INTEGER (KIND=int_prec ),INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/io_plasma_bin.f90:INTEGER (KIND=int_prec )            :: n_read,n_read_min, utime_dum,record_number_plasma_dum
+IPELIB/src/plasma/io_plasma_bin.f90:if(sw_debug)  print *,'sub-io_plasma_bin: switch=',switch,' utime[sec]' ,utime 
+IPELIB/src/plasma/io_plasma_bin.f90:  WRITE (UNIT=lun_ut,FMT=*) record_number_plasma, utime
+IPELIB/src/plasma/io_plasma_bin.f90:    print *,'LUN=',lun_ut,'!dbg! output UT  finished: utime=',utime,record_number_plasma
+IPELIB/src/plasma/io_plasma_bin.f90:!print *,'END sub-io_pl: sw=',switch,' uts=' ,utime 
+IPELIB/src/plasma/io_plasma_bin_sms.f.tmp:SUBROUTINE io_plasma_bin ( switch, utime, timestamp_for_IPE )
+IPELIB/src/plasma/io_plasma_bin_sms.f.tmp:INTEGER (KIND=int_prec ),INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/io_plasma_bin_sms.f.tmp:INTEGER (KIND=int_prec )            :: n_read,n_read_min, utime_dum,record_number_plasma_dum
+IPELIB/src/plasma/io_plasma_bin_sms.f.tmp:if(sw_debug)  print *,'sub-io_plasma_bin: switch=',switch,' utime[sec]' ,utime 
+IPELIB/src/plasma/io_plasma_bin_sms.f.tmp:  WRITE (UNIT=lun_ut,FMT=*) record_number_plasma, utime
+IPELIB/src/plasma/io_plasma_bin_sms.f.tmp:    print *,'LUN=',lun_ut,'!dbg! output UT  finished: utime=',utime,record_number_plasma
+IPELIB/src/plasma/io_plasma_bin_sms.f.tmp:!print *,'END sub-io_pl: sw=',switch,' uts=' ,utime 
+Binary file IPELIB/src/plasma/io_plasma_bin.o matches
+IPELIB/src/plasma/module_stepback_mag_R_sms.f.tmp:      SUBROUTINE stepback_mag_R (utime,mp,lp,phi_t0,theta_t0,r0_apex)
+IPELIB/src/plasma/module_stepback_mag_R_sms.f.tmp:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/module_stepback_mag_R_sms.f.tmp:          LT_SEC = utime + GLON_deg/15.*3600.
+IPELIB/src/plasma/module_stepback_mag_R_sms.f.tmp:          CALL supim_EXBV(utime,lp,LT_SEC,r_apex,GLON_deg,VEXBup(lp,mp))
+IPELIB/src/plasma/module_stepback_mag_R_sms.f.tmp:          if ( mp==1.and.lp==lpmin_perp_trans.and.MOD( (utime-start_time),900 )==0 )    CALL read_vexb ( utime,lp,mp )
+IPELIB/src/plasma/module_stepback_mag_R_sms.f.tmp:! print *,'sub-StR:',ihem,lp,mp,'v_exb_apex[m/s]',VEXBup(lp,mp)  ,utime
+IPELIB/src/plasma/io_plasma_bin_sms.f90:SUBROUTINE io_plasma_bin ( switch, utime, timestamp_for_IPE )
+IPELIB/src/plasma/io_plasma_bin_sms.f90:INTEGER (KIND=int_prec ),INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/io_plasma_bin_sms.f90:INTEGER (KIND=int_prec )            :: n_read,n_read_min, utime_dum,record_number_plasma_dum
+IPELIB/src/plasma/io_plasma_bin_sms.f90:if(sw_debug)  print *,'sub-io_plasma_bin: switch=',switch,' utime[sec]' ,utime 
+IPELIB/src/plasma/io_plasma_bin_sms.f90:  WRITE (UNIT=lun_ut,FMT=*) record_number_plasma, utime
+IPELIB/src/plasma/io_plasma_bin_sms.f90:    print *,'LUN=',lun_ut,'!dbg! output UT  finished: utime=',utime,record_number_plasma
+IPELIB/src/plasma/io_plasma_bin_sms.f90:!print *,'END sub-io_pl: sw=',switch,' uts=' ,utime 
+Binary file IPELIB/src/plasma/module_stepback_mag_r.mod matches
+IPELIB/src/plasma/module_stepback_mag_th_sms.f.tmp:!      SUBROUTINE stepback_mag_R (utime,mp,lp,phi_t0,theta_t0,r0_apex)
+IPELIB/src/plasma/module_perpendicular_transport_sms.f.tmp:      SUBROUTINE perpendicular_transport ( utime, mp,lp )
+IPELIB/src/plasma/module_perpendicular_transport_sms.f.tmp:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/module_perpendicular_transport_sms.f.tmp:      CALL stepback_mag_R (utime, mp,lp, phi_t0 , theta_t0, r0_apex )
+IPELIB/src/plasma/module_stepback_mag_R_sms.f90:      SUBROUTINE stepback_mag_R (utime,mp,lp,phi_t0,theta_t0,r0_apex)
+IPELIB/src/plasma/module_stepback_mag_R_sms.f90:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/module_stepback_mag_R_sms.f90:          LT_SEC = utime + GLON_deg/15.*3600.
+IPELIB/src/plasma/module_stepback_mag_R_sms.f90:          CALL supim_EXBV(utime,lp,LT_SEC,r_apex,GLON_deg,VEXBup(lp,mp))
+IPELIB/src/plasma/module_stepback_mag_R_sms.f90:          if ( mp==1.and.lp==lpmin_perp_trans.and.MOD( (utime-start_time),900 )==0 )    CALL read_vexb ( utime,lp,mp )
+IPELIB/src/plasma/module_stepback_mag_R_sms.f90:! print *,'sub-StR:',ihem,lp,mp,'v_exb_apex[m/s]',VEXBup(lp,mp)  ,utime
+IPELIB/src/plasma/module_stepback_mag_th_sms.f90:!      SUBROUTINE stepback_mag_R (utime,mp,lp,phi_t0,theta_t0,r0_apex)
+Binary file IPELIB/src/plasma/module_perpendicular_transport.mod matches
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:      SUBROUTINE plasma ( utime, timestamp_for_IPE )
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:      USE module_PLASMA,ONLY:utime_save,plasma_1d
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:      utime_save=utime
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:      print *, 'GHGM IN PLASMA ', utime, timestamp_for_IPE
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:!dbg20120509        IF ( sw_rw_sw_perp_trans.AND.sw_perp_transport(mp)==0 )  CALL activate_perp_transport (utime,mp)
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:if(sw_dbg_perp_trans.and.utime==start_time.and.lp==1)then
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:        IF ( HPEQ_flip==0.5 .AND. utime==ut_start_perp_trans ) THEN
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:          print *,lp,mp,'utime=',utime,' plasma perp transport is not called when HPEQ_flip=0.5 & start_time=0 because initial profiles do not exist!'
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:        ELSE IF ( utime>0 ) THEN
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:              CALL perpendicular_transport ( utime,mp,lp )
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:if(utime==start_time) then
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:        END IF !( HPEQ_flip==0.5 .AND. utime==0 ) THEN
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:!!          CALL Get_SZA ( utime,mp,lp ) 
+IPELIB/src/plasma/module_sub_plasma_sms.f.tmp:            CALL flux_tube_solver ( utime,mp,lp )
+IPELIB/src/plasma/module_perpendicular_transport_sms.f90:      SUBROUTINE perpendicular_transport ( utime, mp,lp )
+IPELIB/src/plasma/module_perpendicular_transport_sms.f90:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/module_perpendicular_transport_sms.f90:      CALL stepback_mag_R (utime, mp,lp, phi_t0 , theta_t0, r0_apex )
+Binary file IPELIB/src/plasma/module_sub_plasma.o matches
+Binary file IPELIB/src/plasma/module_sub_plasma.mod matches
+IPELIB/src/plasma/read_vexb_sms.f.tmp:      subroutine read_vexb ( utime,lp,mp )
+IPELIB/src/plasma/read_vexb_sms.f.tmp:        INTEGER (KIND=int_prec),  INTENT(IN)  :: utime    !universal time [sec]
+IPELIB/src/plasma/read_vexb_sms.f.tmp:        INTEGER (KIND=int_prec) :: record_number_plasma_dum,utime_dum,lpin,mpin
+IPELIB/src/plasma/read_vexb_sms.f.tmp:if( utime==start_time ) then 
+IPELIB/src/plasma/read_vexb_sms.f.tmp:      READ (UNIT=luntmp1,FMT=*) record_number_plasma_dum, utime_dum
+IPELIB/src/plasma/read_vexb_sms.f.tmp:print *,'check ut', utime_dum,' utime-172800=',(utime-172800)
+IPELIB/src/plasma/read_vexb_sms.f.tmp:if ( utime_dum /= (utime-172800) ) then
+IPELIB/src/plasma/read_vexb_sms.f.tmp:print *,'check ut', utime_dum,' utime-172800=',(utime-172800)
+IPELIB/src/plasma/read_vexb_sms.f.tmp:print *,'check EXB lp=135',mp, vexbup(135,mp) ,utime
+IPELIB/src/plasma/read_vexb_sms.f.tmp:if( utime==stop_time ) then 
+IPELIB/src/plasma/module_sub_plasma_sms.f90:      SUBROUTINE plasma ( utime, timestamp_for_IPE )
+IPELIB/src/plasma/module_sub_plasma_sms.f90:      USE module_PLASMA,ONLY:utime_save,plasma_1d
+IPELIB/src/plasma/module_sub_plasma_sms.f90:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/module_sub_plasma_sms.f90:      utime_save=utime
+IPELIB/src/plasma/module_sub_plasma_sms.f90:      print *, 'GHGM IN PLASMA ', utime, timestamp_for_IPE
+IPELIB/src/plasma/module_sub_plasma_sms.f90:!dbg20120509        IF ( sw_rw_sw_perp_trans.AND.sw_perp_transport(mp)==0 )  CALL activate_perp_transport (utime,mp)
+IPELIB/src/plasma/module_sub_plasma_sms.f90:if(sw_dbg_perp_trans.and.utime==start_time.and.lp==1)then
+IPELIB/src/plasma/module_sub_plasma_sms.f90:        IF ( HPEQ_flip==0.5 .AND. utime==ut_start_perp_trans ) THEN
+IPELIB/src/plasma/module_sub_plasma_sms.f90:          print *,lp,mp,'utime=',utime,' plasma perp transport is not called when HPEQ_flip=0.5 & start_time=0 because initial profiles do not exist!'
+IPELIB/src/plasma/module_sub_plasma_sms.f90:        ELSE IF ( utime>0 ) THEN
+IPELIB/src/plasma/module_sub_plasma_sms.f90:              CALL perpendicular_transport ( utime,mp,lp )
+IPELIB/src/plasma/module_sub_plasma_sms.f90:if(utime==start_time) then
+IPELIB/src/plasma/module_sub_plasma_sms.f90:        END IF !( HPEQ_flip==0.5 .AND. utime==0 ) THEN
+IPELIB/src/plasma/module_sub_plasma_sms.f90:!!          CALL Get_SZA ( utime,mp,lp ) 
+IPELIB/src/plasma/module_sub_plasma_sms.f90:            CALL flux_tube_solver ( utime,mp,lp )
+Binary file IPELIB/src/plasma/read_vexb.o matches
+IPELIB/src/plasma/read_vexb_sms.f90:      subroutine read_vexb ( utime,lp,mp )
+IPELIB/src/plasma/read_vexb_sms.f90:        INTEGER (KIND=int_prec),  INTENT(IN)  :: utime    !universal time [sec]
+IPELIB/src/plasma/read_vexb_sms.f90:        INTEGER (KIND=int_prec) :: record_number_plasma_dum,utime_dum,lpin,mpin
+IPELIB/src/plasma/read_vexb_sms.f90:if( utime==start_time ) then 
+IPELIB/src/plasma/read_vexb_sms.f90:      READ (UNIT=luntmp1,FMT=*) record_number_plasma_dum, utime_dum
+IPELIB/src/plasma/read_vexb_sms.f90:      call PPP_BCAST(utime_dum,NNT_INTEGER,PPP__GlobalSize,             &
+IPELIB/src/plasma/read_vexb_sms.f90:print *,'check ut', utime_dum,' utime-172800=',(utime-172800)
+IPELIB/src/plasma/read_vexb_sms.f90:if ( utime_dum /= (utime-172800) ) then
+IPELIB/src/plasma/read_vexb_sms.f90:print *,'check ut', utime_dum,' utime-172800=',(utime-172800)
+IPELIB/src/plasma/read_vexb_sms.f90:print *,'check EXB lp=135',mp, vexbup(135,mp) ,utime
+IPELIB/src/plasma/read_vexb_sms.f90:if( utime==stop_time ) then 
+IPELIB/src/plasma/get_sza_sms.f90:      SUBROUTINE Get_SZA ( utime,mp,lp,SZA_rad )
+IPELIB/src/plasma/get_sza_sms.f90:        INTEGER (KIND=int_prec),  INTENT(IN)  :: utime    !universal time [sec]
+IPELIB/src/plasma/get_sza_sms.f90:        REAL (KIND=real_prec) :: utime12   !.. time counting from 12UT [sec]
+IPELIB/src/plasma/get_sza_sms.f90:          IF ( utime >= 12*3600 ) then
+IPELIB/src/plasma/get_sza_sms.f90:             utime12 = REAL(utime) -12.0*3600.0
+IPELIB/src/plasma/get_sza_sms.f90:          ELSE  !IF ( utime < 12*3600 ) then
+IPELIB/src/plasma/get_sza_sms.f90:             utime12 = REAL(utime) +12.0*3600.0
+IPELIB/src/plasma/get_sza_sms.f90:          ssa = plasma_grid_3d(i,lp,mp,IGLON)*180.0/pi + utime12/240.0  
+IPELIB/src/plasma/module_sub_plasma.f90:      SUBROUTINE plasma ( utime, timestamp_for_IPE )
+IPELIB/src/plasma/module_sub_plasma.f90:      USE module_PLASMA,ONLY:utime_save,plasma_1d
+IPELIB/src/plasma/module_sub_plasma.f90:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/module_sub_plasma.f90:      utime_save=utime
+IPELIB/src/plasma/module_sub_plasma.f90:      print *, 'GHGM IN PLASMA ', utime, timestamp_for_IPE
+IPELIB/src/plasma/module_sub_plasma.f90:!dbg20120509        IF ( sw_rw_sw_perp_trans.AND.sw_perp_transport(mp)==0 )  CALL activate_perp_transport (utime,mp)
+IPELIB/src/plasma/module_sub_plasma.f90:if(sw_dbg_perp_trans.and.utime==start_time.and.lp==1)then
+IPELIB/src/plasma/module_sub_plasma.f90:        IF ( HPEQ_flip==0.5 .AND. utime==ut_start_perp_trans ) THEN
+IPELIB/src/plasma/module_sub_plasma.f90:          print *,lp,mp,'utime=',utime,' plasma perp transport is not called when HPEQ_flip=0.5 & start_time=0 because initial profiles do not exist!'
+IPELIB/src/plasma/module_sub_plasma.f90:        ELSE IF ( utime>0 ) THEN
+IPELIB/src/plasma/module_sub_plasma.f90:              CALL perpendicular_transport ( utime,mp,lp )
+IPELIB/src/plasma/module_sub_plasma.f90:if(utime==start_time) then
+IPELIB/src/plasma/module_sub_plasma.f90:        END IF !( HPEQ_flip==0.5 .AND. utime==0 ) THEN
+IPELIB/src/plasma/module_sub_plasma.f90:!!          CALL Get_SZA ( utime,mp,lp ) 
+IPELIB/src/plasma/module_sub_plasma.f90:            CALL flux_tube_solver ( utime,mp,lp )
+IPELIB/src/plasma/get_sza_sms.f.tmp:      SUBROUTINE Get_SZA ( utime,mp,lp,SZA_rad )
+IPELIB/src/plasma/get_sza_sms.f.tmp:        INTEGER (KIND=int_prec),  INTENT(IN)  :: utime    !universal time [sec]
+IPELIB/src/plasma/get_sza_sms.f.tmp:        REAL (KIND=real_prec) :: utime12   !.. time counting from 12UT [sec]
+IPELIB/src/plasma/get_sza_sms.f.tmp:          IF ( utime >= 12*3600 ) then
+IPELIB/src/plasma/get_sza_sms.f.tmp:             utime12 = REAL(utime) -12.0*3600.0
+IPELIB/src/plasma/get_sza_sms.f.tmp:          ELSE  !IF ( utime < 12*3600 ) then
+IPELIB/src/plasma/get_sza_sms.f.tmp:             utime12 = REAL(utime) +12.0*3600.0
+IPELIB/src/plasma/get_sza_sms.f.tmp:          ssa = plasma_grid_3d(i,lp,mp,IGLON)*180.0/pi + utime12/240.0  
+IPELIB/src/plasma/flux_tube_solver_sms.f90:      SUBROUTINE flux_tube_solver ( utime,mp,lp )
+IPELIB/src/plasma/flux_tube_solver_sms.f90:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/flux_tube_solver_sms.f90:!d      IF ( lp==170.and.mp==1.and.MOD( (utime-start_time), ip_freq_output_fort)==0 ) THEN
+IPELIB/src/plasma/flux_tube_solver_sms.f90:      CALL Get_SZA ( utime,mp,lp, SZA_dum )
+IPELIB/src/plasma/flux_tube_solver_sms.f90:      IF ( utime == start_time ) THEN
+IPELIB/src/plasma/flux_tube_solver_sms.f90:        IF ( sw_depleted_flip==1 .AND. utime == start_time_depleted ) THEN
+IPELIB/src/plasma/flux_tube_solver_sms.f90:      ltime = REAL(utime)/3600.0 + (plasma_grid_3d(midpoint,lp,mp,IGLON)*180.0/pi)/15.0
+IPELIB/src/plasma/flux_tube_solver_sms.f90:      WRITE(UNIT=LUN_FLIP1,FMT="('mp=',i3,' lp=',i3,' U',i3,' North, UT=',2F10.3)") mp,lp,LUN_FLIP1,REAL(UTIME)/3600., ltime
+IPELIB/src/plasma/flux_tube_solver_sms.f90:      WRITE(UNIT=LUN_FLIP2,FMT="('mp=',i3,' lp=',i3,' U',i3,' North, UT=',2F10.3)") mp,lp,LUN_FLIP2,REAL(UTIME)/3600., ltime
+IPELIB/src/plasma/flux_tube_solver_sms.f90:      WRITE(UNIT=LUN_FLIP3,FMT="('mp=',i3,' lp=',i3,' U',i3,' South, UT=',2F10.3)") mp,lp,LUN_FLIP3,REAL(UTIME)/3600., ltime
+IPELIB/src/plasma/flux_tube_solver_sms.f90:      WRITE(UNIT=LUN_FLIP4,FMT="('mp=',i3,' lp=',i3,' U',i3,' South, UT=',2F10.3)") mp,lp,LUN_FLIP4,REAL(UTIME)/3600., ltime
+IPELIB/src/plasma/flux_tube_solver_sms.f90:if(sw_debug) print*,'sub-fl: UTs=',UTIME,' LThr=',ltime,' mp',mp,' lp',lp
+IPELIB/src/plasma/flux_tube_solver_sms.f90:         WRITE(UNIT=PRUNIT,FMT="('mp=',i6,' lp=',i6,' UT=',F10.2)") mp,lp,REAL(UTIME)/3600.,mype
+IPELIB/src/plasma/flux_tube_solver_sms.f90:            &  MOD( (utime-start_time),ip_freq_output)==0) THEN
+IPELIB/src/plasma/flux_tube_solver_sms.f90:!nm20121020               IF ( mp==1 ) write(5000,*) utime
+IPELIB/src/plasma/flux_tube_solver_sms.f90:     &                         lp,utime,ltime )
+IPELIB/src/plasma/module_plasma_sms.f.tmp:      INTEGER (KIND=int_prec),PUBLIC:: utime_save
+IPELIB/src/plasma/module_plasma_sms.f90:      INTEGER (KIND=int_prec),PUBLIC:: utime_save
+Binary file IPELIB/src/plasma/module_plasma.o matches
+Binary file IPELIB/src/plasma/module_plasma.mod matches
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:      SUBROUTINE flux_tube_solver ( utime,mp,lp )
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:      INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:!d      IF ( lp==170.and.mp==1.and.MOD( (utime-start_time), ip_freq_output_fort)==0 ) THEN
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:      CALL Get_SZA ( utime,mp,lp, SZA_dum )
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:      IF ( utime == start_time ) THEN
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:        IF ( sw_depleted_flip==1 .AND. utime == start_time_depleted ) THEN
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:      ltime = REAL(utime)/3600.0 + (plasma_grid_3d(midpoint,lp,mp,IGLON)*180.0/pi)/15.0
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:      WRITE(UNIT=LUN_FLIP1,FMT="('mp=',i3,' lp=',i3,' U',i3,' North, UT=',2F10.3)") mp,lp,LUN_FLIP1,REAL(UTIME)/3600., ltime
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:      WRITE(UNIT=LUN_FLIP2,FMT="('mp=',i3,' lp=',i3,' U',i3,' North, UT=',2F10.3)") mp,lp,LUN_FLIP2,REAL(UTIME)/3600., ltime
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:      WRITE(UNIT=LUN_FLIP3,FMT="('mp=',i3,' lp=',i3,' U',i3,' South, UT=',2F10.3)") mp,lp,LUN_FLIP3,REAL(UTIME)/3600., ltime
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:      WRITE(UNIT=LUN_FLIP4,FMT="('mp=',i3,' lp=',i3,' U',i3,' South, UT=',2F10.3)") mp,lp,LUN_FLIP4,REAL(UTIME)/3600., ltime
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:if(sw_debug) print*,'sub-fl: UTs=',UTIME,' LThr=',ltime,' mp',mp,' lp',lp
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:!         WRITE(UNIT=PRUNIT,FMT="('mp=',i6,' lp=',i6,' UT=',F10.2)") mp,lp,REAL(UTIME)/3600.,mype
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:            &  MOD( (utime-start_time),ip_freq_output)==0) THEN
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:!nm20121020               IF ( mp==1 ) write(5000,*) utime
+IPELIB/src/plasma/flux_tube_solver_sms.f.tmp:     &                         lp,utime,ltime )
+Binary file IPELIB/tst/jruby-complete.jar matches
+Binary file NEMS/exe/NEMS.x matches
+NEMS/src/atmos/fim/FIMsrc/post/gribio/io_utils.c: *  CALL CONVERT_TO_UNIX_TIME(YEAR,MONTH,DAY,HOUR,MIN,SEC,UTIME)
+NEMS/src/atmos/fim/FIMsrc/post/gribio/io_utils.c: *	Returns the unix time in UTIME 
+NEMS/src/atmos/fim/FIMsrc/post/gribio/io_utils.c:void cv_to_ut(year,month,day,hour,min,sec,utime)
+NEMS/src/atmos/fim/FIMsrc/post/gribio/io_utils.c:	int	*year,*month,*day,*hour,*min,*sec,*utime;
+NEMS/src/atmos/fim/FIMsrc/post/gribio/io_utils.c:	*utime = (days * 86400) + (*hour * 3600) + (*min * 60) + *sec;
+NEMS/src/atmos/fim/FIMsrc/post/gribio/io_utils.c: *  CALL CONVERT_FROM_UNIX_TIME(YEAR,MONTH,DAY,HOUR,MIN,SEC,UTIME)
+NEMS/src/atmos/fim/FIMsrc/post/gribio/io_utils.c:void cv_fr_ut(year,month,day,hour,min,sec,utime)
+NEMS/src/atmos/fim/FIMsrc/post/gribio/io_utils.c:	int	*year,*month,*day,*hour,*min,*sec,*utime;
+NEMS/src/atmos/fim/FIMsrc/post/gribio/io_utils.c:	j_day = (*utime / 86400);
+NEMS/src/atmos/fim/FIMsrc/post/gribio/io_utils.c:	j_day = (*utime % 86400);
+NEMS/src/atmos/fim/FIMsrc/w3/summary.c.sav:      typedef struct { int tms_utime;
+NEMS/src/atmos/fim/FIMsrc/w3/summary.c.sav:                       int tms_cutime;
+NEMS/src/atmos/fim/FIMsrc/w3/summary.c.sav:      *usr = ((double) Time_buffer.tms_utime) * 0.01;
+NEMS/src/atmos/fim/FIMsrc/w3/summary.c.sav:      user = ((double) RU.ru_utime.tv_sec) + (((double) RU.ru_utime.tv_usec) * ((double) 0.000001));
+NEMS/src/atmos/io/module_WRITE_GRID_COMP_GFS.F90:      TYPE(ESMF_TimeInterval)                 :: IAUTIMEINTERVAL
+NEMS/src/atmos/io/module_WRITE_GRID_COMP_GFS.F90:             call esmf_timeintervalset(iautimeinterval, h = 6,m = 0, rc = rc)
+NEMS/src/atmos/io/module_WRITE_GRID_COMP_GFS.F90:             iauinitime = wrt_int_state%IO_BASETIME + iautimeinterval
+NEMS/src/atmos/io/module_WRITE_GRID_COMP_GFS.f90:      TYPE(ESMF_TimeInterval)                 :: IAUTIMEINTERVAL
+NEMS/src/atmos/io/module_WRITE_GRID_COMP_GFS.f90:             call esmf_timeintervalset(iautimeinterval, h = 6,m = 0, rc = rc)
+NEMS/src/atmos/io/module_WRITE_GRID_COMP_GFS.f90:             iauinitime = wrt_int_state%IO_BASETIME + iautimeinterval
+Binary file NEMS/src/atmos/io/module_WRITE_GRID_COMP_GFS.o matches
+Binary file NEMS/src/atmos/io/libio.a matches
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/doc/AppendixPrologue.tex:       public ::  PUTIME	! times() process user time
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/doc/AppendixPrologue.tex:       public ::  CUTIME	! times() user time of all child-processes
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/doc/AppendixPrologue.tex:       public ::  UWRATE ! (putime+cutime)/xwtime
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/doc/Timing.tex:      use m_zeit,only : PUTIME          ! times() process user time
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/doc/Timing.tex:      call zeit_flush(lu=mpout,umask=MWTIME+PUTIME+PSTIME)
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/doc/Timing.tex:         umask=MWTIME+PUTIME+PSTIME)
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/doc/Timing.tex:    [PUTIME]     counts period    NET    m:s      %    SCOPE    m:s      %
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/doc/Timing.tex:    [PUTIME]x5    NET avg     max imx x% r% i%  SCP avg     max imx x% r% i%
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/doc/Timing.tex:    [PUTIME]     counts period    NET    m:s      %    SCOPE    m:s      %
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/doc/Timing.tex:    [PUTIME]     counts period    NET    m:s      %    SCOPE    m:s      %
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/doc/Timing.tex:    [PUTIME]     counts period    NET    m:s      %    SCOPE    m:s      %
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/doc/Timing.tex:    [PUTIME]x12   NET avg     max imx x% r% i%  SCP avg     max imx x% r% i%
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/get_zeits.c:  zts[1]=tm.tms_utime*secs;
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/get_zeits.c:  zts[3]=tm.tms_cutime*secs;
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/m_zeit.F90:      public ::  PUTIME	! times() process user time
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/m_zeit.F90:      public ::  CUTIME	! times() user time of all child-processes
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/m_zeit.F90:      public ::  UWRATE ! (putime+cutime)/xwtime
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/m_zeit.F90:  integer,parameter ::  PUTIME =  4
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/m_zeit.F90:  integer,parameter ::  CUTIME = 16
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/m_zeit.F90:  integer,parameter :: ALLTIME = MWTIME + XWTIME + PUTIME +	&
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/m_zeit.F90:				 PSTIME + CUTIME + CSTIME
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/m_zeit.F90:	(/ MWTIME,XWTIME,PUTIME,PSTIME,CUTIME,CSTIME /)
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/m_zeit.F90:    (/	'[MWTIME]','[XWTIME]','[PUTIME]',	&
+NEMS/src/chem/gocart/src/GMAO_Shared/GMAO_mpeu/m_zeit.F90:	'[PSTIME]','[CUTIME]','[CSTIME]'	/)
+NEMS/src/module_NEMS_Rusage.F90:     subroutine nems_c_usage(utime,stime,maxrss,inblock, &
+NEMS/src/module_NEMS_Rusage.F90:       real(kind=c_double) :: utime,stime
+NEMS/src/module_NEMS_Rusage.F90:    real(kind=c_double) :: utime,stime
+NEMS/src/module_NEMS_Rusage.F90:    call nems_c_usage(utime,stime,maxrss,inblock,outblock,ierr)
+NEMS/src/module_NEMS_Rusage.F90:    call report_world_range(ru,'systime', 'percent',100*stime/(stime+utime),xmlunit,ierr,&
+NEMS/src/module_NEMS_Rusage.F90:    call report_world_range(ru,'usertime','percent',100*utime/(stime+utime),xmlunit,ierr,&
+NEMS/src/nems_c_rusage.c:void nems_c_usage(double *utime, double *stime, int64_t *maxrss, 
+NEMS/src/nems_c_rusage.c:  *utime=ru.ru_utime.tv_sec + 1e-6*ru.ru_utime.tv_usec;
+Binary file NEMS/src/module_NEMS_Rusage.o matches
+Binary file NEMS/src/module_nems_rusage.mod matches
+NEMS/tests/produtil/ush/produtil/fileop.py:        os.utime(filename, times)
+NEMS/tests/produtil/ush/produtil/fileop.py:            os.utime(tempname,(istat.st_atime,istat.st_mtime))
+NEMS/tests/produtil/ush/produtil/rusage.py:rusage_keys=('ru_utime','ru_stime','ru_maxrss','ru_ixrss','ru_idrss',
+NEMS/tests/produtil/ush/produtil/rusage.py:rusage_meanings=dict(ru_utime='time in user mode',
+RT_cold_start_compsetrun:###get the last utime from ut_rec of the previous run
+log/appBuilder.IPE.log.113511:        print"('Utime=',2i7,f11.4,' nTimeStep',2i2)",utime,(MOD(utime,86400)),(MOD(utime,86400)/3600.),nTimeStep,ncnt
+log/appBuilder.IPE.log.113511:        print"('Utime=',2i7,f11.4,' nTimeStep',2i2)",utime,(MOD(utime,86400)),(MOD(utime,86400)/3600.),nTimeStep,ncnt
+log/appBuilder.IPE.log:        print"('Utime=',2i7,f11.4,' nTimeStep',2i2)",utime,(MOD(utime,86400)),(MOD(utime,86400)/3600.),nTimeStep,ncnt
+log/appBuilder.IPE.log:        print"('Utime=',2i7,f11.4,' nTimeStep',2i2)",utime,(MOD(utime,86400)),(MOD(utime,86400)/3600.),nTimeStep,ncnt
+log/appBuilder.IPE.log.118457:      print *, 'GHGM IN PLASMA ', utime, timestamp_for_IPE_output_files
+CompsetRun_New:###get the last utime from ut_rec of the previous run
+OldCompsetRun:###get the last utime from ut_rec of the previous run
+Binary file IPE-INSTALL/libipe_nuopc.a matches
+Binary file IPE-INSTALL/libipe.a matches
