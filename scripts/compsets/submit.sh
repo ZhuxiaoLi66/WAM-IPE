@@ -3,7 +3,7 @@
 pwd=$(pwd)
 
 ## set restart
-cycle=$2
+cycle=${2:-1}
 if [[ $cycle == 1 ]] ; then
 	export RESTART=.false.
 else
