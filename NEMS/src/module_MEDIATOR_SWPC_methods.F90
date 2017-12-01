@@ -2961,7 +2961,7 @@ contains
     
   end subroutine PolyInterpolate
 
-#if 1
+#if 0
   subroutine LogInterpolate(xs, ys, xd, yd, rt, rc)
     ! -- note: both xs and xd are assumed to be "normalized" heights
     ! --       x = 1 + z / earthRadius
