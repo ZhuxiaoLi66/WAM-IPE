@@ -150,54 +150,11 @@ module module_MED_SWPC
       /), &
       "cannot provide", &
       ungriddedVerticalDim=.true., &
-      fieldOptions=(/ &
-        "none", &
-        "none", &
-        "none", &
-        "none", &
-        "none", &
-        "16.0", &
-        "32.0", &
-        "28.0"  &
-      /), &
       rc=rc) 
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
-
-#if 0
-    call NamespaceAdd("IPM",importState, &
-      (/ &
-        "eastward_wind_neutral      ", &
-        "eastward_momentum_tendency ", &
-        "northward_momentum_tendency", &
-        "neutral_heating_rate       ", &
-        "o2_dissociation_rate       "  &
-      /), &
-      "cannot provide", &
-      rc=rc) 
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-
-    call NamespaceAdd("ATM",exportState, &
-      (/ &
-        "eastward_wind_neutral      ", &
-        "eastward_momentum_tendency ", &
-        "northward_momentum_tendency", &
-        "neutral_heating_rate       ", &
-        "o2_dissociation_rate       "  &
-      /), &
-      "cannot provide", &
-      ungriddedVerticalDim=.true., &
-      rc=rc) 
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-#endif
 
     call NamespaceAdd("IPM",exportState, &
       (/ &
@@ -209,7 +166,17 @@ module module_MED_SWPC
         "O2_Density                     ", &
         "N2_Density                     "  &
       /), &
-      "cannot provide",rc=rc) 
+      "cannot provide", &
+      fieldOptions=(/ &
+        "none", &
+        "none", &
+        "none", &
+        "none", &
+        "16.0", &
+        "32.0", &
+        "28.0"  &
+      /), &
+      rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
@@ -273,6 +240,7 @@ module module_MED_SWPC
     type(ESMF_GeomType_Flag) :: geomtype, localGeomType
     type(ESMF_Grid)          :: grid, localGrid
     type(ESMF_Mesh)          :: mesh, localMesh
+    type(ESMF_Array)         :: array
     real(ESMF_KIND_R8), dimension(2) :: coordBounds
 
     integer, parameter :: numLevels = 188
@@ -316,6 +284,8 @@ module module_MED_SWPC
       return  ! bail out
 
     write(6,'(" -- InitP5: MeshGetBounds: low/upp = ",2g16.6)') coordBounds
+    write(6,'(" -- InitP5: MeshGetBounds: low/upp = ",2g16.6)') &
+      (coordBounds-1._ESMF_KIND_R8)*earthRadius
 
     call NamespaceGet("ATM", importState, geomtype=geomtype, &
       grid=grid, mesh=mesh, rc=rc)
@@ -343,18 +313,25 @@ module module_MED_SWPC
     else if (geomtype == ESMF_GEOMTYPE_MESH) then
 
       call initGrids(mediator, mesh, localMesh, minheight=coordBounds(1), &
-        rc=rc)
+        hArray=array, rc=rc)
 !       heights=verticalLevels, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
         return  ! bail out
+
       call NamespaceUpdateFields("ATM", importState, mesh=mesh, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
         return  ! bail out
-      call NamespaceSetLocalMesh("ATM", localMesh, rc)
+      call NamespaceUpdateFields("ATM", exportState, mesh=mesh, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+      call NamespaceSetLocalMesh("ATM", mesh3d=localMesh, mesh2d=mesh, levArray=array, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
@@ -414,7 +391,7 @@ module module_MED_SWPC
     ! local variables
     type(ESMF_Clock)      :: clock
     type(ESMF_Field)      :: srcField, dstField, tmpField
-    type(ESMF_Array)      :: tmpArray
+    type(ESMF_Array)      :: tmpArray, tnArray
     type(ESMF_State)      :: importState, exportState
     type(ESMF_Time)       :: currTime, stopTime, startTime
     type(rhType), pointer :: rh
@@ -478,132 +455,166 @@ module module_MED_SWPC
 
     end if
 
-    print *,'MED: done with routehandle printing'
-    print *,'MED: entering NamespaceSetRemoteLevelsFromField...'
-
-    ! -- identify field providing time-changing vertical levels
-    call NamespaceSetRemoteLevelsFromField("ATM", importState, "height", &
-      scale=1._ESMF_KIND_R8/earthRadius, offset=1._ESMF_KIND_R8, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-    print *,'MED: done NamespaceSetRemoteLevelsFromField...'
-    print *,'MED: calling RouteHandleListGet...'
-      
     rh => RouteHandleListGet(rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
-    print *,'MED: done RouteHandleListGet...is rh? ', associated(rh)
 
-    ! -- perform necessary computation and regridding
-    do while (associated(rh))
+    if (timeSlice > 1) then
+      ! -- identify field providing time-changing vertical levels
+      call NamespaceSetRemoteLevelsFromField("ATM", importState, "height", &
+        scale=1._ESMF_KIND_R8/earthRadius, offset=1._ESMF_KIND_R8, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+      ! -- perform necessary computation and regridding
+      do while (associated(rh))
 
       ! -- Fields from WAM to IPE require special treatment
-      if (trim(rh % label) == "ATM -> IPM") then
-        ! -- vertical profiles of gaseus species must be extrapolated above TOA
-        ! -- extrapolated profiles depend upon neutral temperature at TOA
-        ! -- therefore the neutral temperature field must be retrieved first
-        tmpField = StateGetField(rh % srcState, "temp_neutral", rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        call ESMF_FieldGet(tmpField, array=tmpArray, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
+        if (trim(rh % label) == "ATM -> IPM") then
+          ! -- vertical profiles of gaseus species must be extrapolated above TOA
+          ! -- extrapolated profiles depend upon neutral temperature at TOA
+          ! -- therefore the neutral temperature field must be retrieved first
+          tmpField = StateGetField(rh % srcState, "temp_neutral", &
+            options="native", rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__, &
+            file=__FILE__)) &
+            return  ! bail out
+          call ESMF_FieldGet(tmpField, array=tmpArray, rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__, &
+            file=__FILE__)) &
+            return  ! bail out
+          tnArray = ESMF_ArrayCreate(tmpArray, rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__, &
+            file=__FILE__)) &
+            return  ! bail out
+          call FieldPrintMinMax(tmpField, "tmp: temp_neutral", rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__, &
+            file=__FILE__)) &
+            return  ! bail out
 
-        ! -- only process fields with known destination
-        do item = 1, size(rh % dstState % fieldNames)
-          print *, 'MED: regridding ',trim(rh % dstState % fieldNames(item)), &
-            ' with ', trim(rh % label)
-          ! -- get source field, interpolated to intermediate grid if needed
-!         if (trim(rh % dstState % fieldNames(item)) == "temp_neutral") then
-          if (.false.) then
-            srcField = tmpField
-          else
+          ! -- only process fields with known destination
+          do item = 1, size(rh % dstState % fieldNames)
+            print *, 'MED: regridding ',trim(rh % dstState % fieldNames(item)), &
+              ' with ', trim(rh % label)
+
+            ! -- get original source field
+            call ESMF_StateGet(rh % srcState % self, field=srcField, &
+              itemName=trim(rh % dstState % fieldNames(item)), rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail out
+            call FieldPrintMinMax(srcField, "orig - src:" // trim(rh % dstState % fieldNames(item)), rc)
+
+            ! -- get source field, interpolated to intermediate grid if needed
             srcField = StateGetField(rh % srcState, &
               trim(rh % dstState % fieldNames(item)), &
-              auxArray=tmpArray, options=rh % dstState % fieldOptions(item), rc=rc)
+              auxArray=tnArray, options=rh % dstState % fieldOptions(item), rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail out
-          end if
 
-          if (timeSlice == 1) then
-            call ESMF_FieldFill(srcField, dataFillScheme="one", rc=rc)
+            ! -- get destination field, interpolated to intermediate grid if needed
+            dstField = StateGetField(rh % dstState, &
+              trim(rh % dstState % fieldNames(item)), rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail out
-          end if
 
-          ! -- get destination field, interpolated to intermediate grid if needed
-          dstField = StateGetField(rh % dstState, &
-            trim(rh % dstState % fieldNames(item)), rc=rc)
+            ! -- print diagnostic info
+            call FieldPrintMinMax(srcField, "pre  - src:" // trim(rh % dstState % fieldNames(item)), rc)
+            ! -- regrid
+            call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
+!             zeroregion=ESMF_REGION_SELECT, &
+              zeroregion=ESMF_REGION_TOTAL, &
+              routehandle=rh % rh, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail out
+
+            call FieldPrintMinMax(dstField, "post - dst:" // trim(rh % dstState % fieldNames(item)), rc)
+
+            ! -- store source field
+            call StateStoreField(rh % srcState, srcField, &
+              trim(rh % dstState % fieldNames(item)), rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail out
+
+            ! -- store destination field
+            call StateStoreField(rh % dstState, dstField, &
+              trim(rh % dstState % fieldNames(item)), rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail out
+
+          end do
+
+          call ESMF_ArrayDestroy(tnArray, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
             return  ! bail out
 
-          ! -- print diagnostic info
-          call FieldPrintMinMax(srcField, "pre  - src:" // trim(rh % dstState % fieldNames(item)), rc)
-          call FieldPrintMinMax(dstField, "pre  - dst:" // trim(rh % dstState % fieldNames(item)), rc)
-          ! -- regrid
-          call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
-!           zeroregion=ESMF_REGION_SELECT, &
-            zeroregion=ESMF_REGION_TOTAL, &
-            routehandle=rh % rh, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
+        else
+          ! -- perform standard regridding w/ linear vertical interpolation
+          ! -- only process fields with known destination
+          do item = 1, size(rh % dstState % fieldNames)
+            call ESMF_StateGet(rh % srcState % self, field=srcField, &
+              itemName=trim(rh % dstState % fieldNames(item)), rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail out
+            call FieldPrintMinMax(srcField, "orig - src:" // trim(rh % dstState % fieldNames(item)), rc)
+            print *, 'MED: regridding ',trim(rh % dstState % fieldNames(item)), &
+              ' with ', trim(rh % label)
+            call FieldRegrid(rh, trim(rh % dstState % fieldNames(item)), rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail out
+          end do
 
-          call FieldPrintMinMax(srcField, "post - src:" // trim(rh % dstState % fieldNames(item)), rc)
-          call FieldPrintMinMax(dstField, "post - dst:" // trim(rh % dstState % fieldNames(item)), rc)
+        end if
 
-#if 0
-          ! -- store source field
-          call StateStoreField(rh % srcState, srcField, &
-            trim(rh % dstState % fieldNames(item)), rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
+        rh => rh % next
+      end do
 
-          ! -- store destination field
-          call StateStoreField(rh % dstState, dstField, &
-            trim(rh % dstState % fieldNames(item)), rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
-#endif
+    else
 
-        end do
-
-      else
-        ! -- perform standard regridding w/ linear vertical interpolation
-      ! -- only process fields with known destination
+      ! -- set all destination fields to preset values
+      do while (associated(rh))
         do item = 1, size(rh % dstState % fieldNames)
-          print *, 'MED: regridding ',trim(rh % dstState % fieldNames(item)), &
-            ' with ', trim(rh % label)
-          call FieldRegrid(rh, trim(rh % dstState % fieldNames(item)), rc=rc)
+          call ESMF_StateGet(rh % dstState % self, field=dstField, &
+            itemName=trim(rh % dstState % fieldNames(item)), rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__, &
+            file=__FILE__)) &
+            return  ! bail out
+          call ESMF_FieldFill(dstField, dataFillScheme="one", rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
             return  ! bail out
         end do
+        rh => rh % next
+      end do
 
-      end if
-
-      rh => rh % next
-    end do
+    end if
 
     timeSlice = timeSlice + 1
 
