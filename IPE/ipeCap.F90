@@ -1034,6 +1034,7 @@ module ipeCap
     type(ESMF_State)   :: importState
     type(ESMF_Field)   :: field
     type(ESMF_Mesh)    :: mesh
+    type(ESMF_VM)      :: vm
 !---
 !nm20161003: esmf timing lib
     real(ESMF_KIND_R8) :: beg_time, end_time
@@ -1043,10 +1044,11 @@ module ipeCap
     integer :: kp, kpp, kpStart, kpEnd, kpStep, kpOffset
     integer :: lp, mp, mpp
     integer :: nCount, numOwnedNodes, spatialDim
-    integer :: localrc
+    integer :: localrc, localPet
     character(len=ESMF_MAXSTR) :: errmsg
     real(ESMF_KIND_R8)         :: dataValue
     real(ESMF_KIND_R8), dimension(:), pointer :: dataPtr, ownedNodeCoords
+    real(ESMF_KIND_R8), dimension(:), pointer :: localMin, localMax, globalMin, globalMax
 
 
     rc = ESMF_SUCCESS
@@ -1126,6 +1128,25 @@ module ipeCap
 
     ! -- check values of imported fields, if requested
     if (checkFields) then
+
+      call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        ESMF_CONTEXT)) &
+        return  ! bail out
+
+      call ESMF_VMGet(vm, localPet=localPet, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        ESMF_CONTEXT)) &
+        return  ! bail out
+
+      allocate(localMin(importFieldCount), localMax(importFieldCount), &
+        globalMin(importFieldCount), globalMax(importFieldCount), stat=localrc)
+      if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        ESMF_CONTEXT, &
+        rcToReturn=rc)) return
+
+      localMin = huge(0._ESMF_KIND_R8)
+      localMax = -localMin
 
       do item = 1, importFieldCount
         ! --- retrieve field
@@ -1208,6 +1229,8 @@ module ipeCap
                     trim(importFieldNames(item)), trim(errmsg), mp, lp, kp, &
                     ownedNodeCoords(nCount:nCount+spatialDim-1)
                 endif
+                localMin(item) = min(dataValue, localMin(item))
+                localMax(item) = max(dataValue, localMax(item))
               end do
             end do
           end do
@@ -1221,6 +1244,27 @@ module ipeCap
           ESMF_CONTEXT, &
           rcToReturn=rc)) return
       end if
+
+      call ESMF_VMReduce(vm, localMin, globalMin, importFieldCount, ESMF_REDUCE_MIN, 0, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        ESMF_CONTEXT)) &
+        return  ! bail out
+
+      call ESMF_VMReduce(vm, localMax, globalMax, importFieldCount, ESMF_REDUCE_MAX, 0, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        ESMF_CONTEXT)) &
+        return  ! bail out
+
+      if (localPet == 0) then
+        do item = 1, importFieldCount
+          write(6,*) trim(importFieldNames(item))," ipeCap min/max =",globalMin(item), globalMax(item)
+        end do
+      end if
+
+      deallocate(localMin, localMax, globalMin, globalMax, stat=localrc)
+      if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        ESMF_CONTEXT, &
+        rcToReturn=rc)) return
 
     end if
 
