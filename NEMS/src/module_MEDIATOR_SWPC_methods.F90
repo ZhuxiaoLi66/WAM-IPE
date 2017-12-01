@@ -2961,7 +2961,7 @@ contains
     
   end subroutine PolyInterpolate
 
-#if 0
+#if 1
   subroutine LogInterpolate(xs, ys, xd, yd, rt, rc)
     ! -- note: both xs and xd are assumed to be "normalized" heights
     ! --       x = 1 + z / earthRadius
@@ -2994,7 +2994,6 @@ contains
       x = xd(i)
       y = 0._ESMF_KIND_R8
       call locate(xs, np, x, j)
-        np, xs(1), xs(np), j, x, i, nd
       if (j == np) then
         itop = i
         exit
@@ -3026,7 +3025,6 @@ contains
       do i = itop, nd
         y = fact * (x1-xd(i)) / (x1*x1+xd(i)*xd(i))
         yd(i) = y1 * exp(y)
-        i, x1, y1, xd(i), yd(i), fact, rt
         x1 = xd(i)
         y1 = yd(i)
       end do
