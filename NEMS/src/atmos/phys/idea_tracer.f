@@ -4,7 +4,6 @@
 ! Oct 15 2016    VAY, take out Weiyu f10.7 and put them as a parameter
 ! Nov    2016    Correct implementation of JO2 and simplified O2-O chemistry
 ! Dec-Jan 16/17  Addition of ozone "diurnal" chemistry and extra reactions
-! September 2017 Weiyu Yang, add IPE back coipling WAM code.
 !-----------------------------------------------------------------------
 
       module idea_tracer_mod
@@ -52,8 +51,7 @@
 !cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine idea_tracer(im,ix,levs,ntrac,ntrac_i,grav,prsi,prsl,   
      &  adt,q,dtp,n1,n2,ozn, n3,n,rho,am, am29, 
-     &  cospass,dayno,zg,f107,f107d,me, go2dr, plow, phigh, xpk_low,
-     &  xpk_high)
+     &  cospass,dayno,zg,f107,f107d,me)
 !
       use physcons, only          : avgd => con_avgd             
 !     &                     amo3 => con_amo3,amh2o => con_amw
@@ -63,9 +61,6 @@
 !      use idea_tracers_input,only : mo, mo2, mn2, mh2o,mo3
 !
       use idea_tracer_mod,   only : jj
-
-      use module_IPE_to_WAM, only: lowst_ipe_level, ipe_to_wam_coupling
-
       implicit none
 ! Argument
       integer, intent(in) :: me              ! current PE
@@ -85,7 +80,6 @@
       real, intent(in)    :: grav(ix,levs)   ! (m/s2)
       real, intent(in)    :: adt(ix,levs)    ! input  temp at dt=0
       real, intent(in)    :: dtp             ! time step in second
-      real, intent(in)    :: go2dr(ix, lowst_ipe_level:levs)
       real, intent(inout) :: q(ix,levs,ntrac)   ! input output tracer
       real, intent(out)   :: n1(ix,levs)     ! number density of o (/cm3)
       real, intent(out)   :: n2(ix,levs)     ! number density of o2 (/cm3)
@@ -96,9 +90,7 @@
       real, intent(out)   :: am(ix,levs)     ! avg mass of mix  (kg)
       real, intent(out)   :: am29(ix,levs)   ! avg mass of air from 28.84 => 16.
 ! local argument
-!      real ::  dq1(ix,levs,ntrac_i),dq2(ix,levs,ntrac_i)
-      real ::  dq1(ix,levs,ntrac_i),dq2(ix,levs,ntrac_i),
-     &     dq3(ix,levs,ntrac_i)
+      real ::  dq1(ix,levs,ntrac_i),dq2(ix,levs,ntrac_i)
       real ::  mh2o,mo3, mo,mo2,mn2        
       real ::  qin(ix,levs,ntrac_i)   !, qsumo(ix,levs)
       real ::  q3(ix,levs), qsumo3
@@ -106,9 +98,6 @@
 ! 
        real :: Jrates_O2(ix, levs)            !  replacement of  jj-2014 
        real :: Jrates_O3(ix, levs)            !  O3-photorates
-
-       real, dimension(ix)    :: xpk_low, xpk_high
-       integer, dimension(ix) :: plow, phigh
 !   
       do in=1,ntrac_i
         do i=1,im
@@ -148,12 +137,8 @@
           n3(i,k) = n(i,k) -n1(i,k) -n2(i,k) -ozn(i,k)
         enddo
       enddo
-      am29 = am * 1.e3 * avgd
+       am29 = am * 1.e3 * avgd
 !       if ( me == 0) print *, maxval(am29), minval(am29), 'VAY29-am'
-! Do eddy mixing
-      call idea_tracer_eddy(im,ix,levs,ntrac_i,grav,prsi,prsl,rho,dtp,     
-     &     qin,dq3)
-
 !======================================================================
 !     Molecular "only" diffusion of major species
 !======================================================================   
@@ -169,14 +154,6 @@
 !
       call idea_dissociation_jo2(im,ix,levs,adt,cospass,n1,n2, ozn, n3,
      &          dayno,zg,grav, f107, f107d, Jrates_O2)
-
-! Merge the  IPE back coupling WAM variable arrays into WAM.
-!-----------------------------------------------------------
-      IF (ipe_to_wam_coupling) THEN
-        call idea_merge_ipe_to_wam(GO2DR, jrates_O2,
-     &    im, ix, levs, lowst_ipe_level, prsl, plow, phigh,
-     &    xpk_low, xpk_high)
-      END IF
 
 !======================================================================
 !     Oxygen chemistry O-O2
@@ -209,8 +186,7 @@
         do i=1,im
           do k=1,levs
             q(i,k,in+ntrac-ntrac_i)=q(i,k,in+ntrac-ntrac_i)+            
-     &        dq1(i,k,in)  +dq2(i,k,in) + dq3(i,k,in) 
-!     &        dq1(i,k,in)  +dq2(i,k,in)
+     &        dq1(i,k,in)  +dq2(i,k,in)
             q(i,k,in+ntrac-ntrac_i)=max(q(i,k,in+ntrac-ntrac_i),1.e-36)            
 !
 ! here upgrades for n1 & n2 needs to be done
@@ -571,104 +547,6 @@ c
       enddo
       return
       end subroutine idea_tracer_c
-
-      subroutine idea_tracer_eddy(im,ix,levs,ntrac_i,grav,prsi,prsl,
-     &     rho,dtp,qin,dq)
-
-! Calculate major species changes by eddy mixing O, O2, N2 (indirectly)
-! October 2017 Rashid Akmaev
-
-      implicit none
-! Arguments
-      integer, intent(in) :: im    ! number of long data points in fields
-      integer, intent(in) :: ix    ! max data points in fields
-      integer, intent(in) :: levs  ! number of pressure levels
-      integer, intent(in) :: ntrac_i ! number of addtl tracers in IDEA
-      real, intent(in) :: dtp      ! time step in second
-      real, intent(in) :: prsi(ix,levs+1) ! interface pressure in Pa
-      real, intent(in) :: prsl(ix,levs)   ! layer pressure in Pa
-      real, intent(in) :: grav(ix,levs)   ! (m/s**2)
-      real, intent(in) :: rho(ix,levs)   ! mass density (kg/m**3)
-      real, intent(in) :: qin(ix,levs,ntrac_i)   ! input tracers
-      real, intent(out):: dq(ix,levs,ntrac_i) ! output tracer changes
-! Locals
-      real alpha(levs+1),beta(levs),qout(levs,ntrac_i)
-      real a(levs),b(levs),c(levs)
-      real e(levs),d(levs,ntrac_i)
-      integer i,k
-
-!-----------------------------------------------------------------------
-! Calculate Keddy (m**2/s) (move this to init subroutine/module later)
-! Keddy parameters: max, width in scale heights, height of max
-
-      real, parameter:: kmax = 200.
-!      real, parameter:: kmax = 50.
-!      real, parameter:: dkeddy = 2.
-      real, parameter:: dkeddy = 0.
-      real, parameter:: xmax = 15.
-      real keddy(levs+1),x
-
-      if(dkeddy <= 1e-10) then
-         keddy(:) = kmax
-      else
-         do k=1,levs+1
-! height in scale heights
-            x = alog(1e5/prsi(1,k))
-            keddy(k)= kmax*exp(-((x-xmax)/dkeddy)**2)
-         enddo
-      endif
-!-----------------------------------------------------------------------
-! Boundary conditions
-      a(1) = 0.
-      c(levs) = 0.
-
-      do i = 1,im
-! Auxiliary arrays
-! at interfaces
-         do k = 2,levs
-            alpha(k) = keddy(k)*(.5*(rho(i,k-1)+rho(i,k)))**2*
-     &           (.5*(grav(i,k-1)+grav(i,k)))/(prsl(i,k-1) -
-     &           prsl(i,k))
-         enddo
-
-! in layers
-         do k = 1,levs
-            beta(k) = dtp*grav(i,k)/(prsi(i,k) - prsi(i,k+1))
-         enddo
-
-! Coefficients a(k), c(k) and b(k)
-         do k = 2,levs
-            a(k) = beta(k)*alpha(k)
-         enddo
-         do k = 1,levs-1
-            c(k) = beta(k)*alpha(k+1)
-         enddo
-         do k = 1,levs
-            b(k) = 1. + a(k) + c(k)
-         enddo
-
-! Solve tridiagonal problem for each tracer
-! boundary conditions
-         e(levs) = a(levs)/b(levs)
-         d(levs,:) = qin(i,levs,:)/b(levs)
-
-! go down, find e(k) and d(k)
-         do k = levs-1,1,-1
-            e(k) = a(k)/(b(k) - c(k)*e(k+1))
-            d(k,:) = (c(k)*d(k+1,:) + qin(i,k,:))/(b(k) - c(k)*e(k+1))
-         enddo
-         
-! go up, find solution
-         qout(1,:) = d(1,:)
-         dq(i,1,:) = qout(1,:) - qin(i,1,:)
-         do k = 2,levs
-            qout(k,:) = e(k)*qout(k-1,:) + d(k,:)
-            dq(i,k,:) = qout(k,:) - qin(i,k,:)
-         enddo
-
-      enddo
-      end subroutine idea_tracer_eddy
-!ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc!   
 
 
 !-----------------------------------------------------------------------

@@ -80,7 +80,6 @@
 !
 !  2017-02-21  VAY       call wam_control_default & call idea_wamcontrol_init(me)
 !  2017-03-12  VAY       commentary changes
-!  2017-09-10  Weiyu Yang - Add IPE back coupling to WAM code.
 ! Usage:    call compns(deltim,
 !    &                  fhout,fhswr,fhlwr,fhzer,fhres,fhcyc,
 !    &                  nsout,nsswr,nslwr,nszer,nsres,nscyc,
@@ -113,7 +112,6 @@
 
       
       use namelist_physics_def
-      use module_IPE_to_WAM, ONLY: ipe_to_wam_coupling
 !
 !vay-2017
 !
@@ -157,7 +155,7 @@
      & isol, ico2, ialb, iems, iaer, iovr_sw, iovr_lw,ictm,
      & isubc_lw, isubc_sw, fdaer, lsidea, 
      & f107_kp_size, f107_kp_interval,f107_kp_skip_size,
-     & f107_kp_data_size, ipe_to_wam_coupling,
+     & f107_kp_data_size,
      & ncw, crtrh,old_monin,flgmin,cnvgwd,cgwf,prslrd0,ral_ts,fixtrc,
 !    & ncw, crtrh,old_monin,flgmin,gfsio_in,gfsio_out,cnvgwd,
      & ccwf,shal_cnv,imfshalcnv,imfdeepcnv,
@@ -250,8 +248,6 @@
       f107_kp_skip_size= 0
       f107_kp_data_size= 56
       f107_kp_interval = 10800
-
-      ipe_to_wam_coupling = .false.
 
 ! Add: a2oi_out, cplflx & ngrid_a2oi
       a2oi_out         = .false.     ! default not writing out Atm fields for Ocn/Ice

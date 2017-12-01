@@ -2,9 +2,13 @@
 #set -eu
 #set -x
 
+# GHGM - export qsub so this works under cron.....
+    export qsub=/apps/torque/default/bin/qsub
+
 if [[ "${RT_DEBUG:-NO}" == YES ]] ; then
     set -xue
 fi
+
 
 export GEFS_ENSEMBLE=${GEFS_ENSEMBLE:-0}
 echo "GEFS_ENSEMBLE=" $GEFS_ENSEMBLE
@@ -12,6 +16,12 @@ echo "GEFS_ENSEMBLE=" $GEFS_ENSEMBLE
 source ./atparse.auto
 
 mkdir -p ${RUNDIR}
+
+model_run_time='MODEL_RUN_TIME.'$(date +%Y%m%dT%H%M)
+model_run_time2=$(date +%Y%m%dT%H%M)
+echo $model_run_time
+touch ${RUNDIR}/$model_run_time
+
 
 export CDATE=${CDATE:-2012010100}
 export NEMSIOIN=${NEMSIOIN:-.false.}
@@ -75,7 +85,6 @@ if [ $GEFS_ENSEMBLE = 0 ] ; then
  export F107_KP_SKIP_SIZE=${F107_KP_SKIP_SIZE:-0}
  export F107_KP_SIZE=${F107_KP_SIZE:-360}
  export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-56}
- export IPE_TO_WAM_COUPLING=${IPE_TO_WAM_COUPLING:-.false.}
 
  cd $PATHRT
 if [[ "${RT_DEBUG:-NO}" == YES ]] ; then
@@ -353,17 +362,12 @@ test_status='PASS'
 # Give 10 seconds for data to show up on file system
 sleep 10
 
-# Point the baseline data set to Weiyu's directory.
-#--------------------------------------------------
-# BASELINE_CNTL_DIR="${BASELINE_DIR:-$RTPWD}/$CNTL_DIR"
-BASELINE_CNTL_DIR="/scratch4/NCEPDEV/nems/noscrub/Weiyu.Yang/REGRESSION_TEST/$CNTL_DIR"
+BASELINE_CNTL_DIR="${BASELINE_DIR:-$RTPWD}/$CNTL_DIR"
 
-# (echo;echo;echo "baseline dir = ${RTPWD}/${CNTL_DIR}")  >> ${REGRESSIONTEST_LOG}
-(echo;echo;echo "baseline dir = $BASELINE_CNTL_DIR")  >> ${REGRESSIONTEST_LOG}
+(echo;echo;echo "baseline dir = ${RTPWD}/${CNTL_DIR}")  >> ${REGRESSIONTEST_LOG}
            echo "working dir  = ${RUNDIR}"              >> ${REGRESSIONTEST_LOG}
            echo "Checking test ${TEST_NR} results ...." >> ${REGRESSIONTEST_LOG}
-# (echo;echo;echo "baseline dir = ${RTPWD}/${CNTL_DIR}")
-(echo;echo;echo "baseline dir = $BASELINE_CNTL_DIR")
+(echo;echo;echo "baseline dir = ${RTPWD}/${CNTL_DIR}")
            echo "working dir  = ${RUNDIR}"
            echo "Checking test ${TEST_NR} results ...."
 
