@@ -1,3 +1,4 @@
+#define LEGACY
 module module_MED_SWPC_methods
 
   !-----------------------------------------------------------------------------
@@ -2760,6 +2761,9 @@ contains
     integer :: i, j, k, localrc
     integer :: lbnd, ubnd
     real(ESMF_KIND_R8) :: auxNorm, rt
+#ifdef LEGACY
+    integer, parameter :: extrap_start_level = 149
+#endif
 
     ! -- begin
     rc = ESMF_SUCCESS
@@ -2793,7 +2797,14 @@ contains
       if (present(auxfarray)) then
         ! -- log interpolation + extrapolation w/ hypsometric equation
         do i = lbnd, ubnd
+#ifdef LEGACY
+        ! -- if using extrap_start_level, make sure auxfarray is from original field (no intermediate interpolation)
+        ! -- use option "origin" in StateGetField
+          rt = auxfarray(i,extrap_start_level)  / auxNorm
+!         rt = auxfarray(i,ubound(auxfarray, dim=2)) / auxNorm
+#else
           rt = auxfarray(i,ubound(auxfarray, dim=2)) / auxNorm
+#endif
           call LogInterpolate(srcCoord(i,:), srcfarray(i,:), &
                               dstCoord(i,:), dstfarray(i,:), &
                               rt=rt, rc=rc)
@@ -2829,8 +2840,13 @@ contains
     else
       ! -- linear interpolation, extrapolate with constant value
       do i = lbnd, ubnd
+#ifdef LEGACY
+        call LinearInterpolate(srcCoord(i,:), srcfarray(i,:), &
+                               dstCoord(i,:), dstfarray(i,:), rc)
+#else
         call PolyInterpolate(srcCoord(i,:), srcfarray(i,:), &
                              dstCoord(i,:), dstfarray(i,:), 1, rc)
+#endif
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
           file=__FILE__)) &
@@ -2961,7 +2977,51 @@ contains
     
   end subroutine PolyInterpolate
 
-#if 0
+#ifdef LEGACY
+  subroutine LinearInterpolate(xs, ys, xd, yd, rc)
+    real(ESMF_KIND_R8), dimension(:), intent(in)  :: xs, ys, xd
+    real(ESMF_KIND_R8), dimension(:), intent(out) :: yd
+    integer, intent(out) :: rc
+
+    ! -- local variables
+    integer :: k, kk, l, np, nd
+    integer, parameter :: extrap_start_level = 149
+
+    ! np = inlevels
+    ! nd = wamdim
+    ! varbuf = ys
+    ! hgtbuf = xs
+
+    ! -- begin
+    rc = ESMF_SUCCESS
+
+    np = size(xs)
+    nd = size(xd)
+    yd = 0._ESMF_KIND_R8
+
+    kk = 1
+    do k = 1, nd
+      do while (kk <= np .and. xs(kk) < xd(k))
+        kk = kk + 1
+      end do
+      if (kk > extrap_start_level) then
+        do l = k, nd
+          yd(l)=ys(extrap_start_level)
+        end do
+        exit
+      end if
+      if (kk > 1) then
+        yd(k)=(ys(kk)*(xd(k)-xs(kk-1))+ &
+          ys(kk-1)*(xs(kk)-xd(k)))/(xs(kk)-xs(kk-1))
+      else
+        yd(k)=ys(kk)
+      end if
+    end do
+
+  end subroutine LinearInterpolate
+#endif
+
+#ifndef LEGACY
   subroutine LogInterpolate(xs, ys, xd, yd, rt, rc)
     ! -- note: both xs and xd are assumed to be "normalized" heights
     ! --       x = 1 + z / earthRadius
@@ -3047,12 +3107,19 @@ contains
     integer :: k, kk, l, np, nd
     real(ESMF_KIND_R8) :: hgt_prev, dist, H_prev, data_prev
     real(ESMF_KIND_R8) :: hgt_curr, H_avg, H_curr, data_curr
+    real(ESMF_KIND_R8) :: R, g0, re
 
     integer,            parameter :: extrap_start_level = 149
-    real(ESMF_KIND_R8), parameter :: log_min = 1.e-10_ESMF_KIND_R8
-    real(ESMF_KIND_R8), parameter :: re = 6371.2_ESMF_KIND_R8
-    real(ESMF_KIND_R8), parameter :: g0 = 9.80665_ESMF_KIND_R8
-    real(ESMF_KIND_R8), parameter :: R  = 8.3141_ESMF_KIND_R8
+    real(ESMF_KIND_R8), parameter :: log_min = 1.0E-10
+!   real(ESMF_KIND_R8), parameter :: log_min = 1.e-10_ESMF_KIND_R8
+!   real(ESMF_KIND_R8), parameter :: re = 6371.2_ESMF_KIND_R8
+!   real(ESMF_KIND_R8), parameter :: g0 = 9.80665_ESMF_KIND_R8
+!   real(ESMF_KIND_R8), parameter :: R  = 8.3141_ESMF_KIND_R8
+
+    R  = 8.3141
+    g0 = 9.80665
+    re = 6.3712e03
+
 
     ! -- begin
     rc = ESMF_SUCCESS
@@ -3073,12 +3140,14 @@ contains
           kk = kk + 1
         end do
         if (kk > extrap_start_level) then
-          hgt_prev=re*(xs(extrap_start_level)-1)
+!         hgt_prev=re*(xs(extrap_start_level)-1)
+          hgt_prev=xs(extrap_start_level)
           dist=re/(re+hgt_prev)
           H_prev=R*rt/(g0*dist*dist)
           data_prev=ys(extrap_start_level)
           do l = k, nd
-            hgt_curr=re*(xd(l)-1)
+!           hgt_curr=re*(xd(l)-1)
+            hgt_curr=xd(l)
             dist=re/(re+hgt_curr)
             H_curr=R*rt/(g0*dist*dist)
 
@@ -3258,8 +3327,8 @@ contains
 
     write(6,'("-- FieldRegrid: ",a,"(",a,")")') trim(fieldName), trim(rh % label)
     call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
-!     zeroregion=ESMF_REGION_SELECT, &
-      zeroregion=ESMF_REGION_TOTAL, &
+      zeroregion=ESMF_REGION_SELECT, &
+!     zeroregion=ESMF_REGION_TOTAL, &
       routehandle=rh % rh, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__,  &
@@ -3302,7 +3371,7 @@ contains
 
     ! -- local variable
     logical :: isFieldCreated
-    logical :: isNative, isNoData
+    logical :: isNative, isNoData, isOrigin
     integer :: localrc
     integer :: localDeCount
     real(ESMF_KIND_R8), pointer :: fptr1d(:), fptr2d(:,:)
@@ -3316,9 +3385,11 @@ contains
     write(6,'("-- StateGetField: entering ...")')
     isNoData = .false.
     isNative = .false.
+    isOrigin = .false.
     if (present(options)) then
       isNoData = (trim(options) == "nodata")
       isNative = (trim(options) == "native")
+      isOrigin = (trim(options) == "origin")
     end if
 
     call ESMF_StateGet(state % parent, stateintent=stateIntent, rc=localrc)
@@ -3337,13 +3408,16 @@ contains
       return
     end if
 
-    isNoData = isNoData .or. (stateIntent == ESMF_STATEINTENT_EXPORT)
-
     call ESMF_StateGet(state % self, itemName=trim(fieldName), field=field, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__,  &
       file=__FILE__,  &
       rcToReturn=rc)) return  ! bail out
+
+    if (isOrigin) then
+      StateGetField = field
+      return
+    end if
 
     write(6,'("-- StateGetField: checking if field is created ...")')
     isFieldCreated = ESMF_FieldIsCreated(state % localField, rc=localrc)
@@ -3351,6 +3425,8 @@ contains
       line=__LINE__,  &
       file=__FILE__,  &
       rcToReturn=rc)) return  ! bail out
+
+    isNoData = isNoData .or. (stateIntent == ESMF_STATEINTENT_EXPORT)
 
     if (isFieldCreated) then
       if (isNoData) then
@@ -4574,6 +4650,14 @@ contains
   
   ! Create the 3D mesh with fixed height
   ! find the lower height level where height > minheight
+#ifdef LEGACY
+  do i=1,wamdims(3)
+     if (wamhgt(i) > 90) then
+        startlevel = i-1
+        exit
+     endif
+  enddo
+#else
   lminheight = 0._ESMF_KIND_R8
   if (present(minheight)) lminheight = minheight
 
@@ -4592,6 +4676,7 @@ contains
 	exit
      endif
   enddo
+#endif
 ! deallocate(nodeCoords)
   totallevels = wamdims(3)-startlevel+1
 
@@ -4616,10 +4701,13 @@ contains
         file=__FILE__)) &
         return  ! bail out
       do i = 1, totallevels
+#ifdef LEGACY
+        fptr2d(:,i) = wamhgt(i+startlevel-1)
+#else
         call convert2Cart(0._ESMF_KIND_R8, 0._ESMF_KIND_R8, &
           wamhgt(i+startlevel-1), nodeCoords)
-!       fptr2d(:,i) = wamhgt(i+startlevel-1)
         fptr2d(:,i) = nodeCoords(3)
+#endif
       end do
     end do
     call ESMF_FieldGet(field, array=hArray, rc=rc)
@@ -4629,7 +4717,9 @@ contains
       return  ! bail out
   end if
 
+#ifndef LEGACY
   deallocate(nodeCoords)
+#endif
 
   if (PetNo == 0) then
     ! create the output file

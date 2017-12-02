@@ -1,3 +1,4 @@
+#define LEGACY
 module module_MED_SWPC
 
   !-----------------------------------------------------------------------------
@@ -463,8 +464,13 @@ module module_MED_SWPC
 
     if (timeSlice > 1) then
       ! -- identify field providing time-changing vertical levels
+#ifdef LEGACY
+      call NamespaceSetRemoteLevelsFromField("ATM", importState, "height", &
+        scale=1._ESMF_KIND_R8/1000.0, rc=rc)
+#else
       call NamespaceSetRemoteLevelsFromField("ATM", importState, "height", &
         scale=1._ESMF_KIND_R8/earthRadius, offset=1._ESMF_KIND_R8, rc=rc)
+#endif
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
@@ -479,7 +485,11 @@ module module_MED_SWPC
           ! -- extrapolated profiles depend upon neutral temperature at TOA
           ! -- therefore the neutral temperature field must be retrieved first
           tmpField = StateGetField(rh % srcState, "temp_neutral", &
+#ifdef LEGACY
+            options="origin", rc=rc)
+#else
             options="native", rc=rc)
+#endif
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
@@ -535,8 +545,8 @@ module module_MED_SWPC
             call FieldPrintMinMax(srcField, "pre  - src:" // trim(rh % dstState % fieldNames(item)), rc)
             ! -- regrid
             call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
-!             zeroregion=ESMF_REGION_SELECT, &
-              zeroregion=ESMF_REGION_TOTAL, &
+              zeroregion=ESMF_REGION_SELECT, &
+!             zeroregion=ESMF_REGION_TOTAL, &
               routehandle=rh % rh, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
