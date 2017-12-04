@@ -435,7 +435,7 @@ module ipeCap
         rcToReturn=rc)) return
 
       deallocate(localBounds, stat=localrc)
-      if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         ESMF_CONTEXT, &
         rcToReturn=rc)) return
 
@@ -480,7 +480,7 @@ module ipeCap
       end do
 
       deallocate(globalBounds, stat=localrc)
-      if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         ESMF_CONTEXT, &
         rcToReturn=rc)) return
 
@@ -581,7 +581,7 @@ module ipeCap
 
       ! -- free up memory
       deallocate(local_grid_3d, petMap, stat=localrc)
-      if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         ESMF_CONTEXT, &
         rcToReturn=rc)) return
 
@@ -602,7 +602,7 @@ module ipeCap
 
       ! -- free up memory
       deallocate(nodeIds, nodeCoords, nodeOwners, stat=localrc)
-      if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         ESMF_CONTEXT, &
         rcToReturn=rc)) return
 
@@ -677,7 +677,7 @@ module ipeCap
 
       ! -- free up memory
       deallocate(numLineElems, idNodeOffset, numLongNodes, stat=localrc)
-      if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         ESMF_CONTEXT, &
         rcToReturn=rc)) return
 
@@ -691,7 +691,7 @@ module ipeCap
 
       ! -- free up memory
       deallocate(elemIds, elemTypes, elemConn, stat=localrc)
-      if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         ESMF_CONTEXT, &
         rcToReturn=rc)) return
 
@@ -746,6 +746,7 @@ module ipeCap
       integer :: srcPet, dstPet
       logical :: doSend, doRecv, update
       real(ESMF_KIND_R4), dimension(:), allocatable :: sendData, recvData
+      type(ESMF_CommHandle) :: chSend, chRecv
 
       ! -- begin
       if (present(rc)) rc = ESMF_SUCCESS
@@ -821,11 +822,9 @@ module ipeCap
           end do
         end do
         deallocate(sendData, recvData, stat=localrc)
-        if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
           ESMF_CONTEXT, &
           rcToReturn=rc)) return
-      else
-        coord(:, lps:lpe, mpe+1:mpu, :) = coord(:, lps:lpe, mps:mps+mHalo-1, :)
       end if
 
       ! -- update S-N (0) and SE-NW (1) halo regions
@@ -883,7 +882,8 @@ module ipeCap
             end do
           end do
           if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," -> ",i4)') localPet, dstPet
-          call ESMF_VMSend(vm, sendData, nCount, dstPet, syncflag=ESMF_SYNC_NONBLOCKING, rc=localrc)
+          call ESMF_VMSend(vm, sendData, nCount, dstPet, syncflag=ESMF_SYNC_NONBLOCKING, &
+            commhandle=chSend, rc=localrc)
           if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             ESMF_CONTEXT, &
             rcToReturn=rc)) return
@@ -903,12 +903,12 @@ module ipeCap
           if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             ESMF_CONTEXT, &
             rcToReturn=rc)) return
-          if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," <- ",i4," - WAITING")') localPet, srcPet
-          call ESMF_VMRecv(vm, recvData, nCount, srcPet, syncflag=ESMF_SYNC_BLOCKING, rc=localrc)
+          if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," <- ",i4)') localPet, srcPet
+          call ESMF_VMRecv(vm, recvData, nCount, srcPet, syncflag=ESMF_SYNC_NONBLOCKING, &
+            commhandle=chRecv, rc=localrc)
           if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             ESMF_CONTEXT, &
             rcToReturn=rc)) return
-          if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," <- ",i4," - COMPLETE")') localPet, srcPet
           lpp = lpe + lHalo
           i = 0
           do j = 1, 2
@@ -921,14 +921,26 @@ module ipeCap
               end do
             end do
           end do
+        end if
+        if (doRecv) then
+          call ESMF_VMCommWait(vm, chRecv, rc=localrc)
+          if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+            ESMF_CONTEXT, &
+            rcToReturn=rc)) return
+          if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," <- ",i4," - COMPLETE")') localPet, srcPet
           deallocate(recvData, stat=localrc)
-          if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             ESMF_CONTEXT, &
             rcToReturn=rc)) return
         end if
         if (doSend) then
+          call ESMF_VMCommWait(vm, chSend, rc=localrc)
+          if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+            ESMF_CONTEXT, &
+            rcToReturn=rc)) return
+          if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," -> ",i4," - COMPLETE")') localPet, dstPet
           deallocate(sendData, stat=localrc)
-          if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             ESMF_CONTEXT, &
             rcToReturn=rc)) return
         end if
@@ -1205,7 +1217,7 @@ module ipeCap
 
       if (associated(ownedNodeCoords)) then
         deallocate(ownedNodeCoords, stat=localrc)
-        if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
           ESMF_CONTEXT, &
           rcToReturn=rc)) return
       end if
@@ -1262,7 +1274,7 @@ module ipeCap
 
     ! -- free up memory
     deallocate(jmin, jSouth, numLineNodes, stat=localrc)
-    if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+    if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       ESMF_CONTEXT, &
       rcToReturn=rc)) return
 
