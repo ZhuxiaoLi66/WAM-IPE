@@ -50,8 +50,8 @@
 !WamField is advertized externally when sw_neutral=0or1
       REAL(KIND=real_prec),ALLOCATABLE,PUBLIC,TARGET :: WamField      (:,:,:,:)!MaxFluxTube,NLP,NMP,NSTOT=7
 !nm20170424 wind output corrected
-      REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: vn_ms1_4output(:,:,:,:)!MaxFluxTube,NLP,NMP,3
-      REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: Un_ms1        (:,:,:,:)!MaxFluxTube,NLP,NMP,3:3 Ue1 Eq5.6 in magnetic frame last dim = apexD1-3
+      REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: Vn_geo_ms1_4output(:,:,:,:)!MaxFluxTube,NLP,NMP,3
+      REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: Un_mag_ms1        (:,:,:,:)!MaxFluxTube,NLP,NMP,3:3 Ue1 Eq5.6 in magnetic frame last dim = apexD1-3
       REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: apexD       (:,:,:,:,:)!MaxFluxTube,NLP,NMP,3,3.. Eq(3.8-10 ) Richmond 1995
       REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: apexE       (:,:,:,:,:)!MaxFluxTube,NLP,NMP,3,2.. Eq(3.11-12) Richmond 1995
 
