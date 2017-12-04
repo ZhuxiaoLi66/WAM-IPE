@@ -3,7 +3,7 @@
 # This script is responsible for loading modules that are compatible with
 # the ESMF 7.0.0 API.
 
-module load intel/15.1.133 impi/5.0.3.048 netcdf/4.3.0 esmf/7.0.0
+module load intel/15.1.133 impi/5.0.3.048 netcdf/4.3.0 esmf/7.0.2
 
 ##
 ## load nwprod libraries

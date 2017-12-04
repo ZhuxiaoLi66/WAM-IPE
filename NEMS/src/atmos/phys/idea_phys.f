@@ -6,7 +6,9 @@
      &                     solhr,slag,sdec,cdec,sinlat,coslat,          
      &                     xlon,xlat,oro,cozen,swh,hlw,dt6dt,           
      &                     thermodyn_id,sfcpress_id,gen_coord_hybrid,me,
-     &                     mpi_ior,mpi_comm, fhour, kstep)
+     &                     mpi_ior,mpi_comm, fhour, kstep,
+     &                     gzmt, gmmt, gjhr, gshr, go2dr)
+
 !-----------------------------------------------------------------------
 ! add temp, wind changes due to viscosity and thermal conductivity
 ! also solar heating
@@ -17,6 +19,7 @@
 ! May    2013   Jun Wang, tmp updated after rad_merge
 ! Jun    2013   S. Moorthi Some optimization and cosmetic changes
 ! Oct    2013   Henry Juang, correct the sequence to get prsi from model top
+! Sep    2017   Weiyu Yang, add IPE back coupling to WAM code.
 !=========================================================================================
 !
 ! 2016/17     Upgrades of WAM physics
@@ -84,6 +87,7 @@
       use idea_imf_input,    only : idea_imf_fix, imf_wamstep_advance
       use idea_imf_input,    only : Bz_s, By_s, Swden_s, Swvel_s    ! only for debugging & comment later
       use idea_imf_input,    only : w_ndx1_imf, w_ndx2_imf          ! inly for debugging
+      use module_IPE_to_WAM, only : lowst_ipe_level, ipe_to_wam_coupling
 !
 !      use GW_unified,  only: IMPL_UNIF_GW    ! 'GFS_91L' or 'WAM150L'
 !
@@ -166,6 +170,9 @@
 !================================================
 ! Tendency-related locals
       real  :: dudt(ix,levs),dvdt(ix,levs),dtdt(ix,levs)
+      real, dimension(ix,lowst_ipe_level:levs)  ::
+     &                            gzmt, gmmt, gjhr, gshr, go2dr
+
 !
 !================================================
 ! Radiance-related locals
@@ -191,6 +198,9 @@
 !
        integer  :: dayno                           ! ddd of year
        integer i,k, j1,j2
+
+       real, dimension(ix)    :: xpk_low, xpk_high
+       integer, dimension(ix) :: plow, phigh
 !================================================
 !
 ! Start with Space Wea /Climate Drivers
@@ -360,6 +370,16 @@
 !     &                 grav,prsi,prsl,adt,adr, dtp,      
 !     &                 o_n,o2_n,n2_n,nair,rho,am,
 !     &                 cospass, dayno, zg, me)
+!===============================================================
+! Get all needed vertical related parameters for merging the 
+! coupling back IPE arrays into the WAM model arrays.
+!===============================================================
+      IF(ipe_to_wam_coupling) THEN
+        call get_vertical_parameters_for_merge(gzmt,  
+     &    im, ix, lowst_ipe_level, levs, plow, phigh, 
+     &    xpk_low, xpk_high, prsl)
+      END IF
+
 !=================================================================
 !=> compute rho
 !=> mid-layers: [o_n, o2_n, o3_n, n2_n, nair]
@@ -367,7 +387,8 @@
 
       call idea_tracer(im,ix,levs,ntrac,2,grav,prsi,prsl,adt,adr,       
      &                 dtp,o_n,o2_n,o3_n, n2_n,nair,rho,am, am29,
-     & cospass, dayno, zg, f107_curdt, f107d_curdt, me)
+     & cospass, dayno, zg, f107_curdt, f107d_curdt, me, go2dr, plow,
+     & phigh, xpk_low, xpk_high)
 !        if ( me == 0) print *, maxval(am29), minval(am29), 'VAY-am29C
 !
 !
@@ -420,6 +441,21 @@
       call idea_sheat(im,ix,levs,adt,dtRad,cospass,o_n,o2_n,o3_n,n2_n,      
      &                rho, cp,lat,dayno,prsl,zg,grav,am,maglat,dt6dt,
      &    f107_curdt, f107d_curdt, kp_curdt)
+
+! Merge the  IPE back coupling WAM dtrad array into WAM.
+!-------------------------------------------------------
+      IF(ipe_to_wam_coupling) THEN
+        DO k = lowst_ipe_level, levs
+          DO i = 1, im
+            GJHR(i, k) = GJHR(i, k) / cp(i, k)
+            GSHR(i, k) = GSHR(i, k) / cp(i, k)
+          END DO
+        END DO
+
+        call idea_merge_ipe_to_wam(GSHR, dtrad,
+     &    im, ix, levs, lowst_ipe_level, prsl, plow, phigh,
+     &    xpk_low, xpk_high)
+      END IF
 !  
 ! 
 ! radiation
@@ -480,11 +516,23 @@
 !=========================================================================
 ! the last piece "simple" ionospheric block with empirical ION-RE moddels
 !=========================================================================
-      call idea_ion(prsl, solhr,cospass,zg, grav, o_n,o2_n,n2_n,cp,                  
+      call idea_ion(prsl, solhr,cospass,zg, grav, o_n,o2_n,n2_n,cp,
      &              adu,adv,adt,dudt,dvdt,dtdt,rho,xlat,xlon,ix,im,levs,
      &              dayno,utsec,sda,maglon,maglat,btot,dipang,essa,
      &              f107_curdt, f107d_curdt, kp_curdt)
-!
+! Merge the  IPE back coupling WAM dudt, dvdt and dtdt arrays into WAM.
+!----------------------------------------------------------------------
+      IF(ipe_to_wam_coupling) THEN
+        call idea_merge_ipe_to_wam(GZMT, dudt,
+     &    im, ix, levs, lowst_ipe_level, prsl, plow, phigh,
+     &    xpk_low, xpk_high)
+        call idea_merge_ipe_to_wam(GMMT, dvdt,
+     &    im, ix, levs, lowst_ipe_level, prsl, plow, phigh,
+     &    xpk_low, xpk_high)
+        call idea_merge_ipe_to_wam(GJHR, dtdt,
+     &    im, ix, levs, lowst_ipe_level, prsl, plow, phigh,
+     &    xpk_low, xpk_high)
+      END IF
 !
       do k=1,levs
         do i=1,im
