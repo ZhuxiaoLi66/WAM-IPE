@@ -171,7 +171,6 @@
       iyr=1999 
 !     iday=97
       utsecs=REAL(utime, real_prec)
-      print *,'GHGM HERE INNIT ', utime, utsecs
 
       CALL sunloc(iyr,NDAY,utsecs) !iyr,iday,secs)        
 

@@ -4,7 +4,7 @@
                                he_density_m3, o_density_m3, &
                                o2_density_m3, n2_density_m3, &
                                h_density_m3, n4s_density_m3, tn_k_dum, tinf_k_dum, &
-                               vn_ms1_dum)
+                               Vn_geo_ms1_dum)
 
       USE module_precision
       USE module_unit_conversion,ONLY: M3_TO_CM3
@@ -28,7 +28,7 @@
                          n4s_density_m3, &    
                          tn_k_dum, &                
                          tinf_k_dum
-      REAL(KIND=real_prec), dimension(3,npts), intent(out) ::  vn_ms1_dum
+      REAL(KIND=real_prec), dimension(3,npts), intent(out) ::  Vn_geo_ms1_dum
 
       real(4) :: sec, alt, glat, glon, stl, f107a_msis, f107d_msis
       real(4) :: ap_msis(7), d(9), t(2)
@@ -67,9 +67,9 @@
       call gws5(iyd,sec,alt,glat,glon,stl,f107a_msis,f107d_msis,ap_hwm(1),w)
 !dbg      print *,'(2)w=',w
 
-      vn_ms1_dum(1,i) =   w(2)  !eastward
-      vn_ms1_dum(2,i) =   w(1)  !northward
-      vn_ms1_dum(3,i) =   0.0   !upward
+      Vn_geo_ms1_dum(1,i) =   w(2)  !eastward
+      Vn_geo_ms1_dum(2,i) =   w(1)  !northward
+      Vn_geo_ms1_dum(3,i) =   0.0   !upward
 
       ! composition & temperature
 
