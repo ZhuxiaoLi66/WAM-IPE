@@ -148,7 +148,7 @@
 !sela - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !     if output (fhout) more frequently than zeroing ,get partial rains
  
-      namelist /nam_phy/FHMAX,FHOUT,FHRES,FHZER,FHSEG,FHROT,DELTIM,IGEN,
+      namelist /nam_phy/FHMAX,FHOUT,FHRES,FHZER,FHSEG,FHROT,IGEN,
      & NGPTC,fhswr,fhlwr,fhcyc,ras,LGOC3D,FHGOC3D,LDIAG3D,reduced_grid,
      & shuff_lats_r,thermodyn_id,sfcpress_id,fhdfi,semilag,gg_tracers,
      & pre_rad,hybrid,gen_coord_hybrid,random_clds,liope,
@@ -183,7 +183,6 @@
       fhrot    = 0
       fhout_hf = 1
       fhmax_hf = 0
-      deltim   = 0
       dtphys   = 3600
       igen     = 0
       fhswr    = 0
@@ -544,12 +543,6 @@
 !
 !sela - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       tol = 0.01
-!  Check rule 1.
-      if(deltim <= 0) then
-        iret = 1
-        return
-      endif
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !  Compute nsout and check rule 2.
       if(nsout > 0) fhout = nsout*deltim/3600.
       nsout=nint(fhout*3600./deltim)

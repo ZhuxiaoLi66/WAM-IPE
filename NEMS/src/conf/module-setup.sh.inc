@@ -1,4 +1,20 @@
-__ms_shell=`ps -p$$ -ocmd= | cut -d'/' -f 2`
+# Create a test function for sh vs. bash detection.  The name is
+# randomly generated to reduce the chances of name collision.
+__ms_function_name="setup__test_function__$$"
+eval "$__ms_function_name() { /bin/true ; }"
+
+# Determine which shell we are using
+__ms_ksh_test=$( eval '__text="text" ; if [[ $__text =~ ^(t).* ]] ; then printf "%s" ${.sh.match[1]} ; fi' 2> /dev/null )
+__ms_bash_test=$( eval 'if ( set | grep '$__ms_function_name' | grep -v name > /dev/null 2>&1 ) ; then echo t ; fi ' 2> /dev/null )
+
+if [[ ! -z "$__ms_ksh_test" ]] ; then
+    __ms_shell=ksh
+elif [[ ! -z "$__ms_bash_test" ]] ; then
+    __ms_shell=bash
+else
+    # Not bash or ksh, so assume sh.
+    __ms_shell=sh
+fi
 
 if [[ -d /lfs3 ]] ; then
     # We are on NOAA Jet
@@ -41,12 +57,6 @@ elif [[ -d /lustre && -d /ncrc ]] ; then
         # the module command fails.  Hence we actually have to source
         # /etc/profile here.
         source /etc/profile
-    fi
-    module purge
-elif [[ -d /nobackupp8 ]] ; then
-    # We are on Pleiades.
-    if ( ! eval module help > /dev/null 2>&1 ) ; then
-        . /usr/local/lib/init/global.profile
     fi
     module purge
 else

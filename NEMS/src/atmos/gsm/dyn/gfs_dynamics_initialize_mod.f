@@ -33,8 +33,8 @@
 !  Jan 20  2013 J. Wang          idea diffusion init interface change
 !  Jun 26  2014 S. Moorthi       modified to read lonsperlat from a file
 !  Jul 21  2014 S. Moorthi       removed num_reduce ; some cleanup
-!  Aug 17  2016  P. Pegion        add call for iau update init
-!
+!  Aug 17  2016 P. Pegion        add call for iau update init
+!  Nov 17  2017 W. Yang          modify the code for WAM-IPE coupling restart run.
 !
 ! !interface:
 !
@@ -49,7 +49,10 @@
       use gfs_dyn_write_state, only : buff_mult_pieceg
       use gfs_dyn_layout1, only : ipt_lats_node_a, lats_node_a_max
       use gfs_dyn_resol_def, only : adiabatic, thermodyn_id, sfcpress_id
-      use namelist_dynamics_def, only : fhrot,fhini,nemsio_in,do_shum,do_sppt,do_skeb,do_vc,iau
+      use namelist_dynamics_def, only : fhrot,fhini,nemsio_in,do_shum,&
+                                        do_sppt,do_skeb,do_vc,iau,    &
+                                        wam_ipe_cpl_rst_input,        &
+                                        wam_ipe_cpl_rst_output
       use gfs_dyn_tracer_config, only: gfs_dyn_tracer, tracer_config_init,gfs_dyn_tracer
       use gfs_dyn_io_header, only: z_r,z
 !  stochastic perturbations
@@ -93,7 +96,8 @@
       nodes  = gis_dyn%nodes
       nlunit = gis_dyn%nam_gfs_dyn%nlunit
 
-      call compns_dynamics(gis_dyn%deltim, gis_dyn%iret, gis_dyn%ntrac,	&
+      call compns_dynamics(gis_dyn%nam_gfs_dyn%deltim, gis_dyn%iret,    &
+                           gis_dyn%ntrac,                               &
                            gis_dyn%nxpt,   gis_dyn%nypt, gis_dyn%jintmx,&
                            gis_dyn%jcap,                              	&
                            gis_dyn%levs,   gis_dyn%levr, 		&
@@ -704,6 +708,24 @@
 !              ' sig_ini2=',gis_dyn%nam_gfs_dyn%sig_ini2 
       gis_dyn%pdryini = 0.0
 
+      if(lsidea) then
+        if(wam_ipe_cpl_rst_input ) then
+! Add the open lines for the WAM-IPE coupling restart file. WY.
+!--------------------------------------------------------------
+! For reading in restart file at the begining of the restart run.
+!----------------------------------------------------------------
+          open(unit=180, file='WAM_IPE_RST_rd', form='unformatted')
+          rewind 180
+        end if
+
+        if(wam_ipe_cpl_rst_output ) then
+! For writing out the restart file for the next restart WAM-IPE run.
+!-------------------------------------------------------------------
+          open(unit=181, file='WAM_IPE_RST_wrt', form='unformatted')
+          rewind 181
+        end if
+      end if
+
       if (me == 0) then
         print *,' grid_ini=',trim(gis_dyn%nam_gfs_dyn%grid_ini),'fhrot=',fhrot, &
         'fhini=',fhini,'restart_run=',gis_dyn%restart_run
@@ -748,6 +770,14 @@
           gis_dyn% start_step   = .false.
           gis_dyn% reset_step   = .false.
           gis_dyn% restart_step = .true.
+
+! read in the restart file for WAM-IPE coupling restart run.
+!-----------------------------------------------------------
+          if(lsidea .and. wam_ipe_cpl_rst_input) then
+            call input_for_wam_ipe_rst(gis_dyn%global_lats_a,   &
+                                       gis_dyn%lonsperlat,      &
+                                       gis_dyn%lats_nodes_a)
+          end if
       endif
 !!
       tov = 0.0

@@ -192,6 +192,8 @@
       call esmf_configgetattribute(cf, 					&
                               int_state%nam_gfs_dyn%deltim,         	&
                               label = 'deltim:', rc = rc1)
+      int_state%deltim = int_state%nam_gfs_dyn%deltim
+
       call gfs_dynamics_err_msg_var(rc1,				&
                'gfs dynamics getcf','deltim',rcfinal)
 
