@@ -18,7 +18,8 @@
 !,  ON_m3_msis, N2N_m3_msis, O2N_m3_msis, TN_k_msis &
 !nm20170424 wind output corrected
 &,vn_ms1_4output
-      USE module_input_parameters,ONLY : parallelBuild
+      USE module_input_parameters,ONLY : parallelBuild, &
+        hTop_m => mesh_height_max
 
       IMPLICIT NONE
 
@@ -69,8 +70,6 @@
       REAL (KIND=real_prec) :: dum0(NPTS2D)
 !dbg20120313
       INTEGER(KIND=int_prec) :: utime_dum
-!include WAM fields options
-      real(KIND=real_prec), parameter :: hTop_m=7.82E+05 !m
 !1:O,2:O2;3:N2
       INTEGER(KIND=int_prec) :: ihTopN,ihTopS,ihTop,jth,jjth
       INTEGER(KIND=int_prec) :: ihem,iStep,midPoints
@@ -108,22 +107,6 @@
      END IF
 
 
-! array initialization - don't do this......
-!SMS$IGNORE BEGIN
-!      ON_m3  = zero
-!      HN_m3  = zero
-!      N2N_m3 = zero
-!      O2N_m3 = zero
-!      HE_m3  = zero
-!      N4S_m3 = zero
-!      TN_k   = zero
-!      TINF_k = zero
-!      Un_ms1 = zero
-!      on_m3_msis = zero
-!      o2n_m3_msis = zero
-!      n2n_m3_msis = zero
-!      tn_k_msis = zero
-!SMS$IGNORE END
 
 !SMS$PARALLEL(dh, lp, mp) BEGIN
       apex_longitude_loop: DO mp = 1,mpstop
@@ -220,9 +203,14 @@
 ! copy across the msis parameters:
 !
                 if ( sw_use_wam_fields_for_restart ) then
-                   print*, '**** GEORGE **** First Call of IPE, Using Read-in WAM fields', mp,lp
+
+                   do jth=1,3
+                     do i=IN,IS
+                       vn_ms1(jth,i-IN+1) = vn_ms1_4output(i-IN+1,lp,mp,jth)
+                     end do
+                   end do
+
                 else
-                   print *, '**** GEORGE **** First Call of IPE, Using MSIS ', mp,lp
 
                    on_m3( IN:IS,lp,mp) =  on_m3_msis(IN:IS)
                    o2n_m3(IN:IS,lp,mp) = o2n_m3_msis(IN:IS)
@@ -467,11 +455,11 @@ n2n_m3( ihTopS:IS,lp,mp) = fracWamD*WamField(ihTopS:IS,lp,mp, jjth) + (1.-fracWa
          end do jth_loop !jth=1,3 !2:4 for WamField,swNeuPar            
 
            !nm20170424 wind output corrected
-           jth_loop4wind: do jth=1,3
-              flux_tube0: do i=IN,IS
-                 vn_ms1_4output(i-IN+1,lp,mp,jth)=vn_ms1(jth,i-IN+1)
-              end do flux_tube0
-           end do jth_loop4wind
+           !jth_loop4wind: do jth=1,3
+           !   flux_tube0: do i=IN,IS
+           !      vn_ms1_4output(i-IN+1,lp,mp,jth)=vn_ms1(jth,i-IN+1)
+           !   end do flux_tube0
+           !end do jth_loop4wind
 !
 
            if(sw_debug)then 
@@ -492,6 +480,12 @@ n2n_m3( ihTopS:IS,lp,mp) = fracWamD*WamField(ihTopS:IS,lp,mp, jjth) + (1.-fracWa
         end if !      if ( sw_neutral == 3
 
 
+           !nm20170424 wind output corrected
+           jth_loop4wind: do jth=1,3
+              flux_tube0: do i=IN,IS
+                 vn_ms1_4output(i-IN+1,lp,mp,jth)=vn_ms1(jth,i-IN+1)
+              end do flux_tube0
+           end do jth_loop4wind
 
 
          !nm20151130

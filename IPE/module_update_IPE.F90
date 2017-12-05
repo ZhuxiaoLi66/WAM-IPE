@@ -87,7 +87,7 @@ module module_update_IPE
        character(len=8) :: h_str
        character(len=8) :: m_str
        character(len=8) :: s_str
-       character(len=13) :: timestamp_for_IPE_output_files
+       character(len=12) :: timestamp_for_IPE_output_files
 
 
     call ESMF_LogWrite("sub-update_IPE start:", ESMF_LOGMSG_INFO, rc=rc)
@@ -106,7 +106,7 @@ module module_update_IPE
 
 
       if (IAM_ROOT()) then
-        print"('Utime=',2i7,f11.4,' nTimeStep',2i2)",utime,(MOD(utime,86400)),(MOD(utime,86400)/3600.),nTimeStep,ncnt
+        print"('Utime=',2i7,f11.4,' nTimeStep',2i7)",utime,(MOD(utime,86400)),(MOD(utime,86400)/3600.),nTimeStep,ncnt
         if(swEsmfTime) write(unit=9999,FMT=*)'update_IPE',nTimeStep,':ut=',utime
       endif
 !!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-5")
@@ -293,7 +293,7 @@ module module_update_IPE
      write (h_str,fmt) H
      write (m_str,fmt) M
      write (s_str,fmt) S
-     timestamp_for_IPE_output_files = trim(yy_str)//trim(mm_str)//trim(dd_str)//'T'//trim(h_str)//trim(m_str)                  
+     timestamp_for_IPE_output_files = trim(yy_str)//trim(mm_str)//trim(dd_str)//trim(h_str)//trim(m_str)                  
 
         CALL plasma ( utime, timestamp_for_IPE_output_files )
 

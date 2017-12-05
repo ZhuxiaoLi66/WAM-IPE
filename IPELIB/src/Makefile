@@ -27,12 +27,13 @@ TARGETS = clean                   \
           trillian_pgi_parallel   \
           trillian_pgi_serial     \
           theia_intel_parallel    \
-          theia_intel_serial \
-          wcoss_intel_parallel \
-          wcoss_intel_serial \
-          generic_pgi_serial \
-          generic_gnu_serial \
-          generic_intel_serial
+          theia_intel_serial      \
+          wcoss_intel_parallel    \
+          wcoss_intel_serial      \
+          generic_pgi_serial      \
+          generic_gnu_serial      \
+          generic_intel_serial    \
+          pleiades_intel_parallel
 
 # Dynamic / Conditional variables
 
@@ -154,7 +155,7 @@ endif
     FCP       = mpiifort
     FCS       = ifort
     CC        = icc
-    OPT_FLAGS = -O3  -fpp 
+    OPT_FLAGS = -O3  -fpp -fp-model strict
     SMS       = /scratch3/NCEPDEV/swpc/noscrub/sms/SMSr825-intel_14.0.2-mpi_5.1.2.150
     ifeq ($(DEBUG),yes)
       DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0 -fpp
@@ -193,12 +194,23 @@ endif
     MODCMD    = $(shell ./modcmd wcoss intel)
     FCP       = mpfort
     FCS       = mpfort
-    OPT_FLAGS = -O3 -fp-model precise -fpp
-    SMS       = /gpfs/hps/emc/global/save/Adam.Kubaryk/sms/SMSr825-intel_O3
+    OPT_FLAGS = -O3 -fp-model precise -fpp -xAVX
+    SMS       = /global/save/Adam.Kubaryk/sms/SMSr825-intel_O3
     ifeq ($(DEBUG),yes)
       DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0
     endif
   endif
+endif
+
+# pleiades stanza
+ifeq ($(MACHINE),pleiades)
+  GPTL_USE_GPTL = no
+  MAKEJOBS = 1
+  MODCMD = . /usr/local/lib/init/global.profile && module purge && module load comp-intel mpi-sgi/mpt
+  FCP = ifort -lmpi
+  FCS = ifort
+  OPT_FLAGS = -O3 -fp-model precise -fpp -xCORE-AVX2
+  SMS = /nobackupp8/akubaryk/save/sms/SMSr825-intel
 endif
 
 # These statements are machine/compiler independent
@@ -303,6 +315,13 @@ ifeq ($(TESTING),yes)
 	make --directory=integration_testing/ -f cmdi.mak clean
 endif
 	$(MAKE) ipe MACHINE=generic COMPILER=intel PARALLELISM=serial
+
+pleiades_intel_parallel:
+ifeq ($(TESTING),yes)
+	$(MAKE) cmdi MACHINE=pleiades COMPILER=intel PARALLELISM=parallel
+	make --directory=integration_testing/ -f cmdi.mak clean
+endif
+	$(MAKE) ipe MACHINE=pleiades COMPILER=intel PARALLELISM=parallel
 
 ipe:
 	$(if $(filter 0,$(MAKELEVEL)),$(call USAGE))

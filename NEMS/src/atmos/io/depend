@@ -1,7 +1,0 @@
-module_GET_CONFIG_WRITE_GFS.o : module_GET_CONFIG_WRITE_GFS.F90 module_WRITE_INTERNAL_STATE_GFS.o module_io_mpi_def.o  ../../ESMFVersionDefine.h
-module_GFS_WRITE.o : module_GFS_WRITE.F90 module_WRITE_GRID_COMP_GFS.o module_io_mpi_def.o module_include_io.o  ../../ESMFVersionDefine.h
-module_WRITE_GRID_COMP_GFS.o : module_WRITE_GRID_COMP_GFS.F90 module_GET_CONFIG_WRITE_GFS.o module_WRITE_ROUTINES_GFS.o module_WRITE_INTERNAL_STATE_GFS.o module_io_mpi_def.o module_include_io.o  ../../ESMFVersionDefine.h
-module_WRITE_INTERNAL_STATE_GFS.o : module_WRITE_INTERNAL_STATE_GFS.F90  ../../ESMFVersionDefine.h
-module_WRITE_ROUTINES_GFS.o : module_WRITE_ROUTINES_GFS.F90 module_WRITE_INTERNAL_STATE_GFS.o module_io_mpi_def.o module_include_io.o  ../../ESMFVersionDefine.h
-module_include_io.o : module_include_io.F90  
-module_io_mpi_def.o : module_io_mpi_def.F90  

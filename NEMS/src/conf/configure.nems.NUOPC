@@ -74,4 +74,4 @@ dataipe_mk    = $(DATAIPE_DIR)/dataipe.mk
 
 shyd_mk       = $(SHYD_DIR)/shyd.mk
 xhyd_mk       = $(XHYD_DIR)/xhyd.mk
-wrfhydro_mk   = $(WRFHYDRO_DIR)/wrfhydro.mk
+wrfhydro_mk = $(WRFHYDRO_DIR)/wrfhydro.mk

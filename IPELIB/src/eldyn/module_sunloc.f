@@ -46,7 +46,7 @@
 !
 ! Local:
       integer :: ihr,imn
-      real :: sec,date,vp,xmlon ! apex magnetic longitude
+      real :: sec,date,vp,xmlon, ! apex magnetic longitude
      |  sbsllat,    ! geographic latitude of subsolar point (degrees)
      |  sbsllon,    ! geographic longitude of subsolar point (degrees)
      |  colat,      ! Geocentric colatitude of geomagnetic dipole north pole (deg)

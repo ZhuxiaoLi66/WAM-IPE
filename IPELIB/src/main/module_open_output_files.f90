@@ -99,39 +99,10 @@ END IF !( sw_output_plasma_grid ) THEN
 
         LUN_UT=lun_min1-1 !=99
 !nm20120303        filename ='ut_rec.log'
-        filename ='ut_rec'
-        FORM_dum ='formatted  ' 
-        STATUS_dum ='unknown'
-        CALL open_file ( filename, LUN_UT, FORM_dum, STATUS_dum ) 
-
-
-
-        IF ( HPEQ_flip==0.0 ) THEN
-!--- unit=1181 : input history file
-!          LUN_PLASMA12=1181
-!          STATUS_dum ='old'
-!          filename = 'plasma_startup1'
-!          CALL open_file ( filename, LUN_PLASMA12, FORM_dum, STATUS_dum )
-
-!--- unit=200~~215
-          FORM_dum = 'unformatted' 
-!note: reading Vi will be needed for neutral coupling
-          DO i=lun_min2,lun_max2   !t +ISPEV)
-             !if(sw_debug) 
-             print *,'startup: unit=',i        
-             LUN_PLASMA2(i)=i
-             IF ( (i-lun_min2) < 10 ) THEN
-                WRITE( string_tmp, FMT="('0',i1)" )(i-lun_min2)
-             ELSE IF ( (i-lun_min2) < 100 ) THEN
-                WRITE( string_tmp, FMT="(i2)" )(i-lun_min2)
-             END IF
-!nm20120303             filename ='startup'//TRIM(string_tmp)
-             filename ='stup'//TRIM(string_tmp)
-             !if(sw_debug) 
-             print *,(i-lun_min2),'filename',filename
-             CALL open_file ( filename, LUN_PLASMA2(i), FORM_dum, STATUS_dum )
-          END DO
-        END IF  ! ( HPEQ_flip==0.0 ) THEN
+!        filename ='ut_rec'
+!        FORM_dum ='formatted  ' 
+!        STATUS_dum ='unknown'
+!        CALL open_file ( filename, LUN_UT, FORM_dum, STATUS_dum ) 
 
 
 
