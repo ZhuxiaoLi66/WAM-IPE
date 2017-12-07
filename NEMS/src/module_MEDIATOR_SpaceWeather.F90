@@ -1815,7 +1815,6 @@ subroutine RunRegrid(model, importState, exportState, rc)
         enddo
         endif
 
-#define NEW_WAY_VECTOR
 #ifdef NEW_WAY_VECTOR
         ! If these are winds, then just save results to be handled later 
         if (trim(fieldNameList(j)) .eq. "northward_wind_neutral") then
