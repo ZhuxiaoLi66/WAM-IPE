@@ -752,7 +752,7 @@ module module_MEDSpaceWeather
   real(ESMF_KIND_R8) :: lon, lat, hgt, lon1, lat1, hgt1
   real(ESMF_KIND_R4) :: interval
   integer :: i,j, k, l, ii, jj, kk, count1, count3, count8, localcount, countup, save, base, base1
-  logical :: even
+  logical :: even, isInd
   integer :: start, count, diff, lastlat, totalelements, totalnodes, localnodes, startid
   integer :: wamtotalnodes
   integer :: elmtcount, increment
@@ -1049,7 +1049,9 @@ module module_MEDSpaceWeather
      ! If the neighbor is local, no need to add
      if (ind < wamdims(2)) then
        if (PetCnt>1) then
-        if ((i < myrows .and. rowinds(i+1) /= ind+1) .or. i==myrows) then
+        isInd = (i < myrows)
+        if (isInd) isInd = (rowinds(i+1) /= ind+1)
+        if (isInd .or. i==myrows) then
           totalnodes=totalnodes+numPerRow(ind)+numPerRow(ind+1)
         else
           totalnodes=totalnodes+numPerRow(ind)
@@ -1107,7 +1109,9 @@ module module_MEDSpaceWeather
        ! if not the last row, add the neighbor row's nodes and the neighbor
        ! is not local
        if (ind < wamdims(2)) then
-         if (i==myrows .or. (i < myrows .and. rowinds(i+1)/= ind+1)) then
+         isInd = (i < myrows)
+         if (isInd) isInd = (rowinds(i+1) /= ind+1)
+         if (isInd .or. i==myrows) then
        	  do j=1, numPerRow(ind+1)
             ! Global id based on the 3D indices
             nodeIds(count1)= j+wamdims(1)*ind+wamdims(1)*wamdims(2)*(k-1)
@@ -1811,7 +1815,6 @@ subroutine RunRegrid(model, importState, exportState, rc)
         enddo
         endif
 
-#define NEW_WAY_VECTOR
 #ifdef NEW_WAY_VECTOR
         ! If these are winds, then just save results to be handled later 
         if (trim(fieldNameList(j)) .eq. "northward_wind_neutral") then
