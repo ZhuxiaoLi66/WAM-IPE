@@ -1545,7 +1545,7 @@ subroutine RunRegrid(model, importState, exportState, rc)
               return  ! bail out
 	call ESMF_FieldGet(datafield, farrayPtr=varbuf, computationalLbound=lbnd, &
        	   	computationalUbound=ubnd, rc=rc)
-  	if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail out
@@ -1558,14 +1558,12 @@ subroutine RunRegrid(model, importState, exportState, rc)
         ! note hgtbuf has the heigth of the original WAM grid (150), the wamdim(3) is the
         ! fixed height WAM grid extended to 800KM, which is > 150
 
-        if (j==1) allocate(wamdata(localnodes, totallevels))
-        ! At the first time step, the values from the importstate are all invalid
-        if (slice==1) then 
-	  wamdata(:,:)=1.0
-        else
+          if (j==1) allocate(wamdata(localnodes, totallevels))
+
 	  if (PetNo == 0) then
              print *, 'fill field ',trim(fieldNameList(j))
           endif
+
           if (trim(fieldNameList(j)) == "O_Density" .or. &
               trim(fieldNameList(j)) == "O2_Density" .or. &
               trim(fieldNameList(j)) == "N2_Density") then
@@ -1660,7 +1658,6 @@ subroutine RunRegrid(model, importState, exportState, rc)
               enddo
             enddo
           endif
-        endif
 
         ! write out the variables from each processor
         if (slice == 2) then
