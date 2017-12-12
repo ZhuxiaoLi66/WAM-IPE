@@ -16,11 +16,11 @@
       USE module_IPE_dimension,ONLY: NMP,NLP,ISTOT
       USE module_FIELD_LINE_GRID_MKS,ONLY: &
      & plasma_grid_3d,plasma_3d,r_meter2D,ON_m3,HN_m3,N2N_m3,O2N_m3&
-     &,apexD,apexE,VEXBup,VEXBe,MaxFluxTube,HE_m3,N4S_m3,TN_k,TINF_K,Un_mag_ms1 &
+     &,apexD,apexE,VEXBup,VEXBe,MaxFluxTube,HE_m3,N4S_m3,TN_k,TINF_K,Un_ms1 &
      &,Be3, Pvalue, JMIN_IN, JMAX_IS,hrate_mks3d,midpnt &
      &,mlon_rad, plasma_grid_Z, plasma_grid_GL, plasma_3d_old &
      &,apexDscalar, l_mag, WamField &
-     &,Vn_geo_ms1_4output
+     &,vn_ms1_4output
 !     &,ON_m3_msis,Tn_K_msis,N2N_m3_msis,O2N_m3_msis
   
       USE module_input_parameters,ONLY: sw_neutral_heating_flip &
@@ -55,8 +55,8 @@
      &,           N4S_m3(MaxFluxTube,NLP,NMP)     &
      &,           TN_k  (MaxFluxTube,NLP,NMP)     &
      &,           TINF_K(MaxFluxTube,NLP,NMP)     &
-     &,           Un_mag_ms1(MaxFluxTube,NLP,NMP,3:3) &
-     &,           Vn_geo_ms1_4output(MaxFluxTube,NLP,NMP,3) )
+     &,           Un_ms1(MaxFluxTube,NLP,NMP,3:3) &
+     &,           vn_ms1_4output(MaxFluxTube,NLP,NMP,3) )
 
 !        allocate( ON_m3_msis (MaxFluxTube,NLP,NMP)     &
 !       &,           Tn_K_msis (MaxFluxTube,NLP,NMP)    &
@@ -140,8 +140,8 @@ print *,'DE-ALLOCATing ARRAYS'
      &,           N4S_m3     &
      &,           TN_k       &
      &,           TINF_K     &
-     &,           Un_mag_ms1 &
-     &,           Vn_geo_ms1_4output )
+     &,           Un_ms1 &
+     &,           vn_ms1_4output )
 
 !nm20170424 wind output corrected
 if ( sw_neutral==0.or.sw_neutral==1 ) then 

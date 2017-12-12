@@ -241,7 +241,7 @@ PROGRAM  test_plasma
 #endif
 !SMS$IGNORE END
          ret = gptlstart ('neutral')
-         CALL neutral ( utime_driver, start_time )
+         CALL neutral ( utime_driver )
          ret = gptlstop  ('neutral')
 
        END IF
