@@ -156,7 +156,7 @@ endif
     FCS       = ifort
     CC        = icc
     OPT_FLAGS = -O3  -fpp -fp-model strict
-    SMS       = /scratch3/NCEPDEV/swpc/noscrub/sms/SMSr825-intel_16.1.150-mpi_5.1.2.150
+    SMS       = /scratch3/NCEPDEV/swpc/noscrub/sms/SMSr825-intel_14.0.2-mpi_5.1.2.150
     ifeq ($(DEBUG),yes)
       DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0 -fpp
       OPT_FLAGS = -g -O0 -traceback -check all -debug all -fpp

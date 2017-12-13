@@ -51,7 +51,7 @@ case $1 in
     goto="$init && module purge && module load"
     case $2 in
       "intel")
-        echo "$goto intel/16.1.150 impi "
+        echo "$goto intel/14.0.2 impi "
         ;;
       *) unknown $1 $2
         ;;
