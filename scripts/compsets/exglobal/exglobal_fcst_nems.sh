@@ -1483,7 +1483,7 @@ EARTH_attributes::
 ::
 
 # MED #
-MED_model:                      spaceweather
+MED_model:                      $med_model
 MED_petlist_bounds:             $med_petlist_bounds
 MED_attributes::
   Verbosity = max
