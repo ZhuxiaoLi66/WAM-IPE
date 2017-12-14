@@ -122,7 +122,12 @@ def get_24hr_kp_avg(dates):
 def hemi_date_fmt(date):
   return datetime.datetime.strptime(date,'%Y%m%d%H').strftime('%Y-%m-%d') + '-input.txt'
 
-def get_hemispheric_power(dates):
+def get_solar_data(dates):
+  swbt         = []
+  swangle      = []
+  swvel        = []
+ #swden        = []
+  bz           = []
   hemi_pow     = []
   hemi_pow_idx = []
 
@@ -132,13 +137,18 @@ def get_hemispheric_power(dates):
         for i, line in enumerate(file):
           if i > 94:
             split_line = line.split(' ')
+            swbt         = numpy.append(swbt,         float(split_line[0] ))
+            swangle      = numpy.append(swangle,      float(split_line[1] ))
+            swvel        = numpy.append(swvel,        float(split_line[3] ))
+           #swden        = numpy.append(swden,        float(split_line[4] ))
+            bz           = numpy.append(bz,           float(split_line[5] ))
             hemi_pow     = numpy.append(hemi_pow,     float(split_line[-1]))
             hemi_pow_idx = numpy.append(hemi_pow_idx,       split_line[-2] )
   
   except:
     failure('hemispheric power read')
   
-  return hemi_pow, hemi_pow_idx
+  return swbt, swangle, swvel, bz, hemi_pow, hemi_pow_idx
 
 def parse(start_date, end_date, hduration):
   ## start_date: YYYYMMDDHH string
@@ -161,9 +171,9 @@ def parse(start_date, end_date, hduration):
   else:                                                                    # end interpolation at current day
     max_f107 = end_date
   # now get data for the days described
-  kp, f107, f107d        = get_kp_f107(get_dates(min_f107, max_f107))
-  kp_avg                 = get_24hr_kp_avg(get_dates(start_date,end_date))
-  hemi_pow, hemi_pow_idx = get_hemispheric_power(get_dates(start_date,end_date))
+  kp, f107, f107d = get_kp_f107(get_dates(min_f107, max_f107))
+  kp_avg          = get_24hr_kp_avg(get_dates(start_date,end_date))
+  swbt, swangle, swvel, swbz, hemi_pow, hemi_pow_idx = get_solar_data(get_dates(start_date,end_date))
 
   # and select the right ones
   kp_offset     = time_diff(start_date+'00', hourless(min_f107) + kp_midpoint_string)
@@ -172,7 +182,8 @@ def parse(start_date, end_date, hduration):
   hemi_offset   = kp_avg_offset
   # return our subarray
   return kp[kp_offset:kp_offset+mduration], f107[f107_offset:f107_offset+mduration], f107d[f107_offset:f107_offset+mduration], \
-         kp_avg[kp_avg_offset:kp_avg_offset+mduration], \
+         kp_avg[kp_avg_offset:kp_avg_offset+mduration], swbt[hemi_offset:hemi_offset+mduration], \
+         swangle[hemi_offset:hemi_offset+mduration], swvel[hemi_offset:hemi_offset+mduration], swbz[hemi_offset:hemi_offset+mduration], \
          hemi_pow[hemi_offset:hemi_offset+mduration], hemi_pow_idx[hemi_offset:hemi_offset+mduration]
 
 ### output
@@ -181,7 +192,7 @@ def output_timestamp(start_date,delta=0):
   return (datetime.datetime.strptime(start_date,'%Y%m%d%H') + datetime.timedelta(minutes=delta)).strftime('%Y-%m-%dT%H:%M:%SZ')
 
 
-def output(file, start_date, kp, f107, f107d, kp_avg, hemi_pow, hemi_pow_idx):
+def output(file, start_date, kp, f107, f107d, kp_avg, swbt, swangle, swvel, swbz, hemi_pow, hemi_pow_idx):
   ## simply
   f = open(file,'w')
 
@@ -189,10 +200,10 @@ def output(file, start_date, kp, f107, f107d, kp_avg, hemi_pow, hemi_pow_idx):
   f.write("F10 81 Day Avg      "+"122"+" \n") # placeholder
   f.write("Flags:  0=Forecast, 1=Estimated, 2=Observed \n\n")
 
-  f.write(" Date_Time                   F10          Kp     F10Flag      KpFlag  F10_81dAvg   24HrKpAvg     HemiPow  HemiPowIdx   \n")
-  f.write("--------------------------------------------------------------------------------------------------------------------   \n")
+  f.write(" Date_Time                   F10          Kp     F10Flag      KpFlag  F10_81dAvg   24HrKpAvg     HemiPow  HemiPowIdx  SW_Bt       SW_Angle    SW_Velocity SW_Bz        \n")
+  f.write("--------------------------------------------------------------------------------------------------------------------------------------------------------------------   \n")
   for i in range(0,len(kp)):
-    f.write('{0}{1:12.7f}{2:12.7f}{3:>12}{4:>12}{5:12.7f}{6:12.7f}{7:>12.7f}{8:>12}'.format( \
+    f.write("{0}{1:>12.7f}{2:>12.7f}{3:>12}{4:>12}{5:>12.7f}{6:>12.7f}{7:>12.7f}{8:>12}{9:>12.7f}{10:>12.7f}{11:>12.7f}{12:>12.7f}\n".format( \
             output_timestamp(start_date,i+1), \
             f107[i],                          \
             kp[i],                            \
@@ -200,14 +211,18 @@ def output(file, start_date, kp, f107, f107d, kp_avg, hemi_pow, hemi_pow_idx):
             f107d[i],                         \
             kp_avg[i],                        \
             hemi_pow[i],                      \
-            hemi_pow_idx[i] + '\n'))
+            hemi_pow_idx[i],                  \
+            swbt[i],                          \
+            swangle[i],                       \
+            swvel[i],                         \
+            swbz[i]))
 
 ### main function
                     
 def run(start_date, duration, output_filename):
   end_date = new_timestamp(start_date, duration)
-  kp, f107, f107d, kp_avg, hemi_pow, hemi_pow_idx = parse(start_date, end_date, duration)
-  output(output_filename, start_date, kp, f107, f107d, kp_avg, hemi_pow, hemi_pow_idx)
+  kp, f107, f107d, kp_avg, swbt, swangle, swvel, swbz, hemi_pow, hemi_pow_idx = parse(start_date, end_date, duration)
+  output(output_filename, start_date, kp, f107, f107d, kp_avg, swbt, swangle, swvel, swbz, hemi_pow, hemi_pow_idx)
 
 ### we start below
 
