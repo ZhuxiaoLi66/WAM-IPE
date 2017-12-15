@@ -1247,13 +1247,13 @@ if [ $IDEA = .true. ]; then
     fi
   else
     # work from the database
-    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((10#$FHMAX)) -s $CDATE -p $PARAMETER_PATH
+    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((36+ 10#$FHMAX)) -s `$NDATE $CDATE -36` -p $PARAMETER_PATH
     if [ ! -e wam_input_f107_kp.txt ] ; then
        echo "failed, no f107 file" ; exit 1
     else
        LEN_F107=`wc -l wam_input_f107_kp.txt | cut -d' ' -f 1`
-       export F107_KP_SIZE=$((LEN_F107-6))
-       export F107_KP_SKIP_SIZE=0
+       export F107_KP_SIZE=$((LEN_F107-5))
+       export F107_KP_SKIP_SIZE=$((36*60))
        export F107_KP_INTERVAL=60
     fi
   fi
@@ -1346,7 +1346,6 @@ cat > GPTLnamelist << EOF
 /
 EOF
 # raw_high_lat specific files
-cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/IPEsw.inp .
 cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/tiros_spectra_ipe .
 cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/ionprof_ipe .
 #
@@ -1406,6 +1405,9 @@ cat  > IPE.inp <<EOF
   ap(5)=4.
   ap(6)=4.
   ap(7)=4.
+  f107_kp_size=$F107_KP_SIZE,
+  f107_kp_interval=$F107_KP_INTERVAL,
+  f107_kp_skip_size=$F107_KP_SKIP_SIZE
 /
 &nmswitch
   duration=$(((10#$FHMAX-10#$FHINI)*3600))
