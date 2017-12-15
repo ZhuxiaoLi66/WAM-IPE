@@ -43,7 +43,7 @@
       use module_FIELD_LINE_GRID_MKS, only : plasma_grid_3d,plasma_grid_Z, apexD, JMIN_IN,JMAX_IS,east,north,up,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,JMIN_ING,JMAX_ISG,WamField
       USE module_physical_constants,ONLY: pi,zero,earth_radius,g0,gscon,massn_kg
       USE module_input_parameters,ONLY: F107D_new,F107_new,AP,NYEAR,NDAY,sw_debug,mpstop,sw_grid,start_time,stop_time,apa_eld,ap_eld &
-     &,sw_neutral, swNeuPar,mype, ut_start_perp_trans, sw_use_wam_fields_for_restart,utime0lpi,lpi,input_params_begin,input_params_interval
+     &,sw_neutral, swNeuPar,mype, ut_start_perp_trans, sw_use_wam_fields_for_restart,utime0lpi,lpi,input_params_begin,input_params_interval,sw_ctip_input
       USE module_unit_conversion,ONLY: M_TO_KM
       USE module_IO, ONLY:filename,FORM_dum,STATUS_dum,luntmp3
       USE module_open_file, ONLY:open_file
