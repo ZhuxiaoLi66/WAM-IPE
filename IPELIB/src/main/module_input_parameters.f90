@@ -400,7 +400,7 @@
         CLOSE(LUN_LOG0)
         ! start wam_f107_kp_mod reads
         ! manipulate the skip_size, since we start from 0 but begin at skip_size+1
-        input_params_begin = f107_kp_skip_size+1
+        input_params_begin = f107_kp_skip_size
         f107_kp_skip_size = 0
         input_params_interval = f107_kp_interval
         ! allocate *_wy arrays and the target arrays
