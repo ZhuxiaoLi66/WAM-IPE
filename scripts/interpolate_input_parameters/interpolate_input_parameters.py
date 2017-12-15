@@ -197,7 +197,6 @@ def output(file, start_date, kp, f107, f107d, kp_avg, swbt, swangle, swvel, swbz
   f = open(file,'w')
 
   f.write("Issue Date          "+output_timestamp(start_date)+"\n")
-  f.write("F10 81 Day Avg      "+"122"+" \n") # placeholder
   f.write("Flags:  0=Forecast, 1=Estimated, 2=Observed \n\n")
 
   f.write(" Date_Time                   F10          Kp     F10Flag      KpFlag  F10_81dAvg   24HrKpAvg     HemiPow  HemiPowIdx  SW_Bt       SW_Angle    SW_Velocity SW_Bz        \n")
