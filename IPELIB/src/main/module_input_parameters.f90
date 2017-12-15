@@ -33,7 +33,7 @@
       INTEGER (KIND=int_prec), PUBLIC   :: MaxLpHaloUsed=0 !Max lp halo size used for the entire run
       INTEGER (KIND=int_prec), PUBLIC   :: MaxMpHaloUsed=0 !Max mp halo size used for the entire run
 
-      REAL (KIND=real_prec), PUBLIC :: F107   !.. Daily F10.7
+      REAL (KIND=real_prec), PUBLIC :: F107D   !.. Daily F10.7
       REAL (KIND=real_prec), PUBLIC :: F107AV  !.. 81 day average F10.7
 !
       INTEGER (KIND=int_prec), PUBLIC :: NYEAR ! year
@@ -220,7 +220,7 @@
      &,stop_time &
      &,time_step &
      &,dumpFrequency &
-     &,F107   &
+     &,F107D   &
      &,F107AV  &
      &,NYEAR  &
      &,NDAY   &
