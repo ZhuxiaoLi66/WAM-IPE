@@ -4,7 +4,8 @@
       SUBROUTINE supim_EXBV(utime,IFL,LT_SEC,r_apex,GLON_deg,VEXBup_out)
       USE module_precision
       USE module_input_parameters,ONLY:NYEAR,NDAY,F107D_new,f107_new
-     &,start_time,lpi,utime0LPI,sw_ctip_input,ap_eld,input_params_begin,input_params_interval
+     &,start_time,lpi,utime0LPI,sw_ctip_input,ap_eld,input_params_begin
+     &,input_params_interval
       IMPLICIT NONE       
 !
       INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
