@@ -15,7 +15,9 @@
 ! add fixed sets for          f107_fix, f107d_fix, kp_fix
 !
       REAL, POINTER, DIMENSION(:) :: f107_wy, kp_wy, kpa_wy, f107d_wy, hp_wy, hpi_wy
-      REAL, POINTER, DIMENSION(:) :: f107, kp, kpa, f107d, hp, hpi
+      REAL, POINTER, DIMENSION(:) :: swbz_wy, swvel_wy, swbt_wy, swang_wy
+      REAL, POINTER, DIMENSION(:) :: f107,    kp,    kpa,    f107d,    hp,    hpi 
+      REAL, POINTER, DIMENSION(:) :: swbz,    swvel,    swbt,    swang
       REAL                        :: f107_fix, f107d_fix, kp_fix
       REAL                        :: swpcf107_fix, swpcf107d_fix, swpckp_fix
       REAL                        :: interpolate_weight
@@ -36,6 +38,7 @@
       INTEGER      :: f107_flag_work, kp_flag_work
       REAL         :: f107_81d_avg
       REAL         :: f107_work, kp_work, f107d_work, kpa_work, hp_work, hpi_work
+      REAL         :: swbz_work, swvel_work, swbt_work, swang_work
 
 ! Flags:   0=Forecast, 1=Estimated, 2=Observed
       INTEGER, DIMENSION(f107_kp_size) :: f107_flag, kp_flag 
@@ -45,7 +48,6 @@
       OPEN(79, FILE='wam_input_f107_kp.txt', FORM='formatted')
       REWIND 79
       READ(79, 1000) issuedate
-      READ(79, 1001) f107_81d_avg
       DO i = 1, 4
           READ(79, *)    
       END DO
@@ -53,7 +55,7 @@
       DO i = 1, f107_kp_skip_size
           READ(79, *) realdate_work, f107_work, kp_work,           &
                f107_flag_work, kp_flag_work, f107d_work, kpa_work, &
-               hp_work, hpi_work
+               hp_work, hpi_work, swbt_work, swang_work, swvel_work, swbz_work
       END DO
 
 ! f107_kp_size is the forecast run length.
@@ -65,7 +67,8 @@
 !old      DO i = 1, f107_kp_read_in_size
           READ(79, *) realdate(i), f107_wy(i), kp_wy(i),             &
                f107_flag(i), kp_flag(i), f107d_wy(i), kpa_wy(i),     &
-               hp_wy(i), hpi_wy(i)
+               hp_wy(i), hpi_wy(i), swbt_wy(i), swang_wy(i),         &
+               swvel_wy(i), swbz_wy(i)
       END DO
       CLOSE(79)
 !
@@ -79,6 +82,10 @@
           f107d_wy(i) = f107d_wy(f107_kp_read_in_size)
           hpi_wy  (i) = hpi_wy  (f107_kp_read_in_size)
           kpa_wy  (i) = kpa_wy  (f107_kp_read_in_size)
+          swbt_wy (i) = swbt_wy (f107_kp_read_in_size)
+          swang_wy(i) = swang_wy(f107_kp_read_in_size)
+          swvel_wy(i) = swvel_wy(f107_kp_read_in_size)
+          swbz_wy (i) = swbz_wy (f107_kp_read_in_size)
       END DO
 !For testing.
 !------------

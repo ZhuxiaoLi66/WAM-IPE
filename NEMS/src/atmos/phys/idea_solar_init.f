@@ -112,7 +112,8 @@
 !
       use wam_f107_kp_mod,    ONLY: read_wam_f107_kp_txt, 
      &                              f107_wy, kp_wy, f107_kp_size,
-     &                              fix_spweather_data, kpa_wy, hp_wy, hpi_wy, f107d_wy
+     &                              fix_spweather_data, kpa_wy, hp_wy, hpi_wy, f107d_wy,
+     &                              swbt_wy, swvel_wy, swang_wy, swbz_wy
 !
 
 !
@@ -428,6 +429,10 @@
           IF(.NOT. ASSOCIATED(kpa_wy))   ALLOCATE(kpa_wy  (f107_kp_size))
           IF(.NOT. ASSOCIATED(hp_wy))    ALLOCATE(hp_wy   (f107_kp_size))
           IF(.NOT. ASSOCIATED(hpi_wy))   ALLOCATE(hpi_wy  (f107_kp_size))
+          IF(.NOT. ASSOCIATED(swbt_wy))  ALLOCATE(swbt_wy (f107_kp_size))
+          IF(.NOT. ASSOCIATED(swang_wy)) ALLOCATE(swang_wy(f107_kp_size))
+          IF(.NOT. ASSOCIATED(swvel_wy)) ALLOCATE(swvel_wy(f107_kp_size))
+          IF(.NOT. ASSOCIATED(swbz_wy))  ALLOCATE(swbz_wy (f107_kp_size))
           call read_wam_f107_kp_txt
           if (mpi_id ==0 ) write(6,*) 
      & ' SPW_DRIVERS => swpc_fst, 3-day forecasts:', trim(SPW_DRIVERS)
