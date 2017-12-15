@@ -14,11 +14,12 @@
       USE module_precision
       USE module_IPE_dimension,ONLY: ISPEC,ISPEV,IPDIM
       USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,Pvalue,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d,ON_m3,HN_m3,N2N_m3,O2N_m3,HE_m3,N4S_m3,TN_k,TINF_k,un_ms1,mlon_rad
-      USE module_input_parameters,ONLY: time_step,F107D_ipe,F107AV_ipe,DTMIN_flip  &
+      USE module_input_parameters,ONLY: time_step,F107D_new,F107_new,DTMIN_flip  &
      &, sw_INNO,FPAS_flip,HEPRAT_flip,COLFAC_flip,sw_IHEPLS,sw_INPLS,sw_debug,iout, start_time  &
      &, HPEQ_flip, sw_wind_flip, sw_depleted_flip, start_time_depleted &
      &, sw_output_fort167,mpfort167,lpfort167 &
-     &, sw_neutral_heating_flip, ip_freq_output, parallelBuild,mype,ip_freq_paraTrans
+     &, sw_neutral_heating_flip, ip_freq_output, parallelBuild,mype,ip_freq_paraTrans &
+     &, sw_ctip_input,utime0lpi,lpi,input_params_begin,input_params_interval
       USE module_PLASMA,ONLY: plasma_1d !dbg20120501
 !dbg20110927      USE module_heating_rate,ONLY: NHEAT_cgs
       USE module_physical_constants,ONLY: pi,zero
@@ -112,8 +113,17 @@
 !      DT        = REAL(time_step)
       DT        = REAL(ip_freq_paraTrans) !nm20160420
       DTMIN     = DTMIN_flip
-      F107D_dum = F107D_ipe
-      F107A_dum = F107AV_ipe
+      if ( sw_ctip_input ) then
+        LPI = INT( ( utime - utime0LPI ) / real(input_params_interval) ) + 1 + input_params_begin
+!t        if(sw_debug)
+        print*,'sub-eld: LPI=',lpi
+!t        if(sw_debug)
+        print*,'sub-eld: utime',utime,'dt_m=',((utime-utime0LPI)/60.)
+      else
+        LPI=1
+      end if
+      F107D_dum = F107_new(lpi)
+      F107A_dum = F107d_new(lpi)
 
 !nm20110822: moved from module_plasma
 !! I need to get the new get_sza based on phil's method

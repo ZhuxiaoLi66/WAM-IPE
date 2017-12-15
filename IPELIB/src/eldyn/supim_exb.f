@@ -3,8 +3,8 @@
 !      program test_supim_exb
       SUBROUTINE supim_EXBV(utime,IFL,LT_SEC,r_apex,GLON_deg,VEXBup_out)
       USE module_precision
-      USE module_input_parameters,ONLY:NYEAR,NDAY,F107AV_ipe,F107D_ipe
-     &,start_time
+      USE module_input_parameters,ONLY:NYEAR,NDAY,F107D_new,f107_new
+     &,start_time,lpi,utime0LPI,sw_ctip_input,ap_eld,input_params_begin,input_params_interval
       IMPLICIT NONE       
 !
       INTEGER (KIND=int_prec), INTENT(IN) :: utime !universal time [sec]
@@ -38,9 +38,18 @@
 ! input parameters
       IYEAR=NYEAR  !1998
       IDAY=NDAY    !74
-      F107A=F107AV_ipe !187.
-      F107=F107D_ipe   !184.
-      AP=4.
+      if ( sw_ctip_input ) then
+        LPI = INT( ( utime - utime0LPI ) / real(input_params_interval) ) + 1 + input_params_begin
+!t        if(sw_debug)
+        print*,'sub-eld: LPI=',lpi
+!t        if(sw_debug)
+        print*,'sub-eld: utime',utime,'dt_m=',((utime-utime0LPI)/60.)
+      else
+        LPI=1
+      end if
+      F107A=F107D_new(LPI) !187.
+      F107=F107_new(LPI)   !184.
+      AP=ap_eld(LPI)
 ! LOW ALTITUDE DRIFT PATTERN
       JDJ=10
 ! HIGH ALTITUDE DRIFT PATTERN

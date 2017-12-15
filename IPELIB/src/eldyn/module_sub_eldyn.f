@@ -37,10 +37,10 @@
       SUBROUTINE eldyn ( utime )
       USE module_precision
       USE module_cal_monthday
-      USE module_input_parameters,ONLY:NYEAR,NDAY,start_time,mype       &
-     &,ip_freq_output,sw_debug,F107D_ipe                       &
-     &,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld,lat_sft_eld      &
-     &,sw_ctip_input,utime0LPI
+      USE module_input_parameters,ONLY:NYEAR,NDAY,start_time,mype &
+     &,ip_freq_output,sw_debug,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld  &
+     &,lat_sft_eld,sw_ctip_input,utime0LPI,f107_new,f107d_new &
+     &,input_params_begin,input_params_interval
       USE module_physical_constants,ONLY:rtd
 !nm20121003:
       USE module_eldyn,ONLY:theta90_rad,j0,Ed1_90,Ed2_90,j1,coslam_m
@@ -69,7 +69,7 @@
 !      iday_m=15                 !day of month 
 
       if ( sw_ctip_input ) then
-        LPI = INT( ( utime - utime0LPI ) / 60. ) +1
+        LPI = INT( ( utime - utime0LPI ) / real(input_params_interval) ) + 1 + input_params_begin
 !t        if(sw_debug)
         print*,'sub-eld: LPI=',lpi
 !t        if(sw_debug)
@@ -79,7 +79,7 @@
       end if
 
 !!! F107D is global both in module efield & ipe input
-      f107d = F107D_ipe         !f107
+      f107d = F107_new(LPI)         !f107
       ut = REAL(utime,real_prec)/3600.0
       if(ut>=24.) ut=MOD(ut,24.)
       kp = kp_eld(LPI)  !=1.                   !???
