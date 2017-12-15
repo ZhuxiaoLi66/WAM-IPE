@@ -523,9 +523,9 @@ print*,mype,'sub-read_input: swNeuPar',swNeuPar
 
         SUBROUTINE kp2ap(kp,ap_out)
         ! input: kp array
-        REAL, DIMENSION(:),           INTENT(IN)  :: kp
+        REAL, DIMENSION(:),        INTENT(IN)  :: kp
         ! output: ap array
-        INTEGER, DIMENSION(SIZE(kp)), INTENT(OUT) :: ap_out
+        REAL, DIMENSION(SIZE(kp)), INTENT(OUT) :: ap_out
         ! local variables
         REAL    :: lookup, remainder
         INTEGER :: i
@@ -546,7 +546,7 @@ print*,mype,'sub-read_input: swNeuPar',swNeuPar
           ! take decimal portion as interpolate value
           remainder = lookup - INT(lookup)
           ! assign integer Ap value
-          ap_out(i) = INT((1 - remainder) * table(INT(lookup)) + remainder * table(INT(lookup)+1))
+          ap_out(i) = (1 - remainder) * table(INT(lookup)) + remainder * table(INT(lookup)+1)
         END DO
 
         END SUBROUTINE kp2ap
