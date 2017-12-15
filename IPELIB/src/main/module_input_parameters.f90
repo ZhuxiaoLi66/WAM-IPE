@@ -33,8 +33,8 @@
       INTEGER (KIND=int_prec), PUBLIC   :: MaxLpHaloUsed=0 !Max lp halo size used for the entire run
       INTEGER (KIND=int_prec), PUBLIC   :: MaxMpHaloUsed=0 !Max mp halo size used for the entire run
 
-      REAL (KIND=real_prec), PUBLIC :: F107D   !.. Daily F10.7
-      REAL (KIND=real_prec), PUBLIC :: F107AV  !.. 81 day average F10.7
+      REAL (KIND=real_prec), PUBLIC :: F107D_ipe   !.. Daily F10.7
+      REAL (KIND=real_prec), PUBLIC :: F107AV_ipe  !.. 81 day average F10.7
 !
       INTEGER (KIND=int_prec), PUBLIC :: NYEAR ! year
       INTEGER (KIND=int_prec), PUBLIC :: NDAY  ! day number
@@ -112,11 +112,11 @@
       REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: kp_eld    ! transfer kp_wy here to become ap eventually
       REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: f107_new  ! transfer f107_wy here
       REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: f107d_new ! transfer f107d_wy here
-      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: gwatt ! transfer hp_wy here
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: gwatts ! transfer hp_wy here
       REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: levpi ! transfer hpi_wy here
       REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: bz    ! transfer swbz_wy here
       REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: swbt  ! transfer swbt_wy here
-      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: swang ! transfer swang_wy here
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: swangle ! transfer swang_wy here
       REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: swvel ! transfer swvel_wy here
       INTEGER (KIND=int_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: ap_eld ! transfer kp_wy->kp2ap->ap_eld
       LOGICAL, PUBLIC :: sw_bnd_wei=.false.              ! this doesn't seem to be used, really
@@ -220,8 +220,8 @@
      &,stop_time &
      &,time_step &
      &,dumpFrequency &
-     &,F107D   &
-     &,F107AV  &
+     &,F107D_ipe   &
+     &,F107AV_ipe  &
      &,NYEAR  &
      &,NDAY   &
      &,internalTimeLoopMax &
@@ -406,18 +406,18 @@
         ! allocate *_wy arrays and the target arrays
         ALLOCATE(hp_wy(f107_kp_size),hpi_wy(f107_kp_size),swbt_wy(f107_kp_size),swbz_wy(f107_kp_size),kp_wy(f107_kp_size),    &
                  swvel_wy(f107_kp_size),swang_wy(f107_kp_size),f107_wy(f107_kp_size),f107d_wy(f107_kp_size),                  &
-                 kp_eld(f107_kp_size),f107_new(f107_kp_size),f107d_new(f107_kp_size),gwatt(f107_kp_size),levpi(f107_kp_size), &
-                 bz(f107_kp_size),swbt(f107_kp_size),swang(f107_kp_size),swvel(f107_kp_size),ap_eld(f107_kp_size))
+                 kp_eld(f107_kp_size),f107_new(f107_kp_size),f107d_new(f107_kp_size),gwatts(f107_kp_size),levpi(f107_kp_size), &
+                 bz(f107_kp_size),swbt(f107_kp_size),swangle(f107_kp_size),swvel(f107_kp_size),ap_eld(f107_kp_size))
 
         call read_wam_f107_kp_txt  ! now we have *_wy arrays
 
         ! assign *_wy arrays to module-local public arrays
-        gwatt = hp_wy
+        gwatts = hp_wy
         levpi = hpi_wy
         swbt  = swbt_wy
         swvel = swvel_wy
         bz    = swbz_wy
-        swang = swang_wy
+        swangle = swang_wy
         f107_new  = f107_wy
         f107d_new = f107d_wy
         kp_eld    = kp_wy

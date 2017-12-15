@@ -14,7 +14,7 @@
       USE module_precision
       USE module_IPE_dimension,ONLY: ISPEC,ISPEV,IPDIM
       USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,Pvalue,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d,ON_m3,HN_m3,N2N_m3,O2N_m3,HE_m3,N4S_m3,TN_k,TINF_k,un_ms1,mlon_rad
-      USE module_input_parameters,ONLY: time_step,F107D,F107AV,DTMIN_flip  &
+      USE module_input_parameters,ONLY: time_step,F107D_ipe,F107AV_ipe,DTMIN_flip  &
      &, sw_INNO,FPAS_flip,HEPRAT_flip,COLFAC_flip,sw_IHEPLS,sw_INPLS,sw_debug,iout, start_time  &
      &, HPEQ_flip, sw_wind_flip, sw_depleted_flip, start_time_depleted &
      &, sw_output_fort167,mpfort167,lpfort167 &
@@ -112,8 +112,8 @@
 !      DT        = REAL(time_step)
       DT        = REAL(ip_freq_paraTrans) !nm20160420
       DTMIN     = DTMIN_flip
-      F107D_dum = F107D
-      F107A_dum = F107AV
+      F107D_dum = F107D_ipe
+      F107A_dum = F107AV_ipe
 
 !nm20110822: moved from module_plasma
 !! I need to get the new get_sza based on phil's method

@@ -3,7 +3,7 @@
 !      program test_supim_exb
       SUBROUTINE supim_EXBV(utime,IFL,LT_SEC,r_apex,GLON_deg,VEXBup_out)
       USE module_precision
-      USE module_input_parameters,ONLY:NYEAR,NDAY,F107AV,F107D
+      USE module_input_parameters,ONLY:NYEAR,NDAY,F107AV_ipe,F107D_ipe
      &,start_time
       IMPLICIT NONE       
 !
@@ -38,8 +38,8 @@
 ! input parameters
       IYEAR=NYEAR  !1998
       IDAY=NDAY    !74
-      F107A=F107AV !187.
-      F107=F107D   !184.
+      F107A=F107AV_ipe !187.
+      F107=F107D_ipe   !184.
       AP=4.
 ! LOW ALTITUDE DRIFT PATTERN
       JDJ=10
