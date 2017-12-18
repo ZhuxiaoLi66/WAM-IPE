@@ -14,14 +14,12 @@
 ! mark them as f107_wy, kp_wy tp avoid mixture with real f107/kp
 ! add fixed sets for          f107_fix, f107d_fix, kp_fix
 !
-      REAL, POINTER, DIMENSION(:) :: f107_wy, kp_wy, kpa_wy, f107d_wy, hp_wy, hpi_wy
-      REAL, POINTER, DIMENSION(:) :: swbz_wy, swvel_wy, swbt_wy, swang_wy
-      REAL, POINTER, DIMENSION(:) :: f107,    kp,    kpa,    f107d,    hp,    hpi 
-      REAL, POINTER, DIMENSION(:) :: swbz,    swvel,    swbt,    swang
+      REAL, POINTER, DIMENSION(:) :: f107_wy, kp_wy, kpa_wy, f107d_wy, hp_wy
+      REAL, POINTER, DIMENSION(:) :: hpi_wy, swbz_wy, swvel_wy, swbt_wy, swang_wy
       REAL                        :: f107_fix, f107d_fix, kp_fix
       REAL                        :: swpcf107_fix, swpcf107d_fix, swpckp_fix
       REAL                        :: interpolate_weight
-      CONTAINs
+      CONTAINS
 
       SUBROUTINE read_wam_f107_kp_txt
 
