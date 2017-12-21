@@ -13,7 +13,7 @@
 ! ADDRESS: 325 Broadway, Boulder, CO 80305
 !--------------------------------------------  
       MODULE module_input_parameters
-      USE wam_f107_kp_mod,ONLY: f107_kp_size,f107_kp_interval,f107_kp_skip_size,f107_kp_read_in_size,f107_kp_data_size ! namelist options
+      USE ipe_f107_kp_mod,ONLY: f107_kp_size,f107_kp_interval,f107_kp_skip_size,f107_kp_read_in_size,f107_kp_data_size ! namelist options
       USE module_precision
       USE module_IPE_dimension,ONLY: NLP,NMP,NPTS2D
       IMPLICIT NONE
@@ -322,7 +322,7 @@
 ! initialise plasma grids
         SUBROUTINE read_input_parameters ( )
         USE module_IPE_dimension,ONLY: NLP,NMP,NPTS2D
-        USE wam_f107_kp_mod,ONLY: read_wam_f107_kp_txt,& ! function(s)
+        USE ipe_f107_kp_mod,ONLY: read_ipe_f107_kp_txt,& ! function(s)
                                   hp_wy,hpi_wy,swbt_wy,swbz_wy,swvel_wy,swang_wy,f107_wy,f107d_wy,kp_wy,kpa_wy ! arrays
 
         IMPLICIT NONE
@@ -412,7 +412,7 @@
                  kp_eld(f107_kp_size),f107_new(f107_kp_size),f107d_new(f107_kp_size),gwatts(f107_kp_size),levpi(f107_kp_size), &
                  bz(f107_kp_size),swbt(f107_kp_size),swangle(f107_kp_size),swvel(f107_kp_size),ap_eld(f107_kp_size),kpa_eld(f107_kp_size), &
                  apa_eld(f107_kp_size))
-        call read_wam_f107_kp_txt  ! now we have *_wy arrays
+        call read_ipe_f107_kp_txt  ! now we have *_wy arrays
         do i=1,f107_kp_size
           write(6,*) 'amk wy',i,f107_wy(i),kp_wy(i)
         end do

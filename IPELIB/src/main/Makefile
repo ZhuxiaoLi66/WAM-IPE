@@ -22,7 +22,7 @@ SSRCS = module_close_files.f90             \
         module_physical_constants.f90      \
         module_precision.f90               \
         module_unit_conversion.f90         \
-        wam_f107_kp_mod.f90
+        ipe_f107_kp_mod.f90
 
 
 CSRCS = runnable.c                         \
