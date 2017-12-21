@@ -103,9 +103,6 @@
         endif
       enddo
 
-      do i=1,f107_kp_size
-        write(6,*) 'amk iwy',f107_wy(i),kp_wy(i)
-      end do
       END SUBROUTINE read_wam_f107_kp_txt
 
 !==========================================================

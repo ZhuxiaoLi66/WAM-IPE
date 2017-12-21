@@ -417,9 +417,6 @@
         IOST_RD = 0
         istat   = 0
         call read_ipe_f107_kp_txt  ! now we have *_wy arrays
-        do i=1,f107_kp_size
-          write(6,*) 'amk wy',i,f107_wy(i),kp_wy(i)
-        end do
         ! assign *_wy arrays to module-local public arrays
         gwatts = hp_wy
         levpi = hpi_wy
@@ -431,13 +428,8 @@
         f107d_new = f107d_wy
         kp_eld    = kp_wy
         kpa_eld   = kpa_wy
-        do i=1,f107_kp_size
-          write(6,*) 'amk eld',i,f107_new(i),kp_eld(i)
-        end do
-        write(6,*) 'amk done assignments'
         call kp2ap(kp_eld,  ap_eld)
         call kp2ap(kpa_eld, apa_eld)
-        write(6,*) 'amk done kp2ap'
 !SMS$SERIAL END
         
         CLOSE(LUN_nmlt)
