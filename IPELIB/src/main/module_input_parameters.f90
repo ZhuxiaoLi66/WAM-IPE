@@ -401,6 +401,7 @@
         WRITE(UNIT=LUN_LOG0,FMT=*)'NMP=',NMP,' NLP=',NLP,' NPTS2D=',NPTS2D
         WRITE(UNIT=LUN_LOG0,FMT=*)'real_prec=',real_prec,' int_prec=',int_prec
         CLOSE(LUN_LOG0)
+!SMS$SERIAL END
         ! start wam_f107_kp_mod reads
         ! manipulate the skip_size, since we start from 0 but begin at skip_size+1
         input_params_begin = f107_kp_skip_size
@@ -412,6 +413,9 @@
                  kp_eld(f107_kp_size),f107_new(f107_kp_size),f107d_new(f107_kp_size),gwatts(f107_kp_size),levpi(f107_kp_size), &
                  bz(f107_kp_size),swbt(f107_kp_size),swangle(f107_kp_size),swvel(f107_kp_size),ap_eld(f107_kp_size),kpa_eld(f107_kp_size), &
                  apa_eld(f107_kp_size))
+!SMS$SERIAL(<IOST_RD,istat,OUT>) BEGIN
+        IOST_RD = 0
+        istat   = 0
         call read_ipe_f107_kp_txt  ! now we have *_wy arrays
         do i=1,f107_kp_size
           write(6,*) 'amk wy',i,f107_wy(i),kp_wy(i)
@@ -434,8 +438,8 @@
         call kp2ap(kp_eld,  ap_eld)
         call kp2ap(kpa_eld, apa_eld)
         write(6,*) 'amk done kp2ap'
-        
 !SMS$SERIAL END
+        
         CLOSE(LUN_nmlt)
 222     IF ( IOST_OP /= 0 ) THEN
           WRITE(UNIT=*, FMT=*) "OPEN NAMELIST FAILED!", IOST_OP
