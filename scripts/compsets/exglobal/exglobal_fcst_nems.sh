@@ -657,8 +657,8 @@ if [ $gfsio_in = .true. ] ; then export GB=1 ; fi
 export IDEA=${IDEA:-.false.}
 export WAM_IPE_COUPLING=${WAM_IPE_COUPLING:-.false.}
 export HEIGHT_DEPENDENT_G=${HEIGHT_DEPENDENT_G:-.false.}
-export F107_KP_SIZE=${F107_KP_SIZE:-56}
-export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-56}
+export F107_KP_SIZE=${F107_KP_SIZE:-$((60*37+1))}
+export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-$((60*37+1))}
 export F107_KP_SKIP_SIZE=${F107_KP_SKIP_SIZE:-0}
 export F107_KP_INTERVAL=${F107_KP_INTERVAL:-10800}
 
@@ -1384,8 +1384,6 @@ cat  > IPE.inp <<EOF
   zlbnp_inp=115.00
 /
 &nmipe
-  f107av=113.0
-  f107d=126.0
   internalTimeLoopMax=18
   ip_freq_eldyn=60
   ip_freq_msis=180
@@ -1408,6 +1406,7 @@ cat  > IPE.inp <<EOF
   f107_kp_size=$F107_KP_SIZE,
   f107_kp_interval=$F107_KP_INTERVAL,
   f107_kp_skip_size=$F107_KP_SKIP_SIZE
+  f107_kp_data_size=$F107_KP_DATA_SIZE
 /
 &nmswitch
   duration=$(((10#$FHMAX-10#$FHINI)*3600))
@@ -1910,6 +1909,7 @@ cat  > atm_namelist <<EOF
   f107_kp_size=$F107_KP_SIZE,
   f107_kp_interval=$F107_KP_INTERVAL,
   f107_kp_skip_size=$F107_KP_SKIP_SIZE,
+  f107_kp_data_size=$F107_KP_DATA_SIZE,
   ngptc=$NGPTC, hybrid=$HYBRID, tfiltc=$TFILTC,
   gen_coord_hybrid=$GEN_COORD_HYBRID,
   thermodyn_id=$THERMODYN_ID, sfcpress_id=$SFCPRESS_ID,
