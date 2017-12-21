@@ -416,16 +416,16 @@
          if (trim(SPW_DRIVERS)=='swpc_fst') then
 ! read the f10.7 and kp multi-time input data.
 !---------------------------------------------
-          IF(.NOT.ASSOCIATED(f107_wy )) ALLOCATE(f107_wy (f107_kp_size))
-          IF(.NOT.ASSOCIATED(kp_wy   )) ALLOCATE(kp_wy   (f107_kp_size))
-          IF(.NOT.ASSOCIATED(f107d_wy)) ALLOCATE(f107d_wy(f107_kp_size))
-          IF(.NOT.ASSOCIATED(kpa_wy  )) ALLOCATE(kpa_wy  (f107_kp_size))
-          IF(.NOT.ASSOCIATED(hp_wy   )) ALLOCATE(hp_wy   (f107_kp_size))
-          IF(.NOT.ASSOCIATED(hpi_wy  )) ALLOCATE(hpi_wy  (f107_kp_size))
-          IF(.NOT.ASSOCIATED(swbt_wy )) ALLOCATE(swbt_wy (f107_kp_size))
-          IF(.NOT.ASSOCIATED(swang_wy)) ALLOCATE(swang_wy(f107_kp_size))
-          IF(.NOT.ASSOCIATED(swvel_wy)) ALLOCATE(swvel_wy(f107_kp_size))
-          IF(.NOT.ASSOCIATED(swbz_wy )) ALLOCATE(swbz_wy (f107_kp_size))
+          IF(.NOT.ALLOCATED(f107_wy )) ALLOCATE(f107_wy (f107_kp_size))
+          IF(.NOT.ALLOCATED(kp_wy   )) ALLOCATE(kp_wy   (f107_kp_size))
+          IF(.NOT.ALLOCATED(f107d_wy)) ALLOCATE(f107d_wy(f107_kp_size))
+          IF(.NOT.ALLOCATED(kpa_wy  )) ALLOCATE(kpa_wy  (f107_kp_size))
+          IF(.NOT.ALLOCATED(hp_wy   )) ALLOCATE(hp_wy   (f107_kp_size))
+          IF(.NOT.ALLOCATED(hpi_wy  )) ALLOCATE(hpi_wy  (f107_kp_size))
+          IF(.NOT.ALLOCATED(swbt_wy )) ALLOCATE(swbt_wy (f107_kp_size))
+          IF(.NOT.ALLOCATED(swang_wy)) ALLOCATE(swang_wy(f107_kp_size))
+          IF(.NOT.ALLOCATED(swvel_wy)) ALLOCATE(swvel_wy(f107_kp_size))
+          IF(.NOT.ALLOCATED(swbz_wy )) ALLOCATE(swbz_wy (f107_kp_size))
           call read_wam_f107_kp_txt
           if (me==0) write(6,*) 
      & ' SPW_DRIVERS => swpc_fst, 3-day forecasts:', trim(SPW_DRIVERS)

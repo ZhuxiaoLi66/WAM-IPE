@@ -14,8 +14,8 @@
 ! mark them as f107_wy, kp_wy tp avoid mixture with real f107/kp
 ! add fixed sets for          f107_fix, f107d_fix, kp_fix
 !
-      REAL, POINTER, DIMENSION(:) :: f107_wy, kp_wy, kpa_wy, f107d_wy, hp_wy
-      REAL, POINTER, DIMENSION(:) :: hpi_wy, swbz_wy, swvel_wy, swbt_wy, swang_wy
+      REAL, ALLOCATABLE, DIMENSION(:) :: f107_wy, kp_wy, kpa_wy, f107d_wy, hp_wy
+      REAL, ALLOCATABLE, DIMENSION(:) :: hpi_wy, swbz_wy, swvel_wy, swbt_wy, swang_wy
       REAL                        :: f107_fix, f107d_fix, kp_fix
       REAL                        :: swpcf107_fix, swpcf107d_fix, swpckp_fix
       REAL                        :: interpolate_weight
@@ -30,7 +30,7 @@
 !
 !  13Apr2017   Houjun Wang, enable handling cases when f107=0 or too small
 
-      CHARACTER*20 :: issuedate, realdate(f107_kp_size)
+      CHARACTER*20 :: realdate(f107_kp_size)
       CHARACTER*20 :: realdate_work
       INTEGER      :: i, j
       INTEGER      :: f107_flag_work, kp_flag_work
@@ -45,11 +45,10 @@
 !--------------------------------------------------------
       OPEN(79, FILE='wam_input_f107_kp.txt', FORM='formatted')
       REWIND 79
-      READ(79, 1000) issuedate
-      DO i = 1, 4
+      DO i = 1, 5
           READ(79, *)    
       END DO
-
+!      write(6,*) 'skip_size',f107_kp_skip_size
       DO i = 1, f107_kp_skip_size
           READ(79, *) realdate_work, f107_work, kp_work,           &
                f107_flag_work, kp_flag_work, f107d_work, kpa_work, &
@@ -60,13 +59,14 @@
 !----------------------------------------      
       f107_kp_read_in_size = f107_kp_data_size - f107_kp_skip_size
 !
+!      write(6,*) 'read_in_size',MIN(f107_kp_read_in_size,f107_kp_size)
       DO i = 1, MIN(f107_kp_read_in_size, f107_kp_size)
 !
-!old      DO i = 1, f107_kp_read_in_size
-          READ(79, *) realdate(i), f107_wy(i), kp_wy(i),             &
-               f107_flag(i), kp_flag(i), f107d_wy(i), kpa_wy(i),     &
-               hp_wy(i), hpi_wy(i), swbt_wy(i), swang_wy(i),         &
-               swvel_wy(i), swbz_wy(i)
+        READ(79, *) realdate(i), f107_wy(i), kp_wy(i),             &
+             f107_flag(i), kp_flag(i), f107d_wy(i), kpa_wy(i),     &
+             hp_wy(i), hpi_wy(i), swbt_wy(i), swang_wy(i),         &
+             swvel_wy(i), swbz_wy(i)
+!        write(6,*) i, f107_wy(i), kp_wy(i)
       END DO
       CLOSE(79)
 !
@@ -85,35 +85,27 @@
           swvel_wy(i) = swvel_wy(f107_kp_read_in_size)
           swbz_wy (i) = swbz_wy (f107_kp_read_in_size)
       END DO
-!For testing.
-!------------
-!      f107=70.0
-!      kp=2.0
 
 ! HW 15May2016
 ! In case of f107 == 0 or too small, 
 ! use the last-readin 'correct' value or f107_81d_avg 
       do i = 1, f107_kp_size
-      if (f107_wy(i) >= 70.0) then
-         f107_work = f107_wy(i)
-      endif
+        if (f107_wy(i) >= 70.0) then
+          f107_work = f107_wy(i)
+        endif
       enddo
 
       if (f107_work < 70.0) f107_work = f107_81d_avg
 
       do i = 1, f107_kp_size
-      if (f107_wy(i) < 70.0) then
-         f107_wy(i) = f107_work
-      endif
+        if (f107_wy(i) < 70.0) then
+          f107_wy(i) = f107_work
+        endif
       enddo
 
-1000  FORMAT(20x, a20)
-1001  FORMAT(20x, f3.0)
-      PRINT*, 'issuedate=', issuedate
-      PRINT*, 'f107_81d_avg=', f107_81d_avg
-      DO i = 1, f107_kp_read_in_size
-          PRINT*, i, f107_wy(i), kp_wy(i), f107_flag(i), kp_flag(i)
-      END DO
+      do i=1,f107_kp_size
+        write(6,*) 'amk iwy',f107_wy(i),kp_wy(i)
+      end do
       END SUBROUTINE read_wam_f107_kp_txt
 
 !==========================================================
