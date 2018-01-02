@@ -24,7 +24,7 @@
       USE module_precision
 !     plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,plasma_3d_old are all IN arrays
       USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,ht90,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d_old, mlon_rad,maxAltitude,minAltitude,minTheta,poleVal
-      USE module_input_parameters,ONLY:sw_perp_transport,sw_debug,sw_ksi,mype,lps,lpe,mps,mpe,nprocs,sw_ihepls,sw_inpls
+      USE module_input_parameters,ONLY:sw_perp_transport,sw_debug,sw_ksi,mype,lps,lpe,mps,mpe,nprocs,sw_ihepls,sw_inpls,sw_th_or_R
       USE module_plasma,ONLY:plasma_1d 
       USE module_IPE_dimension,ONLY: ISPEC,ISPET,IPDIM, ISTOT, NMP
       USE module_physical_constants,ONLY: earth_radius,pi,zero,rtd
@@ -138,8 +138,12 @@ rapex(0) = r0_apex
 !d tmp_lam = ACOS(SQRT((earth_radius+ht90)/r0_apex  ))
 !d print "('!dbg20140528 lambda1=',f8.6)",tmp_lam
 !NH ihem=1 only 
-lambda_m(0) = pi*0.50 - theta_t0(ihem)
+IF ( sw_th_or_R==0 ) THEN
+  lambda_m(0) = pi*0.50 - theta_t0(ihem)
 !d print "('!dbg20140528 lambda2=',f8.6,' dif=',f8.6,' mp=',i3,' lp=',i4)",lambda_m(0),(tmp_lam-lambda_m(0)),mp,lp
+ELSE IF ( sw_th_or_R==1 ) THEN
+  lambda_m(0) = ACOS(SQRT((earth_radius+ht90)/r0_apex  ))
+END IF !sw_th_or_R
 
 !R of apex altitude for the two IN/OUT FTs
 DO ilp=1,2  !outer/inner flux tubes
@@ -154,58 +158,45 @@ DO ilp=1,2  !outer/inner flux tubes
   
 !note: this factor cannot work when lp<=6!!!
 !nm20140630 i may not need this line at all???
-!t  IF ( lp>6 ) THEN
-!t    lambda_m(ilp)= ACOS(SQRT((earth_radius+ht90)/rapex(ilp)))
+  IF ( sw_th_or_R==1.and.lp>6 ) THEN
+     lambda_m(ilp) = ACOS(SQRT((earth_radius+ht90)/rapex(ilp)))
 !t print "('!dbg20140627 lambda_m=',f8.6,' ilp=',i4,' rapex',f9.0)",lambda_m(ilp),ilp,rapex(ilp)
-!t ELSE
+  ELSE
   !note: this factor cannot work when lp<=6!!!
   !because rapex does not mean anything for lp<=6
-    lambda_m(ilp)  = pi*0.5 - plasma_grid_GL( JMIN_IN(lp0),lp0 )
+     lambda_m(ilp) = pi*0.5 - plasma_grid_GL( JMIN_IN(lp0),lp0 )
 
-!t  END IF
+  END IF !
 END DO  !DO ilp=1,2
   
 !not sure which factor is more correct??? either r- or lambda (gip) base???
 !note: tmp_fac1 is not available lp<=6 because rapex(1)=(2)
-!t tmp_fac1 = ( rapex(0)-rapex(2) ) / ( rapex(1)-rapex(2) )
-!t write(9001, "('!dbg20140528 tmp_fac1=',f8.6,' mp=',i3,' lp=',i4)")tmp_fac1,mp,lp
-tmp_fac2 = ( lambda_m(0) - lambda_m(2)) / (lambda_m(1) - lambda_m(2))
 
+IF ( sw_th_or_R==1.and.lp>6.and.rapex(1)/=rapex(2) ) THEN
 
-!t IF ( lp>6 ) THEN
-! r = RE + ha(APEX height)
-!!!  rapex(0)=( earth_radius + ht90 ) / ( COS( lambda_m(0) ) * COS( lambda_m(0)) )
-!d  factor = ( rapex(0)-rapex(2) ) / ( rapex(1)-rapex(2) )
-!t   IF ( rapex(1)/=rapex(2) ) THEN
-!t      factor = tmp_fac1
-!t   ELSE
-!t      print *,'!sub-interpolate_ft: STOP! INVALID factor,rapex', factor,rapex,mp,lp
-!t      STOP
-!t   END IF
-!tELSE !IF lp<=6
-!???not sure if the rapex(0) mean anything for huge flux tubes??? thus use the factor of the magnetic apex latitude as in GIP...
-! the values are only for NH
+      factor = ( rapex(0)-rapex(2) ) / ( rapex(1)-rapex(2) )
 
-!d  factor = ( lambda_m(0) - lambda_m(2)) / (lambda_m(1) - lambda_m(2))
-   IF ( lambda_m(1)/=lambda_m(2) ) THEN
-      factor = tmp_fac2
-   ELSE
+ELSE IF ( lambda_m(1)/=lambda_m(2) ) THEN
+   ! the values are only for NH
+      factor = ( lambda_m(0) - lambda_m(2)) / (lambda_m(1) - lambda_m(2))
+ELSE
 !SMS$ignore begin
-      print *,'!sub-interpolate_ft: STOP! INVALID factor:lambda', factor,lambda_m,mp,lp,mype
+   print *,'!sub-interpolate_ft: STOP! INVALID factor:lambda', factor,lambda_m,mp,lp,mype
 !SMS$ignore end
-      STOP
-   END IF
- 
+   STOP
+END IF
 
-!t END IF
+
+
+
 
 !error trap
-IF ( factor>1.0.OR.factor<zero) THEN
+IF ( factor>1.0.OR.factor<0.0) THEN
 !SMS$ignore begin
-  print *,'!!!INVALID factor!!!',factor,mp,lp,rapex(0:2),lambda_m(0:2),mype
+  print"('sub-interpolate_flux_tube:INVALID factor=',e12.4,'mp=',i3,'lp=',i4,'rapex=',3e12.4,'lambda_m=',3e12.4,'mype=',i4)",factor,mp,lp,rapex(0:2),lambda_m(0:2),mype
 !SMS$ignore end
   IF ( factor>1.0 )factor=1.0
-  IF ( factor<zero )factor=zero
+  IF ( factor<0.0 )factor=0.0
 ENDIF
 
 
@@ -232,8 +223,12 @@ mp_t0_loop1: DO imp=1,imp_max
 !weighting of X between Nin & Nout
 ! X can be either R or lambda (but only at IN/IS!!!)
    IF( r(1)/=r(2) ) then
-!dbg20141210      x(0:2) = r(0:2)
+
+      if ( sw_th_or_R==1 ) then
+         x(0:2) = r(0:2)
+      else if ( sw_th_or_R==0 ) then
          x(0:2) = lambda_m(0:2)
+      end if !sw_th_or_R
 
    ELSE IF( r(1)==r(2) ) THEN
 
