@@ -3,8 +3,8 @@
 !purpose: initialization of tiros routine
       subroutine tiros_init_ipe()
       use tirosdata_ipe
-      CHARACTER (LEN=*), parameter :: filename3='ionprof_ipe'
-      CHARACTER (LEN=*), parameter :: filename7='tiros_spectra_ipe'
+      CHARACTER (LEN=*), parameter :: filename3='ionprof'
+      CHARACTER (LEN=*), parameter :: filename7='tiros_spectra'
       CHARACTER (LEN=100) :: string_dum
       INTEGER :: istat, i
       INTEGER, parameter :: UNIT3=103
