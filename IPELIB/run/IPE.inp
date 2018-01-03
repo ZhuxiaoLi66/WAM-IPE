@@ -32,8 +32,8 @@
   zlbnp_inp=115.00
 /
 &nmipe
-  f107av=113.0
-  f107d=126.0
+  f107av_ipe=113.0
+  f107d_ipe=126.0
   internalTimeLoopMax=1
   ip_freq_eldyn=60
   ip_freq_msis=900
