@@ -37,10 +37,10 @@
       SUBROUTINE eldyn ( utime )
       USE module_precision
       USE module_cal_monthday
-      USE module_input_parameters,ONLY:NYEAR,NDAY,start_time,mype       &
-     &,ip_freq_output,sw_debug,F107D_ipe => F107D                       &
-     &,lpi,bz_eld,by_eld,kp_eld,sw_bnd_wei,bnd_wei_eld,lat_sft_eld      &
-     &,sw_ctip_input,utime0LPI
+      USE module_input_parameters,ONLY:NYEAR,NDAY,start_time,mype &
+     &,ip_freq_output,sw_debug,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld  &
+     &,lat_sft_eld,sw_ctip_input,utime0LPI,f107_new,f107d_new &
+     &,input_params_begin,input_params_interval
       USE module_physical_constants,ONLY:rtd
 !nm20121003:
       USE module_eldyn,ONLY:theta90_rad,j0,Ed1_90,Ed2_90,j1,coslam_m
@@ -68,11 +68,21 @@
 !nm20130402: temporarily hard-code the iday to get b4bconfirmed.
 !      iday_m=15                 !day of month 
 
+      if ( sw_ctip_input ) then
+        LPI = INT( ( utime - utime0LPI ) / real(input_params_interval) ) + 1 + input_params_begin
+!t        if(sw_debug)
+        print*,'sub-eld: LPI=',lpi
+!t        if(sw_debug)
+        print*,'sub-eld: utime',utime,'dt_m=',((utime-utime0LPI)/60.)
+      else
+        LPI=1
+      end if
+
 !!! F107D is global both in module efield & ipe input
-      f107d = F107D_ipe         !f107
+      f107d = F107_new(LPI)         !f107
       ut = REAL(utime,real_prec)/3600.0
       if(ut>=24.) ut=MOD(ut,24.)
-      kp = kp_eld  !=1.                   !???
+      kp = kp_eld(LPI)  !=1.                   !???
 !      bz = .433726 - kp*(.0849999*kp + .0810363)                        &
 !     &        + f107d*(.00793738 - .00219316*kp)
  
@@ -81,24 +91,9 @@
       if ( utime==start_time ) then
         print *,'iday',iday, 'imo',imo,' iday_m',iday_m,' iyear',iyear
         print *,' kp',kp
-        print *,'IPE By=',by,' Bz=',bz,' F107d=',f107d
       end if
 
 !nm20151104
-      if ( sw_ctip_input ) then
-        LPI = INT( ( utime - utime0LPI ) / 60. ) +1
-!t        if(sw_debug)
-        print*,'sub-eld: LPI=',lpi
-!t        if(sw_debug)
-        print*,'sub-eld: utime',utime,'dt_m=',((utime-utime0LPI)/60.)
-      else
-        LPI=1
-      end if
-      bz = bz_eld(LPI)
-      by = by_eld(LPI)
-
-      if(sw_debug)print *,'Bz=',bz,' By=',by
-
 !nm20151105
 !-------------------------------------------------------------------
 ! find latitudinal shift

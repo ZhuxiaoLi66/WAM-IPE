@@ -13,6 +13,7 @@
 ! ADDRESS: 325 Broadway, Boulder, CO 80305
 !--------------------------------------------  
       MODULE module_input_parameters
+      USE ipe_f107_kp_mod,ONLY: f107_kp_size,f107_kp_interval,f107_kp_skip_size,f107_kp_read_in_size,f107_kp_data_size ! namelist options
       USE module_precision
       USE module_IPE_dimension,ONLY: NLP,NMP,NPTS2D
       IMPLICIT NONE
@@ -32,8 +33,8 @@
       INTEGER (KIND=int_prec), PUBLIC   :: MaxLpHaloUsed=0 !Max lp halo size used for the entire run
       INTEGER (KIND=int_prec), PUBLIC   :: MaxMpHaloUsed=0 !Max mp halo size used for the entire run
 
-      REAL (KIND=real_prec), PUBLIC :: F107D   !.. Daily F10.7
-      REAL (KIND=real_prec), PUBLIC :: F107AV  !.. 81 day average F10.7
+      REAL (KIND=real_prec), PUBLIC :: F107D_ipe   !.. Daily F10.7
+      REAL (KIND=real_prec), PUBLIC :: F107AV_ipe  !.. 81 day average F10.7
 !
       INTEGER (KIND=int_prec), PUBLIC :: NYEAR ! year
       INTEGER (KIND=int_prec), PUBLIC :: NDAY  ! day number
@@ -106,30 +107,31 @@
 !             ap(1) = magnetic index(daily) (use 4 in lower atmos.)     
 !             ap(2)=current 3hr ap index (used only when sw(9)=-1.) 
 !
-!--- ELDYN specific input parameters
-      REAL (KIND=real_prec), PUBLIC :: kp_eld      =  1.0    ! geomagnetic index
-      LOGICAL, PUBLIC :: sw_bnd_wei=.false.
-      REAL (KIND=real_prec), PUBLIC :: bnd_wei_eld = 44.   ! weimer boundary setting
-      REAL (KIND=real_prec), PUBLIC :: lat_sft_eld = 54.   ! weimer boundary setting
+!    Solar & geomagnetic input parameters
+      INTEGER (KIND=int_prec), PUBLIC :: input_params_begin, input_params_interval
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: kp_eld    ! transfer kp_wy here to become ap eventually
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: kpa_eld   ! transfer kpa_wy here to become apa eventually
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: f107_new  ! transfer f107_wy here
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: f107d_new ! transfer f107d_wy here
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: gwatts  ! transfer hp_wy here
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: levpi   ! transfer hpi_wy here
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: bz      ! transfer swbz_wy here
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: swbt    ! transfer swbt_wy here
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: swangle ! transfer swang_wy here
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: swvel   ! transfer swvel_wy here
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: ap_eld  ! transfer kp_wy->kp2ap->ap_eld
+      REAL (KIND=real_prec), DIMENSION(:), ALLOCATABLE, PUBLIC :: apa_eld ! transfer kpa_wy->kp2ap->apa_eld
+      LOGICAL, PUBLIC :: sw_bnd_wei=.false.              ! this doesn't seem to be used, really
+      REAL (KIND=real_prec), PUBLIC :: bnd_wei_eld = 44. ! weimer boundary setting
+      REAL (KIND=real_prec), PUBLIC :: lat_sft_eld = 54. ! weimer boundary setting
 ! for now inputs available every minute for 24hrs
 !     INTEGER (KIND=int_prec), PARAMETER, PUBLIC :: nLevPI = 1440   !=60min/hr*24hr/dy
       INTEGER (KIND=int_prec), PARAMETER, PUBLIC :: nLevPI = 6000
       INTEGER (KIND=int_prec),            PUBLIC :: LPI    =  1     ! time(minute) index for magnetic indices
-! weimer inputs:(0) default setting: bz/y
-      REAL (KIND=real_prec), DIMENSION(nLevPI), PUBLIC :: bz_eld!      = -0.3163809  ! geomagnetic index
-      REAL (KIND=real_prec), DIMENSION(nLevPI), PUBLIC :: by_eld!      =  0.000  ! geomagnetic index
 
 ! weimer inputs:(1) solar wind parameters from ctip input when sw_ctip_input is ON:
       LOGICAL, PUBLIC :: sw_ctip_input=.false.
       INTEGER (KIND=int_prec), PUBLIC   :: utime0LPI=518400 !start time UT[sec] of the ctip input parameters  
-      REAL (KIND=real_prec), DIMENSION(nLevPI), PUBLIC :: swbt! 4.98  !solar wind total magnetic field
-      REAL (KIND=real_prec), DIMENSION(nLevPI), PUBLIC :: swangle! 80.88 !solar wind angle
-      REAL (KIND=real_prec), DIMENSION(nLevPI), PUBLIC :: swvel! 449.47 !solar wind velocity
-
-! tiros inputs [Foster et al 1986grl]
-      INTEGER (KIND=int_prec),  DIMENSION(nLevPI), PUBLIC :: LevPI     ! Power Index 
-      REAL    (KIND=real_prec), DIMENSION(nLevPI), PUBLIC :: GWatts!  1.7   ! Power Input [GW]
-
 
 !--- all the SWITCHes either integer or logical or character
       LOGICAL, PUBLIC :: sw_debug=.false.
@@ -220,8 +222,8 @@
      &,stop_time &
      &,time_step &
      &,dumpFrequency &
-     &,F107D   &
-     &,F107AV  &
+     &,F107D_ipe   &
+     &,F107AV_ipe  &
      &,NYEAR  &
      &,NDAY   &
      &,internalTimeLoopMax &
@@ -297,20 +299,14 @@
            &, barriersOn
 !nm20120304           &, PCO_flip       &
 !nm20120304           &, BLON_flip      &
-      NAMELIST/NMMSIS/AP  
-      NAMELIST/NMWEIM/  &
-     & bnd_wei_eld &
-     &,by_eld &
-     &,bz_eld &
-     &,kp_eld &
-     &,lat_sft_eld &
-     &,swangle &
-     &,swbt &
-     &,swvel
-      NAMELIST/NMTIROS/  &
-     & GWatts &
-     &,LevPI
-     NAMELIST/IPECAP/ &
+      NAMELIST/NMMSIS/ &
+              AP,                   &
+              f107_kp_read_in_size, &
+              f107_kp_interval,     &
+              f107_kp_skip_size,    &
+              f107_kp_size,         &
+              f107_kp_data_size
+      NAMELIST/IPECAP/ &
               mesh_height_min, &
               mesh_height_max, &
               mesh_write,      &
@@ -326,15 +322,17 @@
 ! initialise plasma grids
         SUBROUTINE read_input_parameters ( )
         USE module_IPE_dimension,ONLY: NLP,NMP,NPTS2D
+        USE ipe_f107_kp_mod,ONLY: read_ipe_f107_kp_txt,& ! function(s)
+                                  hp_wy,hpi_wy,swbt_wy,swbz_wy,swvel_wy,swang_wy,f107_wy,f107d_wy,kp_wy,kpa_wy ! arrays
+
         IMPLICIT NONE
 !MPI requirement 
       ! Joe : July 19, 2017 : This causes an error if serial compilation
       ! is desired. Should have preprocessing flags around it.
 !SMS$INSERT         include "mpif.h"
 !---------
-        INTEGER(KIND=int_prec),PARAMETER :: LUN_nmlt=1,LUN_nmlt2=2
+        INTEGER(KIND=int_prec),PARAMETER :: LUN_nmlt=1
         CHARACTER(LEN=*),PARAMETER :: INPTNMLT='IPE.inp'
-        CHARACTER(LEN=*),PARAMETER :: INPTNMLT2='IPEsw.inp'
         INTEGER(KIND=int_prec) :: IOST_OP=0
         INTEGER(KIND=int_prec) :: IOST_RD=0
         INTEGER (KIND=int_prec), PARAMETER :: LUN_LOG0=10  !output4input parameters only
@@ -343,8 +341,16 @@
 !dbg20160408 sms debug
         INTEGER (KIND=int_prec) :: nElements,ierr
         INTEGER (KIND=int_prec) :: mycore !Processor to which mype is assigned
+        INTEGER :: i
         !MPI communicator to be passed to SMS
      !   INTEGER (KIND=int_prec) :: MPI_COMM_IPE        
+
+        ! defaults for wam_f107_kp namelist options
+        f107_kp_read_in_size = 37*60+1
+        f107_kp_interval     = 60
+        f107_kp_skip_size    = 36*60
+        f107_kp_size         = f107_kp_read_in_size
+        f107_kp_data_size    = f107_kp_size
 
 
 !SMS$INSERT lpHaloSize=1
@@ -358,7 +364,6 @@
 
 !SMS$IGNORE BEGIN
         OPEN(LUN_nmlt, FILE='IPE.inp',ERR=222,IOSTAT=IOST_OP,STATUS='OLD')
-        OPEN(LUN_nmlt2,FILE='IPEsw.inp',ERR=222,IOSTAT=IOST_OP,STATUS='OLD')
         REWIND LUN_nmlt
         READ(LUN_nmlt,NML=IPEDIMS,ERR=222,IOSTAT=IOST_RD)
         REWIND LUN_nmlt
@@ -379,10 +384,6 @@
         READ(LUN_nmlt,NML=NMSWITCH,ERR=222,IOSTAT=IOST_RD)
         REWIND LUN_nmlt
         READ(LUN_nmlt,NML=NMMSIS,ERR=222,IOSTAT=IOST_RD)
-        REWIND LUN_nmlt2
-        READ(LUN_nmlt2,NML=NMWEIM,ERR=222,IOSTAT=IOST_RD)
-        REWIND LUN_nmlt2
-        READ(LUN_nmlt2,NML=NMTIROS,ERR=222,IOSTAT=IOST_RD)
         IF (sw_neutral == 1) THEN
           REWIND LUN_nmlt
           READ(LUN_nmlt,NML=IPECAP   ,ERR=222,IOSTAT=IOST_RD)
@@ -397,14 +398,41 @@
         WRITE(UNIT=LUN_LOG0, NML=NMFLIP)
         WRITE(UNIT=LUN_LOG0, NML=NMSWITCH)
         WRITE(UNIT=LUN_LOG0, NML=NMMSIS)
-        WRITE(UNIT=LUN_LOG0, NML=NMWEIM)
-        WRITE(UNIT=LUN_LOG0, NML=NMTIROS)
         WRITE(UNIT=LUN_LOG0,FMT=*)'NMP=',NMP,' NLP=',NLP,' NPTS2D=',NPTS2D
         WRITE(UNIT=LUN_LOG0,FMT=*)'real_prec=',real_prec,' int_prec=',int_prec
         CLOSE(LUN_LOG0)
 !SMS$SERIAL END
+        ! start wam_f107_kp_mod reads
+        ! manipulate the skip_size, since we start from 0 but begin at skip_size+1
+        input_params_begin = f107_kp_skip_size
+        f107_kp_skip_size = 0
+        input_params_interval = f107_kp_interval
+        ! allocate *_wy arrays and the target arrays
+        ALLOCATE(hp_wy(f107_kp_size),hpi_wy(f107_kp_size),swbt_wy(f107_kp_size),swbz_wy(f107_kp_size),kp_wy(f107_kp_size),    &
+                 swvel_wy(f107_kp_size),swang_wy(f107_kp_size),f107_wy(f107_kp_size),f107d_wy(f107_kp_size),kpa_wy(f107_kp_size), &
+                 kp_eld(f107_kp_size),f107_new(f107_kp_size),f107d_new(f107_kp_size),gwatts(f107_kp_size),levpi(f107_kp_size), &
+                 bz(f107_kp_size),swbt(f107_kp_size),swangle(f107_kp_size),swvel(f107_kp_size),ap_eld(f107_kp_size),kpa_eld(f107_kp_size), &
+                 apa_eld(f107_kp_size))
+!SMS$SERIAL(<IOST_RD,istat,OUT>) BEGIN
+        IOST_RD = 0
+        istat   = 0
+        call read_ipe_f107_kp_txt  ! now we have *_wy arrays
+        ! assign *_wy arrays to module-local public arrays
+        gwatts = hp_wy
+        levpi = hpi_wy
+        swbt  = swbt_wy
+        swvel = swvel_wy
+        bz    = swbz_wy
+        swangle = swang_wy
+        f107_new  = f107_wy
+        f107d_new = f107d_wy
+        kp_eld    = kp_wy
+        kpa_eld   = kpa_wy
+        call kp2ap(kp_eld,  ap_eld)
+        call kp2ap(kpa_eld, apa_eld)
+!SMS$SERIAL END
+        
         CLOSE(LUN_nmlt)
-        CLOSE(LUN_nmlt2)
 222     IF ( IOST_OP /= 0 ) THEN
           WRITE(UNIT=*, FMT=*) "OPEN NAMELIST FAILED!", IOST_OP
           STOP
@@ -495,5 +523,36 @@ print*,mype,'sub-read_input: swNeuPar',swNeuPar
 !SMS$IGNORE end
  
         END SUBROUTINE read_input_parameters
+
+        SUBROUTINE kp2ap(kp,ap_out)
+        ! input: kp array
+        REAL, DIMENSION(:),        INTENT(IN)  :: kp
+        ! output: ap array
+        REAL, DIMENSION(SIZE(kp)), INTENT(OUT) :: ap_out
+        ! local variables
+        REAL    :: lookup, remainder
+        INTEGER :: i
+        INTEGER, PARAMETER, DIMENSION(29) :: table = (/  0,   2,   3, & ! 0-0.67
+                                                         4,   5,   6, & ! 1-1.67
+                                                         7,   9,  12, & ! 2-2.67
+                                                        15,  18,  22, & ! 3-3.67
+                                                        27,  32,  39, & ! 4-4.67
+                                                        48,  56,  67, & ! 5-5.67
+                                                        80,  94, 111, & ! 6-6.67
+                                                       132, 154, 179, & ! 7-7.67
+                                                       207, 236, 300, & ! 8-8.67
+                                                       400, 999/)       ! 9-dumm
+        ! for item in kp
+        DO i=1,size(kp)
+          ! determine where you are in the table
+          lookup    = kp(i) * 3 + 1
+          ! take decimal portion as interpolate value
+          remainder = lookup - INT(lookup)
+          ! assign integer Ap value
+          write(6,*) 'amk lookup',lookup,remainder,INT(lookup),size(table)
+          ap_out(i) = (1 - remainder) * table(INT(lookup)) + remainder * table(INT(lookup)+1)
+        END DO
+
+        END SUBROUTINE kp2ap
 
 END MODULE module_input_parameters

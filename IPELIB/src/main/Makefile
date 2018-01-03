@@ -12,7 +12,7 @@ PSRCS = allocate_arrays.f90                \
         module_read_plasma_grid_global.f90 \
         output_plasma_grid.f90             \
         prepPoleVal.f90                    \
-        stop.f90
+        stop.f90                           
 
 SSRCS = module_close_files.f90             \
         module_io.f90                      \
@@ -21,7 +21,9 @@ SSRCS = module_close_files.f90             \
         module_output.f90                  \
         module_physical_constants.f90      \
         module_precision.f90               \
-        module_unit_conversion.f90
+        module_unit_conversion.f90         \
+        ipe_f107_kp_mod.f90
+
 
 CSRCS = runnable.c                         \
         print_affinity.c                   \

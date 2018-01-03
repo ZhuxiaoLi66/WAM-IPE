@@ -1,4 +1,4 @@
-      MODULE wam_f107_kp_mod
+      MODULE ipe_f107_kp_mod
 !
 ! VAY 2017-02-21 Orchestraion of OLD/NEW SWPC-drivers
 !
@@ -21,7 +21,7 @@
       REAL                        :: interpolate_weight
       CONTAINS
 
-      SUBROUTINE read_wam_f107_kp_txt
+      SUBROUTINE read_ipe_f107_kp_txt
 
 ! Subprogram:  read_wam_f107_kp_txt   read-in the inputted f10.7 and kp data. 
 !   Prgmmr: Weiyu Yang          Date: 2015-10-19
@@ -103,7 +103,10 @@
         endif
       enddo
 
-      END SUBROUTINE read_wam_f107_kp_txt
+      do i=1,f107_kp_size
+        write(6,*) 'amk iwy',f107_wy(i),kp_wy(i)
+      end do
+      END SUBROUTINE read_ipe_f107_kp_txt
 
 !==========================================================
 ! Below two service subs to disable "read_wam_f107_kp_txt"
@@ -137,4 +140,4 @@
       END SUBROUTINE read_spweather_real_data
 !
 
-      END MODULE wam_f107_kp_mod
+      END MODULE ipe_f107_kp_mod

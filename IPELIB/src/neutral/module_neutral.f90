@@ -42,8 +42,8 @@
       USE module_IPE_dimension,ONLY: IPDIM
       use module_FIELD_LINE_GRID_MKS, only : plasma_grid_3d,plasma_grid_Z, apexD, JMIN_IN,JMAX_IS,east,north,up,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,JMIN_ING,JMAX_ISG,WamField
       USE module_physical_constants,ONLY: pi,zero,earth_radius,g0,gscon,massn_kg
-      USE module_input_parameters,ONLY: F107D,F107AV,AP,NYEAR,NDAY,sw_debug,mpstop,sw_grid,start_time,stop_time &
-     &,sw_neutral, swNeuPar,mype, ut_start_perp_trans, sw_use_wam_fields_for_restart
+      USE module_input_parameters,ONLY: F107D_new,F107_new,AP,NYEAR,NDAY,sw_debug,mpstop,sw_grid,start_time,stop_time,apa_eld,ap_eld &
+     &,sw_neutral, swNeuPar,mype, ut_start_perp_trans, sw_use_wam_fields_for_restart,utime0lpi,lpi,input_params_begin,input_params_interval,sw_ctip_input
       USE module_unit_conversion,ONLY: M_TO_KM
       USE module_IO, ONLY:filename,FORM_dum,STATUS_dum,luntmp3
       USE module_open_file, ONLY:open_file
@@ -96,9 +96,24 @@
 
       iyear = NYEAR
       iday  = NDAY
-      f107D_dum  = F107D
-      f107A_dum  = F107AV
-      AP_dum(1:7)= AP(1:7)
+      if ( sw_ctip_input ) then
+        LPI = INT( ( utime - utime0LPI ) / real(input_params_interval) ) + 1 + input_params_begin
+!t        if(sw_debug)
+        print*,'sub-eld: LPI=',lpi
+!t        if(sw_debug)  
+        print*,'sub-eld: utime',utime,'dt_m=',((utime-utime0LPI)/60.)
+      else
+        LPI=1
+      end if
+      f107D_dum  = F107_new(lpi)
+      f107A_dum  = F107d_new(lpi)
+      AP_dum(1) = apa_eld(lpi)
+      AP_dum(2) =  ap_eld(lpi)
+      AP_dum(3) =  ap_eld(lpi-INT( 3.*60*60/input_params_interval))
+      AP_dum(4) =  ap_eld(lpi-INT( 6.*60*60/input_params_interval))
+      AP_dum(5) =  ap_eld(lpi-INT( 9.*60*60/input_params_interval))
+      AP_dum(6) = apa_eld(lpi-INT(12.*60*60/input_params_interval))
+      AP_dum(7) = apa_eld(lpi-INT(36.*60*60/input_params_interval))
       ut_hour = REAL(utime)/3600. !convert from sec to hours
 
       IF( sw_debug )  THEN

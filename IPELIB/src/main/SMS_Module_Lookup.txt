@@ -21,3 +21,4 @@ module_sub_PLASMA ../plasma/module_sub_plasma.f90
 module_sunloc ../eldyn/module_sunloc.f
 module_unit_conversion ../main/module_unit_conversion.f90
 module_preppoleval ./prepPoleVal_sms.f.tmp
+ipe_f107_kp_mod ./ipe_f107_kp_mod.f90
