@@ -138,12 +138,17 @@ rapex(0) = r0_apex
 !d tmp_lam = ACOS(SQRT((earth_radius+ht90)/r0_apex  ))
 !d print "('!dbg20140528 lambda1=',f8.6)",tmp_lam
 !NH ihem=1 only 
-IF ( sw_th_or_R==0 ) THEN
+!IF ( sw_th_or_R==0 ) THEN
+!  lambda_m(0) = pi*0.50 - theta_t0(ihem)
+!ELSE IF ( sw_th_or_R==1 ) THEN
+!  lambda_m(0) = ACOS(SQRT((earth_radius+ht90)/r0_apex  ))
+!END IF !sw_th_or_R
+
+IF ( lp < 37 ) THEN
   lambda_m(0) = pi*0.50 - theta_t0(ihem)
-!d print "('!dbg20140528 lambda2=',f8.6,' dif=',f8.6,' mp=',i3,' lp=',i4)",lambda_m(0),(tmp_lam-lambda_m(0)),mp,lp
-ELSE IF ( sw_th_or_R==1 ) THEN
+ELSE
   lambda_m(0) = ACOS(SQRT((earth_radius+ht90)/r0_apex  ))
-END IF !sw_th_or_R
+END IF
 
 !R of apex altitude for the two IN/OUT FTs
 DO ilp=1,2  !outer/inner flux tubes
@@ -224,11 +229,17 @@ mp_t0_loop1: DO imp=1,imp_max
 ! X can be either R or lambda (but only at IN/IS!!!)
    IF( r(1)/=r(2) ) then
 
-      if ( sw_th_or_R==1 ) then
+     ! if ( sw_th_or_R==1 ) then
+     !    x(0:2) = r(0:2)
+     ! else if ( sw_th_or_R==0 ) then
+     !    x(0:2) = lambda_m(0:2)
+     ! end if !sw_th_or_R
+      if ( lp >= 37 ) then
          x(0:2) = r(0:2)
-      else if ( sw_th_or_R==0 ) then
+      else
          x(0:2) = lambda_m(0:2)
       end if !sw_th_or_R
+
 
    ELSE IF( r(1)==r(2) ) THEN
 

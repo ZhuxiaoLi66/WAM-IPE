@@ -146,7 +146,7 @@ endif
 # theia stanza
 
 ifeq ($(MACHINE),theia)
-  GPTL_USE_GPTL = yes
+  GPTL_USE_GPTL = no
 ifndef MAKEJOBS
   MAKEJOBS      = 24
 endif 
@@ -155,7 +155,7 @@ endif
     FCP       = mpiifort
     FCS       = ifort
     CC        = icc
-    OPT_FLAGS = -O3  -fpp -fp-model strict
+    OPT_FLAGS = -O3  -fpp
     SMS       = /scratch3/NCEPDEV/swpc/noscrub/sms/SMSr825-intel_14.0.2-mpi_5.1.2.150
     ifeq ($(DEBUG),yes)
       DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0 -fpp
