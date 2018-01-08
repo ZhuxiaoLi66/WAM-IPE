@@ -37,10 +37,19 @@
       SUBROUTINE eldyn ( utime )
       USE module_precision
       USE module_cal_monthday
+!SMS$IGNORE BEGIN
+#ifdef HAVE_MPI
       USE module_input_parameters,ONLY:NYEAR,NDAY,start_time,mype &
      &,ip_freq_output,sw_debug,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld  &
      &,lat_sft_eld,sw_ctip_input,utime0LPI,f107_new,f107d_new &
      &,input_params_begin,input_params_interval
+#else
+      USE module_input_parameters,ONLY:NYEAR,NDAY,start_time,mype,
+     & ip_freq_output,sw_debug,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld,
+     & lat_sft_eld,sw_ctip_input,utime0LPI,f107_new,f107d_new,
+     & input_params_begin,input_params_interval
+#endif
+!SMS$IGNORE END
       USE module_physical_constants,ONLY:rtd
 !nm20121003:
       USE module_eldyn,ONLY:theta90_rad,j0,Ed1_90,Ed2_90,j1,coslam_m
