@@ -93,7 +93,7 @@
           IN = JMIN_IN(lp)
           coslam_m(1,lp)=COS(pi*0.5-plasma_grid_GL(IN,lp))
 
-          if(coslam_m(1,lp)<=0.or.coslam_m(1,lp)>=1.)then
+          if(coslam_m(1,lp)<=0.0 .or. coslam_m(1,lp)>=1.0 )then
 !SMS$IGNORE BEGIN
             print*,'sub-get_e:NH!STOP! INVALID coslam!',lp,IN,mype
             print*, coslam_m(1,lp),(90.-plasma_grid_GL(IN,lp)*rtd),     &
@@ -105,7 +105,7 @@
           IS = JMAX_IS(lp)
           coslam_m(2,lp) = COS( pi*0.5-plasma_grid_GL(IS,lp) )
 
-          if(coslam_m(2,lp)<=0.or.coslam_m(2,lp)>=1.)then
+          if(coslam_m(2,lp)<=0.0 .or. coslam_m(2,lp)>=1.0 )then
 !SMS$IGNORE BEGIN
             print*,'sub-get_e:SH!STOP! INVALID coslam!',lp,IS,mype
             print*, coslam_m(2,lp),(90.-plasma_grid_GL(IS,lp)*rtd),     & 
@@ -287,7 +287,7 @@
           jj1=j1(1,lp)
           pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50 
           pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
-          if (r<=0..or.coslam_m(1,lp)==0..or.d_phi_m==0.)then
+          if (r<=0.0 .or. coslam_m(1,lp)==0.0 .or. d_phi_m==0.0 )then
 !SMS$IGNORE BEGIN
             print*,'sub-get_e:NH!STOP! INVALID',lp,ihem,mp,mype
             print*, r,coslam_m(1,lp),d_phi_m
@@ -317,7 +317,7 @@
           jj1=j1(2,lp)              !2:SH
           pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50
           pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
-          if (r<=0..or.coslam_m(2,lp)==0..or.d_phi_m==0.)then
+          if (r<=0.0 .or. coslam_m(2,lp)==0.0 .or. d_phi_m==0.0 )then
 !SMS$IGNORE BEGIN
             print*,'sub-get_e:SH!STOP! INVALID',lp,ihem,mp,mype
             print*, r,coslam_m(2,lp),d_phi_m
