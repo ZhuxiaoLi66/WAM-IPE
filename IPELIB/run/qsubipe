@@ -253,9 +253,9 @@ test "$parallelism" = "parallel" && rundir+="_$tasks"
 mkdir $rundir || fail
 echo Created run directory: $rundir
 inp=IPE.inp
-inpSw=IPEsw.inp
+f107kp=wam_input_f107_kp.txt
 smsnl=SMSnamelist
-for x in $exe coef* GPTLnamelist $inp $inpSw load_balance_groups1 $smsnl wei96.cofcnts; do
+for x in $exe coef* GPTLnamelist $inp $f107kp load_balance_groups1 $smsnl wei96.cofcnts; do
   cp $x $rundir || fail
 done
 linksafe $gridfile $rundir/ipe_grid
@@ -292,7 +292,6 @@ cd $rundir || fail
 #  $(nml) -i $smsnl -o $smsnl $sms_sets || fail "$0: Could not edit $smsnl"
 #fi
 #$(nml) -i $inp   -o $inp   $ipe_sets   || fail "$0: Could not edit $inp"
-$(nml) -i $inpSw -o $inpSw $ipe_setsSw || fail "$0: Could not edit $inpSw"
 modcmd=../../src/modcmd # for manual runs
 test -x $modcmd || modcmd=../modcmd # for test-suite runs
 echo "$(runscript_$machine)" > runscript

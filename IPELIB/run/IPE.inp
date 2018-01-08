@@ -96,4 +96,8 @@
   ap(5)=4.
   ap(6)=4.
   ap(7)=4.
+  f107_kp_size=2221,
+  f107_kp_interval=60,
+  f107_kp_skip_size=2160
+  f107_kp_data_size=2221
 /
