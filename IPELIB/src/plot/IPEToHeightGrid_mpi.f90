@@ -385,7 +385,7 @@ CONTAINS
    INTEGER,DIMENSION(:  ), ALLOCATABLE :: JMIN_IN, JMAX_IS, JMIN_ING, JMAX_ISG
    INTEGER ierr, MaxFluxTube
    CHARACTER( LEN(TRIM(plasmaFile)) ) :: shortenedFile
-   CHARACTER( 12 )                    :: timeStamp
+   CHARACTER( 2 )                     :: timeStamp
 
 
  
@@ -428,8 +428,8 @@ CONTAINS
 
 
       shortenedFile = TRIM(plasmaFile)
-      timestamp     = shortenedFile( LEN(shortenedFile)-11:LEN(shortenedFile) )
-      WRITE( GMTHour, '(I2)' ) timestamp(9:10)
+      timestamp     = shortenedFile( LEN(shortenedFile)-3:LEN(shortenedFile)-2 )
+      READ( timestamp, '(I2)' ) GMTHour
 
      OPEN(UNIT   = 20, &
           FILE   = TRIM(plasmaFile),&
@@ -653,8 +653,11 @@ CONTAINS
       ! Uses approximation of foF2 and foE as a function of time as in
       ! Bradley and Dudeny, "A simple model of the vertical distribution of 
       !  electron concentration in the ionosphere", JATP, 1973
-      localTime = GMTHour - (1.0/15.0)*x(m)
-      dM    = 6*sin( (3.141592653/12.0)*(localTime-5.0) )
+      localTime = GMTHour + x(m)/15.0
+      IF( localTime > 24.0 ) THEN
+        localTime = localTime - 24.0
+      ENDIF
+      dM    = 0.6*sin( (3.141592653/12.0)*(localTime-5.0) )
       m3000 = 1490.0/(hmf2(m,l) + 176.0)-dM
 
       muf3000(m,l) = m3000*sqrt( nmf2(m,l) )/(1.11355287*10.0**5)
@@ -905,6 +908,7 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, tec_varid, total_electron_content ) )
       CALL Check( nf90_put_var( ncid, nmf2_varid, nmf2 ) )
       CALL Check( nf90_put_var( ncid, hmf2_varid, hmf2 ) )
+      CALL Check( nf90_put_var( ncid, muf_varid, muf3000 ) )
       CALL Check( nf90_put_var( ncid, tn_varid, tn_fixed ) )
       CALL Check( nf90_put_var( ncid, u_varid, vn_fixed(:,:,:,1) ) )
       CALL Check( nf90_put_var( ncid, v_varid, vn_fixed(:,:,:,2) ) )
