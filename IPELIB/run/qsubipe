@@ -95,6 +95,31 @@ runscript_theia() {
   echo "echo 'ipe failed' && exit 23"
 }
 
+###cheyenne
+runscript_cheyenne() {
+
+  # Produce a script to run IPE on cheyenne.
+
+  echo "#!/bin/bash -x"
+  echo "#PBS -A $acct"
+  echo "#PBS -d $PWD"
+  echo "#PBS -j oe"
+  echo "#PBS -l select=1:ncpus=$taskreq"
+  echo "#PBS -l walltime=$IPETIME"
+  echo "#PBS -N $jobname"
+  echo "#PBS -o output.batch"
+  echo "#PBS -q $IPEQUEUE"
+  echo "#PBS -W umask=022"
+  echo "export $envvars"
+  echo "$($modcmd $machine $compiler)"
+  echo "module list"
+  echo "export RESDIR=/glade2/scratch2/naomi/ipe/data/1515447988_ipe_theia_intel_serial/"
+  echo "echo $RESDIR"
+  test $parallelism == parallel && extra="mpirun -np $tasks "
+  echo "time $extra./$(basename $exe) >output 2>&1 && echo 'ipe finished' && exit 0"
+  echo "echo 'ipe failed' && exit 23"
+}
+
 setc() {
 
   # Set variable to value only if variable is currently undefined.
@@ -239,6 +264,39 @@ case $machine in
     esac
     ;;
 
+
+  # cheyenne stanza
+
+  "cheyenne")
+    compiler_check "intel" $compiler $machine
+#note20151116: IPEDATA,IPEQUEUE,IPETIME can be overridden by the setup(setenv) in script
+#0)    setc IPEDATA  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/IPEdata/data
+#1)    setc IPEDATA  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/runs/tmp20150730/trunk/run/1444997033_ipe_theia_intel_parallel_80
+#    setc IPEDATA /scratch3/NCEPDEV/stmp2/Naomi.Maruyama/20170314Init4Jacques/run/1490799959_ipe_theia_intel_parallel1_80/
+    setc IPEDATA /glade/u/home/naomi/scratch2/ipe/data/1515447988_ipe_theia_intel_serial/
+
+    echo "IPEDATA=" $IPEDATA
+    setc IPEQUEUE economy
+    echo "IPEQUEUE=" $IPEQUEUE
+    setc IPETIME  00:15:00
+    echo "IPETIME=" $IPETIME
+    setc IPEWIND  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/IPEdata/wind
+    acct=UCUB0029
+    griddir=/glade/p/work/naomi/grid
+    queue_cmd=qsub
+    gridfile=$griddir/GIP_apex_coords_global_lowres_new20120705 
+    case $compiler in
+      intel)
+        envvars="MPI_BUFS_PER_HOST=2048 MPI_BUFS_PER_PROC=256"
+        ;;
+      lahey)
+        envvars="MPI_BUFS_PER_HOST=1024 MPI_BUFS_PER_PROC=128"
+        ipe_sets+=" -s nmswitch:mpstop=2"
+        ipe_setsSw+=" -s nmswitch:mpstop=2"
+        ;;
+    esac
+    ;;
+###
 esac
 
 pre=ipe_${machine}_${compiler}_${parallelism}
@@ -268,11 +326,11 @@ if [ $sw_neutral -eq 3 ]; then
   linksafe $IPEWIND/ut_input $rundir/ut_input2009017
   linksafe $IPEWIND/wind_input $rundir/wind_input2009017
 fi
-linksafe  /home/Naomi.Maruyama/aurora/20150810/ionprof        $rundir/ionprof
-linksafe  /home/Naomi.Maruyama/aurora/20150810/tiros_spectra  $rundir/tiros_spectra
+linksafe  /glade2/scratch2/naomi/ipe/data/1515447988_ipe_theia_intel_serial/ionprof        $rundir/ionprof
+linksafe  /glade2/scratch2/naomi/ipe/data/1515447988_ipe_theia_intel_serial/tiros_spectra  $rundir/tiros_spectra
 ###nm20170809 george's new startup files
 #linksafe /scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/ipe_grid_plasma_params $rundir/ipe_grid_plasma_params
-export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/
+export RESDIR=/glade2/scratch2/naomi/ipe/data/1515447988_ipe_theia_intel_serial/
 echo "RESDIR=" $RESDIR
 
 # Enter the run directory, edit SMSnamelist, create and submit the run script.
