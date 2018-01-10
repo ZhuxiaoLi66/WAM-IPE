@@ -1370,7 +1370,6 @@ print_esmf:     ${print_esmf}
 nhours_dfini=${nhours_dfini:-$FHDFI}
 
 #nam_atm +++++++++++++++++++++++++++
-iau:                     .false.
 nlunit:                  35
 deltim:                  ${DELTIM}.0
 fhrot:                   $FHROT
@@ -1715,7 +1714,6 @@ cat  > atm_namelist <<EOF
   f107_kp_data_size=$F107_KP_DATA_SIZE, 
   f107_kp_interval=$F107_KP_INTERVAL,
   f107_kp_skip_size=$F107_KP_SKIP_SIZE,
-  ipe_to_wam_coupling=$IPE_TO_WAM_COUPLING,
   ngptc=$NGPTC, hybrid=$HYBRID, tfiltc=$TFILTC,
   gen_coord_hybrid=$GEN_COORD_HYBRID,
   thermodyn_id=$THERMODYN_ID, sfcpress_id=$SFCPRESS_ID,
@@ -1797,4 +1795,4 @@ set +x
 if [[ "$VERBOSE" = "YES" ]] ; then
    echo $(date) EXITING $0 with return code $err >&2
 fi
-exit $err
+return $err

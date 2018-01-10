@@ -167,7 +167,6 @@ MODULES_IDEA = idea_composition.o         \
                idea_ion.o           \
                idea_o2_o3.o         \
                idea_dissipation.o   \
-               idea_merge_ipe_to_wam.o   \
                idea_phys.o
 
 MODULES_TRAC=      gocart_tracer_config.o

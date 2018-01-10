@@ -54,7 +54,6 @@
 !  Jan      2016  P. Tripp      NUOPC/GSM merge - importData
 !  March    2016  J. Han        Add ncnvcld3d for enhancing conv clouds
 !  March    2016  Hang Lei      Initialize the physics variable for mdl_parm
-!  Sept     2017  W. Yang       Add the IPE back coupling to WAM code,
 ! !interface:
 !
       module gfs_physics_initialize_mod
@@ -96,7 +95,7 @@
                                 kozc, dphiozc, latsozc, pl_coeff
       USE namelist_physics_def,                                                 &
                           ONLY: ras, cscnv, jo3, ldiag3d, ngptc, ens_nam,       &
-                                reduced_grid, grid_aldata, nstf_name,           &
+                                reduced_grid, grid_aldata, nstf_name,            &
                                 isol, ico2, ialb, iems, iaer, iovr_sw,          &
                                 iovr_lw,ictm, isubc_sw,isubc_lw,                &
                                 crick_proof, ccnorm, norad_precip,              &
@@ -104,8 +103,8 @@
                                 a2oi_out, cplflx, stochphys, do_shoc,           &
 ! Add some things needed by physics wrapper
                                 flipv, pre_rad, lsm, imfshalcnv,imfdeepcnv,     &
-                                ncw, crtrh, cdmbgwd, ccwf, dlqf, ctei_rm, cgwf, &
-                                prslrd0, ral_ts,old_monin, cnvgwd, shal_cnv,    &
+                                 ncw, crtrh, cdmbgwd, ccwf, dlqf, ctei_rm, cgwf,&
+                           prslrd0, ral_ts,old_monin, cnvgwd, shal_cnv, &
                                 cal_pre, mom4ice, mstrat, trans_trac, moist_adj,&
                                 lsidea, pdfcld, shcnvcw, redrag, hybedmf,       &
                                 dspheat, shoc_cld, shocaftcnv,nemsio_in
@@ -127,10 +126,6 @@
       USE d3d_def,        ONLY: d3d_init, d3d_zero
       use machine,        ONLY : kind_io4
       USE sfcio_module,   ONLY: sfcio_axdbta
-
-      USE module_IPE_to_WAM, ONLY:  lowst_ipe_level,                   &
-                                    ZMT, MMT, JHR, SHR, O2DR,          &
-                                    ipe_to_wam_coupling
 
       USE gfs_physics_gridgr_mod,  ONLY: gridvar_aldata  
       USE gfs_physics_g3d_mod,     ONLY: g3d_aldata
@@ -737,39 +732,6 @@
 !!
 !       write(0,*)' gis_phy%lonsperlar2b=',gis_phy%lonsperlar
 !       write(0,*)' before fix_fields'
-
-      PRINT*, 'in phys initialize, lsidea, ipe_to_wam_coupling=', &
-            lsidea, ipe_to_wam_coupling
-      IF(lsidea .AND. ipe_to_wam_coupling) THEN
-        lowst_ipe_level = 80
-
-        IF(.NOT. ASSOCIATED(ZMT))  &
-          ALLOCATE(ZMT(lonr, lats_node_r_max, lowst_ipe_level:levs)) 
-        IF(.NOT. ASSOCIATED(MMT))  &
-          ALLOCATE(MMT(lonr, lats_node_r_max, lowst_ipe_level:levs)) 
-        IF(.NOT. ASSOCIATED(JHR))  &
-          ALLOCATE(JHR(lonr, lats_node_r_max, lowst_ipe_level:levs)) 
-        IF(.NOT. ASSOCIATED(SHR))  &
-          ALLOCATE(SHR(lonr, lats_node_r_max, lowst_ipe_level:levs)) 
-        IF(.NOT. ASSOCIATED(O2DR)) &
-          ALLOCATE(O2DR(lonr, lats_node_r_max, lowst_ipe_level:levs)) 
-! Just for simple testing, when run the model, should commenting the lines.
-!--------------------------------------------------------------------------
-      ZMT(:,:,81:150)=1.0E-7
-      MMT(:,:,81:150)=1.0E-7
-      JHR(:,:,81:150)=1.0E-7
-      SHR(:,:,81:150)=1.0E-7
-      O2DR(:,:,81:150)=1.0E-7
-
-      ZMT(:,:,80)=-1.0E30
-      MMT(:,:,80)=-1.0E30
-      JHR(:,:,80)=-1.0E30
-      SHR(:,:,80)=-1.0E30
-      O2DR(:,:,80)=-1.0E30
-! End of the simple testing.
-!---------------------------
-
-      END IF
 
       IF(lsidea .AND. gis_phy%restart_run) THEN
         call fix_fields_idea_rst(gis_phy%LONSPERLAR, gis_phy%GLOBAL_LATS_R,    &

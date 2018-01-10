@@ -4,6 +4,7 @@
 ! Nov    2016    Correction of JO2 and oxygen chemistry
 ! September 2017 Weiyu Yang, add IPE back coipling WAM code.
 ! October 2017   Rashid Akmaev, eddy mixing, corrections and clean-up
+! Dec-Jan 16/17  Addition of ozone "diurnal" chemistry and extra reactions
 !-----------------------------------------------------------------------
 
       module idea_tracer_mod
@@ -50,9 +51,6 @@
       use idea_composition, only  : bz,amo,amn2, amo2, amo3, amh2o
       use idea_composition, only  : rbz, rmo, rmo2, rmn2, rmh2o,rmo3
       use idea_tracer_mod,   only : jj
-
-      use module_IPE_to_WAM, only: lowst_ipe_level, ipe_to_wam_coupling
-
       implicit none
 ! Argument
       integer, intent(in) :: me              ! current PE
@@ -89,9 +87,10 @@
       real ::  qin(ix,levs,ntrac_i)
       real ::  qn2
       integer i,k,in
-       real :: Jrates_O2(ix, levs)            ! O2 dissociation rate
+      real :: Jrates_O2(ix, levs)            ! O2 dissociation rate
 
 !     Two tracers added by IDEA, O and O2
+
       do in=1,ntrac_i
         do i=1,im
           do k=1,levs
@@ -123,6 +122,7 @@
         enddo
       enddo
 
+
 ! Eddy mixing
       call idea_tracer_eddy(im,ix,levs,ntrac_i,grav,prsi,prsl,rho,dtp,
      &     qin,dayno,dq3)
@@ -134,6 +134,7 @@
 ! O2 dissociation rate
       call idea_dissociation_jo2(im,ix,levs,adt,cospass,n1,n2, ozn, n3,
      &          dayno,zg,grav, f107, f107d, Jrates_O2)
+
 
 ! Merge the  IPE back coupling WAM variable arrays into WAM.
       IF (ipe_to_wam_coupling) THEN
@@ -151,7 +152,9 @@
         do i=1,im
           do k=1,levs
             q(i,k,in+ntrac-ntrac_i)=q(i,k,in+ntrac-ntrac_i)+            
+
      &        dq1(i,k,in)  +dq2(i,k,in) + dq3(i,k,in)
+
           enddo
         enddo
       enddo
@@ -425,6 +428,7 @@
 
       return
       end subroutine idea_tracer_c
+
 
 !ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc!   
       subroutine idea_tracer_eddy(im,ix,levs,ntrac_i,grav,prsi,prsl,
