@@ -160,7 +160,7 @@ sms_sets=""
 # Set up some lists of valid options for error checking.
 
 compilers="cray intel lahey pgi"
-machines="trillian yellowstone theia"
+machines="trillian theia cheyenne"
 parallelisms="parallel serial"
 
 # Set variables for command-line arguments.
@@ -243,11 +243,14 @@ case $machine in
     setc IPEDATA /scratch3/NCEPDEV/stmp2/Naomi.Maruyama/20170314Init4Jacques/run/1490799959_ipe_theia_intel_parallel1_80/
 
     echo "IPEDATA=" $IPEDATA
-    setc IPEQUEUE batch
+#    setc IPEQUEUE batch
+    setc IPEQUEUE debug
     echo "IPEQUEUE=" $IPEQUEUE
-    setc IPETIME  08:00:00
+#    setc IPETIME  08:00:00
+    setc IPETIME  00:30:00
     echo "IPETIME=" $IPETIME
     setc IPEWIND  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/IPEdata/wind
+    setc IPEAURORA  /home/Naomi.Maruyama/aurora/20150810
     acct=swpc
     griddir=/scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/grid
     queue_cmd=qsub
@@ -281,6 +284,7 @@ case $machine in
     setc IPETIME  00:15:00
     echo "IPETIME=" $IPETIME
     setc IPEWIND  /scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/ipe/IPEdata/wind
+    setc IPEAURORA  /glade2/scratch2/naomi/ipe/data/1515447988_ipe_theia_intel_serial
     acct=UCUB0029
     griddir=/glade/p/work/naomi/grid
     queue_cmd=qsub
@@ -326,8 +330,8 @@ if [ $sw_neutral -eq 3 ]; then
   linksafe $IPEWIND/ut_input $rundir/ut_input2009017
   linksafe $IPEWIND/wind_input $rundir/wind_input2009017
 fi
-linksafe  /glade2/scratch2/naomi/ipe/data/1515447988_ipe_theia_intel_serial/ionprof        $rundir/ionprof
-linksafe  /glade2/scratch2/naomi/ipe/data/1515447988_ipe_theia_intel_serial/tiros_spectra  $rundir/tiros_spectra
+linksafe  $IPEAURORA/ionprof        $rundir/ionprof
+linksafe  $IPEAURORA/tiros_spectra  $rundir/tiros_spectra
 ###nm20170809 george's new startup files
 #linksafe /scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/ipe_grid_plasma_params $rundir/ipe_grid_plasma_params
 export RESDIR=/glade2/scratch2/naomi/ipe/data/1515447988_ipe_theia_intel_serial/
