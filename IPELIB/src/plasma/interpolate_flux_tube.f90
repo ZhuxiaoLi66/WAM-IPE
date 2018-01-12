@@ -63,7 +63,7 @@
       REAL(KIND=real_prec8),DIMENSION(ISTOT,IPDIM,2) :: plasma_2d !3d:imp
 !dbg20140205 debug zonal transport
       REAL(KIND=real_prec8) :: mlon1,mlon2
-      INTEGER (KIND=int_prec) :: mp1,mp2
+      INTEGER (KIND=int_prec) :: mp1,mp2, mp3
 !dbg20140528
       REAL(KIND=real_prec) :: tmp_fac1
       REAL(KIND=real_prec8) :: tmp_fac2
@@ -138,17 +138,12 @@ rapex(0) = r0_apex
 !d tmp_lam = ACOS(SQRT((earth_radius+ht90)/r0_apex  ))
 !d print "('!dbg20140528 lambda1=',f8.6)",tmp_lam
 !NH ihem=1 only 
-!IF ( sw_th_or_R==0 ) THEN
-!  lambda_m(0) = pi*0.50 - theta_t0(ihem)
-!ELSE IF ( sw_th_or_R==1 ) THEN
-!  lambda_m(0) = ACOS(SQRT((earth_radius+ht90)/r0_apex  ))
-!END IF !sw_th_or_R
-
-IF ( lp < 37 ) THEN
+IF ( sw_th_or_R==0 ) THEN
   lambda_m(0) = pi*0.50 - theta_t0(ihem)
-ELSE
+!d print "('!dbg20140528 lambda2=',f8.6,' dif=',f8.6,' mp=',i3,' lp=',i4)",lambda_m(0),(tmp_lam-lambda_m(0)),mp,lp
+ELSE IF ( sw_th_or_R==1 ) THEN
   lambda_m(0) = ACOS(SQRT((earth_radius+ht90)/r0_apex  ))
-END IF
+END IF !sw_th_or_R
 
 !R of apex altitude for the two IN/OUT FTs
 DO ilp=1,2  !outer/inner flux tubes
@@ -229,17 +224,11 @@ mp_t0_loop1: DO imp=1,imp_max
 ! X can be either R or lambda (but only at IN/IS!!!)
    IF( r(1)/=r(2) ) then
 
-     ! if ( sw_th_or_R==1 ) then
-     !    x(0:2) = r(0:2)
-     ! else if ( sw_th_or_R==0 ) then
-     !    x(0:2) = lambda_m(0:2)
-     ! end if !sw_th_or_R
-      if ( lp >= 37 ) then
+      if ( sw_th_or_R==1 ) then
          x(0:2) = r(0:2)
-      else
+      else if ( sw_th_or_R==0 ) then
          x(0:2) = lambda_m(0:2)
       end if !sw_th_or_R
-
 
    ELSE IF( r(1)==r(2) ) THEN
 
@@ -438,7 +427,7 @@ END DO mp_t0_loop1 !: DO imp=1,imp_max
 
               if (jth==1.and.plasma_1d(jth,i1d)<=zero ) then 
 !SMS$IGNORE begin
-                 print *,mype,utime,"!STOP! INVALID plasma_1d(1)",mlon1,phi_t0(ihem),plasma_2d(jth,i1d,2),mlon2,plasma_2d(jth,i1d,1),jth,i1d,ihem,lp,mp
+                 print *,mype,utime,"sub-interpFT:!STOP! INVALID plasma_1d L430",mlon1,phi_t0(ihem),plasma_2d(jth,i1d,2),mlon2,plasma_2d(jth,i1d,1),jth,i1d,ihem,lp,mp
                  print *,(mlon1        - phi_t0(ihem) ),(phi_t0(ihem) - mlon2        ),(mlon1 - mlon2)
 !SMS$IGNORE end
                  STOP
@@ -459,7 +448,7 @@ END DO mp_t0_loop1 !: DO imp=1,imp_max
 
               if(jth==1.and.plasma_1d(jth,i1d)<=zero)then
 !SMS$IGNORE begin
-                 print *,mype,utime,'!STOP! INVALID plasma_1d(2)',mp,lp,plasma_1d(jth,i1d),factor_ksi,i1d,jth
+                 print *,mype,utime,'sub-interpFT:!STOP! INVALID plasma_1d L451',mp,lp,plasma_1d(jth,i1d),factor_ksi,i1d,jth
 !SMS$IGNORE end
                  STOP
               endif !jth
@@ -468,13 +457,13 @@ END DO mp_t0_loop1 !: DO imp=1,imp_max
            ELSE !    mlon1 >= mlon2
 !
 !SMS$ignore begin
-              print *, 'sub-interp:!STOP! INVALID mlon order! ihem=',ihem,' mp=',mp,' lp=',lp,'mp(1)',mp_t0(ihem,1),'mp(2)',mp_t0(ihem,2),mlon1*rtd,mlon2*rtd,mype
+              print *, 'sub-interpFT:!STOP! INVALID mlon order! ihem=',ihem,' mp=',mp,' lp=',lp,'mp(1)',mp_t0(ihem,1),'mp(2)',mp_t0(ihem,2),mlon1*rtd,mlon2*rtd,mype
 !SMS$ignore end
               STOP
            END IF
         ELSE    ! IF ( (mlon1-mlon2)==0.) THEN
 !SMS$ignore begin
-           print *, 'sub-interp:!STOP! INVALID same mlon1&2!',ihem,mp,lp,mp_t0(ihem,1),mp_t0(ihem,2),mlon1*rtd,mlon2*rtd,mype
+           print *, 'sub-interpFT:!STOP! INVALID same mlon1&2!',ihem,mp,lp,mp_t0(ihem,1),mp_t0(ihem,2),mlon1*rtd,mlon2*rtd,mype
 !SMS$ignore end
            STOP
            !       plasma_1d(jth,i1d) = plasma_2d(jth,i1d,1)
@@ -504,24 +493,61 @@ ELSE IF ( lp_t0(ihem,1)==-999 ) THEN !missing_value in module_find_nei...
       jth_loop6: DO jth=1,iT
          IF ( jth>TSP.AND.jth<=ISPEC )  CYCLE jth_loop6
 !nm20160420 special 3 point pole interpolation
-x(1)=zero
-x(0)=theta_t0(ihem)
-x(2)=minTheta
+         x(1)=zero
+         x(0)=theta_t0(ihem)
+         x(2)=minTheta
 
-do imp=1,imp_max
-   y(imp) = ( (x(1)-x(0))*plasma_3d_old(i,lp_t0(ihem,2),mp_t0(ihem,imp),jth) + (x(0)-x(2))*poleVal(i,jth) ) / ( x(1)-x(2) )
-end do
+         do imp=1,imp_max
 
-x(1)=mlon_rad( mp_t0(ihem,1) )
-x(0)=phi_t0(ihem)
-x(2)=mlon_rad( mp_t0(ihem,2) )
-plasma_1d(jth,i1d) = ( (x(1)-x(0))*y(2) + (x(0)-x(2))*y(1) ) / ( x(1)-x(2) )
+!nm20180112 bug found!!!
+            mp3 = mp_t0(ihem,imp)
+            if(nprocs==1)then
+               if ( mp3<1   ) then 
+                  mp3 = mp3 + NMP
+!SMS$IGNORE begin
+                  print*,mype,'sub-interpFT:(1)corrected mp3!',mp3, mp_t0(ihem,imp),ihem,imp,lp
+!SMS$IGNORE end
+               end if !mp3<
+               if ( mp3>NMP ) then
+                  mp3 = mp3 - NMP
+!SMS$IGNORE begin
+                  print*,mype,'sub-interpFT:(2)corrected mp3!',mp3, mp_t0(ihem,imp),ihem,imp,lp
+!SMS$IGNORE end
+               end if !mp3>
+
+            end if !nprocs
+
+!double check size
+!   if(i==1.and.jth==1.and.mp==1.and.lp==1) then
+!!!SMS$IGNORE begin
+!      print*,'sub-interpFT:shape=',shape(plasma_3d_old)
+!      print*,'lbound=',lbound( plasma_3d_old, 3 ),' ubound=',ubound( plasma_3d_old, 3 )
+!!!SMS$IGNORE end
+!   endif
+
+
+            y(imp) = ( (x(1)-x(0))*plasma_3d_old(i,lp_t0(ihem,2),mp3,jth) + (x(0)-x(2))*poleVal(i,jth) ) / ( x(1)-x(2) )
+         end do !imp
+
+         x(1)=mlon_rad( mp_t0(ihem,1) )
+         x(0)=phi_t0(ihem)
+         x(2)=mlon_rad( mp_t0(ihem,2) )
+         plasma_1d(jth,i1d) = ( (x(1)-x(0))*y(2) + (x(0)-x(2))*y(1) ) / ( x(1)-x(2) )
+
+!!!SMS$IGNORE begin
+!if(utime==240.and.jth==1.and.mp==1.and.lp==1)then
+!   print*,mype,'sub-interpFT:mlon=',mlon_rad( mp_t0(ihem,1) ),phi_t0(ihem),mlon_rad( mp_t0(ihem,2) ),plasma_1d(jth,i1d),plasma_3d_old(i,lp_t0(ihem,2),mp_t0(ihem,imp),jth),mp_t0(ihem,1),mp_t0(ihem,2),lp_t0(ihem,2),lp,mp,i,i1d,ihem
+!end if!utime
+!!!SMS$IGNORE end
+
 
          if(jth==1.and.plasma_1d(jth,i1d)<=zero)then
 !SMS$IGNORE begin
-            print*,mype,utime,'!STOP! INVALID plasma_1d',plasma_1d(jth,i1d),lp,mp,i,i1d
+            print*,mype,utime,'sub-interpFT:!STOP! INVALID plasma_1d L511',plasma_1d(jth,i1d),lp,mp,i,i1d
+            print*,mype,'sub-interpFT:mlon=',mlon_rad( mp_t0(ihem,1) ),phi_t0(ihem),mlon_rad( mp_t0(ihem,2) ),y,mp_t0(ihem,1),mp_t0(ihem,2),lp,mp,ihem
 !SMS$IGNORE end
-         endif !utime
+            STOP
+         endif !jth==1
 
 
       END DO jth_loop6

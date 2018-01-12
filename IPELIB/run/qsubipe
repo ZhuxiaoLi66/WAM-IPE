@@ -334,8 +334,8 @@ linksafe  $IPEAURORA/ionprof        $rundir/ionprof
 linksafe  $IPEAURORA/tiros_spectra  $rundir/tiros_spectra
 ###nm20170809 george's new startup files
 #linksafe /scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/ipe_grid_plasma_params $rundir/ipe_grid_plasma_params
-export RESDIR=/glade2/scratch2/naomi/ipe/data/1515447988_ipe_theia_intel_serial/
-echo "RESDIR=" $RESDIR
+#export RESDIR=/glade2/scratch2/naomi/ipe/data/1515447988_ipe_theia_intel_serial/
+#echo "RESDIR=" $RESDIR
 
 # Enter the run directory, edit SMSnamelist, create and submit the run script.
 

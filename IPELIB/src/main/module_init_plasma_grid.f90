@@ -38,6 +38,12 @@ print *,"Z_meter calculation completed"
 Pvalue = zero
 do lp=1,NLP
   IN = JMIN_IN(lp)
+
+!nm20180112: double check IN,IS
+!SMS$IGNORE begin         
+  print*,'lp=',lp,' JMIN_IN=',JMIN_IN(lp),' JMAX_IS=',JMAX_IS(lp)
+!SMS$IGNORE end
+
   CALL Get_Pvalue_Dipole ( r_meter2D(IN,lp), plasma_grid_GL(IN,lp), Pvalue(lp) )
 enddo
 
