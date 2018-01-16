@@ -87,7 +87,6 @@
      &               zsg, psg, ttg, uug, vvg, rqg, dpg,
      X               PDRYINI,IPRINT,
      &               global_lats_a,lats_nodes_a,lonsperlat) 
-!      print *,'after treadg_nemsio,mypsg n-1=',psg(5,3)
 
        do j=1,lats_node_a
        grid_gr(:,j,g_gz) = zsg(:,j)
@@ -109,7 +108,6 @@
      &                 zsg, psg, ttg, uug, vvg, rqg, dpg,
      X                 PDRYINI,IPRINT,
      &                 global_lats_a,lats_nodes_a,lonsperlat) 
-!      print *,'after treadg_nemsio,mypsg n=',psg(1:5,3)
 !
        do j=1,lats_node_a
 !      grid_gr(:,j,g_gz) = zsg(:,j)
@@ -145,8 +143,6 @@
           trio_ls(:,:,p_rm :p_rm +levh-1)=trio_ls(:,:,p_rq:p_rq+levh-1)
         endif
 !
-!       print *,'after treads n-1, P-GZ=',P_GZ,'p_QM=',P_QM,'P_TEM=',
-!    &  P_TEM, 'P_DIM=',P_DIM,'P_ZEM=',P_ZEM,'P_RM=',P_RM
 !---
       fhini=fhour
       if(me.eq.0) PRINT 9877, FHOUR
@@ -170,11 +166,6 @@
           CALL TREADS_nemsio(cread2,FHOUR,IDATE,
      &                       trie_ls, trio_ls,
      &                       LS_NODE)
-        print *,'after treads n, P-GZ=',P_GZ,'p_Q=',P_Q,'P_TE=',P_TE,
-     &  'P_DI=',P_DI,'P_ZE=',P_ZE,'P_RQ=',P_RQ
-        print *,'after treads n, p_zQ=',P_ZQ,'P_y=',P_y,
-     &  'P_x=',P_x,'P_w=',P_w,'P_Rt=',P_Rt
-        print *,'trie_ls(3:5,1,2)=',trie_ls(3:5,1,2)
 !
         if(me.eq.0) PRINT 9878, FHOUR
  9878   FORMAT(1H ,'FHOUR AFTER TREAD',F6.2)

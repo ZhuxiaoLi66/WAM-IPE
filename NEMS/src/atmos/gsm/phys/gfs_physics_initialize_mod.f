@@ -190,7 +190,8 @@
       nodes  = gis_phy%nodes
 !      CALL ESMF_VMGetCurrent(vm, rc = ierr)
 
-      call compns_physics(gis_phy%deltim, gis_phy%iret,  gis_phy%ntrac,	&
+      call compns_physics(gis_phy%nam_gfs_phy%deltim, gis_phy%iret,     &
+                          gis_phy%ntrac,                                &
                           gis_phy%nxpt,   gis_phy%nypt,  gis_phy%jintmx,&
                           gis_phy%jcap,   gis_phy%levs,  gis_phy%levr,  &
                           gis_phy%lonr,   gis_phy%latr,                 &
@@ -755,17 +756,17 @@
           ALLOCATE(O2DR(lonr, lats_node_r_max, lowst_ipe_level:levs)) 
 ! Just for simple testing, when run the model, should commenting the lines.
 !--------------------------------------------------------------------------
-      ZMT(:,:,81:150)=1.0E-7
-      MMT(:,:,81:150)=1.0E-7
-      JHR(:,:,81:150)=1.0E-7
-      SHR(:,:,81:150)=1.0E-7
-      O2DR(:,:,81:150)=1.0E-7
+!      ZMT(:,:,81:150)=1.0E-7
+!      MMT(:,:,81:150)=1.0E-7
+!      JHR(:,:,81:150)=1.0E-7
+!      SHR(:,:,81:150)=1.0E-7
+!      O2DR(:,:,81:150)=1.0E-7
 
-      ZMT(:,:,80)=-1.0E30
-      MMT(:,:,80)=-1.0E30
-      JHR(:,:,80)=-1.0E30
-      SHR(:,:,80)=-1.0E30
-      O2DR(:,:,80)=-1.0E30
+!      ZMT(:,:,80)=-1.0E30
+!      MMT(:,:,80)=-1.0E30
+!      JHR(:,:,80)=-1.0E30
+!      SHR(:,:,80)=-1.0E30
+!      O2DR(:,:,80)=-1.0E30
 ! End of the simple testing.
 !---------------------------
 
