@@ -54,16 +54,9 @@
 !   2014-07-17  S  Moorthi     updating to latest semi-lagrangian
 !   2014-07-21  S  Moorthi     removed num_reduce (lonsperlat read from a file now)
 !                              added cdamp and k2o
-!  2016-03-07   Weiyu Yang - add the wam_ipe_coupling, and height_dependent_g:
-!                            the WAM IPE model coupling flag and the flag that
-!                            flag for using the height dependent g in that coupling.
-!  2017-11-06   Weiyu Yang - 
-!               i)   add wam_ipe_cpl_rst_input for WAM-IPE coupling restart run,
-!               ii)  add wam_ipe_cpl_rst_output for WAM-IPE coupling restart run,
-!               iii) add grads_output and FHOUT_grads for outputing 
-!                    the fort.178 file for grads the figure, 
-!               iv)  add NC_output and FHOUT_NC for outputing the 
-!                    NetCDF diagnostic files.
+!  2016-03-07 Weiyu Yang - add the wam_ipe_coupling, and height_dependent_g:
+!                          the WAM IPE model coupling flag and the flag that
+!                          flag for using the height dependent g in that coupling.
 !
 ! Usage:    call compns(deltim,
 !    &                  fhout,fhres,
@@ -108,7 +101,7 @@
 
 c - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !
-      namelist /nam_dyn/FHMAX,FHOUT,FHRES,FHROT,FHDFI,IGEN,
+      namelist /nam_dyn/FHMAX,FHOUT,FHRES,FHROT,FHDFI,DELTIM,IGEN,
      & NGPTC,shuff_lats_a,reshuff_lats_a,
      & nxpt,nypt,jintmx,jcap,levs,lonf,latg,levr,
      & ntrac,ntoz,ntcw,ncld,ntke,nsout,tfiltc,
@@ -133,16 +126,7 @@ c - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
      & skeb_sigtop1,skeb_sigtop2,sppt_sigtop1,sppt_sigtop2,
      & shum_sigefold,vc_sigtop1,vc_sigtop2,skebint,
 ! WAM IPE coupling flags
-     & wam_ipe_coupling, height_dependent_g,
-! For WAM IPE coupling restart run.
-!----------------------------------
-     & wam_ipe_cpl_rst_output, wam_ipe_cpl_rst_input,
-! For outputing the fort.178 file for grads figures.
-!---------------------------------------------------
-     & grads_output, FHOUT_grads,
-! For outputing the NetCDF diagnostic files.
-!-------------------------------------------
-     & NC_output, FHOUT_NC
+     & wam_ipe_coupling, height_dependent_g
 
 !
       fhmax      = 0
@@ -153,6 +137,7 @@ c - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       fhmax_hf   = 0
       fhdfi      = 0
       dfilevs    = levs
+      deltim     = 0
       igen       = 0
       tfiltc     = 0.85
       ngptc      = lonf
@@ -282,18 +267,9 @@ c - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       stochini          = .false. ! true= read in pattern, false=initialize from seed
 
 ! idea add
-      lsidea              = .false. ! idea add (WAM) logical variablei 
-      wam_ipe_coupling    = .false.
-      height_dependent_g  = .false.
-
-      wam_ipe_cpl_rst_input  = .false.
-      wam_ipe_cpl_rst_output = .false.
-
-      grads_output        = .false.
-      FHOUT_grads         = 2400
-
-      NC_output           = .false.
-      FHOUT_NC            = 2400
+      lsidea             = .false. ! idea add (WAM) logical variablei 
+      wam_ipe_coupling   = .false.
+      height_dependent_g = .false.
 !
 !  iau parameters
        iau              = .false.
@@ -355,12 +331,6 @@ c - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !
       if( lsidea ) then       ! idea add (WAM) case needs larger ref_temp
         if (levs > 100 .and. ref_temp < 400.0) ref_temp = 2500.0
-! open the wam-ipe coupling interface output file for grads.
-!-----------------------------------------------------------
-        if(grads_output .and. wam_ipe_coupling) then
-          open(178, file = 'WAM-IPE_interface_output_grads',
-     &        form='UNFORMATTED')
-        end if
       endif
 
       if (me == 0) write(6,nam_dyn)
@@ -380,6 +350,10 @@ c - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !sela - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       tol = 0.01
 !  Check rule 1.
+      if(deltim <= 0) then
+        iret=1
+        return
+      endif
       if (me == 0)
      & print *,'lver=',levr,'deltim=',deltim,'nsout=',nsout,'fhout=',
      & fhout,'fhres=',fhres,'gen_coord_hybrid=',gen_coord_hybrid, 
