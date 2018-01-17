@@ -52,18 +52,13 @@
       INTEGER (KIND=int_prec ) :: midpoint, ipts
       REAL    (KIND=real_prec) :: v_e(2)   !1:ed2/be3 (4.18) ;2: -ed1/be3 (4.19)
       REAL    (KIND=real_prec) :: vexbgeo(east:up) !EXB in gegraphic frame
-      REAL    (KIND=real_prec) :: vperp !EXB at 90km only for th method
+!      REAL    (KIND=real_prec) :: vperp !EXB at 90km only for th method
 
 
 ! array initialization
       Ed1_90=zero
       Ed2_90=zero
 
-!dbg20160408 sms
-!!SMS$IGNORE BEGIN
-!      print"('utime=',i7,' (1)mype=',i2,' j0s=',i5,' lps=',i3)",utime   &
-!     &,mype,j0(1,lps),lps
-!!SMS$IGNORE end
 
       IF ( j0(1,lps)<0 ) THEN
 ! array initialization
@@ -125,12 +120,6 @@
             j0(2,lp)=nmlat/2     !2:SH
             j1(2,lp)=nmlat/2-1
 
-!dbg20160408 sms
-!!SMS$IGNORE BEGIN
-!      print"('(2)mype=',i2,' j0=',i3,' lp=',i3)",mype,j0(1,lp),lp       &
-!     &,j1(1,lp)
-!!SMS$IGNORE end
-            
           ELSE ! plasma_grid_3d(IN,mp)%GL>=4.49(R130 apex)
 
 !           NH find the closest j of mlat90 from 130km
@@ -150,11 +139,6 @@
                 j1(1,lp)=j-1
                 j0(2,lp)=nmlat-(j-1)  !2:SH
                 j1(2,lp)=nmlat-j
-!dbg20160408 sms
-!!SMS$IGNORE BEGIN
-!      print"('(3)mype=',i2,' j0=',i3,' lp=',2i3)",mype,j0(1,lp),lp      &
-!     &,j1(1,lp)
-!!SMS$IGNORE end
 
                 EXIT mlat_loop130km1
               ELSE
@@ -273,13 +257,6 @@
 
 
 
-!dbg20160408 sms
-!!SMS$IGNORE BEGIN
-!      print                                                             &
-!     &"('(4)mype=',i2,' j0=',i3,' lp=',i3,' mp=',i2,' i0=',i3,'i1=',i3)"&
-!     &,mype,j0(1,lp),lp,mp,i0,i1
-!      print*,"(43)mype=",mype,j1(1,lp)
-!!SMS$IGNORE end
 
 
 
@@ -294,14 +271,7 @@
 !SMS$IGNORE END
             STOP
           endif
-!!dbg20160408 sms new decomp debug
-!      if (lp==1.and.mp==1) then
-!!SMS$IGNORE BEGIN
-!      print *,'(44)mype=',mype,mp,lp,pot_i1,pot_i0                      &
-!     &,potent(i1,jj1),potent(i0,jj1),jj1                                &
-!     &,coslam_m(1,lp)
-!!SMS$IGNORE end
-!      end if                    !mp==41
+
           ed1_90(1,lp,mp)=-1.0/r/coslam_m(1,lp)                         &
      &                         *(pot_i1-pot_i0)/d_phi_m
 !         SH
@@ -376,12 +346,6 @@
 
             v_e(1) =   Ed2_90(1,lp,mp) / Be3(lp,mp) !(4.18) +mag-east(d1?) 
             v_e(2) = - Ed1_90(1,lp,mp) / Be3(lp,mp) !(4.19) +down/equatorward(d2?)
-!dbg20160408 sms
-!!SMS$IGNORE BEGIN
-!      print"('(5)mype=',i2,' mp=',i2,' lp=',i3)",mype,mp,lp
-!      print *,mype,'ve2[m/s]=',v_e(2),'ed1[mV/m]=',Ed1_90(1,lp,mp)*1.E3 &
-!     &,' Be3[tesla]=',Be3(lp,mp) 
-!!SMS$IGNORE end
 
 ! EXB in geographic frame at (midpoint,lp,mp)
             vexbgeo(east )=(v_e(1)*apexE(midpoint,lp,mp,east,1))        &
@@ -391,18 +355,11 @@
             vexbgeo(up   )=(v_e(1)*apexE(midpoint,lp,mp,up   ,1))       &
      &                    +(v_e(2)*apexE(midpoint,lp,mp,up   ,2))
             if(sw_debug) then
-              print *,'sub-StR:',v_e(1),apexE(midpoint,lp,mp,up,1)      &
+              print *,'sub-getE90:',v_e(1),apexE(midpoint,lp,mp,up,1)      &
      &                          ,v_e(2),apexE(midpoint,lp,mp,up,2)
             endif
 ! EXB  magnetic exact upward at APEX (midpoint) 
-            VEXBup(lp,mp)=                                              &
-!nm20130201: the new, correct definition
-     &       vexbgeo(east)  * l_mag(midpoint,lp,mp,east ,2)             &
-     &     + vexbgeo(north) * l_mag(midpoint,lp,mp,north,2)             &
-     &     + vexbgeo(up   ) * l_mag(midpoint,lp,mp,up   ,2)
-!vexbgeo(up) !nm20140528
-!     &                    (v_e(1)*apexE(midpoint,lp,mp,up,1))           &
-!     &                   +(v_e(2)*apexE(midpoint,lp,mp,up,2))
+            VEXBup(lp,mp) = v_e(2) * (-1.0) !convert from down to UPward
 
 !nm20140528: VEXBth at 90km required for th method, sinI_m for NH
             if ( sw_th_or_R==0 ) then !th method(ctipe/shawn)
@@ -418,50 +375,23 @@
             vexbgeo(up   )=(v_e(1)*apexE(ipts,lp,mp,up   ,1))           &
      &                    +(v_e(2)*apexE(ipts,lp,mp,up   ,2))
 ! vperp at 90km NH +poleward
-!dbg20150319: astrid confirmed this!!!
-               vperp =                                                  &
-     &  v_e(2) * (-1.)  !converted from equator to poleward
-!d     &       vexbgeo(east)  * l_mag(ipts,lp,mp,east ,2)                 &
-!d     &     + vexbgeo(north) * l_mag(ipts,lp,mp,north,2)                 &
-!d     &     + vexbgeo(up   ) * l_mag(ipts,lp,mp,up   ,2)
-
-!nm20140616: kensyo: compare VEXBup vs. vperp
-!dbg20160408 sms
-!!SMS$IGNORE BEGIN
-!      print"('(6)mype=',i2,' mp=',i2,' lp=',i3)",mype,mp,lp
-!      write(6,"(i2,'vperp=',3f9.2)")mype,vperp,v_e(2)
-!!SMS$IGNORE end
-
 !VEXBth: horizontal component, positive EQUATORward: is calculated only for th-method
 !dbg20150319: it might be better to estimate sinI at JMIN_IN
-               VEXBth(lp,mp)= vperp * (-1.) * sinI_m(1) !if ihem=1 NH
-!dbg20160408 sms
-!!SMS$IGNORE BEGIN
-!      print"('(7)mype=',i2,' mp=',i2,' lp=',i3)",mype,mp,lp
-!      write(6,"(i2,' VEXBth=',3f10.3)")mype,VEXBth(lp,mp),vperp         &
-!     &,sinI_m(1)!if ihem=1 NH
-!!SMS$IGNORE end
+               VEXBth(lp,mp) = v_e(2) * sinI_m(1) !if ihem=1 NH
 
-!nm20150516(1):SED test
-!      VEXBth(lp,mp)=0.0
-
-            else if ( sw_th_or_R==1 ) then !R method(gip)
-               ipts = midpoint
+!            else if ( sw_th_or_R==1 ) then !R method(gip)
+!               ipts = midpoint
             end if !( sw_th_or_R==1
 ! exact magnetic eastward  
 ! R method: at APEX
 ! th method: at 90km JMIN_IN
-!dbg20150319: astrid confirmed this!!!
-            VEXBe(lp,mp)=                                               &
-     &  v_e(1)  !+eastward
 
-!d vexbgeo(east )*l_mag(ipts,lp,mp,east ,1)       &
-!d     &                  +vexbgeo(north)*l_mag(ipts,lp,mp,north,1)       &
-!d     &                  +vexbgeo(up  ) *l_mag(ipts,lp,mp,up   ,1)
-
-
-!nm20150516(2):SED test
-!      VEXBe(lp,mp)=0.0
+            if( sw_th_or_R==0 ) then
+               VEXBe(lp,mp) = v_e(1)  !+magnetic eastward
+            else if( sw_th_or_R==1 )then
+!temporary solution to test the code
+               VEXBe(lp,mp) = 0.0
+            endif
 
 
               if ( sw_perp_transport==1 )   VEXBe(lp,mp)=zero
