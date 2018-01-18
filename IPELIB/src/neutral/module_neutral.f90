@@ -116,9 +116,6 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
                  , tinf_k_dummy(IN:IS) &
                  , Vn_ms1_dummy(1:3,1:NPTS))
 
-!SMS$IGNORE BEGIN
-        print *, 'GHGM UTIME ',utime
-!SMS$IGNORE END  
 
           if (utime.ne.start_time) then
 
@@ -254,16 +251,6 @@ end do ihemLoop!: DO ihem
 
 
             endif  ! utime if
-
-
-!SMS$IGNORE BEGIN
-          if ( mp.eq.10.and.lp.eq.20) then
-            do i = in, is
-              print *,'GHGM TWO ', i, on_m3(i,lp,mp), o2n_m3(i,lp,mp), n2n_m3(i,lp,mp)        
-            enddo
-          endif
-!SMS$IGNORE END
-
 
 
 
