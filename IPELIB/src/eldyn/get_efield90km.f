@@ -76,6 +76,13 @@
      &               (90.-theta90_rad(j)*rtd)
           endif
         END DO mlat_loop130km0
+!SMS$SERIAL BEGIN
+      OPEN( UNIT=6000, FILE='plasma_grid_GL.check' )
+      WRITE( 6000, * ) plasma_grid_GL
+      CLOSE( 6000 )
+!SMS$SERIAL END
+
+      STOP
 
 !dbg20160408 sms debug: original parallel begin location
 !SMS$PARALLEL(dh, lp, mp) BEGIN
