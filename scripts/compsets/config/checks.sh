@@ -167,13 +167,13 @@ else # restart conditions
 	echo "checking for atmospheric/surface restart files in RESTARTDIR $RESTARTDIR"
 	NFHOUR_ARR=()
 	IDATE_ARR=()
-	for file in $SIGR1 $SIGR2 $SFCR $GRDR1 $GRDR2 $FORT1051 ; do
+	for file in $SIGR1 $SIGR2 $SFCR $GRDR1 $GRDR2 $FORT1051 $RSTR ; do
 		if ! [[ -n "$(ls $file)" ]] ; then # file not found
 			echo "   restart file $file not found! exiting." ; exit 1
 		else # file found
 			# it's good that we found the file, but we also want to be sure these files are compatible.
 			# in other words, we want to have idate and fhour that all match.
-			if [ $file != $FORT1051 ] ; then # $FORT1051 is binary format
+			if [ $file != $FORT1051 ] && [ $file != $RSTR ] ; then # $FORT1051 is binary, $RSTR is unformatted
 			# we pull the nemsio nfhour and idate into arrays:
 			nfhour=`$NEMSIOGET ${file} nfhour | tr -s ' ' | cut -d' ' -f 3   | sed -e 's/\s//g'`
 			idate=` $NEMSIOGET ${file} idate  | tr -s ' ' | cut -d' ' -f 3-7 | sed -e 's/\s//g'`

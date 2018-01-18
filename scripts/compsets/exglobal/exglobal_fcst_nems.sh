@@ -951,6 +951,7 @@ if [[ $ENS_NUM -le 1 ]] ; then
       ln -fs $GRDI  grid_ini
       ln -fs $GRDI2 grid_ini2
       ln -fs $SIGI2 sig_ini2
+      ln -fs $RSTR  WAM_IPE_RST_rd
     else
       export RESTART=.false.
     fi
@@ -963,6 +964,7 @@ if [[ $ENS_NUM -le 1 ]] ; then
     ln -fs $NSTI  nst_ini
     ln -fs $PLASI ipe_grid_plasma_params
     ln -fs $NEUTI ipe_grid_neutral_params
+    ln -fs $RSTR  WAM_IPE_RST_rd
     export RESTART=.true.
   fi
 #        For output
@@ -1017,7 +1019,6 @@ if [[ $ENS_NUM -le 1 ]] ; then
       STEP=$((STEP+1))
     done
   fi
-  echo $FORT1051
   eval ln -fs $FORT1051 fort.1051
   eval ln -fs $GRDR1 GRDR1
   eval ln -fs $GRDR2 GRDR2
@@ -1025,6 +1026,7 @@ if [[ $ENS_NUM -le 1 ]] ; then
   eval ln -fs $SIGR2 SIGR2
   eval ln -fs $SFCR  SFCR
   eval ln -fs $NSTR  NSTR
+  eval ln -fs $RSTR  WAM_IPE_RST_wrt
 else
 #
 #   For Ensemble runs (members > 1)
