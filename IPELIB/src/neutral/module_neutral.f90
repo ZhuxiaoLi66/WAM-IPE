@@ -34,7 +34,7 @@
                                              JMIN_IN, JMAX_IS, east, north, up, IGCOLAT, IGLON, WamField
 
       USE module_physical_constants, ONLY: pi,zero,earth_radius,g0,gscon,massn_kg
-      USE module_input_parameters, ONLY: F107D,F107AV,AP,NYEAR,NDAY,mpstop, sw_neutral                 
+      USE module_input_parameters, ONLY: F107D,F107AV,AP,NYEAR,NDAY,mpstop, sw_neutral,simulation_is_warm_start 
 
       USE module_unit_conversion, ONLY: M_TO_KM
 
@@ -88,8 +88,8 @@ if (sw_neutral.eq.1) then
 !---------------------------------------------------------------------------
 
 !SMS$PARALLEL(dh, lp, mp) BEGIN
-      apex_longitude_loop: DO mp = 1,mpstop
-        apex_latitude_height_loop: DO lp = 1,NLP
+      DO mp = 1,mpstop
+        DO lp = 1,NLP
 
           IN = JMIN_IN(lp)
           IS = JMAX_IS(lp)
@@ -116,28 +116,40 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
                  , tinf_k_dummy(IN:IS) &
                  , Vn_ms1_dummy(1:3,1:NPTS))
 
+        if( utime == start_time )then
+        
+          ! At the first timestep - the geographic wind comes from the value read in from
+          ! the plasma parameters file....
 
-          if (utime.ne.start_time) then
+          do jth=1,3
+            do i=IN,IS
+              Vn_ms1(jth,i-IN+1) = Vn_ms1_4output(i-IN+1,lp,mp,jth)
+            end do
+          end do
+
+        endif
+
+        if( (simulation_is_warm_start .and. utime == start_time) .or. utime > start_time )then
 
           midpoint = IN + (IS-IN)/2
 
-         NHLoop: do ipts=in,midpoint
+         do ipts=in,midpoint
             if ( plasma_grid_Z(ipts,lp)<=mesh_height_max .and. mesh_height_max<plasma_grid_Z(ipts+1,lp) ) then
                ihTopN=ipts
-               exit NHLoop
+               exit
             endif
             ! if midpoint < mesh_height_max[km]
             if ( ipts==midpoint) ihTopN = midpoint
-         end do NHLoop !: do ipts=in,midpoint
+         end do 
          
-         SHLoop: do ipts=is,midpoint, -1
+         do ipts=is,midpoint, -1
             if ( plasma_grid_Z(ipts,lp)<=mesh_height_max .and. mesh_height_max<plasma_grid_Z(ipts-1,lp) ) then
                ihTopS=ipts
-               exit SHLoop
+               exit
             endif
             ! if midpoint < mesh_height_max[km]
             if ( ipts==midpoint) ihTopS = midpoint
-         end do SHLoop !: do ipts=is       
+         end do       
 
 
 !---------------------------------------------------------------------------
@@ -148,29 +160,29 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
 ! NH and SH denote Northern and Southern Hemispheres respectively
 !---------------------------------------------------------------------------
 
-tn_k(IN:ihTopN,lp,mp)           =  WamField(IN:ihTopN,lp,mp,1)          !Tn < 800km NH
-tn_k(ihTopS:IS,lp,mp)           =  WamField(ihTopS:IS,lp,mp,1)          !Tn < 800km SH
-tn_k(ihTopN+1:midpoint  ,lp,mp) =  WamField(ihTopN,lp,mp,1)             !Tn >800km NH
-tn_k(midpoint+1:ihTopS-1,lp,mp) =  WamField(ihTopS,lp,mp,1)             !Tn >800km SH
-tinf_k(IN:midpoint  ,lp,mp)     =  WamField(ihTopN,lp,mp,1)             !Tn Inf NH 
-tinf_k(midpoint+1:IS,lp,mp)     =  WamField(ihTopS,lp,mp,1)             !Tn Inf SH
+          tn_k(IN:ihTopN,lp,mp)           =  WamField(IN:ihTopN,lp,mp,1)          !Tn < 800km NH
+          tn_k(ihTopS:IS,lp,mp)           =  WamField(ihTopS:IS,lp,mp,1)          !Tn < 800km SH
+          tn_k(ihTopN+1:midpoint  ,lp,mp) =  WamField(ihTopN,lp,mp,1)             !Tn >800km NH
+          tn_k(midpoint+1:ihTopS-1,lp,mp) =  WamField(ihTopS,lp,mp,1)             !Tn >800km SH
+          tinf_k(IN:midpoint  ,lp,mp)     =  WamField(ihTopN,lp,mp,1)             !Tn Inf NH 
+          tinf_k(midpoint+1:IS,lp,mp)     =  WamField(ihTopS,lp,mp,1)             !Tn Inf SH
+          
+          Vn_ms1(1,IN-IN+1:ihTopN-IN+1)   =  WamField(IN:ihTopN,lp,mp,2)      !Vn_geographic_east < 800km NH
+          Vn_ms1(1,ihTopS-IN+1:IS-IN+1)   =  WamField(ihTopS:IS,lp,mp,2)      !Vn_geographic_east < 800km SH
+          Vn_ms1(2,IN-IN+1:ihTopN-IN+1)   =  WamField(IN:ihTopN,lp,mp,3)      !Vn_geographic_north < 800km NH
+          Vn_ms1(2,ihTopS-IN+1:IS-IN+1)   =  WamField(ihTopS:IS,lp,mp,3)      !Vn_geographic_north < 800km SH
+          Vn_ms1(3,IN-IN+1:ihTopN-IN+1)   =  WamField(IN:ihTopN,lp,mp,4)      !Vn_geographic_up < 800km NH
+          Vn_ms1(3,ihTopS-IN+1:IS-IN+1)   =  WamField(ihTopS:IS,lp,mp,4)      !Vn_geographic_up < 800km SH
+          
+          on_m3( IN:ihTopN,lp,mp)         =  WamField(IN:ihTopN,lp,mp,5)          !O < 800km NH           
+          on_m3( ihTopS:IS,lp,mp)         =  WamField(ihTopS:IS,lp,mp,5)          !O < 800km SH           
+          o2n_m3( IN:ihTopN,lp,mp)        =  WamField(IN:ihTopN,lp,mp,6)          !O2 < 800km NH        
+          o2n_m3( ihTopS:IS,lp,mp)        =  WamField(ihTopS:IS,lp,mp,6)          !O2 < 800km SH       
+          n2n_m3( IN:ihTopN,lp,mp)        =  WamField(IN:ihTopN,lp,mp,7)          !N2 < 800km NH       
+          n2n_m3( ihTopS:IS,lp,mp)        =  WamField(ihTopS:IS,lp,mp,7)          !N2 < 800km SH       
 
-Vn_ms1(1,IN-IN+1:ihTopN-IN+1)   =  WamField(IN:ihTopN,lp,mp,2)      !Vn_geographic_east < 800km NH
-Vn_ms1(1,ihTopS-IN+1:IS-IN+1)   =  WamField(ihTopS:IS,lp,mp,2)      !Vn_geographic_east < 800km SH
-Vn_ms1(2,IN-IN+1:ihTopN-IN+1)   =  WamField(IN:ihTopN,lp,mp,3)      !Vn_geographic_north < 800km NH
-Vn_ms1(2,ihTopS-IN+1:IS-IN+1)   =  WamField(ihTopS:IS,lp,mp,3)      !Vn_geographic_north < 800km SH
-Vn_ms1(3,IN-IN+1:ihTopN-IN+1)   =  WamField(IN:ihTopN,lp,mp,4)      !Vn_geographic_up < 800km NH
-Vn_ms1(3,ihTopS-IN+1:IS-IN+1)   =  WamField(ihTopS:IS,lp,mp,4)      !Vn_geographic_up < 800km SH
 
-on_m3( IN:ihTopN,lp,mp)         =  WamField(IN:ihTopN,lp,mp,5)          !O < 800km NH           
-on_m3( ihTopS:IS,lp,mp)         =  WamField(ihTopS:IS,lp,mp,5)          !O < 800km SH           
-o2n_m3( IN:ihTopN,lp,mp)        =  WamField(IN:ihTopN,lp,mp,6)          !O2 < 800km NH        
-o2n_m3( ihTopS:IS,lp,mp)        =  WamField(ihTopS:IS,lp,mp,6)          !O2 < 800km SH       
-n2n_m3( IN:ihTopN,lp,mp)        =  WamField(IN:ihTopN,lp,mp,7)          !N2 < 800km NH       
-n2n_m3( ihTopS:IS,lp,mp)        =  WamField(ihTopS:IS,lp,mp,7)          !N2 < 800km SH       
-
-
-ihemLoop: DO ihem=1,2
+         DO ihem=1,2
 
           if ( ihem==1 ) then 
              istep=+1
@@ -182,11 +194,11 @@ ihemLoop: DO ihem=1,2
              midPoints=midPoint+1               
           end if
  
-  above800kmLoop: DO ipts=ihTop+istep, midPoints, iStep 
+          DO ipts=ihTop+istep, midPoints, iStep 
                      
-Vn_ms1(1,ipts)                  =  WamField(ihTop,lp,mp,2)          !Vn_geographic_east > 800km 
-Vn_ms1(2,ipts)                  =  WamField(ihTop,lp,mp,3)          !Vn_geographic_north > 800km 
-Vn_ms1(3,ipts)                  =  WamField(ihTop,lp,mp,4)          !Vn_geographic_up > 800km   
+                    Vn_ms1(1,ipts)                  =  WamField(ihTop,lp,mp,2)          !Vn_geographic_east > 800km 
+                    Vn_ms1(2,ipts)                  =  WamField(ihTop,lp,mp,3)          !Vn_geographic_north > 800km 
+                    Vn_ms1(3,ipts)                  =  WamField(ihTop,lp,mp,4)          !Vn_geographic_up > 800km   
                         
 
 !---------------------------------------------------------------------------
@@ -212,23 +224,23 @@ Vn_ms1(3,ipts)                  =  WamField(ihTop,lp,mp,4)          !Vn_geograph
                         dht = plasma_grid_Z(ipts1,lp) - plasma_grid_Z(ipts,lp)
 
 
-on_m3(ipts,lp,mp)               =  on_m3(ipts1,lp,mp) * exp(dht/scale_height_O)   !O  > 800km 
-o2n_m3(ipts,lp,mp)              =  o2n_m3(ipts1,lp,mp) * exp(dht/scale_height_O2) !O2 > 800km        
-n2n_m3(ipts,lp,mp)              =  n2n_m3(ipts1,lp,mp) * exp(dht/scale_height_N2) !N2 > 800km            
-
-
-!---------------------------------------------------------------------------
-! Finally, Make sure these densities do not go to zero at high altitudes....
-!---------------------------------------------------------------------------
-
-if (on_m3(ipts,lp,mp).le.1.0e-12) on_m3(ipts,lp,mp) = 1.0e-12
-if (o2n_m3(ipts,lp,mp).le.1.0e-12) o2n_m3(ipts,lp,mp) = 1.0e-12
-if (n2n_m3(ipts,lp,mp).le.1.0e-12) n2n_m3(ipts,lp,mp) = 1.0e-12
+                        on_m3(ipts,lp,mp)               =  on_m3(ipts1,lp,mp) * exp(dht/scale_height_O)   !O  > 800km 
+                        o2n_m3(ipts,lp,mp)              =  o2n_m3(ipts1,lp,mp) * exp(dht/scale_height_O2) !O2 > 800km        
+                        n2n_m3(ipts,lp,mp)              =  n2n_m3(ipts1,lp,mp) * exp(dht/scale_height_N2) !N2 > 800km            
                         
-  end do above800kmLoop!: DO ipts 
-end do ihemLoop!: DO ihem         
+                        
+                        !---------------------------------------------------------------------------
+                        ! Finally, Make sure these densities do not go to zero at high altitudes....
+                        !---------------------------------------------------------------------------
+                        
+                        if (on_m3(ipts,lp,mp).le.1.0e-12) on_m3(ipts,lp,mp) = 1.0e-12
+                        if (o2n_m3(ipts,lp,mp).le.1.0e-12) o2n_m3(ipts,lp,mp) = 1.0e-12
+                        if (n2n_m3(ipts,lp,mp).le.1.0e-12) n2n_m3(ipts,lp,mp) = 1.0e-12
+                        
+                      end do  
+                    end do        
 
-! Write the geographic wind across to a 3-D parameter for output....
+                   ! Write the geographic wind across to a 3-D parameter for output....
 
                    do jth=1,3
                      do i=IN,IS
@@ -237,25 +249,10 @@ end do ihemLoop!: DO ihem
                    end do
 
 
-            else ! utime
+          endif ! selection between cold and warm start
 
 
-! At the first timestep - the geographic wind comes from the value read in from
-! the plasma parameters file....
-
-                   do jth=1,3
-                     do i=IN,IS
-                       Vn_ms1(jth,i-IN+1) = Vn_ms1_4output(i-IN+1,lp,mp,jth)
-                     end do
-                   end do
-
-
-            endif  ! utime if
-
-
-
-         !nm20151130
-          flux_tube: DO i=IN,IS
+          DO i=IN,IS
             ipts = i-IN+1 !1:NPTS
 
 ! un(3)=Ue3=d3*U: positive parallel to a field line, Eq(5.6) 
@@ -276,10 +273,22 @@ end do ihemLoop!: DO ihem
 !dbg20110131: the midpoint values become NaN otherwise because of inappropriate D1/3 values...
                IF ( lp>=1 .AND. lp<=6 .AND. i==midpoint )   Un_ms1(i,lp,mp,:) = Un_ms1(i-1,lp,mp,:) 
 
-          END DO flux_tube !: DO i=IN,IS
-        END DO  apex_latitude_height_loop !: DO lp = 1,NLP
-      END DO  apex_longitude_loop  !: DO mp = 1,NMP
+          END DO  !: DO i=IN,IS
+        END DO !: DO lp = 1,NLP
+      END DO   !: DO mp = 1,NMP
 !SMS$PARALLEL END
+
+!SMS$SERIAL (<tn_k,tinf_k,Vn_ms1,on_m3,o2n_m3,n2n_m3,Vn_ms1,IN> :DEFAULT=IGNORE) BEGIN
+
+  PRINT*, 'Jmin/max tn_k', MINVAL(tn_k), MAXVAL(tn_k)
+  PRINT*, 'Jmin/max tinf_k',MINVAL(tinf_k), MAXVAL(tinf_k)
+  PRINT*, 'Jmin/max Vn_ms1',MINVAL(Vn_ms1), MAXVAL(Vn_ms1)
+  PRINT*, 'Jmin/max on_m3',MINVAL(on_m3), MAXVAL(on_m3)
+  PRINT*, 'Jmin/max o2n_m3',MINVAL(o2n_m3), MAXVAL(o2n_m3)
+  PRINT*, 'Jmin/max n2n_m3',MINVAL(n2n_m3), MAXVAL(n2n_m3)
+  PRINT*, 'Jmin/max Vn_ms1',MINVAL(Vn_ms1), MAXVAL(Vn_ms1)
+
+!SMS$SERIAL END
 
       else if (sw_neutral.eq.3) then 
 

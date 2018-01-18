@@ -22,6 +22,7 @@
       INTEGER (KIND=int_prec), PUBLIC   :: start_time      !=0  !UT[sec]
       INTEGER (KIND=int_prec), PUBLIC   :: stop_time       !=60 !UT[sec]
       INTEGER (KIND=int_prec), PUBLIC   :: time_step       !=60 ![sec]
+      LOGICAL, PUBLIC                          :: simulation_is_warm_start =.false. ! flag for determining wheter to use wamfield on first time step or not (coupled mode only) 
       REAL (KIND=real_prec), PUBLIC     :: dumpFrequency=3600   ! [sec]
       INTEGER (KIND=int_prec), PUBLIC   :: nprocs=1        !Number of processors
       INTEGER (KIND=int_prec), PUBLIC   :: mype=0          !Processor number
@@ -175,6 +176,7 @@
      &, stop_time &
      &,time_step &
      &,dumpFrequency &
+     &,simulation_is_warm_start &
      &,F107D   &
      &,F107AV  &
      &,NYEAR  &
