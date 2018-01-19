@@ -1689,31 +1689,30 @@ subroutine RunRegrid(model, importState, exportState, rc)
 
         if (j==1) allocate(wamdata(localnodes, totallevels))
         ! At the first time step, the values from the importstate are all invalid
-        if (slice==1) then 
-	  wamdata(:,:)=1.0
-        else
-	  if (PetNo == 0) then
-             print *, 'fill field ',trim(fieldNameList(j))
-          endif
-          if (trim(fieldNameList(j)) == "O_Density" .or. &
-              trim(fieldNameList(j)) == "O2_Density" .or. &
-              trim(fieldNameList(j)) == "N2_Density") then
-   
-            if (trim(fieldNameList(j)) == "O_Density") then
-	       mass = 16
-            elseif (trim(fieldNameList(j)) == "O2_Density") then
-               mass = 32
-            else
-               mass = 28
-            endif
-            ! do log interpolation 
-  	    do i=1,localnodes
+        if (PetNo == 0) then
+           print *, 'fill field ',trim(fieldNameList(j))
+        endif
+
+        if (trim(fieldNameList(j)) == "O_Density" .or. &
+             trim(fieldNameList(j)) == "O2_Density" .or. &
+             trim(fieldNameList(j)) == "N2_Density") then
+           
+           if (trim(fieldNameList(j)) == "O_Density") then
+              mass = 16
+           elseif (trim(fieldNameList(j)) == "O2_Density") then
+              mass = 32
+           else
+              mass = 28
+           endif
+
+           ! do log interpolation 
+           do i=1,localnodes
               kk = 1  ! source ind
               do k=startlevel, wamdims(3)
                  do while (kk<=inlevels .and. hgtbuf(i,kk)<wamhgt(k))
 	            kk=kk+1
                  enddo
-	         if (kk>extrap_start_level) then
+                 if (kk>extrap_start_level) then
 		    hgt_prev=hgtbuf(i,extrap_start_level)
 		    dist=re/(re+hgt_prev)
                     H_prev=R*tempbuf(i)/(mass*g0*dist*dist)
@@ -1788,8 +1787,7 @@ subroutine RunRegrid(model, importState, exportState, rc)
                  endif
               enddo
             enddo
-          endif
-        endif
+         endif
 
         ! write out the variables from each processor
         if (slice == 2) then
