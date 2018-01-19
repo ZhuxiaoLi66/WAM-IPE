@@ -129,7 +129,8 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
 
         endif
 
-        if( (simulation_is_warm_start .and. utime == start_time) .or. utime > start_time )then
+        if( simulation_is_warm_start .or. utime > start_time )then
+       
 
           midpoint = IN + (IS-IN)/2
 
@@ -160,6 +161,7 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
 ! NH and SH denote Northern and Southern Hemispheres respectively
 !---------------------------------------------------------------------------
 
+          PRINT*, 'MODULE_NEUTRAL : Exchange with WAMfield Start'
           tn_k(IN:ihTopN,lp,mp)           =  WamField(IN:ihTopN,lp,mp,1)          !Tn < 800km NH
           tn_k(ihTopS:IS,lp,mp)           =  WamField(ihTopS:IS,lp,mp,1)          !Tn < 800km SH
           tn_k(ihTopN+1:midpoint  ,lp,mp) =  WamField(ihTopN,lp,mp,1)             !Tn >800km NH
@@ -180,6 +182,7 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
           o2n_m3( ihTopS:IS,lp,mp)        =  WamField(ihTopS:IS,lp,mp,6)          !O2 < 800km SH       
           n2n_m3( IN:ihTopN,lp,mp)        =  WamField(IN:ihTopN,lp,mp,7)          !N2 < 800km NH       
           n2n_m3( ihTopS:IS,lp,mp)        =  WamField(ihTopS:IS,lp,mp,7)          !N2 < 800km SH       
+          PRINT*, 'MODULE_NEUTRAL : Exchange with WAMfield End'
 
 
          DO ihem=1,2
