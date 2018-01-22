@@ -234,28 +234,28 @@ print*, mype,' shape=',shape(tn_k)
 
   READ (unit=5996) tn_k(1:MaxFluxTube,1:NLP,1:NMP)
 !SMS$IGNORE BEGIN  
-print*,'reading tn_k finished'
+print*,mype,'reading tn_k finished'
 !SMS$IGNORE end
   READ (unit=5996) vn_ms1_4output(1:MaxFluxTube,1:NLP,1:NMP,1:3)
 
 !SMS$IGNORE BEGIN  
-print*,'reading vn_ms1_4 finished'
+print*,mype,'reading vn_ms1_4 finished'
 !SMS$IGNORE end
 
   READ (unit=5996) on_m3(1:MaxFluxTube,1:NLP,1:NMP) 
 !SMS$IGNORE BEGIN  
-print*,'reading on_m3 finished'
+print*,mype,'reading on_m3 finished'
 !SMS$IGNORE end
 
   READ (unit=5996) n2n_m3(1:MaxFluxTube,1:NLP,1:NMP) 
 
 !SMS$IGNORE BEGIN  
-print*,'reading n2n_m3 finished'
+print*,mype,'reading n2n_m3 finished'
 !SMS$IGNORE end
 
   READ (unit=5996) o2n_m3(1:MaxFluxTube,1:NLP,1:NMP) 
 !SMS$IGNORE BEGIN  
-print*,'reading o2n_m3 finished'
+print*,mype,'reading o2n_m3 finished'
 !SMS$IGNORE end  
 
   CLOSE(5996)

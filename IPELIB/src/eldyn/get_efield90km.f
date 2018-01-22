@@ -88,6 +88,11 @@
           IN = JMIN_IN(lp)
           coslam_m(1,lp)=COS(pi*0.5-plasma_grid_GL(IN,lp))
 
+!SMS$IGNORE begin
+       print*,'coslam=',coslam_m(1,lp),' lp=',lp,' IN=',IN,' mype',mype &
+     &,plasma_grid_GL(IN,lp),(pi*0.5-plasma_grid_GL(IN,lp))
+!SMS$IGNORE end
+
           if(coslam_m(1,lp)<=0.0 .or. coslam_m(1,lp)>=1.0 )then
 !SMS$IGNORE BEGIN
             print*,'sub-get_e:NH!STOP! INVALID coslam!',lp,IN,mype
@@ -264,10 +269,16 @@
           jj1=j1(1,lp)
           pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50 
           pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
-          if (r<=0.0 .or. coslam_m(1,lp)==0.0 .or. d_phi_m==0.0 )then
+
+!SMS$IGNORE begin
+       print*,'coslam=',coslam_m(1,lp),' lp=',lp,' mype',mype
+!SMS$IGNORE end
+
+          if (r<=0..or.coslam_m(1,lp)==0..or.d_phi_m==0.)then
 !SMS$IGNORE BEGIN
-            print*,'sub-get_e:NH!STOP! INVALID',lp,ihem,mp,mype
-            print*, r,coslam_m(1,lp),d_phi_m
+            print*,'sub-get_e:NH!STOP! INVALID:lp=',lp                  &
+     &,' mp=',mp,' mype=',mype
+            print*,'r=',r,' coslam_m=',coslam_m(1,lp),'d_phi_m=',d_phi_m
 !SMS$IGNORE END
             STOP
           endif
@@ -287,9 +298,9 @@
           jj1=j1(2,lp)              !2:SH
           pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50
           pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
-          if (r<=0.0 .or. coslam_m(2,lp)==0.0 .or. d_phi_m==0.0 )then
+          if (r<=0..or.coslam_m(2,lp)==0..or.d_phi_m==0.)then
 !SMS$IGNORE BEGIN
-            print*,'sub-get_e:SH!STOP! INVALID',lp,ihem,mp,mype
+            print*,'sub-get_e:SH!STOP! INVALID',lp,mp,mype
             print*, r,coslam_m(2,lp),d_phi_m
 !SMS$IGNORE END
             STOP
@@ -355,7 +366,7 @@
             vexbgeo(up   )=(v_e(1)*apexE(midpoint,lp,mp,up   ,1))       &
      &                    +(v_e(2)*apexE(midpoint,lp,mp,up   ,2))
             if(sw_debug) then
-              print *,'sub-getE90:',v_e(1),apexE(midpoint,lp,mp,up,1)      &
+              print *,'sub-getE90:',v_e(1),apexE(midpoint,lp,mp,up,1)   &
      &                          ,v_e(2),apexE(midpoint,lp,mp,up,2)
             endif
 ! EXB  magnetic exact upward at APEX (midpoint) 

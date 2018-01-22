@@ -3,8 +3,8 @@
 !      program test_supim_exb
       SUBROUTINE supim_EXBV(utime,IFL,LT_SEC,r_apex,GLON_deg,VEXBup_out)
       USE module_precision
-      USE module_input_parameters,ONLY:NYEAR,NDAY,F107D_new,f107_new
-     &,start_time,lpi,utime0LPI,sw_ctip_input,ap_eld,input_params_begin
+      USE module_input_parameters,ONLY:NYEAR,NDAY,F107D_new,f107_new    &
+     &,start_time,lpi,utime0LPI,sw_ctip_input,ap_eld,input_params_begin &
      &,input_params_interval
       IMPLICIT NONE       
 !
@@ -40,7 +40,8 @@
       IYEAR=NYEAR  !1998
       IDAY=NDAY    !74
       if ( sw_ctip_input ) then
-        LPI = INT( ( utime - utime0LPI ) / real(input_params_interval) ) + 1 + input_params_begin
+        LPI = INT( ( utime - utime0LPI ) / real(input_params_interval)) &
+     &+ 1 + input_params_begin
 !t        if(sw_debug)
         print*,'sub-eld: LPI=',lpi
 !t        if(sw_debug)
@@ -77,10 +78,10 @@
 !      if(i==1) write(3001,*)'ht',ht
 !GLOND(NM,IFL) degrees
 !      GLOND_IFL=288.
-      if(utime==start_time)
-     &  write(3001,*)IFL,' GLOND',GLON_deg,' GREQ',r_apex
+      if(utime==start_time)                                             &
+     &write(3001,*)IFL,' GLOND',GLON_deg,' GREQ',r_apex
 
-      CALL EXBV(JDJ,JDA,LT_SEC,r_apex,GLON_deg
+      CALL EXBV(JDJ,JDA,LT_SEC,r_apex,GLON_deg                          &
 !     &              ,INEB,ISEB
      &,IFL)
       write(3000,fmt=*) IFL,VPE(IFL)
@@ -91,7 +92,7 @@
       END SUBROUTINE supim_EXBV
 !*-------------------------------------------------------------------------------
 !*
-      SUBROUTINE EXBV(IDJ,IDA,ZTSEC,GRE,GLONB
+      SUBROUTINE EXBV(IDJ,IDA,ZTSEC,GRE,GLONB                           &
 !     &,INEB,ISEB
      &,IFL)
 !*
@@ -109,15 +110,15 @@
       PARAMETER(NPTS=601,NFL=170)
       SAVE RZE0,RZE1,RZE2,RZE3,RZE4,RZE5,JVPE,AVPE
       REAL JVPE
-      COMMON
-     +/BLK1/PYE,R0,RAD
-     +/BLK9/VPE(NFL)
+      COMMON                                                            &
+     &/BLK1/PYE,R0,RAD                                                  &
+     &/BLK9/VPE(NFL)                                                    &
 !,VP(NPTS,NFL),DVP(NPTS,NFL)
-     +     ,VZONE(NFL)
+     &     ,VZONE(NFL)                                                  &
 !,VZON(NPTS,NFL)
-     +/BLK15/IYEAR,IDAY,F107A,F107,AP
-     +/EXBVEL/EXBJT(97,10),EXBJD(97,10),EXBAT(97,1),EXBAD(97,1)
-      DATA ZE0/150.E3/,ZE1/200.E3/,ZE2/600.E3/,ZE3/2000.E3/
+     &/BLK15/IYEAR,IDAY,F107A,F107,AP                                   &
+     &/EXBVEL/EXBJT(97,10),EXBJD(97,10),EXBAT(97,1),EXBAD(97,1)
+      DATA ZE0/150.E3/,ZE1/200.E3/,ZE2/600.E3/,ZE3/2000.E3/             &
      &    ,ZE4/3000.E3/,ZE5/4000.E3/
 !*
       IF(IFL.GT.1) GOTO 40
