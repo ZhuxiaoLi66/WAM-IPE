@@ -115,7 +115,7 @@ ELSE IF ( switch==2 ) THEN !2:RESTART:
    CALL getenv("RESDIR", restart_directory)
    print *, 'GHGM IO_PLASMA restart_directory=',TRIM(restart_directory)
 
-!SMS$SERIAL(<plasma_3d, tn_k, vn_ms1_4output, on_m3, n2n_m3, o2n_m3, OUT> : DEFAULT=IGNORE) BEGIN
+!SMS$SERIAL (<plasma_3d, tn_k, vn_ms1_4output, on_m3, n2n_m3, o2n_m3, OUT> : DEFAULT=IGNORE) BEGIN
 
   OPEN( UNIT = 5997, &
         FILE = trim(restart_directory)//'ipe_grid_plasma_params', &
@@ -156,20 +156,21 @@ print*, mype,' size=',size(tn_k)
 print*, mype,' shape=',shape(tn_k)
 
   READ (unit=5996) tn_k(1:MaxFluxTube,1:NLP,1:NMP)
-print*,'reading tn_k finished'
+
+print*,mype,'reading tn_k finished'
   READ (unit=5996) vn_ms1_4output(1:MaxFluxTube,1:NLP,1:NMP,1:3)
 
-print*,'reading vn_ms1_4 finished'
+print*,mype,'reading vn_ms1_4 finished'
 
   READ (unit=5996) on_m3(1:MaxFluxTube,1:NLP,1:NMP) 
-print*,'reading on_m3 finished'
+print*,mype,'reading on_m3 finished'
 
   READ (unit=5996) n2n_m3(1:MaxFluxTube,1:NLP,1:NMP) 
 
-print*,'reading n2n_m3 finished'
+print*,mype,'reading n2n_m3 finished'
 
   READ (unit=5996) o2n_m3(1:MaxFluxTube,1:NLP,1:NMP) 
-print*,'reading o2n_m3 finished'
+print*,mype,'reading o2n_m3 finished'
 
   CLOSE(5996)
 

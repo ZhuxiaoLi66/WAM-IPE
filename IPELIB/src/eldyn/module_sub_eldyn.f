@@ -39,14 +39,14 @@
       USE module_cal_monthday
 !SMS$IGNORE BEGIN
 #ifdef HAVE_MPI
-      USE module_input_parameters,ONLY:NYEAR,NDAY,start_time,mype &
-     &,ip_freq_output,sw_debug,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld  &
-     &,lat_sft_eld,sw_ctip_input,utime0LPI,f107_new,f107d_new &
+      USE module_input_parameters,ONLY:NYEAR,NDAY,start_time,mype       &
+     &,ip_freq_output,sw_debug,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld        &
+     &,lat_sft_eld,sw_ctip_input,utime0LPI,f107_new,f107d_new           &
      &,input_params_begin,input_params_interval
 #else
-      USE module_input_parameters,ONLY:NYEAR,NDAY,start_time,mype,
-     & ip_freq_output,sw_debug,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld,
-     & lat_sft_eld,sw_ctip_input,utime0LPI,f107_new,f107d_new,
+      USE module_input_parameters,ONLY:NYEAR,NDAY,start_time,mype,      &
+     & ip_freq_output,sw_debug,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld,       &
+     & lat_sft_eld,sw_ctip_input,utime0LPI,f107_new,f107d_new,          &
      & input_params_begin,input_params_interval
 #endif
 !SMS$IGNORE END
@@ -78,7 +78,8 @@
 !      iday_m=15                 !day of month 
 
       if ( sw_ctip_input ) then
-        LPI = INT( ( utime - utime0LPI ) / real(input_params_interval) ) + 1 + input_params_begin
+        LPI = INT( ( utime - utime0LPI ) / real(input_params_interval) ) &
+     &+ 1 + input_params_begin
 !t        if(sw_debug)
         print*,'sub-eld: LPI=',lpi
 !t        if(sw_debug)
@@ -116,7 +117,7 @@
                exit
             end if
          end do 
-         print *,'bnd_wei=',bnd_wei,' lat_sft=',lat_sft                    &
+         print *,'bnd_wei=',bnd_wei,' lat_sft=',lat_sft                 &
      &        ,' ilat_sft=',ilat_sft,' ef_max=',ef_max
       end if                    !( sw_bnd_wei==1 ) then 
 !------------------------------------------------------------------

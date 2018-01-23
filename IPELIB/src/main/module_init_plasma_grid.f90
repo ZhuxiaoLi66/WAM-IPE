@@ -9,7 +9,7 @@ USE module_read_plasma_grid_global,only: read_plasma_grid_global
 USE module_precision
 USE module_IPE_dimension      ,ONLY: NMP,NLP,ISTOT
 USE module_physical_constants ,ONLY: earth_radius, pi, G0,zero
-USE module_input_parameters   ,ONLY: sw_debug,sw_grid,parallelBuild,mpHaloSize,nprocs
+USE module_input_parameters   ,ONLY: sw_debug,sw_grid,parallelBuild,mpHaloSize,nprocs,mype
 USE module_FIELD_LINE_GRID_MKS,ONLY: Pvalue,JMIN_IN,JMAX_IS, r_meter2D      &
 &, plasma_grid_GL,plasma_grid_3d,apexD,apexE,Be3,plasma_grid_Z,ISL,IBM,IGR  &
 & ,IQ,IGCOLAT,IGLON,east,north,up,mlon_rad,dlonm90km,apexDscalar,l_mag
@@ -41,7 +41,7 @@ do lp=1,NLP
 
 !nm20180112: double check IN,IS
 !SMS$IGNORE begin         
-  print*,'lp=',lp,' JMIN_IN=',JMIN_IN(lp),' JMAX_IS=',JMAX_IS(lp)
+  print*,'mype=',mype,' lp=',lp,' JMIN_IN=',JMIN_IN(lp),' JMAX_IS=',JMAX_IS(lp)
 !SMS$IGNORE end
 
   CALL Get_Pvalue_Dipole ( r_meter2D(IN,lp), plasma_grid_GL(IN,lp), Pvalue(lp) )

@@ -24,7 +24,8 @@
   
       USE module_input_parameters,ONLY: sw_neutral_heating_flip,mpHaloSize,nprocs &
 !nm20170424 wind output corrected
-     &, sw_neutral
+     &, sw_neutral &
+     &, mype
 
       IMPLICIT NONE
       INTEGER (KIND=int_prec),INTENT(IN) :: switch
@@ -57,6 +58,13 @@
      &,           TINF_K(MaxFluxTube,NLP,NMP)     &
      &,           Un_ms1(MaxFluxTube,NLP,NMP,3:3) &
      &,           vn_ms1_4output(MaxFluxTube,NLP,NMP,3) )
+
+
+!SMS$ignore begin                                                                  
+print*, mype,'allocate_arrays:  size=',size(tn_k)
+print*, mype,'q shape=',shape(tn_k)
+!SMS$ignore end
+
 
 !nm20170424 wind output corrected
 !t        if ( sw_neutral==0.or.sw_neutral==1 ) then

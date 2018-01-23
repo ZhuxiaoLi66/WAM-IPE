@@ -59,7 +59,7 @@
   sw_aurora=1
   sw_ctip_input=t
   sw_dbg_perp_trans=f
-  sw_debug=f
+  sw_debug=t
   sw_debug_mpi=f
   sw_divv=0
   sw_eldyn=1
