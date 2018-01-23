@@ -18,13 +18,14 @@ SUBROUTINE io_plasma_bin ( switch, utime, timestamp_for_IPE )
 USE module_precision
 USE module_IO,ONLY: LUN_PLASMA1,LUN_PLASMA2,lun_min1,lun_min2,lun_ut,record_number_plasma,lun_max1
 
-USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_3d,JMIN_ING,JMAX_ISG,VEXBup &
-!&, Un_ms1,tn_k,on_m3,n2n_m3,o2n_m3
-&, vn_ms1_4output,tn_k,on_m3,n2n_m3,o2n_m3 &
-&, MaxFluxTube 
+USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_3d,JMIN_ING,JMAX_ISG,VEXBup, &
+                                     vn_ms1_4output,tn_k,on_m3,n2n_m3,o2n_m3, maxFluxTube
+
 USE module_IPE_dimension,ONLY: NMP,NLP,NPTS2D,ISPEC,ISPEV,IPDIM,ISPET,ISTOT
-USE module_input_parameters,ONLY:sw_debug,record_number_plasma_start,mype &
-&,sw_record_number,stop_time,start_time,duration,mpstop, sw_output_wind, sw_use_wam_fields_for_restart
+USE module_input_parameters,ONLY:sw_debug,record_number_plasma_start,mype, &
+                                 sw_record_number,stop_time,start_time, &
+                                 duration,mpstop, sw_output_wind, sw_use_wam_fields_for_restart
+
 USE module_physical_constants,ONLY:zero
 ! ghgm - now need the open_file module....
 USE module_open_file,ONLY: open_file
@@ -53,7 +54,7 @@ CHARACTER(len=200)                  :: restart_directory
 IF ( switch==1 ) THEN !1:Output the 16 plasma* files
 
 
-!SMS$SERIAL(<plasma_3d,tn_k,vn_ms1_4output,on_m3,n2n_m3,o2n_m3>:default=ignore) BEGIN
+!SMS$SERIAL(<plasma_3d, tn_k, vn_ms1_4output, on_m3, n2n_m3, o2n_m3, IN>:default=ignore) BEGIN
 
   record_number_plasma = record_number_plasma+1
 
@@ -152,7 +153,6 @@ ELSE IF ( switch==2 ) THEN !2:RESTART:
   ENDIF
 
 
-print*, mype,' size=',size(tn_k)
 print*, mype,' shape=',shape(tn_k)
 
   READ (unit=5996) tn_k(1:MaxFluxTube,1:NLP,1:NMP)
@@ -179,5 +179,4 @@ print*,mype,'reading o2n_m3 finished'
 
 END IF !( switch==1 ) THEN
 
-!print *,'END sub-io_pl: sw=',switch,' uts=' ,utime 
 END SUBROUTINE io_plasma_bin
