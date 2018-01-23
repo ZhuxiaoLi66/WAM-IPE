@@ -281,15 +281,15 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
       END DO   !: DO mp = 1,NMP
 !SMS$PARALLEL END
 
-!SMS$SERIAL (<tn_k,tinf_k,Vn_ms1,on_m3,o2n_m3,n2n_m3,Vn_ms1,IN> :DEFAULT=IGNORE) BEGIN
+!SMS$SERIAL (<tn_k,tinf_k,Un_ms1,Vn_ms1,on_m3,o2n_m3,n2n_m3,IN> :DEFAULT=IGNORE) BEGIN
 
   PRINT*, 'Jmin/max tn_k', MINVAL(tn_k), MAXVAL(tn_k), utime, start_time
   PRINT*, 'Jmin/max tinf_k',MINVAL(tinf_k), MAXVAL(tinf_k), utime, start_time
   PRINT*, 'Jmin/max Vn_ms1',MINVAL(Vn_ms1), MAXVAL(Vn_ms1), utime, start_time
+  PRINT*, 'Jmin/max Un_ms1',MINVAL(Un_ms1), MAXVAL(Un_ms1), utime, start_time
   PRINT*, 'Jmin/max on_m3',MINVAL(on_m3), MAXVAL(on_m3), utime, start_time
   PRINT*, 'Jmin/max o2n_m3',MINVAL(o2n_m3), MAXVAL(o2n_m3), utime, start_time
   PRINT*, 'Jmin/max n2n_m3',MINVAL(n2n_m3), MAXVAL(n2n_m3), utime, start_time
-  PRINT*, 'Jmin/max Vn_ms1',MINVAL(Vn_ms1), MAXVAL(Vn_ms1), utime, start_time
 
 !SMS$SERIAL END
 
