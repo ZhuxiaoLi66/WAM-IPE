@@ -128,9 +128,15 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
           end do
 
         endif
+!SMS$SERIAL BEGIN
+        PRINT*, "WARM_START = ", simulation_is_warm_start, utime
+!SMS$SERIAL END
 
         if( simulation_is_warm_start .or. utime > start_time )then
        
+!SMS$SERIAL BEGIN
+          PRINT*, "WARM_START CONDITIONAL TIME =", utime
+!SMS$SERIAL END
 
           midpoint = IN + (IS-IN)/2
 
