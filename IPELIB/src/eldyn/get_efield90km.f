@@ -82,7 +82,6 @@
       CLOSE( 6000 )
 !SMS$SERIAL END
 
-      STOP
 
 !dbg20160408 sms debug: original parallel begin location
 !SMS$PARALLEL(dh, lp, mp) BEGIN
