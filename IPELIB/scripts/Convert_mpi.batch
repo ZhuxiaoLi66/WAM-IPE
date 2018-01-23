@@ -25,7 +25,7 @@ rm -rf tmp*
 
 # Build the i2hg executable
 module purge
-module load intel/15.6.233 impi/5.0.3.048 netcdf-hdf5parallel
+module load intel/15.6.233 impi/5.0.3.048 netcdf
 make --directory=${WAMIPEDIR}/IPELIB/src/plot/ i2hg_mpi -f i2hg_mpi.mak
 export I2HG_EXE=${WAMIPEDIR}/IPELIB/bin/i2hg_mpi
 
@@ -79,7 +79,7 @@ if [ x\$PBS_O_WORKDIR != x ]; then
    cd \$PBS_O_WORKDIR
 fi
 module purge
-module load intel/15.6.233 impi/5.0.3.048 netcdf-hdf5parallel
+module load intel/15.6.233 impi/5.0.3.048 netcdf
 
 # Run the executable
 ulimit -s unlimited
