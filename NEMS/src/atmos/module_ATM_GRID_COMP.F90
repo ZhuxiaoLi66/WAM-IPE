@@ -42,6 +42,7 @@
         model_label_CheckImport     => label_CheckImport, &
         model_label_Advance         => label_Advance
       use module_CPLFIELDS
+      use get_variables_for_WAM_IPE_coupling
 #ifdef WITH_NMMB_NUOPC
       USE module_NMM_GRID_COMP,ONLY: nmm_grid
 #endif
@@ -858,6 +859,14 @@
             return  ! bail out
         endif
       enddo
+
+      ! JAS : 1/25/2018 : Added call to fillWAMFields so that IPE has access
+      ! to the data read in the module
+      ! NEMS/src/atmos/gsm/dyn/input_for_wam_ipe_rst.f
+
+      call fillWAMFields(uug, vvg, wwg, ttg, zzg, n2g, rqg, ipt_lats_node_a,global_lats_a)
+
+
     end subroutine
     
   end subroutine
