@@ -432,8 +432,8 @@ module module_CPLFIELDS
     real(ESMF_KIND_R8), target :: zzg(:,:,:)
     real(ESMF_KIND_R8), target :: n2g(:,:,:)
     real(ESMF_KIND_R8), intent(in) :: rqg(:,:,:)
-    integer :: ipt_lats_node_a
-    integer, intent(in) :: global_lats_a(:)
+    integer, optional :: ipt_lats_node_a
+    integer, optional, intent(in) :: global_lats_a(:)
     integer, optional :: rc
 
     real(ESMF_KIND_R8), pointer   :: fptr(:,:), infptr(:,:,:)
@@ -516,7 +516,7 @@ module module_CPLFIELDS
            enddo
          enddo
 	 ! For validation purpose, write the field out
-         if (slice==1) then
+         if (slice==1 .and. present(global_lats_a)) then
             filename = 'wam3dgridnew2.nc'
             ! write shuffle order global_lats_a(:) first
             if (PetNo == 0) then
@@ -532,26 +532,30 @@ module module_CPLFIELDS
             ! The variable in the output file is named "heights" because there is 
             ! another variable named "height" already
             if (trim(fieldName) == "height") fieldName = "heights"
-            do i=0, PetCnt-1
-              if (PetNo == i) then
-                 status = nf90_open(filename, NF90_WRITE, nc)
-                 call CheckNCError(status, filename)
-                 status = nf90_inq_varId(nc, trim(fieldName), varid)
-                 call CheckNCError(status, trim(fieldName))
-                 start3(3)=1
-                 start3(2)=ipt_lats_node_a
-                 start3(1)=1
-                 count3(3)=size(infptr,3)
-                 count3(2)=size(infptr,2)
-                 count3(1)=size(infptr,1)
-	         status = nf90_put_var(nc, varid, infptr, & 
-		    start3, count3)
-                 call CheckNCError(status, trim(fieldName))
-                 status = nf90_close(nc)
-                 call CheckNCError(status, filename)
-              endif
-              call ESMF_VMBarrier(vm)
-            enddo  !i=0,PetCnt-1
+            if( present( ipt_lats_node_a ) )then
+
+              do i=0, PetCnt-1
+                if (PetNo == i) then
+                   status = nf90_open(filename, NF90_WRITE, nc)
+                   call CheckNCError(status, filename)
+                   status = nf90_inq_varId(nc, trim(fieldName), varid)
+                   call CheckNCError(status, trim(fieldName))
+                   start3(3)=1
+                   start3(2)=ipt_lats_node_a
+                   start3(1)=1
+                   count3(3)=size(infptr,3)
+                   count3(2)=size(infptr,2)
+                   count3(1)=size(infptr,1)
+  	         status = nf90_put_var(nc, varid, infptr, & 
+  		    start3, count3)
+                   call CheckNCError(status, trim(fieldName))
+                   status = nf90_close(nc)
+                   call CheckNCError(status, filename)
+                endif
+                call ESMF_VMBarrier(vm)
+              enddo  !i=0,PetCnt-1
+ 
+            endif
             if (PetNo == 0) then
        	       print *, 'Write out ', trim(fieldName)
             endif

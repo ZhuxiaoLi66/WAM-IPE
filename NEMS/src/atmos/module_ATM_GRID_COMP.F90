@@ -864,7 +864,7 @@
       ! to the data read in the module
       ! NEMS/src/atmos/gsm/dyn/input_for_wam_ipe_rst.f
 
-      call fillWAMFields(uug, vvg, wwg, ttg, zzg, n2g, rqg, ipt_lats_node_a,global_lats_a)
+      call fillWAMFields(uug, vvg, wwg, ttg, zzg, n2g, rqg)
 
 
     end subroutine
