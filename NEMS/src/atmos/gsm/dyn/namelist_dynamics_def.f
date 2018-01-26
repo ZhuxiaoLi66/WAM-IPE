@@ -18,6 +18,7 @@
 !                      NetCDF diagnostic files.
 !
       use gfs_dyn_machine
+      use module_CPLFIELDS
       implicit none
       
       integer nsres,nsout,igen,ngptc,levwgt(2),k2o,nsout_hf
@@ -52,7 +53,7 @@
 ! WAM IPE coupling flags.
 !------------------------
       logical :: wam_ipe_coupling, height_dependent_g, 
-     &           wam_ipe_cpl_rst_input, wam_ipe_cpl_rst_output, 
+!     &           wam_ipe_cpl_rst_input, wam_ipe_cpl_rst_output, 
      &           grads_output, NC_output
 ! pjp stochastic phyics
       integer skeb_varspect_opt

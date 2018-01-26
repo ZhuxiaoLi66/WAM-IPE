@@ -12,6 +12,7 @@ module module_CPLFIELDS
   use netcdf
 
   implicit none
+  logical, public :: wam_ipe_cpl_rst_input, wam_ipe_cpl_rst_output 
   
   private
   

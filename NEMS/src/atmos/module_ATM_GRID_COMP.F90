@@ -864,8 +864,10 @@
       ! to the data read in the module
       ! NEMS/src/atmos/gsm/dyn/input_for_wam_ipe_rst.f
 
-      call fillWAMFields(uug, vvg, wwg, ttg, zzg, n2g, rqg)
-
+      
+      if(wam_ipe_cpl_rst_input) then
+        call fillWAMFields(uug, vvg, wwg, ttg, zzg, n2g, rqg)
+      endif
 
     end subroutine
     
