@@ -5,6 +5,7 @@
 #SMS output
 *_sms.f.tmp
 *_sms.f90
+*~
 
 #Build Files
 *.exe

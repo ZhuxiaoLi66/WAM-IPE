@@ -13,17 +13,22 @@
       SUBROUTINE flux_tube_solver ( utime,mp,lp )
       USE module_precision
       USE module_IPE_dimension,ONLY: ISPEC,ISPEV,IPDIM
-      USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,Pvalue,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d,ON_m3,HN_m3,N2N_m3,O2N_m3,HE_m3,N4S_m3,TN_k,TINF_k,un_ms1
-      USE module_input_parameters,ONLY: time_step,F107D,F107AV,DTMIN_flip  &
-     &, sw_INNO,FPAS_flip,HPEQ_flip,HEPRAT_flip,COLFAC_flip,sw_IHEPLS,sw_INPLS,sw_debug,iout, start_time, sw_wind_flip, sw_depleted_flip, start_time_depleted, sw_output_fort167,mpFort167,lpFort167 &
-     &, sw_neutral_heating_flip, ip_freq_output, parallelBuild,mype
+      USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,Pvalue,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d,ON_m3,HN_m3,N2N_m3,O2N_m3,HE_m3,N4S_m3,TN_k,TINF_k,un_ms1,mlon_rad
+      USE module_input_parameters,ONLY: time_step,F107D_new,F107_new,DTMIN_flip  &
+     &, sw_INNO,FPAS_flip,HEPRAT_flip,COLFAC_flip,sw_IHEPLS,sw_INPLS,sw_debug,iout, start_time  &
+     &, HPEQ_flip, sw_wind_flip, sw_depleted_flip, start_time_depleted &
+     &, sw_output_fort167,mpfort167,lpfort167 &
+     &, sw_neutral_heating_flip, ip_freq_output, parallelBuild,mype,ip_freq_paraTrans &
+     &, sw_ctip_input,utime0lpi,lpi,input_params_begin,input_params_interval
       USE module_PLASMA,ONLY: plasma_1d !dbg20120501
 !dbg20110927      USE module_heating_rate,ONLY: NHEAT_cgs
       USE module_physical_constants,ONLY: pi,zero
       USE module_IO,ONLY: PRUNIT,LUN_FLIP1,LUN_FLIP2,LUN_FLIP3,LUN_FLIP4
       USE module_unit_conversion,ONLY: M_TO_KM
       USE module_heating_rate,ONLY: get_neutral_heating_rate
-
+      USE module_deplete_flux_tube,ONLY: deplete_flux_tube
+      USE module_magfield,ONLY:sunlons
+!
       IMPLICIT NONE
       include "gptl.inc"
 !------------------------
@@ -39,7 +44,7 @@
       DOUBLE PRECISION ::  PCO
       INTEGER ::  INNO            !.. switch to turn on FLIP NO calculation if <0
       DOUBLE PRECISION, DIMENSION(IPDIM) ::  ZX,GLX,SLX,BMX,GRX,OX,HX,N2X,O2X,HEX,N4SX,NNOX &
-     &, UNX &     ! assumed a component parallel to a field line [m s-1]
+     &, UNX &  ! field aligned component of neutral wind velocity [m s-1], positive SOUTHward
      &, TNX &
        !.. TINFX has to be an array for grazing incidence column densities
      &, TINFX & !.. Exospheric temperature [k]
@@ -71,37 +76,16 @@
       INTEGER (KIND=int_prec) :: ipts,i,ret
       INTEGER (KIND=int_prec),PARAMETER :: ip_freq_output_fort=900      
       INTEGER (KIND=int_prec) :: jth !dbg20120501
+      REAL :: mlt
 !----------------------------------
 
-! frequency of output to fort167/8 170/1 within CTIP-int
-!d      IF ( lp==170.and.mp==1.and.MOD( (utime-start_time), ip_freq_output_fort)==0 ) THEN
-!d        sw_output_fort167=.TRUE. 
-!d      ELSE 
-!d        sw_output_fort167=.FALSE.
-!d      END IF
- 
       IN = JMIN_IN(lp)
       IS = JMAX_IS(lp)
 
 ! make sure that JMINX equals to 1
       JMINX   = IN - IN + 1
       JMAXX   = IS - IN + 1
-      CTIPDIM = IS - IN + 1   
-
-!nm20110822: no more allocatable arrays
-!      ALLOCATE ( ZX(JMINX:JMAXX),  SLX(JMINX:JMAXX),  GLX(JMINX:JMAXX), BMX(JMINX:JMAXX), GRX(JMINX:JMAXX) &
-!     &          ,OX(JMINX:JMAXX),   HX(JMINX:JMAXX),  N2X(JMINX:JMAXX), O2X(JMINX:JMAXX), HEX(JMINX:JMAXX) &
-!     &          ,N4SX(JMINX:JMAXX),TNX(JMINX:JMAXX),TINFX(JMINX:JMAXX), UNX(JMINX:JMAXX), SZA_dum(JMINX:JMAXX) &
-!     &          ,NNOX(JMINX:JMAXX),EHTX(1:3,JMINX:JMAXX),TE_TIX(1:3,JMINX:JMAXX) &
-!     &          ,XIONNX(1:ISPEC,JMINX:JMAXX),XIONVX(1:ISPEC,JMINX:JMAXX),NHEAT(JMINX:JMAXX)  &
-!     & ,STAT=stat_alloc         )
-!if ( stat_alloc/=0 ) then
-!  print *, ALLOCATED( ZX )
-!  print *,"!STOP! ALLOCATION FAILD! in flux_tube_solver:",stat_alloc,mp,lp,in,is,jminx,jmaxx,ctipdim
-!  STOP
-!endif
-
-
+      CTIPDIM = IS - IN + 1
       
       ZX(1:CTIPDIM)  = plasma_grid_Z(IN:IS,lp) * M_TO_KM !convert from m to km 
       PCO = Pvalue(lp)  !Pvalue is a single value
@@ -122,17 +106,24 @@
       TNX(1:CTIPDIM) = TN_k(IN:IS,lp,mp)
       TINFX(1:CTIPDIM) = TINF_k(IN:IS,lp,mp)
 
-! FLIP assumes positive SOUTHWARD along a field line
-      IF ( sw_wind_flip == 1 ) THEN
-        UNX(1:CTIPDIM)  = (-1.) * Un_ms1(IN:IS,lp,mp,3) 
-      ELSE IF ( sw_wind_flip == 0 ) THEN
-        UNX(1:CTIPDIM)  = 0.0
-      END IF
+! FLIP expects positive SOUTHward along a field line
+      UNX(1:CTIPDIM)  = (-1.) * Un_ms1(IN:IS,lp,mp,3)
 
-      DT        = REAL(time_step)
+!nm20160420: i am not totally sure about the FLIP time step???
+!      DT        = REAL(time_step)
+      DT        = REAL(ip_freq_paraTrans) !nm20160420
       DTMIN     = DTMIN_flip
-      F107D_dum = F107D
-      F107A_dum = F107AV
+      if ( sw_ctip_input ) then
+        LPI = INT( ( utime - utime0LPI ) / real(input_params_interval) ) + 1 + input_params_begin
+!t        if(sw_debug)
+        print*,'sub-eld: LPI=',lpi
+!t        if(sw_debug)
+        print*,'sub-eld: utime',utime,'dt_m=',((utime-utime0LPI)/60.)
+      else
+        LPI=1
+      end if
+      F107D_dum = F107_new(lpi)
+      F107A_dum = F107d_new(lpi)
 
 !nm20110822: moved from module_plasma
 !! I need to get the new get_sza based on phil's method
@@ -152,15 +143,17 @@
       FPAS      = FPAS_flip
 
 !nm110510: test the depleted flux tube
-      IF ( utime == start_time ) THEN
-        HPEQ      = HPEQ_flip
-      ELSE
-        HPEQ      = 0.0
-
-        IF ( sw_depleted_flip==1 .AND. utime == start_time_depleted ) THEN
-          HPEQ      = - 0.1
-        ENDIF
-      ENDIF
+!nm20140729: moved to module_deplete_flux_tube.f90
+      CALL deplete_flux_tube ( utime, mp,lp, HPEQ )
+!      IF ( utime == start_time ) THEN
+!        HPEQ      = HPEQ_flip
+!      ELSE
+!        HPEQ      = 0.0
+!
+!        IF ( sw_depleted_flip==1 .AND. utime == start_time_depleted ) THEN
+!          HPEQ      = - 0.1
+!        ENDIF
+!      ENDIF
       
 
       HEPRAT    = HEPRAT_flip
@@ -228,12 +221,13 @@ END IF !( sw_debug ) then
       IF ( ltime > 24.0 )  ltime = MOD(ltime, 24.0)
 
 ret = gptlstart ('sw_output_fort167')
-IF( sw_output_fort167.AND.mp==mpFort167.AND.lp==lpFort167 ) then
+IF( sw_output_fort167.AND.mp==mpfort167.AND.lp==lpfort167 ) THEN
+!sms$ignore begin
       WRITE(UNIT=LUN_FLIP1,FMT="('mp=',i3,' lp=',i3,' U',i3,' North, UT=',2F10.3)") mp,lp,LUN_FLIP1,REAL(UTIME)/3600., ltime
       WRITE(UNIT=LUN_FLIP2,FMT="('mp=',i3,' lp=',i3,' U',i3,' North, UT=',2F10.3)") mp,lp,LUN_FLIP2,REAL(UTIME)/3600., ltime
       WRITE(UNIT=LUN_FLIP3,FMT="('mp=',i3,' lp=',i3,' U',i3,' South, UT=',2F10.3)") mp,lp,LUN_FLIP3,REAL(UTIME)/3600., ltime
       WRITE(UNIT=LUN_FLIP4,FMT="('mp=',i3,' lp=',i3,' U',i3,' South, UT=',2F10.3)") mp,lp,LUN_FLIP4,REAL(UTIME)/3600., ltime
-
+!sms$ignore end
 END IF !( sw_output_fort167
 ret = gptlstop  ('sw_output_fort167')
 if(sw_debug) print*,'sub-fl: UTs=',UTIME,' LThr=',ltime,' mp',mp,' lp',lp
@@ -242,7 +236,7 @@ if(sw_debug) print*,'sub-fl: UTs=',UTIME,' LThr=',ltime,' mp',mp,' lp',lp
 !dbg20110131:
       IF ( sw_debug ) then
 !sms$ignore begin
-         WRITE(UNIT=PRUNIT,FMT="('mp=',i6,' lp=',i6,' UT=',F10.2)") mp,lp,REAL(UTIME)/3600.,mype
+         WRITE(UNIT=PRUNIT,FMT="('mp=',i6,' lp=',i6,' UT=',F10.2,i7)") mp,lp,REAL(UTIME)/3600.,mype
 !sms$ignore end
       END IF! ( sw_debug ) then
       ret = gptlstart ('flux_tube_solver_loop1')
@@ -266,10 +260,7 @@ ELSE
           XIONVX(jth,ipts) = zero
 END IF
         END DO !jth
-!dbg20120501         XIONNX(1:ISPEC,ipts) = n0_1d%N_m3(1:ISPEC,ipts)
-!dbg20120501         TE_TIX(3      ,ipts) = n0_1d%Te_k(        ipts)
-!dbg20120501         TE_TIX(2      ,ipts) = n0_1d%Ti_k(      2,ipts)
-!dbg20120501         TE_TIX(1      ,ipts) = n0_1d%Ti_k(      1,ipts) 
+
 
 !### need to change these derived data type to a simpler arrays!!!
 !nm20120412: need to restore the save V//(1:2) for parallel conv. effect
@@ -279,9 +270,7 @@ END IF
 !dbg20120501         XIONVX(2,ipts)=plasma_1d(2,1,ipts) 
 !dbg20120501         XIONVX(3:ISPEC,ipts) = zero
 
-!dbg20110927         EHTX(3          ,ipts)= plasma_3d(mp,lp)%heating_rate_e_cgs(  ipts)
-!dbg20110927         EHTX(2          ,ipts)= plasma_3d(mp,lp)%heating_rate_i_cgs(2,ipts)
-!dbg20110927         EHTX(1          ,ipts)= plasma_3d(mp,lp)%heating_rate_i_cgs(1,ipts)
+
 
 !20110930: inclusion for future neutral coupling:
 ! auroral electron heating-->EHTX(3)
@@ -289,8 +278,7 @@ END IF
 
          EHTX(  1:3        ,ipts)=zero  !dbg20110927
 
-!dbg20110809 v2
-!dbg20110923     NNOX(          ipts)= plasma_3d(mp,lp)%NO_m3(        ipts)
+
          IF ( INNO<0 ) THEN   !when flip calculates NO
            NNOX(              ipts)=zero !dbg20110927
          ELSE !when CTIPe calculates NO
@@ -299,7 +287,13 @@ END IF
          NHEAT(             ipts)=zero !dbg20110927
          hrate_cgs(1:22,    ipts)=zero !nm20121020
       END DO !ipts=
+!nm20170328: correct setting for the He+/N+ switches
+          if ( sw_ihepls==0 ) XIONNX(3,:) = zero
+          if ( sw_inpls==0  ) XIONNX(4,:) = zero
       ret = gptlstop ('flux_tube_solver_loop1')
+
+!tmp20151112: mlt for aurora in flip
+      mlt = mlon_rad(mp)*180./pi/15.0D0-sunlons(1)*12.0D0/pi+12.0 !;[hr]
 
 ! call the flux tube solver (FLIP)
       ret = gptlstart ('CTIPINT')
@@ -323,7 +317,7 @@ END IF
      &              NNOX, & !.. array, NO density (cm-3)
      &               TNX, & !.. array, Neutral temperature (K)
      &             TINFX, & !.. array, Exospheric Neutral temperature (K)
-     &               UNX, & !.. array, Neutral wind (m/s), positive northward,horizontal component in the magnetic meridian??? or component parallel to a field line???
+     &               UNX, & !.. array, Neutral wind (m/s), field aligned component, positive SOUTHward
      &                DT, & !.. CTIPe time step (secs)
      &             DTMIN, & !.. Minimum time step allowed (>=10 secs?)
      &         F107D_dum, & !.. Daily F10.7
@@ -342,11 +336,11 @@ END IF
      &             EFLAG, & !.. OUT: 2D array, Error Flags
      &                mp, &
      &                lp, &
-     &         hrate_cgs  ) !.. heating rates [eV/cm^3/s] !nm20121020
+     &                utime, & !dbg20141209
+     &         hrate_cgs,mlt  ) !.. heating rates [eV/cm^3/s] !nm20121020
       ret = gptlstop  ('CTIPINT')
 
-!dbg20110802: 3D multiple-lp run
-!if ( sw_debug )  sw_debug=.false.
+
 
 
 
@@ -354,10 +348,21 @@ END IF
 ! output
       ret = gptlstart ('flux_tube_solver_loop2')
       DO ipts=1,CTIPDIM
-!dbg20120501
+
          DO jth=1,ISPEC
             plasma_3d(ipts+IN-1,lp,mp,jth) = XIONNX(jth,ipts)
          END DO !jth
+
+
+!dbg20160421 debug 
+if( EFLAG(2,1)/=0 .and. 32<(ipts+IN-1) .and. (ipts+IN-1)<39 )then
+!SMS$IGNORE begin
+print"(i2,' XION=',e10.2,f7.0,f7.1,i4,' lp=',i3,' mp=',i2,' LT=',f6.1)",mype,plasma_3d(ipts+IN-1,lp,mp,1),(plasma_grid_Z(ipts+IN-1,lp)*1.e-3),((pi/2. - plasma_grid_GL(ipts+IN-1,lp))*180./pi),(ipts+IN-1),lp,mp,ltime
+!SMS$IGNORE end
+endif!(EFLAG
+
+
+
 
 !te
          plasma_3d(ipts+IN-1,lp,mp,ISPEC+1) = TE_TIX(3,ipts)
@@ -369,20 +374,8 @@ END IF
          DO jth=1,ISPEV
            plasma_3d(ipts+IN-1,lp,mp,jth+ISPEC+3) = XIONVX(jth,ipts)
          END DO !jth
-!dbg20120501         plasma_3d(mp,lp)%N_m3( 1:ISPEC,ipts) = XIONNX(1:ISPEC,ipts)
-!dbg20120501         plasma_3d(mp,lp)%Te_k(         ipts) = TE_TIX(3      ,ipts)
-!dbg20120501         plasma_3d(mp,lp)%Ti_k(       2,ipts) = TE_TIX(2      ,ipts)
-!dbg20120501         plasma_3d(mp,lp)%Ti_k(       1,ipts) = TE_TIX(1      ,ipts)
-!dbg20120501         plasma_3d4n(ipts+IN-1,mp)%V_ms1( 1:ISPEV     ) = XIONVX(1:ISPEV,ipts)
-!dbg20110927
-!dbg20110927         plasma_3d(mp,lp)%V_ms1(1:ISPEV,ipts) = XIONVX(1:ISPEV,ipts)
-!dbg20110927         plasma_3d(mp,lp)%heating_rate_e_cgs(  ipts)=EHTX(3   ,ipts) 
-!dbg20110927         plasma_3d(mp,lp)%heating_rate_i_cgs(2,ipts)=EHTX(2   ,ipts)
-!dbg20110927         plasma_3d(mp,lp)%heating_rate_i_cgs(1,ipts)=EHTX(1   ,ipts)
-!dbg20110923         IF ( INNO<0 ) &  !when flip calculates NO
-!dbg20110923        &  plasma_3d(mp,lp)%NO_m3(      ipts) =   NNOX(        ipts)
 
-!nm20121020
+
 !nm20110404: save each component of heating rate for output
          IF ( sw_neutral_heating_flip==1 .AND. &
             &  MOD( (utime-start_time),ip_freq_output)==0) THEN

@@ -82,7 +82,8 @@ if [ $IDEA = .true. ] ; then
 		for i in "${VALID_IPE_PET[@]}" ; do
 			if [ $NPROCIPE = $i ] ; then valid=1 ; fi
 		done
-		[ $valid = 0 ] && echo "   could not match NPROCIPE against the list of allowed configurations, check ipe.config! exiting." && exit 1
+		#[ $valid = 0 ] && echo "   could not match NPROCIPE against the list of allowed configurations, check ipe.config! exiting." && exit 1
+		[ $valid = 0 ] && echo "   WARNING: I don't understand what constitutes a valid NPROCIPE anymore but this wouldn't have worked before..."
 
 		echo "checking IPEDECOMP against NPROCIPE: (${IPEDECOMPARR[0]}x${IPEDECOMPARR[1]})"
 		if [[ ${#IPEDECOMPARR[*]} -ne 2 ]] || ! [[ ${IPEDECOMPARR[0]} =~ $re ]] || ! [[ ${IPEDECOMPARR[1]} =~ $re ]] ; then

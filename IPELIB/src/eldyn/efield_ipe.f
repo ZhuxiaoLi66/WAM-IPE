@@ -1,7 +1,7 @@
 !Jan2011:original code was provided from Astrid from WACCM.
 !Aug2011:this code was provided from Fei Wu from the WAM version.
 !--------------------------------------------  
-      module efield
+      module efield_ipe
 !--------------------------------------------------------------------- 
 ! description: calculates the electric potential for a given year,
 !      day of year,UT, F10.7, B_z(K_p)
@@ -108,12 +108,14 @@
       logical, parameter :: iutav=.false.  ! .true.  means UT-averaging 
                                            ! .false. means no UT-averaging
 !     real, parameter ::  v_sw = 400.      ! solar wind velocity [km/s]
-      real, parameter ::  v_sw = 450.      ! solar wind velocity [km/s]
+!nm20151105     real, parameter ::  v_sw = 450.      ! solar wind velocity [km/s]
+      real ::  v_sw = 450.      ! solar wind velocity [km/s]
 
 !---------------------------------------------------------------------- 
 ! boundary for Weimer
 !---------------------------------------------------------------------- 
-      real, parameter :: bnd_wei = 44. ! colat. [deg]
+!nm20151105      real, parameter :: bnd_wei = 44. ! colat. [deg]
+      real :: bnd_wei = 44. ! colat. [deg]
       integer         :: nmlat_wei
       
 !---------------------------------------------------------------------- 
@@ -165,12 +167,14 @@
 !---------------------------------------------------------------------- 
 ! high_latitude boundary
 !---------------------------------------------------------------------- 
-      real,parameter ::ef_max  = 0.015   ! max e-field for high latitude boundary location [V/m]
-      real,parameter ::lat_sft = 54.     ! shift of highlat_bnd to 54 deg
+!nm20151105      real,parameter ::ef_max  = 0.015   ! max e-field for high latitude boundary location [V/m]
+      real ::ef_max  = 0.015   ! max e-field for high latitude boundary location [V/m]
+!nm20151105      real,parameter ::lat_sft = 54.     ! shift of highlat_bnd to 54 deg
+      real :: lat_sft = 54.     ! shift of highlat_bnd to 54 deg
       integer            :: ilat_sft     ! index of shift for high latitude boundary
       integer, parameter :: nmax_sin = 2 ! max. wave number to be represented
       logical, parameter :: debug =.false.
 
 !nm20121003:subroutines are separated into sub_efield.f.
 
-      end module efield
+      end module efield_ipe

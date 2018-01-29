@@ -18,12 +18,14 @@ SUBROUTINE io_plasma_bin ( switch, utime, timestamp_for_IPE )
 USE module_precision
 USE module_IO,ONLY: LUN_PLASMA1,LUN_PLASMA2,lun_min1,lun_min2,lun_ut,record_number_plasma,lun_max1
 
-USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_3d,JMIN_ING,JMAX_ISG,VEXBup &
-!&, Un_ms1,tn_k,on_m3,n2n_m3,o2n_m3
-&, vn_ms1_4output,tn_k,on_m3,n2n_m3,o2n_m3
+USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_3d,JMIN_ING,JMAX_ISG,VEXBup, &
+                                     vn_ms1_4output,tn_k,on_m3,n2n_m3,o2n_m3, maxFluxTube
+
 USE module_IPE_dimension,ONLY: NMP,NLP,NPTS2D,ISPEC,ISPEV,IPDIM,ISPET,ISTOT
-USE module_input_parameters,ONLY:sw_debug,record_number_plasma_start,mype &
-&,sw_record_number,stop_time,start_time,duration,mpstop, sw_output_wind, sw_use_wam_fields_for_restart
+USE module_input_parameters,ONLY:sw_debug,record_number_plasma_start,mype, &
+                                 sw_record_number,stop_time,start_time, &
+                                 duration,mpstop, sw_output_wind, sw_use_wam_fields_for_restart
+
 USE module_physical_constants,ONLY:zero
 ! ghgm - now need the open_file module....
 USE module_open_file,ONLY: open_file
@@ -47,34 +49,15 @@ REAL    (KIND=real_prec)            :: dumm(NPTS2D,NMP)
 CHARACTER(len=200)                  :: restart_directory
 
 
-CALL getenv("RESDIR", restart_directory)
-print *, 'GHGM IO_PLASMA restart_directory=',TRIM(restart_directory)
 
-IF ( switch<1.or.switch>2 ) THEN
-  print *,'sub-io_plasma:!STOP! INVALID switch',switch
-  STOP
-END IF
-
-if(sw_debug)  print *,'sub-io_plasma_bin: switch=',switch,' utime[sec]' ,utime 
-
-!output time dependent plasma parameters
-
-! array initialization
-dumm=0.0_real_prec
 
 IF ( switch==1 ) THEN !1:Output the 16 plasma* files
 
 
-  record_number_plasma = record_number_plasma+1
-!SMS$SERIAL(<plasma_3d,IN>:default=ignore) BEGIN
+!SMS$SERIAL(<plasma_3d, tn_k, vn_ms1_4output, on_m3, n2n_m3, o2n_m3, IN>:default=ignore) BEGIN
 
-! ghgm - open the new plasma file unit......
-!SMS$IGNORE BEGIN
-#ifdef DEBUG
-  ! If debugging is enabled, the activity throughout the code is logged.
-  WRITE( UNIT=LUN_LOG, FMT=*) 'opening file: ipe_grid_plasma_params.'//timestamp_for_IPE
-#endif
-!SMS$IGNORE END
+  record_number_plasma = record_number_plasma+1
+
   OPEN( UNIT = 5999, &
         FILE = 'ipe_grid_plasma_params.'//timestamp_for_IPE, &
         FORM = 'UNFORMATTED', &
@@ -104,32 +87,9 @@ IF ( switch==1 ) THEN !1:Output the 16 plasma* files
 
   ENDDO j_loop1
   
-  ! ghgm - and then close the file
-!SMS$IGNORE BEGIN
-#ifdef DEBUG
-    ! If debugging is enabled, the activity throughout the code is logged.
-    WRITE( UNIT=LUN_LOG, FMT=*) 'Closing file: ipe_grid_plasma_params.'//timestamp_for_IPE
-#endif
-!SMS$IGNORE END  
   CLOSE(unit=5999)
 
-!SMS$SERIAL END
-!  LUN = LUN_PLASMA1(lun_max1)
-!SMS$SERIAL(<VEXBup,IN>:default=ignore) BEGIN
-!  WRITE (UNIT=LUN) (VEXBup(:,mp),mp=1,mpstop)
-  WRITE (UNIT=lun_ut,FMT=*) record_number_plasma, utime
-!SMS$SERIAL END
 
-  !nm20141001: moved from neutral
-  IF ( sw_output_wind ) THEN
-
-!SMS$SERIAL(<tn_k,vn_ms1_4output,on_m3,n2n_m3,o2n_m3,IN>:default=ignore) BEGIN
-!SMS$IGNORE BEGIN
-#ifdef DEBUG
-    ! If debugging is enabled, the activity throughout the code is logged.
-    WRITE( UNIT=LUN_LOG, FMT=*) 'opening file: ipe_grid_neutral_params.'//timestamp_for_IPE//' for writing.'
-#endif
-!SMS$IGNORE END
     OPEN( UNIT = 5998, &
         FILE = 'ipe_grid_neutral_params.'//timestamp_for_IPE, &
         FORM = 'UNFORMATTED', &
@@ -140,38 +100,23 @@ IF ( switch==1 ) THEN !1:Output the 16 plasma* files
       STOP
     ENDIF
 
-    WRITE (unit=5998) tn_k
-    WRITE (unit=5998) vn_ms1_4output
-    WRITE (unit=5998) on_m3 
-    WRITE (unit=5998) n2n_m3
-    WRITE (unit=5998) o2n_m3
-    
-!SMS$IGNORE BEGIN
-#ifdef DEBUG
-    ! If debugging is enabled, the activity throughout the code is logged.
-    WRITE( UNIT=LUN_LOG, FMT=*) 'Closing file: ipe_grid_neutral_params.'//timestamp_for_IPE
-#endif    
-!SMS$IGNORE END
+    WRITE (unit=5998) tn_k(1:MaxFluxTube,1:NLP,1:NMP)
+    WRITE (unit=5998) vn_ms1_4output(1:MaxFluxTube,1:NLP,1:NMP,1:3)
+    WRITE (unit=5998) on_m3(1:MaxFluxTube,1:NLP,1:NMP) 
+    WRITE (unit=5998) n2n_m3(1:MaxFluxTube,1:NLP,1:NMP)
+    WRITE (unit=5998) o2n_m3(1:MaxFluxTube,1:NLP,1:NMP)
     CLOSE (unit=5998)
+
+
 !SMS$SERIAL END
 
-  END IF !( sw_output_wind ) THEN
-
-
-  if(sw_debug) then
-    print *,'LUN=',lun_ut,'!dbg! output UT  finished: utime=',utime,record_number_plasma
-  endif
 
 ELSE IF ( switch==2 ) THEN !2:RESTART: 
 
-!SMS$SERIAL BEGIN
-! ghgm - read in saved plasma_3d data.....
-!SMS$IGNORE BEGIN
-#ifdef DEBUG
-  ! If debugging is enabled, the activity throughout the code is logged.
-  WRITE( UNIT=LUN_LOG, FMT=*) 'Opening file: ipe_grid_plasma_params for reading'
-#endif
-!SMS$IGNORE END  
+   CALL getenv("RESDIR", restart_directory)
+   print *, 'GHGM IO_PLASMA restart_directory=',TRIM(restart_directory)
+
+!SMS$SERIAL (<plasma_3d, tn_k, vn_ms1_4output, on_m3, n2n_m3, o2n_m3, OUT> : DEFAULT=IGNORE) BEGIN
 
   OPEN( UNIT = 5997, &
         FILE = trim(restart_directory)//'ipe_grid_plasma_params', &
@@ -195,25 +140,7 @@ ELSE IF ( switch==2 ) THEN !2:RESTART:
     end do mp_loop3
   END DO j_loop3
 
-!SMS$IGNORE BEGIN
-#ifdef DEBUG
-    ! If debugging is enabled, the activity throughout the code is logged.
-    WRITE( UNIT=LUN_LOG, FMT=*) 'Closing file: ipe_grid_plasma_params.'
-#endif
-!SMS$IGNORE END  
   CLOSE (5997)
-
-!SMS$SERIAL END
-
-!SMS$SERIAL BEGIN
-! ghgm - read in saved WAM neutral parameters.....
-
-!SMS$IGNORE BEGIN
-#ifdef DEBUG
-  ! If debugging is enabled, the activity throughout the code is logged.
-  WRITE( UNIT=LUN_LOG, FMT=*) 'Opening file: ipe_grid_neutral_params for reading'
-#endif  
-!SMS$IGNORE END
 
   OPEN( UNIT = 5996, &
         FILE = trim(restart_directory)//'ipe_grid_neutral_params', &
@@ -225,11 +152,25 @@ ELSE IF ( switch==2 ) THEN !2:RESTART:
     STOP
   ENDIF
 
-  READ (unit=5996) tn_k
-  READ (unit=5996) vn_ms1_4output
-  READ (unit=5996) on_m3 
-  READ (unit=5996) n2n_m3
-  READ (unit=5996) o2n_m3
+
+print*, mype,' shape=',shape(tn_k)
+
+  READ (unit=5996) tn_k(1:MaxFluxTube,1:NLP,1:NMP)
+
+print*,mype,'reading tn_k finished'
+  READ (unit=5996) vn_ms1_4output(1:MaxFluxTube,1:NLP,1:NMP,1:3)
+
+print*,mype,'reading vn_ms1_4 finished'
+
+  READ (unit=5996) on_m3(1:MaxFluxTube,1:NLP,1:NMP) 
+print*,mype,'reading on_m3 finished'
+
+  READ (unit=5996) n2n_m3(1:MaxFluxTube,1:NLP,1:NMP) 
+
+print*,mype,'reading n2n_m3 finished'
+
+  READ (unit=5996) o2n_m3(1:MaxFluxTube,1:NLP,1:NMP) 
+print*,mype,'reading o2n_m3 finished'
 
   CLOSE(5996)
 
@@ -238,5 +179,4 @@ ELSE IF ( switch==2 ) THEN !2:RESTART:
 
 END IF !( switch==1 ) THEN
 
-!print *,'END sub-io_pl: sw=',switch,' uts=' ,utime 
 END SUBROUTINE io_plasma_bin

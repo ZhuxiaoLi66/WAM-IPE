@@ -30,9 +30,9 @@
       INTEGER (KIND=int_prec), INTENT(IN) :: mp    !mag-lon index
       INTEGER (KIND=int_prec), INTENT(IN) :: lp    !mag-lat index
 ! OUTPUT
-      REAL(KIND=real_prec), INTENT(OUT) :: phi_t0(2)   !magnetic longitude,phi[rad] at T0
-      REAL(KIND=real_prec), INTENT(OUT) :: theta_t0(2) !magnetic latitude,theta[rad] at T0
-      REAL(KIND=real_prec), INTENT(OUT) :: r0_apex     ![meter]
+      REAL(KIND=real_prec8), INTENT(OUT) :: phi_t0(2)   !magnetic longitude,phi[rad] at T0
+      REAL(KIND=real_prec8), INTENT(OUT) :: theta_t0(2) !magnetic latitude,theta[rad] at T0
+      REAL(KIND=real_prec8), INTENT(OUT) :: r0_apex     ![meter]
 ! local
       REAL   (KIND=real_prec) :: phi_t1     !magnetic longitude,phi at T1
       REAL   (KIND=real_prec) :: theta_t1(2)!magnetic latitude,theta at T1
@@ -41,6 +41,7 @@
       INTEGER(KIND=int_prec ) :: ihem                              !1:NH; 2:SH
       REAL   (KIND=real_prec) :: GLON_deg, LT_SEC
 
+      if ( sw_debug ) print*,'starting sub-stepback_mag_R:utime',utime,mp,lp
       phi_t1 = mlon_rad(mp)
       theta_t1(1) = plasma_grid_GL( JMIN_IN(lp),lp ) !NH
       theta_t1(2) = plasma_grid_GL( JMAX_IS(lp),lp ) !SH
@@ -48,7 +49,7 @@
       r = earth_radius + ht90 ![m]
       midpoint = JMIN_IN(lp) + ( JMAX_IS(lp) - JMIN_IN(lp) )/2
       r_apex = earth_radius + plasma_grid_Z(midpoint,lp) ![m]
-if(sw_debug) print *,'sub-StR:',lp,mp,r,r_apex,plasma_grid_Z(midpoint,lp)
+      if(sw_debug) print *,'sub-StepbackR: lp=',lp,' mp=',mp,' r=',r,' r_apex=',r_apex,' plasma_grid_Z=',plasma_grid_Z(midpoint,lp)
 
 !note: for the moment, Ed1/B is calculated only in NH, assuming that the flux tube is moving with the same velocity between N/SH.
       which_hemisphere: DO ihem=1,1 !ihem_max
@@ -91,14 +92,14 @@ if(sw_debug) print *,'sub-StR:',lp,mp,r,r_apex,plasma_grid_Z(midpoint,lp)
 ! print *,'sub-StR:',ihem,lp,mp,'v_exb_apex[m/s]',VEXBup(lp,mp)  ,utime
 
         r0_apex = r_apex - VEXBup(lp,mp) * time_step
-if(sw_debug)&
-& print *,'sub-StR:',r_apex,' r0 apex[m/s]',r0_apex
+
+        if(sw_debug)print *,'sub-StepbackR:',r_apex,' r0 apex[m/s]',r0_apex
 
 if ( r0_apex<(minAltitude+earth_radius) ) then
-   print *,'!r0_apex too small!',r0_apex,VEXBup(lp,mp),lp,mp, (minAltitude+earth_radius)
+   print *,'sub-StepbackR:!r0_apex too small!',r0_apex,VEXBup(lp,mp),lp,mp, (minAltitude+earth_radius)
    r0_apex = minAltitude+earth_radius
 else if ( r0_apex>(maxAltitude+earth_radius) ) then
-   print *,'!r0_apex too big!',r0_apex, VEXBup(lp,mp),lp,mp, (maxAltitude+earth_radius)
+   print *,'sub-StepbackR:!r0_apex too big!',r0_apex, VEXBup(lp,mp),lp,mp, (maxAltitude+earth_radius)
    r0_apex = maxAltitude+earth_radius
 end if
 !dbg20120301:
@@ -126,17 +127,21 @@ if(sw_debug) print *,'SIN',sin2theta,sintheta,theta,' mlat R0[deg]', (90.-  thet
 END DO      which_hemisphere !: DO ihem=1,ihem_max
 
 ihem=1 !only
-if(sw_debug) print *,lp,mp, 'Z(mp,lp)',plasma_grid_Z(midpoint,lp), (plasma_grid_Z(midpoint,lp)+earth_radius)
-if(sw_debug) print *, 'mlatN(mp,lp)',90.-plasma_grid_GL( JMIN_IN(lp),lp )*180./pi !NH
+if(sw_debug) then
+  print *,lp,mp, 'Z(mp,lp)',plasma_grid_Z(midpoint,lp), (plasma_grid_Z(midpoint,lp)+earth_radius)
+  print *, 'mlatN(mp,lp)',90.-plasma_grid_GL( JMIN_IN(lp),lp )*180./pi !NH
+end if
 sin2theta = r/( earth_radius+plasma_grid_Z(midpoint,lp) )
 sintheta = SQRT( sin2theta )
 theta_t1(ihem)    = ASIN ( sintheta )
 if(sw_debug) print *,'DIPOLE',sin2theta,sintheta,theta_t1(ihem),' mlat NH[deg]', (90.-  theta_t1(ihem)*180./pi)
 
 
-if(sw_debug) print "('sub-StR:T1: phi=',F12.6,' theta=',F12.6,' r=',E13.5)",phi_t1*rtd,      (90.-theta_t1(ihem)*rtd), r_apex
-if(sw_debug) print "('sub-StR:T0: phi=',F12.6,' theta=',F12.6,' r=',E13.5)",phi_t0(ihem)*rtd,(90.-theta_t0(ihem)*rtd), r0_apex
-if(sw_debug) print "(3E12.4)", (theta_t1(ihem)-theta_t0(ihem))*rtd, (r_apex-r0_apex), (VEXBup(lp,mp) * time_step)
+if(sw_debug) then
+   print "('sub-StepbackR::T1: phi=',F12.6,' theta=',F12.6,' r=',E13.5)",phi_t1*rtd,      (90.-theta_t1(ihem)*rtd), r_apex
+   print "('sub-StepbackR::T0: phi=',F12.6,' theta=',F12.6,' r=',E13.5)",phi_t0(ihem)*rtd,(90.-theta_t0(ihem)*rtd), r0_apex
+   print "(3E12.4)", (theta_t1(ihem)-theta_t0(ihem))*rtd, (r_apex-r0_apex), (VEXBup(lp,mp) * time_step)
+end if
 
       END SUBROUTINE stepback_mag_R
       END MODULE module_stepback_mag_R

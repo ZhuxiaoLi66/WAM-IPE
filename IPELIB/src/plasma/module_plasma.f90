@@ -43,7 +43,7 @@
 !dbg20120501      TYPE(plasma_data_1d), PUBLIC :: n0_1d !N&T after perpendicular transport
 !dbg20120501
 !     REAL(KIND=real_prec),ALLOCATABLE,TARGET,PUBLIC :: plasma_3d(:,:,:,:)!ISTOT,NPTS2D,NLP,NMP
-      REAL(KIND=real_prec),DIMENSION(ISTOT,IPDIM),PUBLIC :: plasma_1d
+      REAL(KIND=real_prec8),DIMENSION(ISTOT,IPDIM),PUBLIC :: plasma_1d
 !1:9:den:o+,h+,he+,n+
 !10 :te
 !11:12:ti
