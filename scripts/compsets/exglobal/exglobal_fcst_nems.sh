@@ -1388,7 +1388,7 @@ cat  > IPE.inp <<EOF
   zlbnp_inp=115.00
 /
 &nmipe
-  simulation_is_warm_start=${RESTART}
+  simulation_is_warm_start=${RESTART:1:1}
   f107av=${F107AVG}
   f107d=${F107DAY}
   internalTimeLoopMax=1
