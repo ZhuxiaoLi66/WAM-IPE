@@ -40,19 +40,10 @@ if [ $WAM_IPE_COUPLING = .true. ] ; then
 . $CONFIGDIR/coupled.config
 
 # load the namelist options
-if [ $NAMELIST_VER = 'compset' ] ; then
-. $CONFIGDIR/wam-ipe_ocr_dpnamelist.config
-else
 . $CONFIGDIR/wam-ipe_dpnamelist.config
-fi
 
-else
-if [ $NAMELIST_VER = 'compset' ] ; then
-. $CONFIGDIR/wam_ocr_dpnamelist.config
-else
-. $CONFIGDIR/wam_ocr_dpnamelist.config
-fi
-
+else # standalone
+. $CONFIGDIR/wam_dpnamelist.config
 fi
 
 # run our checks to make sure we're not walking into any walls before we try to run a job

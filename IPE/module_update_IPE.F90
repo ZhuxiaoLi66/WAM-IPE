@@ -210,7 +210,7 @@ module module_update_IPE
 !nm20161003 esmf timing library
           if(swEsmfTime) CALL ESMF_VMWtime(beg_time)
 
-          CALL neutral ( utime )
+          CALL neutral ( utime, start_time )
 
           if(swEsmfTime) then  
             CALL ESMF_VMWtime(end_time)

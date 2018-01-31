@@ -462,7 +462,6 @@ module module_MED_SWPC
       file=__FILE__)) &
       return  ! bail out
 
-    if (timeSlice > 1) then
       ! -- identify field providing time-changing vertical levels
 #ifdef LEGACY
       call NamespaceSetRemoteLevelsFromField("ATM", importState, "height", &
@@ -603,28 +602,6 @@ module module_MED_SWPC
 
         rh => rh % next
       end do
-
-    else
-
-      ! -- set all destination fields to preset values
-      do while (associated(rh))
-        do item = 1, size(rh % dstState % fieldNames)
-          call ESMF_StateGet(rh % dstState % self, field=dstField, &
-            itemName=trim(rh % dstState % fieldNames(item)), rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
-          call ESMF_FieldFill(dstField, dataFillScheme="one", rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
-        end do
-        rh => rh % next
-      end do
-
-    end if
 
     timeSlice = timeSlice + 1
 

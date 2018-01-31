@@ -10,6 +10,7 @@ MODULES_F90  = module_ERR_MSG.o \
                module_CPLFIELDS.o \
 	       check_esmf_pet.o \
 	       module_IPE_to_WAM.o \
+               get_variables_for_wam_ipe_coupling.o \
 	       ffsync.o 
 
 MODULES_F77 =                     \

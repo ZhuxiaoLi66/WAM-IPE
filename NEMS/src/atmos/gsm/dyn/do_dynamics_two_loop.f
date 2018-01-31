@@ -1059,7 +1059,7 @@
      &               EPSE,EPSO,EPSEDN,EPSODN,
      &               PLNEV_A,PLNOD_A,PLNEW_A,PLNOW_A,
 !     &               PDDEV_A,PDDOD_A,SNNP1EV,SNNP1OD)
-     &               PDDEV_A,PDDOD_A,SNNP1EV,SNNP1OD, kdt)
+     &               PDDEV_A,PDDOD_A,SNNP1EV,SNNP1OD, kdt, deltim)
 
         call fillWAMFields(uug, vvg, wwg, ttg, zzg, n2g, rqg, 
      &              ipt_lats_node_a,global_lats_a)

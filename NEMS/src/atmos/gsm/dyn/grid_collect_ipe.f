@@ -1,5 +1,6 @@
       SUBROUTINE grid_collect_ipe(wwg,zzg,uug,vvg,ttg,rqg,n2g,
-     &                   global_lats_a,lonsperlat, lats_nodes_a, kdt)
+     &              global_lats_a,lonsperlat, lats_nodes_a, kdt, 
+     &              deltim)
 !!
 !! Revision history:
 !  2007           Henry Juang, original code
@@ -12,11 +13,16 @@
 !  Feb 04 2015    S. Moorthi - threading and optimization
 !  May 17 2016    Weiyu Yang - modified from grid_collect.f for WAM-IPE
 !                              coupling outputs.
+!  Nov 08 2017    Weiyu Yang - modified for adding the NetCDF diagnostic 
+!                              outputs and the WAM-IPE coupling restart
+!                              functions.
 !
 
       use gfs_dyn_resol_def
       use gfs_dyn_layout1
       use gfs_dyn_mpi_def
+      use namelist_dynamics_def, ONLY: wam_ipe_cpl_rst_output,
+     &                                 grads_output, NC_output
 
       implicit none
 
@@ -27,17 +33,30 @@
      &,                                                          ttg,wwg
      &,                                                          zzg,n2g
       real(kind=kind_grid), dimension(lonf,lats_node_a,levh) ::  rqg
-      real(kind=kind_io4), dimension(:, :, :), allocatable :: 
+      real(kind=kind_grid), dimension(:, :, :), allocatable :: 
      &                                              buff_mult_pieceg_ipe
 !
-      real(kind=kind_io8), dimension(lonf,lats_node_a) :: buffo, buffi
+      real(kind=kind_grid), dimension(lonf,lats_node_a) :: buffi
       integer, dimension(lonf,lats_node_a)             :: kmsk
       integer i, j, k, ngrids_gg_ipe, kdt
+      real   deltim
 !
+! For test.
+!----------
+!      print*, 'me, uug=', me, uug(3,1,100)
+!      print*, 'me, vvg=', me, vvg(3,1,100)
+!      print*, 'me, ttg=', me, ttg(3,1,100)
+!      print*, 'me, wwg=', me, wwg(3,1,100)
+!      print*, 'me, zzg=', me, zzg(3,1,100)
+!      print*, 'me, n2g=', me, n2g(3,1,100)
+!      print*, 'me, rqg=', me, rqg(3,1,100),rqg(3,1,250),rqg(3,1,400)
+
       ngrids_gg_ipe = 6*levs+levh
+      kmsk = 0
 
       if(.not. allocated(buff_mult_pieceg_ipe)) then
          allocate(buff_mult_pieceg_ipe(lonf,lats_node_a,ngrids_gg_ipe))
+         buff_mult_pieceg_ipe = 0.0
       endif
 !
       do k=1,levs
@@ -47,8 +66,17 @@
             buffi(i,j) = wwg(i,j,k)
           enddo
         enddo
-        CALL uninterpreg(1,kmsk,buffo,buffi,global_lats_a,lonsperlat,
-     &                   buff_mult_pieceg_ipe(1,1,k) )
+        IF(grads_output .OR. NC_output) THEN
+          CALL uninterpred_dyn(1,kmsk,buff_mult_pieceg_ipe(1,1,k),buffi,
+     &                     global_lats_a,lonsperlat)
+        ELSE IF(wam_ipe_cpl_rst_output) THEN
+          do j=1,lats_node_a
+            do i=1,lonf
+              buff_mult_pieceg_ipe(i, j, k) = buffi(i,j)
+            enddo
+          enddo
+        END IF
+
 !      write(0,*)'in grid collect, buff_wwg=',' me=',me,
 !    & maxval(buff_mult_pieceg_ipe(1:lonf,1:lats_node_a,k)),
 !    & minval(buff_mult_pieceg_ipe(1:lonf,1:lats_node_a,k))
@@ -61,8 +89,18 @@
             buffi(i,j) = zzg(i,j,k)
           enddo
         enddo
-        CALL uninterpreg(1,kmsk,buffo,buffi,global_lats_a,lonsperlat,
-     &                   buff_mult_pieceg_ipe(1,1,levs+k) )
+        IF(grads_output .OR. NC_output) THEN
+          CALL uninterpred_dyn(1,kmsk,
+     &       buff_mult_pieceg_ipe(1,1,levs+k),buffi,
+     &       global_lats_a,lonsperlat)
+        ELSE IF(wam_ipe_cpl_rst_output) THEN
+          do j=1,lats_node_a
+            do i=1,lonf
+              buff_mult_pieceg_ipe(i, j, levs+k) = buffi(i,j) 
+            enddo
+          enddo
+        END IF
+
 !      write(0,*)'in grid collect, buff_zzg=',' me=',me,
 !    & maxval(buff_mult_pieceg_ipe(1:lonf,1:lats_node_a,levs+k)),
 !    & minval(buff_mult_pieceg_ipe(1:lonf,1:lats_node_a,levs+k))
@@ -75,8 +113,18 @@
             buffi(i,j) = uug(i,j,k)
           enddo
         enddo
-        CALL uninterpreg(1,kmsk,buffo,buffi,global_lats_a,lonsperlat,
-     &                   buff_mult_pieceg_ipe(1,1,2*levs+k) )
+        IF(grads_output .OR. NC_output) THEN
+          CALL uninterpred_dyn(1,kmsk,
+     &       buff_mult_pieceg_ipe(1,1,2*levs+k),buffi,
+     &       global_lats_a,lonsperlat)
+        ELSE IF(wam_ipe_cpl_rst_output) THEN
+          do j=1,lats_node_a
+            do i=1,lonf
+              buff_mult_pieceg_ipe(i, j, 2*levs+k) = buffi(i,j)
+            enddo
+          enddo
+        END IF
+
 !      write(0,*)'in grid collect, buff_uug=',' me=',me,
 !    & maxval(buff_mult_pieceg_ipe(1:lonf,1:lats_node_a,2*levs+k)),
 !    & minval(buff_mult_pieceg_ipe(1:lonf,1:lats_node_a,2*levs+k))
@@ -89,8 +137,18 @@
             buffi(i,j) = vvg(i,j,k)
           enddo
         enddo
-        CALL uninterpreg(1,kmsk,buffo,buffi,global_lats_a,lonsperlat,
-     &                   buff_mult_pieceg_ipe(1,1,3*levs+k) )
+        IF(grads_output .OR. NC_output) THEN
+          CALL uninterpred_dyn(1,kmsk,
+     &       buff_mult_pieceg_ipe(1,1,3*levs+k),buffi,
+     &       global_lats_a,lonsperlat)
+        ELSE IF(wam_ipe_cpl_rst_output) THEN
+          do j=1,lats_node_a
+            do i=1,lonf
+              buff_mult_pieceg_ipe(i, j, 3*levs+k) = buffi(i,j)
+            enddo
+          enddo
+        END IF
+
 !      write(0,*)'in grid collect, buff_vvg=',' me=',me,
 !    & maxval(buff_mult_pieceg_ipe(1:lonf,1:lats_node_a,3*levs+k)),
 !    & minval(buff_mult_pieceg_ipe(1:lonf,1:lats_node_a,3*levs+k))
@@ -103,8 +161,18 @@
             buffi(i,j) = ttg(i,j,k)
           enddo
         enddo
-        CALL uninterpreg(1,kmsk,buffo,buffi,global_lats_a,lonsperlat,
-     &                   buff_mult_pieceg_ipe(1,1,4*levs+k) )
+        IF(grads_output .OR. NC_output) THEN
+          CALL uninterpred_dyn(1,kmsk,
+     &       buff_mult_pieceg_ipe(1,1,4*levs+k),buffi,
+     &       global_lats_a,lonsperlat)
+        ELSE IF(wam_ipe_cpl_rst_output) THEN
+          do j=1,lats_node_a
+            do i=1,lonf
+              buff_mult_pieceg_ipe(i, j, 4*levs+k) = buffi(i,j)
+            enddo
+          enddo
+        END IF
+
 !      write(0,*)'in grid collect, buff_ttg=',' me=',me,
 !    & maxval(buff_mult_pieceg_ipe(1:lonf,1:lats_node_a,4*levs+k)),
 !    & minval(buff_mult_pieceg_ipe(1:lonf,1:lats_node_a,4*levs+k))
@@ -116,11 +184,19 @@
           do j=1,lats_node_a
             do i=1,lonf
               buffi(i,j) = rqg(i,j,k)
-!             if (abs(buffi(i,j)) < 1.0e-15) buffi(i,j) = 0.0
             enddo
           enddo
-          CALL uninterpreg(1,kmsk,buffo,buffi,global_lats_a,lonsperlat,
-     &                     buff_mult_pieceg_ipe(1,1,5*levs+k) )
+          IF(grads_output .OR. NC_output) THEN
+          CALL uninterpred_dyn(1,kmsk,
+     &       buff_mult_pieceg_ipe(1,1,5*levs+k),buffi,
+     &       global_lats_a,lonsperlat)
+          ELSE IF(wam_ipe_cpl_rst_output) THEN
+            do j=1,lats_node_a
+              do i=1,lonf
+                buff_mult_pieceg_ipe(i, j, 5*levs+k) = buffi(i,j)
+              enddo
+            enddo
+          END IF
 
 !      write(0,*)'in grid collect, buff_rqg=',' me=',me,
 !    & maxval(buff_mult_pieceg_ipe(1:lonf,1:lats_node_a,5*levs+k)),
@@ -135,21 +211,31 @@
             buffi(i,j) = n2g(i,j,k)
           enddo
         enddo
-        CALL uninterpreg(1,kmsk,buffo,buffi,global_lats_a,lonsperlat,
-     &                   buff_mult_pieceg_ipe(1,1,5*levs+levh+k) )
+        IF(grads_output .OR. NC_output) THEN
+          CALL uninterpred_dyn(1,kmsk,
+     &       buff_mult_pieceg_ipe(1,1,5*levs+levh+k),buffi,
+     &       global_lats_a,lonsperlat)
+        ELSE IF(wam_ipe_cpl_rst_output) THEN
+          do j=1,lats_node_a
+            do i=1,lonf
+              buff_mult_pieceg_ipe(i, j, 5*levs+levh+k) = buffi(i,j)
+            enddo
+          enddo
+        END IF
+
 !      write(0,*)'in grid collect, buff_n2g=',' me=',me,
 !    & maxval(buff_mult_pieceg_ipe(1:lonf,1:lats_node_a,5*levs+levh+k)),
 !    & minval(buff_mult_pieceg_ipe(1:lonf,1:lats_node_a,5*levs+levh+k))
       enddo
 
       CALL atmgg_move_ipe(buff_mult_pieceg_ipe,ngrids_gg_ipe, kdt,
-     &                    global_lats_a, lats_nodes_a)
+     &                    global_lats_a, lats_nodes_a, deltim)
 
       return
       end
 
       subroutine atmgg_move_ipe(buff_mult_pieceg_ipe,ngrids_gg_ipe, kdt,
-     &                          global_lats_a, lats_nodes_a)
+     &                          global_lats_a, lats_nodes_a, deltim)
 c
 c***********************************************************************
 c
@@ -157,22 +243,35 @@ c
       use gfs_dyn_write_state
       use gfs_dyn_layout1
       use gfs_dyn_mpi_def
+      use namelist_dynamics_def, ONLY: wam_ipe_cpl_rst_output,
+     &                                 grads_output,
+     &                                 FHOUT_grads, NC_output,
+     &                                 FHOUT_NC, FHRES
       implicit none
 !
       integer ngrids_gg_ipe
-      real(kind=kind_io4), dimension(lonf,lats_node_a,ngrids_gg_ipe)
+!      real(kind=kind_io4), dimension(lonf,lats_node_a,ngrids_gg_ipe)
+!     &                                           :: buff_mult_pieceg_ipe
+!      real(kind=kind_io4), dimension(lonf,lats_node_a_max,ngrids_gg_ipe)
+!     &                                           :: grid_node
+!      real(kind=kind_io4),dimension(:,:,:),  allocatable :: buff_final
+!      real(kind=kind_io4),dimension(:,:,:,:),allocatable :: grid_nodes
+      real(kind=kind_grid), dimension(lonf,lats_node_a,ngrids_gg_ipe)
      &                                           :: buff_mult_pieceg_ipe
-      real(kind=kind_io4), dimension(lonf,lats_node_a_max,ngrids_gg_ipe)
+      real(kind=kind_grid),dimension(lonf,lats_node_a_max,ngrids_gg_ipe)
      &                                           :: grid_node
-      real(kind=kind_io4),dimension(:,:,:),  allocatable :: buff_final
-      real(kind=kind_io4),dimension(:,:,:,:),allocatable :: grid_nodes
+      real(kind=kind_grid),dimension(:,:,:),  allocatable :: buff_final
+      real(kind=kind_grid),dimension(:,:,:,:),allocatable :: grid_nodes
       integer, dimension(latg)       :: global_lats_a
       integer, dimension(nodes_comp) :: lats_nodes_a
       integer ioproc, kdt, lat, ipt_lats
       integer j,k,i,ierr, node
       integer lenrec
+      real    deltim
 !
       ioproc = nodes_comp - 1
+
+      grid_node = 0.0
       DO k = 1, ngrids_gg_ipe
         DO j = 1, lats_node_a
           DO i = 1, lonf
@@ -198,8 +297,8 @@ c
       if(nodes_comp>1) then
         lenrec = lonf * lats_node_a_max * ngrids_gg_ipe
 !
-        call mpi_gather( grid_node , lenrec, mpi_real4,
-     x                 grid_nodes, lenrec, mpi_real4,
+        call mpi_gather( grid_node , lenrec, mpi_real8,
+     x                 grid_nodes, lenrec, mpi_real8,
      x                 ioproc, MPI_COMM_ALL, ierr)
       else
         grid_nodes(:,:,:,1)=grid_node(:,:,:)
@@ -229,12 +328,71 @@ c
 ! buff_final contains wwg, zzg, uug, vvg, ttg, rqg, n2g.
 !-------------------------------------------------------
       if(me == ioproc) then
-        write(178) kdt, lonf, latg, ngrids_gg_ipe
-        print*, 'kdt, lonf, latg, ngrids_gg_ipe=',kdt, lonf, latg,
-     &           ngrids_gg_ipe
-        write(178) buff_final
+
+! The following is only to output for making figures and comparisons.
+! WY.
+!------------------------------------------------------------------------
+        IF(grads_output .AND.
+     &    MOD(NINT(deltim) * kdt, FHOUT_grads * 3600) == 0) THEN
+          PRINT*,'Output the WAM-IPE coupling fields at kdt=', kdt
+          print*, 'kdt, lonf, latg, ngrids_gg_ipe=',kdt, lonf, latg,
+     &             ngrids_gg_ipe
+          write(178) kdt, lonf, latg, ngrids_gg_ipe
+          write(178) buff_final
+        END IF
+
+! The following is to the NetCDF diagnostic files.
+!-------------------------------------------------
+!        IF(NC_output .AND.
+!     &    MOD(NINT(deltim) * kdt, FHOUT_NC * 3600) == 0) THEN
+!          CALL write_NC(kdt, lonf, latg, ngrids_gg_ipe,
+!     &                  buff_final)
+!        END IF
+
+! The following is to output the interface restart file for WAM-IPE
+! coupling restart run.
+!------------------------------------------------------------------
+! Joe Schoonover ( Jan. 31, 2018 ) : Needed to change kdt to
+! kdt+1 to write the neutrals at a multiple of FHRES, instead
+! of a FHRES+dt
+        IF(wam_ipe_cpl_rst_output .AND.
+     &    MOD(NINT(deltim) * (kdt+1), NINT(FHRES) * 3600) == 0) THEN
+! restart file will keep the last output file.
+!---------------------------------------------
+          rewind 181
+          WRITE(181) buff_final
+        END IF
+
         deallocate(buff_final)
-      end if
-!!
+      end if   ! if(me == ioproc). 
+
       return
       end
+
+      subroutine uninterpred_dyn(iord,kmsk,f,fi,global_lats_a,
+     &     lonsperlat)
+!!
+      use gfs_dyn_resol_def,   ONLY: latg, lonf
+      use gfs_dyn_layout1,     ONLY: lats_node_a, ipt_lats_node_a
+      USE machine,     ONLY: kind_io8
+      implicit none
+!!
+      integer              global_lats_a(latg)
+      integer,intent(in):: iord
+      integer,intent(in):: kmsk(lonf,lats_node_a)
+      integer,intent(in):: lonsperlat(latg)
+      real(kind=kind_io8),intent(out):: f(lonf,lats_node_a)
+      real(kind=kind_io8),intent(in) :: fi(lonf,lats_node_a)
+      integer j,lons,lat
+!!
+      do j=1,lats_node_a
+        lat  = global_lats_a(ipt_lats_node_a-1+j)
+        lons = lonsperlat(lat)
+        if(lons .ne. lonf) then
+          call intlon_phys(iord,1,1,lons,lonf,
+     &                     kmsk(1,j),fi(1,j),f(1,j))
+        else
+          f(:,j) = fi(:,j)
+        endif
+      enddo
+      end subroutine

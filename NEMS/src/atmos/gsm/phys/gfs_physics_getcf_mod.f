@@ -167,6 +167,8 @@
       call esmf_configgetattribute(cf, 					&
                               int_state%nam_gfs_phy%deltim,         	&
                               label = 'deltim:', rc = rc1)
+      int_state%deltim = int_state%nam_gfs_phy%deltim
+
       call gfs_physics_err_msg_var(rc1,				        &
                'gfs physics getcf','deltim',rcfinal)
 

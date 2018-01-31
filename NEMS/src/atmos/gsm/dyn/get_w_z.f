@@ -1,18 +1,3 @@
-      module get_variables_for_WAM_IPE_coupling
-
-      use gfs_dyn_resol_def, ONLY: lonf, levs, levh
-      use gfs_dyn_layout1,   ONLY: lats_node_a
-      use gfs_dyn_machine
-
-      IMPLICIT NONE
-
-      REAL, DIMENSION(:, :, :), ALLOCATABLE :: wwg, zzg, uug, 
-     &                                         vvg, ttg, rqg,
-     &                                         n2g, ppg
-      REAL, DIMENSION(:, :),    ALLOCATABLE :: ps
-
-      END module get_variables_for_WAM_IPE_coupling
-
       subroutine get_w_z(grid_gr,
      &                 trie_ls,trio_ls,
      &                 LS_NODE,LS_NODES,MAX_LS_NODES,
@@ -20,7 +5,7 @@
      &                 EPSE,EPSO,EPSEDN,EPSODN,
      &                 PLNEV_A,PLNOD_A,PLNEW_A,PLNOW_A,
 !     &                 PDDEV_A,PDDOD_A,SNNP1EV,SNNP1OD)
-     &                 PDDEV_A,PDDOD_A,SNNP1EV,SNNP1OD, kdt)
+     &                 PDDEV_A,PDDOD_A,SNNP1EV,SNNP1OD, kdt, deltim)
 !!
 ! Program History Log:
 ! Mar 2015    Henry Juang	use existed variables to get w hydrostatically
@@ -109,6 +94,7 @@
 
       REAL(KIND=KIND_GRID) phis(lonf,lats_node_a)
       real, parameter:: g0re = g0*re, g0re2 = g0*re*re
+      real           :: deltim
 
       INTEGER               I,J,K,L,LOCL,N
 
@@ -451,20 +437,38 @@
 !
 ! The following is only to output for making figures and comparisons. WY.
 !------------------------------------------------------------------------
-
-! For 3 minutes time step, output field every 6 hours.
-!-----------------------------------------------------
-!      IF(MOD(kdt, 120) == 0)  CALL grid_collect_ipe(wwg,zzg,uug,vvg,
-! For 3 minutes time step, output field every 240 hours.
-!-------------------------------------------------------
-!      IF(MOD(kdt, 4800) == 0)  CALL grid_collect_ipe(wwg,zzg,uug,vvg,
-! For 3 minutes time step, output field every 120 hours.
-!-------------------------------------------------------
-      IF(MOD(kdt, 2400) == 0) THEN
+      IF(grads_output .AND. 
+     &  MOD(NINT(deltim) * kdt, FHOUT_grads * 3600) == 0) THEN
         PRINT*,'Output the WAM-IPE coupling fields at kdt=', kdt
         CALL grid_collect_ipe(wwg,zzg,uug,vvg,
      &                        ttg,rqg,n2g,global_lats_a,lonsperlat,
-     &                        lats_nodes_a, kdt)
+     &                        lats_nodes_a, kdt, deltim)
       END IF
+! End of output fort.178 for grads figours.
+!------------------------------------------
+
+! The following is to output the interface restart file for WAM-IPE coupling
+! restart run.
+!---------------------------------------------------------------------------
+! Joe Schoonover ( Jan. 31, 2018 ) : Needed to change kdt to
+! kdt+1 to write the neutrals at a multiple of FHRES, instead
+! of a FHRES+dt
+      IF(wam_ipe_cpl_rst_output .AND. kdt /= 0 .AND.
+     &  MOD(NINT(deltim) * (kdt+1), NINT(FHRES) * 3600) == 0) THEN
+        PRINT*,'Write out the WAM-IPE rst file needed for IPE, kdt=',
+     &       kdt
+        CALL grid_collect_ipe(wwg,zzg,uug,vvg,
+     &                        ttg,rqg,n2g,global_lats_a,lonsperlat,
+     &                        lats_nodes_a, kdt, deltim)
+      END IF
+
+! The following is to the NetCDF diagnostic files.
+!-------------------------------------------------
+!      IF(NC_output .AND. 
+!     &  MOD(NINT(deltim) * kdt, FHOUT_NC * 3600) == 0) THEN
+!        CALL grid_collect_ipe(wwg,zzg,uug,vvg,
+!     &                        ttg,rqg,n2g,global_lats_a,lonsperlat,
+!     &                        lats_nodes_a, kdt, deltim)
+!      END IF
 
       END subroutine get_w_z

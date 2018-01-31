@@ -109,6 +109,7 @@ OBJS   = \
 	shuffle_grid.o \
 	grid_collect.o \
 	grid_collect_ipe.o \
+	input_for_wam_ipe_rst.o \
 	excha.o \
 	info.o \
 	four2grid_thread.o \
