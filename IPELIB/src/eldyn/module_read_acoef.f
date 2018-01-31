@@ -36,7 +36,7 @@
 !     use ioFileMod,     only : getfil
 !     use units,         only : getunit, freeunit
 !nm20121003
-      USE efield_ipe !,ONLY:
+      USE efield !,ONLY:
 
       character(len=*), intent(in) :: efield_lflux_file
       character(len=*), intent(in) :: efield_hflux_file

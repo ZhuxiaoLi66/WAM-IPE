@@ -25,8 +25,7 @@
 ! Author: A. Maute Nov 2003  am 11/20/03
 !------------------------------------------------------------------
 !nm20121003
-      USE efield_ipe !,ONLY:
-      USE module_input_parameters,ONLY: mype
+      USE efield !,ONLY:
 !------------------------------------------------------------------
 !	... dummy arguments
 !------------------------------------------------------------------
@@ -72,11 +71,6 @@
       do ilat = idlat,nmlath-idlat
          pot(:,ilat) = pot_smo(:,ilat)
       end do
-
-
-
-
-
 
       end subroutine pot_latsmo2
 

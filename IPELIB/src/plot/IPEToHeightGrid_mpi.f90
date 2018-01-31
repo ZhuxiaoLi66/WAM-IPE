@@ -31,8 +31,6 @@ USE netcdf
   REAL(kind=real_prec8),DIMENSION(nheights)  :: z
   REAL(kind=real_prec8),DIMENSION(nlon) :: x
   REAL(kind=real_prec8),DIMENSION(nlat) :: y 
-  REAL(kind=real_prec8) :: localtime, dm, m3000
-  INTEGER :: GMTHour
   INTEGER :: height_km
   INTEGER :: i, iheight, iup, ido, ih, ip
   INTEGER :: l, m, mp, lp, in1, in2
@@ -75,7 +73,6 @@ USE netcdf
   REAL(kind=real_prec8),DIMENSION(:,:), ALLOCATABLE     :: total_electron_content
   REAL(kind=real_prec8),DIMENSION(:,:), ALLOCATABLE     :: hmf2
   REAL(kind=real_prec8),DIMENSION(:,:), ALLOCATABLE     :: nmf2
-  REAL(kind=real_prec8),DIMENSION(:,:), ALLOCATABLE     :: muf3000
   REAL(kind=real_prec8),DIMENSION(3)                    :: oplus_interpolated
   REAL(kind=real_prec8),DIMENSION(3)                    :: hplus_interpolated
   REAL(kind=real_prec8),DIMENSION(3)                    :: heplus_interpolated
@@ -328,7 +325,7 @@ CONTAINS
                  electron_density_fixed(nlon,nlat,nheights), &
                  electron_density_fixed_300km(nlon,nlat), &
                  total_electron_content(nlon,nlat), &
-                 hmf2(nlon,nlat), nmf2(nlon,nlat), muf3000(nlon,nlat) )
+                 hmf2(nlon,nlat), nmf2(nlon,nlat) )
             
 
  END SUBROUTINE AllocateArrays
@@ -369,7 +366,7 @@ CONTAINS
                    electron_density_fixed, &
                    electron_density_fixed_300km, &
                    total_electron_content, &
-                   hmf2, nmf2, muf3000 )
+                   hmf2, nmf2 )
               
 
  END SUBROUTINE CleanupArrays
@@ -384,10 +381,6 @@ CONTAINS
    INTEGER,DIMENSION(:,:), ALLOCATABLE :: JMIN_IN_ALL, JMAX_IS_ALL
    INTEGER,DIMENSION(:  ), ALLOCATABLE :: JMIN_IN, JMAX_IS, JMIN_ING, JMAX_ISG
    INTEGER ierr, MaxFluxTube
-   CHARACTER( LEN(TRIM(plasmaFile)) ) :: shortenedFile
-   CHARACTER( 2 )                     :: timeStamp
-
-
  
     allocate(JMIN_IN_ALL(NMP,NLP),JMAX_IS_ALL(NMP,NLP),JMIN_IN(NLP),JMAX_IS(NLP),JMIN_ING(NLP),JMAX_ISG(NLP))
     if ( my_pe .eq. 0 ) then
@@ -426,10 +419,6 @@ CONTAINS
               n2n_ms1(MaxFluxTube,NLP,NMP), &
               o2n_m3(MaxFluxTube,NLP,NMP) )
 
-
-      shortenedFile = TRIM(plasmaFile)
-      timestamp     = shortenedFile( LEN(shortenedFile)-3:LEN(shortenedFile)-2 )
-      READ( timestamp, '(I2)' ) GMTHour
 
      OPEN(UNIT   = 20, &
           FILE   = TRIM(plasmaFile),&
@@ -649,24 +638,10 @@ CONTAINS
       hmf2(m,l) = (0.0 - b) / (2*c)
       nmf2(m,l) = a + (b*hmf2(m,l)) + (c*hmf2(m,l)*hmf2(m,l))
 
-      ! MUF-3000 
-      ! Uses approximation of foF2 and foE as a function of time as in
-      ! Bradley and Dudeny, "A simple model of the vertical distribution of 
-      !  electron concentration in the ionosphere", JATP, 1973
-      localTime = GMTHour + x(m)/15.0
-      IF( localTime > 24.0 ) THEN
-        localTime = localTime - 24.0
-      ENDIF
-      dM    = 0.6*sin( (3.141592653/12.0)*(localTime-5.0) )
-      m3000 = 1490.0/(hmf2(m,l) + 176.0)-dM
-
-      muf3000(m,l) = m3000*sqrt( nmf2(m,l) )/(1.11355287*10.0**5)
     
-
     ENDDO
   ENDDO
 
- 
  END SUBROUTINE InterpolateOntoFixedHeightGrid
 !
  SUBROUTINE WriteToNetCDF(  )
@@ -678,7 +653,7 @@ CONTAINS
    INTEGER :: x_varid, y_varid, z_varid, time_varid
    INTEGER :: oplus_varid, hplus_varid, heplus_varid
    INTEGER :: nplus_varid, noplus_varid, o2plus_varid
-   INTEGER :: n2plus_varid, tec_varid, nmf2_varid, hmf2_varid, muf_varid
+   INTEGER :: n2plus_varid, tec_varid, nmf2_varid, hmf2_varid
    INTEGER :: edens_varid
    INTEGER :: tn_varid, u_varid, v_varid, w_varid, on_varid, n2n_varid, o2n_varid
 
@@ -825,14 +800,6 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, hmf2_varid, "_FillValue",fillValue) )
       CALL Check( nf90_put_att( ncid, hmf2_varid,"coordinates", "latitude longitude" ) )
          
-      CALL Check( nf90_def_var( ncid, "muf3000", NF90_PREC,&
-                               (/ x_dimid, y_dimid, time_dimid /),&
-                               muf_varid ) )
-      CALL Check( nf90_put_att( ncid, muf_varid, &
-                                "long_name","Maximum Usable Frequency." ) )
-      CALL Check( nf90_put_att( ncid, muf_varid, "units","[unknown]" ) )
-      CALL Check( nf90_put_att( ncid, muf_varid, "_FillValue",fillValue) )
-      CALL Check( nf90_put_att( ncid, muf_varid,"coordinates", "latitude longitude" ) )
 
       CALL Check( nf90_def_var( ncid, "tn", NF90_PREC,&
                                (/ x_dimid, y_dimid, z_dimid, time_dimid /),&
@@ -908,7 +875,6 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, tec_varid, total_electron_content ) )
       CALL Check( nf90_put_var( ncid, nmf2_varid, nmf2 ) )
       CALL Check( nf90_put_var( ncid, hmf2_varid, hmf2 ) )
-      CALL Check( nf90_put_var( ncid, muf_varid, muf3000 ) )
       CALL Check( nf90_put_var( ncid, tn_varid, tn_fixed ) )
       CALL Check( nf90_put_var( ncid, u_varid, vn_fixed(:,:,:,1) ) )
       CALL Check( nf90_put_var( ncid, v_varid, vn_fixed(:,:,:,2) ) )

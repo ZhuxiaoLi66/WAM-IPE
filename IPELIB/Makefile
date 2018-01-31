@@ -9,6 +9,5 @@ all:
 
 clean:
 	$(RM) -v bin/*
-	$(RM) -v lib/*
 	make -C src clean
 	(cd tst && ./ipets clean)

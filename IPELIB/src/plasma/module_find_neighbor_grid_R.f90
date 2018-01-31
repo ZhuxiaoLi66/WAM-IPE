@@ -30,9 +30,9 @@
 !--- INPUT ---
       INTEGER (KIND=int_prec),INTENT(IN) :: mp
       INTEGER (KIND=int_prec),INTENT(IN) :: lp
-      REAL(KIND=real_prec8),INTENT(IN) :: phi_t0(2) !magnetic longitude,phi[rad] at T0(previous time step)
-      REAL(KIND=real_prec8),INTENT(IN) :: theta_t0(2) !magnetic latitude,theta[rad] at T0
-      REAL(KIND=real_prec8), INTENT(IN) :: r0_apex ![meter]
+      REAL(KIND=real_prec),INTENT(IN) :: phi_t0(2) !magnetic longitude,phi[rad] at T0(previous time step)
+      REAL(KIND=real_prec),INTENT(IN) :: theta_t0(2) !magnetic latitude,theta[rad] at T0
+      REAL(KIND=real_prec), INTENT(IN) :: r0_apex ![meter]
 !---local
       INTEGER (KIND=int_prec) :: ihem,ihem_max
       REAL(KIND=real_prec) :: Z_t0
@@ -63,11 +63,9 @@ which_hemisphere: DO ihem=1,1  !ihem_max
 !!!dbg20120125:  mp_t0(ihem,2) = mp_t0(ihem,1)+1
   mpx_loop: DO mpx=0,NMP
     if(mpx+1 > mpHaloSize) then
-!SMS$ignore begin
-      print*,'mpx+1 > mpHaloSize in find_neighbor_grid_R: mpx=',mpx,' mpHaloSize=',mpHaloSize,' mp=',mp,' lp=',lp
+      print*,'mpx+1 > mpHaloSize in find_neighbor_grid_R',mpx,mpHaloSize,mp
       print*,'Increase the halo size or take smaller time steps.'
-      print*,'Stopping in find_neighbor_grid_R:mype=',mype
-!SMS$ignore end
+      print*,'Stopping in find_neighbor_grid_R'
       STOP
     endif
     MaxMpHaloUsed = max(MaxMpHaloUsed,mpx+1)
@@ -141,11 +139,9 @@ z_t0 = r0_apex - earth_radius
 
 lpx_loop: DO lpx=0,NLP-1  !nearest point-->EQ
   IF(lpx+1 > lpHaloSize) THEN
-!SMS$ignore begin
-    print'("Searching for inner,outer flux tube: lpx+1>lpHaloSize: lpx=",i4,"lpHaloSize=",i2,"lp=",i4)',lpx,lpHaloSize,lp
+    print*,'Searching for inner,outer flux tube: lpx+1 > lpHaloSize',lpx,lpHaloSize,lp
     print*,'Increase the halo size or take smaller time steps.'
-    print*,'Stopping in find_neighbor_grid_R: mype=',mype
-!SMS$ignore end
+    print*,'Stopping in find_neighbor_grid_R'
     STOP
   ENDIF
   MaxLpHaloUsed = max(MaxLpHaloUsed,lpx+1)

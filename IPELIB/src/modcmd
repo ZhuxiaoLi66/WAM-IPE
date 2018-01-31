@@ -51,7 +51,7 @@ case $1 in
     goto="$init && module purge && module load"
     case $2 in
       "intel")
-        echo "$goto intel/16.1.150 impi/5.1.1.109 "
+        echo "$goto intel/16.1.150 impi "
         ;;
       *) unknown $1 $2
         ;;
@@ -68,20 +68,4 @@ case $1 in
         ;;
     esac
     ;;
-###
-  "cheyenne")
-###    init="source /apps/lmod/lmod/init/sh"
-    goto="module purge && module load"
-    case $2 in
-      "intel")
-###        echo "$goto intel/14.0.2 impi "
-        echo "$goto intel/17.0.1 mpt/2.15f "
-        ;;
-      *) unknown $1 $2
-        ;;
-    esac
-    ;;
-###
-
-
 esac

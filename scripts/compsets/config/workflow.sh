@@ -42,7 +42,6 @@ if [ $WAM_IPE_COUPLING = .true. ] ; then
 # load the namelist options
 . $CONFIGDIR/wam-ipe_dpnamelist.config
 
-
 else # standalone
 . $CONFIGDIR/wam_dpnamelist.config
 fi

@@ -23,7 +23,7 @@
 !c idea
 !      subroutine idea_geteb(im,ix,dayno,utsec,f107,kp,maglat,maglon,
 !     &essa,ee1,ee2)
-      USE efield_ipe !,ONLY:iday,imo,iday_m,iyear,ut,kp,by,bz,f107d
+      USE efield !,ONLY:iday,imo,iday_m,iyear,ut,kp,by,bz,f107d
       USE module_efield_init,ONLY:efield_init
 !c     use date_def
 !c     use physcons, pi => con_pi

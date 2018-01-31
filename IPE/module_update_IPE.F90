@@ -92,9 +92,9 @@ module module_update_IPE
 
     call ESMF_LogWrite("sub-update_IPE start:", ESMF_LOGMSG_INFO, rc=rc)
 
-!t    call ESMF_LogWrite("sub-update_IPE ClockPrint:", ESMF_LOGMSG_INFO, rc=rc)
-!t    call ESMF_ClockPrint(clock, options="currTime name startTime stopTime timeStep", rc=rc)
-!t    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    call ESMF_LogWrite("sub-update_IPE ClockPrint:", ESMF_LOGMSG_INFO, rc=rc)
+    call ESMF_ClockPrint(clock, options="currTime name startTime stopTime timeStep", rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 !nm20160315---copied from driver_ipe_sms.f90
 
@@ -106,7 +106,7 @@ module module_update_IPE
 
 
       if (IAM_ROOT()) then
-        print"('Utime=',2i7,f11.4,' nTimeStep=',i7,' ncnt=',i7)",utime,(MOD(utime,86400)),(MOD(utime,86400)/3600.),nTimeStep,ncnt
+        print"('Utime=',2i7,f11.4,' nTimeStep',2i2)",utime,(MOD(utime,86400)),(MOD(utime,86400)/3600.),nTimeStep,ncnt
         if(swEsmfTime) write(unit=9999,FMT=*)'update_IPE',nTimeStep,':ut=',utime
       endif
 !!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-5")
@@ -295,7 +295,7 @@ module module_update_IPE
      write (s_str,fmt) S
      timestamp_for_IPE_output_files = trim(yy_str)//trim(mm_str)//trim(dd_str)//trim(h_str)//trim(m_str)                  
 
-        CALL plasma ( utime )
+        CALL plasma ( utime, timestamp_for_IPE_output_files )
 
         if(swEsmfTime) then
 	  CALL ESMF_VMWtime(end_time)

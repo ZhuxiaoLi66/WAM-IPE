@@ -10,7 +10,6 @@ SSRCS=CMINOR.f                       \
       INIT-PROFILES.f                \
       KEMPRN.f                       \
       MINORA.f                       \
-      module_tirosdata_ipe.f         \
       Neut_Heating.f                 \
       Photoel-Freqs.f                \
       Rates.f                        \
@@ -20,9 +19,6 @@ SSRCS=CMINOR.f                       \
       RSLPST.f                       \
       RSPE2B.f                       \
       RSPRIM.f                       \
-      RSTEMC_EXB.f                   \
-      sub_ionize_ipe.f               \
-      sub_tiros_init_ipe.f           \
-      sub_tiros_ionize_ipe.f
+      RSTEMC_EXB.f
 
 include $(TOP)/Makefile.common
