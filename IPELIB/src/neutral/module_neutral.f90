@@ -42,8 +42,8 @@
       USE module_IPE_dimension,ONLY: IPDIM
       use module_FIELD_LINE_GRID_MKS, only : plasma_grid_3d,plasma_grid_Z, apexD, JMIN_IN,JMAX_IS,east,north,up,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,JMIN_ING,JMAX_ISG,WamField
       USE module_physical_constants,ONLY: pi,zero,earth_radius,g0,gscon,massn_kg
-      USE module_input_parameters,ONLY: F107D_new,F107_new,AP,NYEAR,NDAY,sw_debug,mpstop,sw_grid,start_time,stop_time,apa_eld,ap_eld &
-     &,sw_neutral, swNeuPar,mype, ut_start_perp_trans, sw_use_wam_fields_for_restart,utime0lpi,lpi,input_params_begin,input_params_interval,sw_ctip_input
+      USE module_input_parameters,ONLY: F107D,F107AV,AP,NYEAR,NDAY,sw_debug,mpstop,sw_grid,start_time,stop_time &
+     &,sw_neutral, swNeuPar,mype, ut_start_perp_trans, sw_use_wam_fields_for_restart
       USE module_unit_conversion,ONLY: M_TO_KM
       USE module_IO, ONLY:filename,FORM_dum,STATUS_dum,luntmp3
       USE module_open_file, ONLY:open_file
@@ -96,24 +96,9 @@
 
       iyear = NYEAR
       iday  = NDAY
-      if ( sw_ctip_input ) then
-        LPI = INT( ( utime - utime0LPI ) / real(input_params_interval) ) + 1 + input_params_begin
-!t        if(sw_debug)
-        print*,'sub-eld: LPI=',lpi
-!t        if(sw_debug)  
-        print*,'sub-eld: utime',utime,'dt_m=',((utime-utime0LPI)/60.)
-      else
-        LPI=1
-      end if
-      f107D_dum  = F107_new(lpi)
-      f107A_dum  = F107d_new(lpi)
-      AP_dum(1) = apa_eld(lpi)
-      AP_dum(2) =  ap_eld(lpi)
-      AP_dum(3) =  ap_eld(lpi-INT( 3.*60*60/input_params_interval))
-      AP_dum(4) =  ap_eld(lpi-INT( 6.*60*60/input_params_interval))
-      AP_dum(5) =  ap_eld(lpi-INT( 9.*60*60/input_params_interval))
-      AP_dum(6) = apa_eld(lpi-INT(12.*60*60/input_params_interval))
-      AP_dum(7) = apa_eld(lpi-INT(36.*60*60/input_params_interval))
+      f107D_dum  = F107D
+      f107A_dum  = F107AV
+      AP_dum(1:7)= AP(1:7)
       ut_hour = REAL(utime)/3600. !convert from sec to hours
 
       IF( sw_debug )  THEN
@@ -283,56 +268,49 @@
 
 
 !dbg20160715!perhaps i do not need this debug any more!
-            IF ( sw_debug ) THEN
+IF ( sw_debug ) THEN
 !SMS$IGNORE begin
-               print '(2i3,i4," tn MIN",f7.0," MAX",f7.0)',mype,mp,lp,minval(tn_k(IN:IS,lp,mp)),maxval(tn_k(IN:IS,lp,mp))
+   print '(2i3,i4," tn MIN",f7.0," MAX",f7.0)',mype,mp,lp,minval(tn_k(IN:IS,lp,mp)),maxval(tn_k(IN:IS,lp,mp))
 !SMS$IGNORE end
 
-               if ( minval(tn_k(IN:IS,lp,mp))<0.0 ) then
+   if ( minval(tn_k(IN:IS,lp,mp))<0.0 ) then
 
 !SMS$IGNORE begin
-                  print*,mype,utime,'!STOP! INVALID Tn MIN!',mp,lp,minloc(tn_k(IN:IS,lp,mp))
+      print*,mype,utime,'!STOP! INVALID Tn MIN!',mp,lp,minloc(tn_k(IN:IS,lp,mp))
 !SMS$IGNORE end
 
-                  do idb=IN,IS
+      do idb=IN,IS
 
 !SMS$IGNORE begin
-                     print*,mp,lp,idb,wamfield(idb,lp,mp,1),tn_k(idb,lp,mp),plasma_grid_z(idb,lp)*1.e-3
+         print*,mp,lp,idb,wamfield(idb,lp,mp,1),tn_k(idb,lp,mp),plasma_grid_z(idb,lp)*1.e-3
 !SMS$IGNORE end
 
-                  end do
-                  STOP
-                  
-               end if !(minval
-            END IF !( sw_debug ) THEN
+      end do
+      STOP
 
-         !nm20171117 bug fixed when swNeuPar=false
-         else !  ( swNeuPar(jth)==f
+   end if !(minval
+END IF !( sw_debug ) THEN
 
-            tn_k(  IN:IS,lp,mp) =   tn_k_msis(IN:IS)
-            tinf_k(IN:IS,lp,mp) = tinf_k_msis(IN:IS)
-
-         end if !  ( swNeuPar(jth) ) then
+end if !  ( swNeuPar(jth) ) then
 
 
 !nm20170427: implement gradually shift from msis to wam
-         if ( dUTWamD==0.0 ) then 
-            fracWamD = 1.0
-         else
-            fracWamD = ( REAL(utime)-UTMinWamD ) * 1.0/dUTWamD 
-         end if
-         if(mp==1.and.lp==1)print*,'frac=',fracWamD,' dUT=',dUTWamD,' ut=',utime, UTMinWamD  
-         if ( fracWamD < 0.0 .or. fracWamD > 1.0 ) then
+if ( dUTWamD==0.0 ) then 
+  fracWamD = 1.0
+else
+  fracWamD = ( REAL(utime)-UTMinWamD ) * 1.0/dUTWamD 
+end if
+if(mp==1.and.lp==1)print*,'frac=',fracWamD,' dUT=',dUTWamD,' ut=',utime, UTMinWamD  
+if ( fracWamD < 0.0 .or. fracWamD > 1.0 ) then
 !SMS$IGNORE begin
-            print*,'!STOP! INVALID fracWamD',fracWamD,' dUT=',dUTWamD,' ut=',REAL(utime),UTMinWamD,(REAL(utime)-UTMinWamD)    
+  print*,'!STOP! INVALID fracWamD',fracWamD,' dUT=',dUTWamD,' ut=',REAL(utime),UTMinWamD,(REAL(utime)-UTMinWamD)    
 !SMS$IGNORE end
-            STOP
-         end if
- 
+  STOP
+end if
          jth_loop: do jth=1,6 !2:east;3:notrh;4:up for WamField,swNeuPar
             jjth=jth+1 !2:4 for WamField,swNeuPar; !5:O,6:O2,7:N2
             if ( swNeuPar(jjth) ) then
-               
+
                if ( jjth<5 ) then
                   if(sw_debug.and.lp==1) print*,mp,'calculating wam Un',jjth
                   !below 800km: NH
@@ -345,80 +323,80 @@
 
 
 
-                  !dbg20170504:check NaNs and temporary fix
-                  do ihem=1,2
-                     if ( ihem==1 ) then
-                        !NH
-                        ihTop=IN+3
-                        iStep=-1
-                        midPoints=IN
-                     else if ( ihem==2 ) then
-                        !SH
-                        ihTop=IS-3
-                        iStep=+1
-                        midPoints=IS
-                     end if! ( ihtm==2 ) then
-                     
-                     do idb=ihTop,midPoints, iStep
-                        if ( wamfield(idb,lp,mp,jjth) /= wamfield(idb,lp,mp,jjth) ) then
-                           !SMS$IGNORE begin
-                           print"('ERROR NaN! module_neutral:',i3,i6,i4,i3,e12.4,f6.0,2f7.1)",mype,idb,lp,mp,wamfield(idb,lp,mp,jjth),alt_km(idb),glon_deg(idb),glat_deg(idb)
-                           !SMS$IGNORE end
-                           
-                           !dbg20170504 temporary fix: overwrite NaNs by downward extraporation
-                           if (ihem==1) then
-                              !NH
-                              istp1=+1
-                              istp2=+2
-                           else if (ihem==2) then
-                              !SH
-                              istp1=-1
-                              istp2=-2
-                           end if !(idb<midpoint) then
-                           WamField(idb,lp,mp,jjth)=10**( &
-                                & LOG10(WamField(idb+istp2,lp,mp,jjth)) + ( &
-                                & LOG10(WamField(idb+istp1,lp,mp,jjth)) - LOG10(WamField(idb+istp2,lp,mp,jjth)) &
-                                &                                    ) * ( alt_km(idb)-alt_km(idb+istp2) )/ ( alt_km(idb+istp1)-alt_km(idb+istp2) )&
-                                & )
-                           !SMS$IGNORE begin
-                           print"('NaN corrected! module_neutral:',i3,i6,i4,i3,e12.4,f6.0,2f7.1)",mype,idb,lp,mp,wamfield(idb,lp,mp,jjth),alt_km(idb),glon_deg(idb),glat_deg(idb)
-                           !SMS$IGNORE end
-                        end if !( wamfield(idb,lp,mp,jjth) /= wamfield(idb,lp,mp,jjth) ) then
-                     end do !idb
-                  end do !ihem
-                  !dbg20170504 --end
-                  !nm20170427: implement gradually shift from msis to wam
-                  MsisDSaved(IN:IS)=on_m3( IN:IS,lp,mp) 
-                  
+!dbg20170504:check NaNs and temporary fix
+do ihem=1,2
+   if ( ihem==1 ) then
+!NH
+      ihTop=IN+3
+      iStep=-1
+      midPoints=IN
+   else if ( ihem==2 ) then
+!SH
+      ihTop=IS-3
+      iStep=+1
+      midPoints=IS
+   end if! ( ihtm==2 ) then
+
+   do idb=ihTop,midPoints, iStep
+      if ( wamfield(idb,lp,mp,jjth) /= wamfield(idb,lp,mp,jjth) ) then
+!SMS$IGNORE begin
+         print"('ERROR NaN! module_neutral:',i3,i6,i4,i3,e12.4,f6.0,2f7.1)",mype,idb,lp,mp,wamfield(idb,lp,mp,jjth),alt_km(idb),glon_deg(idb),glat_deg(idb)
+!SMS$IGNORE end
+
+!dbg20170504 temporary fix: overwrite NaNs by downward extraporation
+         if (ihem==1) then
+!NH
+            istp1=+1
+            istp2=+2
+         else if (ihem==2) then
+!SH
+            istp1=-1
+            istp2=-2
+         end if !(idb<midpoint) then
+         WamField(idb,lp,mp,jjth)=10**( &
+              & LOG10(WamField(idb+istp2,lp,mp,jjth)) + ( &
+              & LOG10(WamField(idb+istp1,lp,mp,jjth)) - LOG10(WamField(idb+istp2,lp,mp,jjth)) &
+              &                                    ) * ( alt_km(idb)-alt_km(idb+istp2) )/ ( alt_km(idb+istp1)-alt_km(idb+istp2) )&
+              & )
+!SMS$IGNORE begin
+         print"('NaN corrected! module_neutral:',i3,i6,i4,i3,e12.4,f6.0,2f7.1)",mype,idb,lp,mp,wamfield(idb,lp,mp,jjth),alt_km(idb),glon_deg(idb),glat_deg(idb)
+!SMS$IGNORE end
+      end if !( wamfield(idb,lp,mp,jjth) /= wamfield(idb,lp,mp,jjth) ) then
+   end do !idb
+end do !ihem
+!dbg20170504 --end
+!nm20170427: implement gradually shift from msis to wam
+MsisDSaved(IN:IS)=on_m3( IN:IS,lp,mp) 
+
                   !O below 800km: NH
-                  on_m3( IN:ihTopN,lp,mp) = fracWamD*WamField(IN:ihTopN,lp,mp, jjth) + (1.-fracWamD)*MsisDSaved(IN:ihTopN) !O
-                  !d                  on_m3( IN:ihTopN,lp,mp) = WamField(IN:ihTopN,lp,mp, jjth) !O
+on_m3( IN:ihTopN,lp,mp) = fracWamD*WamField(IN:ihTopN,lp,mp, jjth) + (1.-fracWamD)*MsisDSaved(IN:ihTopN) !O
+!d                  on_m3( IN:ihTopN,lp,mp) = WamField(IN:ihTopN,lp,mp, jjth) !O
                   !O below 800km: SH
-                  on_m3( ihTopS:IS,lp,mp) = fracWamD*WamField(ihTopS:IS,lp,mp, jjth) + (1.-fracWamD)*MsisDSaved(ihTopS:IS) !O
-                  !d                  on_m3( ihTopS:IS,lp,mp) = WamField(ihTopS:IS,lp,mp, jjth) !O
+on_m3( ihTopS:IS,lp,mp) = fracWamD*WamField(ihTopS:IS,lp,mp, jjth) + (1.-fracWamD)*MsisDSaved(ihTopS:IS) !O
+!d                  on_m3( ihTopS:IS,lp,mp) = WamField(ihTopS:IS,lp,mp, jjth) !O
                else if ( jjth==6 ) then
-                  
-                  !nm20170427: implement gradually shift from msis to wam
-                  MsisDSaved(IN:IS)=o2n_m3( IN:IS,lp,mp) 
-                  
+
+!nm20170427: implement gradually shift from msis to wam
+MsisDSaved(IN:IS)=o2n_m3( IN:IS,lp,mp) 
+
                   !O2 below 800km: NH
-                  o2n_m3( IN:ihTopN,lp,mp) = fracWamD*WamField(IN:ihTopN,lp,mp, jjth) + (1.-fracWamD)*MsisDSaved(IN:ihTopN) !O2
-                  !d                  o2n_m3( IN:ihTopN,lp,mp) = WamField(IN:ihTopN,lp,mp, jjth) !O2
+o2n_m3( IN:ihTopN,lp,mp) = fracWamD*WamField(IN:ihTopN,lp,mp, jjth) + (1.-fracWamD)*MsisDSaved(IN:ihTopN) !O2
+!d                  o2n_m3( IN:ihTopN,lp,mp) = WamField(IN:ihTopN,lp,mp, jjth) !O2
                   !O2 below 800km: SH
-                  o2n_m3( ihTopS:IS,lp,mp) = fracWamD*WamField(ihTopS:IS,lp,mp, jjth) + (1.-fracWamD)*MsisDSaved(ihTopS:IS)  !O2
-                  !d                  o2n_m3( ihTopS:IS,lp,mp) = WamField(ihTopS:IS,lp,mp, jjth) !O2
+o2n_m3( ihTopS:IS,lp,mp) = fracWamD*WamField(ihTopS:IS,lp,mp, jjth) + (1.-fracWamD)*MsisDSaved(ihTopS:IS)  !O2
+!d                  o2n_m3( ihTopS:IS,lp,mp) = WamField(ihTopS:IS,lp,mp, jjth) !O2
                else if ( jjth==7 ) then
-                  
-                  !nm20170427: implement gradually shift from msis to wam
-                  MsisDSaved(IN:IS)=n2n_m3( IN:IS,lp,mp) 
-                  
+
+!nm20170427: implement gradually shift from msis to wam
+MsisDSaved(IN:IS)=n2n_m3( IN:IS,lp,mp) 
+
                   !N2 below 800km: NH
-                  n2n_m3( IN:ihTopN,lp,mp) = fracWamD*WamField(IN:ihTopN,lp,mp, jjth) + (1.-fracWamD)*MsisDSaved(IN:ihTopN) !n2
-                  !d                  n2n_m3( IN:ihTopN,lp,mp) = WamField(IN:ihTopN,lp,mp, jjth) !n2
+n2n_m3( IN:ihTopN,lp,mp) = fracWamD*WamField(IN:ihTopN,lp,mp, jjth) + (1.-fracWamD)*MsisDSaved(IN:ihTopN) !n2
+!d                  n2n_m3( IN:ihTopN,lp,mp) = WamField(IN:ihTopN,lp,mp, jjth) !n2
                   !N2 below 800km: SH
-                  n2n_m3( ihTopS:IS,lp,mp) = fracWamD*WamField(ihTopS:IS,lp,mp, jjth) + (1.-fracWamD)*MsisDSaved(ihTopS:IS) !n2
-                  !d                  n2n_m3( ihTopS:IS,lp,mp) = WamField(ihTopS:IS,lp,mp, jjth) !n2
-               end if !jjth==5
+n2n_m3( ihTopS:IS,lp,mp) = fracWamD*WamField(ihTopS:IS,lp,mp, jjth) + (1.-fracWamD)*MsisDSaved(ihTopS:IS) !n2
+!d                  n2n_m3( ihTopS:IS,lp,mp) = WamField(ihTopS:IS,lp,mp, jjth) !n2
+               end if !jjth
 
 
 
@@ -471,20 +449,6 @@
                   end do above800kmLoop!: DO ipts=ihTop+istep, midPoints, iStep 
                end do          ihemLoop!: DO ihem=1,2         
 
-            !nm20171117 bug fixed when swNeuPar=false
-            else  !( swNeuPar(jjth)=f 
-
-              if ( jjth<5 ) then !O
-                  Vn_ms1(jth,ipts)   = Vn_ms1_msis(jth,ipts)
-              else  !jjth>=5
-                 if ( jjth==5 ) then !O
-                    on_m3( ipts,lp,mp) = on_m3_msis(ipts)
-                 else if ( jjth==6 ) then !O2
-                    o2n_m3( ipts,lp,mp) = o2n_m3_msis(ipts)
-                 else if ( jjth==7 ) then !N2
-                    n2n_m3( ipts,lp,mp) = n2n_m3_msis(ipts)
-                 end if !jjth==5
-              end if  !jjth<5
 
             end if !( swNeuPar(jjth) ) then
 

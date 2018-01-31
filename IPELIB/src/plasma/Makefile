@@ -8,7 +8,6 @@ PSRCS = flux_tube_solver.f90               \
         get_sza.f90                        \
         interpolate_flux_tube.f90          \
         io_plasma_bin.f90                  \
-        module_deplete_flux_tube.f90       \
         module_find_neighbor_grid_R.f90    \
         module_find_neighbor_grid_th.f90   \
         module_heating_rate.f90            \
@@ -19,9 +18,5 @@ PSRCS = flux_tube_solver.f90               \
         module_stepback_mag_th.f90         \
         module_sub_plasma.f90              \
         read_vexb.f90
-
-ifeq ($(PARALLELISM),parallel)
-  PSRCS += calcPoleVal.f90
-endif
 
 include $(TOP)/Makefile.common

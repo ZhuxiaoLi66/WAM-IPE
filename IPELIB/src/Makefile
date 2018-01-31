@@ -33,10 +33,7 @@ TARGETS = clean                   \
           generic_pgi_serial      \
           generic_gnu_serial      \
           generic_intel_serial    \
-          pleiades_intel_parallel \
-          cheyenne_intel_parallel \
-          cheyenne_intel_serial
-
+          pleiades_intel_parallel
 
 # Dynamic / Conditional variables
 
@@ -151,14 +148,14 @@ endif
 ifeq ($(MACHINE),theia)
   GPTL_USE_GPTL = no
 ifndef MAKEJOBS
-  MAKEJOBS      = 24
+  MAKEJOBS      = 1
 endif 
   ifeq ($(COMPILER),intel)
     MODCMD    = $(shell ./modcmd theia intel)
     FCP       = mpiifort
     FCS       = ifort
     CC        = icc
-    OPT_FLAGS = -O3  -fpp
+    OPT_FLAGS = -O3  -fpp -fp-model strict
     SMS       = /scratch3/NCEPDEV/swpc/noscrub/sms/SMSr825-intel_14.0.2-mpi_5.1.2.150
     ifeq ($(DEBUG),yes)
       DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0 -fpp
@@ -215,44 +212,6 @@ ifeq ($(MACHINE),pleiades)
   OPT_FLAGS = -O3 -fp-model precise -fpp -xCORE-AVX2
   SMS = /nobackupp8/akubaryk/save/sms/SMSr825-intel
 endif
-
-# cheyenne stanza
-
-ifeq ($(MACHINE),cheyenne)
-  GPTL_USE_GPTL = no
-ifndef MAKEJOBS
-  MAKEJOBS      = 1
-endif 
-  ifeq ($(COMPILER),intel)
-    MODCMD    = $(shell ./modcmd cheyenne intel)
-    FCP       = mpif90
-    FCS       = ifort
-    CC        = icc
-    OPT_FLAGS = -O3  -fpp -march=corei7 -axAVX 
-    SMS       = /scratch3/NCEPDEV/swpc/noscrub/sms/SMSr825-intel_14.0.2-mpi_5.1.2.150
-    ifeq ($(DEBUG),yes)
-      DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0 -fpp
-      OPT_FLAGS = -g -O0 -traceback -check all -debug all -fpp
-    endif
-    ifeq ($(PARALLELISM),parallel)
-      ifeq ($(GPTL_USE_GPTL),yes)
-        GPTL_INCFLAGS = -I/contrib/gptl/gptl-v5.4.4_impi_noomp/include
-        GPTL_LDFLAGS  = -L/contrib/gptl/gptl-v5.4.4_impi_noomp/lib -lgptl
-      endif
-      OPT_FLAGS+=-DHAVE_MPI
-    endif
-    ifeq ($(PARALLELISM),serial)
-      ifeq ($(GPTL_USE_GPTL),yes)
-       $(error GPTL support currently unavailable on theia serial intel)
-#        GPTL_INCFLAGS = -I/contrib/gptl/gptl-v5.4.4_impi_noomp/include
-#        GPTL_LDFLAGS  = -L/contrib/gptl/gptl-v5.4.4_impi_noomp/lib -lgptl
-      endif
-    endif
-  endif
-endif
-
-
-
 
 # These statements are machine/compiler independent
 ifeq ($(TESTING),yes)
@@ -363,15 +322,6 @@ ifeq ($(TESTING),yes)
 	make --directory=integration_testing/ -f cmdi.mak clean
 endif
 	$(MAKE) ipe MACHINE=pleiades COMPILER=intel PARALLELISM=parallel
-
-###cheyenne
-cheyenne_intel_parallel:
-	$(MAKE) ipe MACHINE=cheyenne COMPILER=intel PARALLELISM=parallel
-
-cheyenne_intel_serial:
-	$(MAKE) ipe MACHINE=cheyenne COMPILER=intel PARALLELISM=serial
-###
-
 
 ipe:
 	$(if $(filter 0,$(MAKELEVEL)),$(call USAGE))

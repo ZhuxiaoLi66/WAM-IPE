@@ -34,7 +34,7 @@ INTEGER(KIND=int_prec) :: NMP !# of points along all the flux tubes in one longi
 INTEGER(KIND=int_prec) :: NLP !# of flux tubes in longitude the entire grid
 
 INTEGER(KIND=int_prec) :: NPTS2D
-!INTEGER(KIND=int_prec), PARAMETER :: NPTS2D=31287 !sw_grid=0
+!sw_grid=0:NPTS2D=44438; 1:44514; 2:31287
 !INTEGER(KIND=int_prec), PARAMETER :: NMP_all =80
 !INTEGER(KIND=int_prec), PARAMETER :: NMP0  =1       !mp lower bound 4 allocating array
 !INTEGER(KIND=int_prec), PARAMETER :: NMP1  =NMP_all !mp upper bound

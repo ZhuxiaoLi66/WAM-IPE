@@ -22,7 +22,7 @@
 !c idea
 !      subroutine idea_geteb(im,ix,dayno,utsec,f107,kp,maglat,maglon,
 !     &essa,ee1,ee2)
-      USE efield_ipe
+      USE efield
 !c     use date_def
 !c     use physcons, pi => con_pi
       IMPLICIT NONE

@@ -1,5 +1,4 @@
-MODULE module_init_plasma_grid
-IMPLICIT NONE
+      MODULE module_init_plasma_grid
 
       CONTAINS
 !---------------------------
@@ -7,25 +6,26 @@ IMPLICIT NONE
 SUBROUTINE init_plasma_grid ( )
 USE module_read_plasma_grid_global,only: read_plasma_grid_global
 USE module_precision
-USE module_IPE_dimension      ,ONLY: NMP,NLP,ISTOT
-USE module_physical_constants ,ONLY: earth_radius, pi, G0,zero
-USE module_input_parameters   ,ONLY: sw_debug,sw_grid,parallelBuild,mpHaloSize,nprocs,mype
-USE module_FIELD_LINE_GRID_MKS,ONLY: Pvalue,JMIN_IN,JMAX_IS, r_meter2D      &
-&, plasma_grid_GL,plasma_grid_3d,apexD,apexE,Be3,plasma_grid_Z,ISL,IBM,IGR  &
-& ,IQ,IGCOLAT,IGLON,east,north,up,mlon_rad,dlonm90km,apexDscalar,l_mag
-!sms$insert USE module_prepPoleVal,ONLY: prepPoleVal
+USE module_IPE_dimension,ONLY: NMP,NLP,ISTOT
+USE module_physical_constants,ONLY: earth_radius, pi, G0,zero
+USE module_input_parameters,ONLY: sw_debug,sw_grid,parallelBuild
+USE module_FIELD_LINE_GRID_MKS,ONLY: Pvalue &
+&, JMIN_IN,JMAX_IS, r_meter2D, plasma_grid_GL,plasma_grid_3d,apexD,apexE,Be3,plasma_grid_Z &
+&, ISL,IBM,IGR,IQ,IGCOLAT,IGLON,east,north,up,mlon_rad,dlonm90km &
+&, apexDscalar,l_mag
 !USE module_cal_apex_param,ONLY:cal_apex_param
+IMPLICIT NONE
 
 INTEGER (KIND=int_prec)           :: i,mp,lp,in,is
 REAL    (KIND=real_prec)          :: sinI
 INTEGER (KIND=int_prec),parameter :: sw_sinI=0  !0:flip; 1:APEX
 INTEGER (KIND=int_prec)           :: midpoint
 !local
-      REAL    (KIND=real_prec)              :: ufac
-      REAL    (KIND=real_prec),DIMENSION(3) :: bhat !eq(3.14)
-      REAL    (KIND=real_prec),DIMENSION(3) :: a,b,c      
+      REAL (KIND=real_prec) :: ufac
+      REAL (KIND=real_prec),DIMENSION(3) :: bhat !eq(3.14)
+      REAL (KIND=real_prec),DIMENSION(3)  :: a,b,c      
 !dbg20130814
-      INTEGER (KIND=int_prec)               :: ii
+      INTEGER (KIND=int_prec)           :: ii
 
 
 
@@ -38,12 +38,6 @@ print *,"Z_meter calculation completed"
 Pvalue = zero
 do lp=1,NLP
   IN = JMIN_IN(lp)
-
-!nm20180112: double check IN,IS
-!SMS$IGNORE begin         
-  print*,'mype=',mype,' lp=',lp,' JMIN_IN=',JMIN_IN(lp),' JMAX_IS=',JMAX_IS(lp)
-!SMS$IGNORE end
-
   CALL Get_Pvalue_Dipole ( r_meter2D(IN,lp), plasma_grid_GL(IN,lp), Pvalue(lp) )
 enddo
 
@@ -105,7 +99,7 @@ IF ( sw_grid==0 ) THEN  !APEX
 
                if ( i==midpoint ) then
                   ii = i-1  !assign the northward neighboring value
-                  if ( sw_debug ) print *,'apexD is corrected!',i,lp,mp
+                  print *,'apexD is corrected!',i,lp,mp
                else
                   print *,'sub-init_plasma_grid: STOP! INVALID apexD!',i,lp,mp,apexD(i,lp,mp,:,1),apexD(i,lp,mp,:,2)
                   STOP 
@@ -232,17 +226,10 @@ endif !(mp==1) then
 
 !SMS$PARALLEL END
 
-!sms$insert call prepPoleVal
-
-
      mlon_rad(:) = zero
-!nm20160419
-!     DO mp = 1,NMP+1
-     DO mp = 1-mpHaloSize,NMP+mpHaloSize
+     DO mp = 1,NMP+1
        mlon_rad(mp) = REAL( (mp-1),real_prec ) * dlonm90km *pi/180.00
-print*,'mp=',mp,'mlon=',mlon_rad(mp)
      END DO
 
-END SUBROUTINE init_plasma_grid
-
-END MODULE module_init_plasma_grid
+        END SUBROUTINE init_plasma_grid
+      END MODULE module_init_plasma_grid

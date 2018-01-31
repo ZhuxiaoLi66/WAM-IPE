@@ -657,8 +657,8 @@ if [ $gfsio_in = .true. ] ; then export GB=1 ; fi
 export IDEA=${IDEA:-.false.}
 export WAM_IPE_COUPLING=${WAM_IPE_COUPLING:-.false.}
 export HEIGHT_DEPENDENT_G=${HEIGHT_DEPENDENT_G:-.false.}
-export F107_KP_SIZE=${F107_KP_SIZE:-$((60*37+1))}
-export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-$((60*37+1))}
+export F107_KP_SIZE=${F107_KP_SIZE:-56}
+export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-56}
 export F107_KP_SKIP_SIZE=${F107_KP_SKIP_SIZE:-0}
 export F107_KP_INTERVAL=${F107_KP_INTERVAL:-10800}
 
@@ -803,11 +803,7 @@ $LOGSCRIPT
 ${NCP:-cp} $FCSTEXEC $DATA
 
 #------------------------------------------------------------
-if [ $FHROT -gt 0 ] ; then
-  export RESTART=.true.
-  export NEMSIO_IN=.true.
-  export SIGIO_IN=.false.
-fi
+if [ $FHROT -gt 0 ] ; then export RESTART=.true. ; fi
 export RESTART=${RESTART:-.false.}
 if [ $RESTART = .false. ] ; then # when restarting should not remove - Weiyu
   rm -f NULL
@@ -1152,46 +1148,73 @@ done
 
 export wgrib=${wgrib:-$NWPROD/util/exec/wgrib}
 
-if [[ $ENS_NUM -le 1 ]] ; then
-  if [ $NEMSIO_IN = .true. ]; then
-    if [ $ioform_sig = 'grib' ] ; then # unsupported
+if [ $FHINI -eq 0 ]; then
+  if [[ $ENS_NUM -le 1 ]] ; then
+    if [ $NEMSIO_IN = .true. ]; then
+     if [ $ioform_sig = 'grib' ] ; then
       export CDATE_NEMS=$($wgrib -4yr $GRDI | grep -i hgt |awk -F: '{print $3}' |awk -F= '{print $2}')
-    else
-      idate=` $NEMSIOGET $GRDI idate  | tr -s ' ' | cut -d' ' -f 3-7`
-      iyear=` echo $idate | cut -d' ' -f 1`
-      imonth=`printf "%02d" $(echo $idate | cut -d' ' -f 2)`
-      iday=`  printf "%02d" $(echo $idate | cut -d' ' -f 3)`
-      ihour=` printf "%02d" $(echo $idate | cut -d' ' -f 4)`
-      export CDATE=${iyear}${imonth}${iday}${ihour}
-      nfhour=`$NEMSIOGET $GRDI nfhour | tr -s ' ' | cut -d' ' -f 3`
-      export FDATE=`$NDATE $nfhour $CDATE`
-    fi
-  else
-    export CDATE=`$SIGHDR $SIGI idate`
-    export FDATE=`$NDATE \`$SIGHDR $SIGI fhour | cut -d'.' -f 1\` $CDATE`
-  fi
-else # also unsupported
-  MN=c00
-  if [ $NEMSIO_IN = .true. ]; then
-    if [ $ioform_sig = 'grib' ] ; then
-      export CDATE_NEMS=$($wgrib -4yr ${GRDI}${MN} | grep -i hgt |awk -F: '{print $3}' |awk -F= '{print $2}')
-    else
+     else
       export CDATE_NEMS=$($NEMSIOGET $GRDI idate |grep -i "idate" |awk -F= '{print $2}')
+     fi
+    else
+      export CDATE_SIG=$(echo idate|$SIGHDR ${SIGI})
     fi
   else
-    export CDATE_SIG=$(echo idate|$SIGHDR ${SIGI}i${MN})
+    MN=c00
+    if [ $NEMSIO_IN = .true. ]; then
+     if [ $ioform_sig = 'grib' ] ; then
+      export CDATE_NEMS=$($wgrib -4yr ${GRDI}${MN} | grep -i hgt |awk -F: '{print $3}' |awk -F= '{print $2}')
+     else
+      export CDATE_NEMS=$($NEMSIOGET $GRDI idate |grep -i "idate" |awk -F= '{print $2}')
+     fi
+    else
+      export CDATE_SIG=$(echo idate|$SIGHDR ${SIGI}i${MN})
+    fi
+  fi
+else
+  if [[ $ENS_NUM -le 1 ]] ; then
+    if [ $NEMSIO_IN = .true. ]; then
+     if [ $ioform_sig = 'grib' ] ; then
+      export CDATE_NEMS=$($wgrib -4yr $GRDI | grep -i hgt |awk -F: '{print $3}' |awk -F= '{print $2}')
+     else
+      export CDATE_NEMS=$($NEMSIOGET $GRDI idate | grep -i "idate" |awk -F= '{print $2}')
+     fi
+    else
+      export CDATE_SIG=$(echo idate|$SIGHDR ${SIGI})
+    fi
+  else
+    MN=c00
+    if [ $NEMSIO_IN = .true. ]; then
+     if [ $ioform_sig = 'grib' ] ; then
+      export CDATE_NEMS=$($wgrib -4yr ${GRDI}${MN} | grep -i hgt |awk -F: '{print $3}' |awk -F= '{print $2}')
+     else
+      export CDATE_NEMS=$($NEMSIOGET ${GRDI}${MN} idate | grep -i "idate" |awk -F= '{print $2}')
+     fi
+    else
+      export CDATE_SIG=$(echo idate|$SIGHDR ${SIGI}${MN})
+    fi
   fi
 fi
 
-INI_YEAR=$(echo $FDATE  | cut -c1-4)
-INI_MONTH=$(echo $FDATE | cut -c5-6)
-INI_DAY=$(echo $FDATE   | cut -c7-8)
-INI_HOUR=$(echo $FDATE  | cut -c9-10)
-
-C_YEAR=$(echo $CDATE    | cut -c1-4)
-C_MONTH=$(echo $CDATE   | cut -c5-6)
-C_DAY=$(echo $CDATE     | cut -c7-8)
-C_HOUR=$(echo $CDATE    | cut -c9-10)
+if [ $NEMSIO_IN = .true.  ]; then
+    INI_YEAR=$(echo $CDATE_NEMS | awk -F" " '{print $1}')
+    echo "cdate=$CDATE_NEMS, ini_year=${INI_YEAR}"
+    INI_MONTH=$(echo $CDATE_NEMS | awk -F" " '{print $2}')
+    INI_DAY=$(echo $CDATE_NEMS | awk -F" " '{print $3}')
+    INI_HOUR=$(echo $CDATE_NEMS | awk -F" " '{print $4}')
+    yyyy=$INI_YEAR
+    mm=$INI_MONTH; if [ $mm -lt 10 ]; then mm=0$mm ; fi
+    dd=$INI_DAY; if [ $dd -lt 10 ]; then dd=0$dd ; fi
+    hh=`expr $INI_HOUR + 0 `; if [ $hh -lt 10 ]; then hh=0$hh ; fi
+    export CDATE=${yyyy}${mm}${dd}${hh}
+else
+    INI_YEAR=$(echo $CDATE_SIG | cut -c1-4)
+    echo "cdate=$CDATE_SIG, ini_year=${INI_YEAR}"
+    INI_MONTH=$(echo $CDATE_SIG | cut -c5-6)
+    INI_DAY=$(echo $CDATE_SIG | cut -c7-8)
+    INI_HOUR=$(echo $CDATE_SIG | cut -c9-10)
+    export CDATE=$CDATE_SIG
+fi
 
 ## copy configure files needed for NEMS GFS
 ${NCP} ${MAPL:-$PARM_NGAC/MAPL.rc}                    MAPL.rc
@@ -1228,38 +1251,40 @@ fi
 # Add time dependent variables F10.7 and kp into the WAM model.
 #--------------------------------------------------------------
 if [ $IDEA = .true. ]; then
-  START_UT_SEC=$((10#$INI_HOUR*3600))
+  mod6=$((6-10#$INI_HOUR%6))
+  mod3=$((3-10#$INI_HOUR%6))
+  CDATE6=`$NDATE $mod6 $CDATE`
 
-  if [ ${REALTIME:-NO} = YES ] ; then
-    # copy in xml kp/f107
-    if [ -e $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${INI_HOUR}15.xml ] ; then
-      ${NCP} $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${INI_HOUR}15.xml ./wam_input2.xsd
-      # convert to ascii
-      $BASE_NEMS/../scripts/parse_f107_xml/parse.py
-      # now f107
-      ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
-    else
-      if [ -e $COMOUT/wam_input_f107_kp.txt ] ; then
-        ${NCP} $COMOUT/wam_input_f107_kp.txt ${DATA}
-      else
-        echo "failed, no f107 file" ; exit 1
-      fi
-    fi
-  else
-    # work from the database
-    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((36+ 10#$FHMAX)) -s `$NDATE -36 $CDATE` -p $PARAMETER_PATH
-    if [ ! -e wam_input_f107_kp.txt ] ; then
-       echo "failed, no f107 file" ; exit 1
-    else
-       LEN_F107=`wc -l wam_input_f107_kp.txt | cut -d' ' -f 1`
-       export F107_KP_SIZE=$((LEN_F107-5))
-       export F107_KP_SKIP_SIZE=$((36*60))
-       export F107_KP_INTERVAL=60
-    fi
-  fi
+  INI_YEAR6=$(echo $CDATE6 | cut -c1-4)
+  INI_MONTH6=$(echo $CDATE6 | cut -c5-6)
+  INI_DAY6=$(echo $CDATE6 | cut -c7-8)
+  INI_HOUR6=$(echo $CDATE6 | cut -c9-10)
+
+  CDATE3=`$NDATE $mod3 $CDATE`
+  INI_YEAR3=$(echo $CDATE3 | cut -c1-4)
+  INI_MONTH3=$(echo $CDATE3 | cut -c5-6)
+  INI_DAY3=$(echo $CDATE3 | cut -c7-8)
+  INI_HOUR3=$(echo $CDATE3 | cut -c9-10)
+
+  START_UT_SEC=$((10#$INI_HOUR*3600))
 
   # global_idea fix files
   ${NLN} $FIX_IDEA/global_idea* .
+
+  # copy in xml kp/f107
+  if [ -e $WAMINDIR/wam_input-${INI_YEAR6}${INI_MONTH6}${INI_DAY6}T${INI_HOUR6}15.xml ] ; then
+    ${NCP} $WAMINDIR/wam_input-${INI_YEAR6}${INI_MONTH6}${INI_DAY6}T${INI_HOUR6}15.xml ./wam_input2.xsd
+    # convert to ascii
+    $BASE_NEMS/../scripts/parse_f107_xml/parse.py
+    # now f107
+    ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
+  else
+    if [ -e $COMOUT/wam_input_f107_kp.txt ] ; then
+      ${NCP} $COMOUT/wam_input_f107_kp.txt ${DATA}
+    else
+      echo "failed, no f107 file" ; exit 1
+    fi
+  fi
 
   # RT_WAM
   ${NLN} $RT_WAM/* $DATA
@@ -1320,35 +1345,13 @@ cat > SMSnamelist <<EOF
   compare_var_on=f
   exact_parallel_sum=f
   load_balance_method=2,1
-  load_balance_on=t,f
-  load_balance_size=58,0
+  load_balance_on=f,f
+  load_balance_size=40,0
   process_layout=${IPEDECOMPARR[0]},${IPEDECOMPARR[1]}
   set_process_layout=t
 /
 EOF
-cat > load_balance_groups1 <<EOF
-           1           2           3           4           5           6
-           7           8           9          10          11          12
-          13          14          15          16          17          19
-          21          23          25          27          29          31
-          33          35          37          39          41          43
-          45          48          51          54          57          60
-          63          66          69          73          77          81
-          85          89          92          95          98         101
-         104         107         110         113         116         119
-         123         131         144         170
-EOF
-cat > GPTLnamelist << EOF
-&gptlnl
- print_method = 'full_tree' ! print full call tree
- utr          = 'nanotime'  ! fastest available underlying timer (Intel processors only)
-! eventlist   = 'PAPI_FP_OPS','GPTL_CI' ! PAPI-based counters (only if PAPI is available)
-/
-EOF
-# raw_high_lat specific files
-cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/tiros_spectra_ipe .
-cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/ionprof_ipe .
-#
+
 cat  > IPE.inp <<EOF
 &ipedims
   nlp=170
@@ -1377,50 +1380,47 @@ cat  > IPE.inp <<EOF
   sw_neutral_heating_flip=0
   sw_ohpls=1
   sw_optw_flip=t
-  sw_pe2s=1
   sw_tei=1
   sw_wind_flip=1
   zlbdy_flip=120.00
   zlbnp_inp=115.00
 /
 &nmipe
-  internalTimeLoopMax=18
-  ip_freq_eldyn=60
-  ip_freq_msis=180
-  ip_freq_plasma=10
-  ip_freq_output=900
-  ip_freq_paraTrans=60
-  nday=76
+  f107av=${F107AVG}
+  f107d=${F107DAY}
+  internalTimeLoopMax=1
+  ip_freq_eldyn=$DELTIM
+  ip_freq_msis=$DELTIM
+  ip_freq_plasma=$DELTIM
+  ip_freq_output=$IPEFREQ
+  dumpFrequency=3600
+  nday=$DOY
   nyear=2000
-  start_time=0
-  time_step=10
+  start_time=${START_UT_SEC}
+  time_step=$DELTIM
 /
 &nmmsis
-  ap(1)=4.
-  ap(2)=4.
-  ap(3)=4.
-  ap(4)=4.
-  ap(5)=4.
-  ap(6)=4.
-  ap(7)=4.
-  f107_kp_size=$F107_KP_SIZE,
-  f107_kp_interval=$F107_KP_INTERVAL,
-  f107_kp_skip_size=$F107_KP_SKIP_SIZE
-  f107_kp_data_size=$F107_KP_DATA_SIZE
+  ap(1)=${AP3HR}
+  ap(2)=${AP3HR}
+  ap(3)=${AP3HR}
+  ap(4)=${AP3HR}
+  ap(5)=${AP3HR}
+  ap(6)=${AP3HR}
+  ap(7)=${AP3HR}
+  kp_eld=${KP3HR}
 /
 &nmswitch
   duration=$(((10#$FHMAX-10#$FHINI)*3600))
   fac_bm=1.00
   iout(1)=1
   iout(2)=60
-  lpFort167=11
-  lpmax_perp_trans=74
-  lpmin_perp_trans=1
-  mpFort167=1
+  lpFort167=57
+  lpmax_perp_trans=151
+  lpmin_perp_trans=15
+  mpFort167=71
   mpstop=80
+  peFort167=56
   record_number_plasma_start=0
-  sw_aurora=1
-  sw_ctip_input=t
   sw_dbg_perp_trans=f
   sw_debug=f
   sw_debug_mpi=f
@@ -1437,19 +1437,17 @@ cat  > IPE.inp <<EOF
   swNeuPar(5)=t
   swNeuPar(6)=t
   swNeuPar(7)=t
-  swEsmfTime=f
+  swEsmfTime=t
   sw_output_fort167=f
   sw_output_wind=t
   sw_output_plasma_grid=f
   sw_use_wam_fields_for_restart=t
   sw_para_transport=1
   sw_pcp=0
-  sw_perp_transport=2
-  sw_record_number=1
-  sw_th_or_r=0
+  sw_perp_transport=1
+  sw_record_number=2
+  sw_th_or_r=1
   ut_start_perp_trans=${START_UT_SEC}
-  utime0LPI=${START_UT_SEC}
-  barriersOn=f
 /
 &ipecap
   mesh_height_min = 0.
@@ -1619,10 +1617,10 @@ RUN_CONTINUE:            .false.
 dt_int:                  $DELTIM
 dt_num:                  0
 dt_den:                  1
-start_year:              $C_YEAR
-start_month:             $C_MONTH
-start_day:               $C_DAY
-start_hour:              $C_HOUR
+start_year:              $INI_YEAR
+start_month:             $INI_MONTH
+start_day:               $INI_DAY
+start_hour:              $INI_HOUR
 start_minute:            0
 start_second:            0
 nhours_fcst:             $FHMAX
@@ -1909,7 +1907,6 @@ cat  > atm_namelist <<EOF
   f107_kp_size=$F107_KP_SIZE,
   f107_kp_interval=$F107_KP_INTERVAL,
   f107_kp_skip_size=$F107_KP_SKIP_SIZE,
-  f107_kp_data_size=$F107_KP_DATA_SIZE,
   ngptc=$NGPTC, hybrid=$HYBRID, tfiltc=$TFILTC,
   gen_coord_hybrid=$GEN_COORD_HYBRID,
   thermodyn_id=$THERMODYN_ID, sfcpress_id=$SFCPRESS_ID,

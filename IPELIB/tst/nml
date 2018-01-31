@@ -5,7 +5,5 @@ d=$(dirname     $p)
 b=$(basename    $p)
 
 NMLJAR=$d/nml.jar
-maxmem="1100M"
-echo "nml: MAX memory=" $maxmem
-java -Xms50M -Xmx$maxmem -jar $NMLJAR "$@"
-#java -Xms50M -Xmx50M -jar $NMLJAR "$@"
+
+java -Xms50M -Xmx50M -jar $NMLJAR "$@"

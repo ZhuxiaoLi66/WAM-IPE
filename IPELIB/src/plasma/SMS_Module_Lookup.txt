@@ -1,5 +1,4 @@
 efield ../eldyn/efield.f
-ipe_f107_kp_mod ../main/ipe_f107_kp_mod.f90
 module_close_files ../main/module_close_files.f90
 module_decomp ../main/module_decomp_sms.f.tmp
 module_ELDYN ../eldyn/module_eldyn.f
@@ -29,6 +28,3 @@ module_sub_PLASMA ../plasma/module_sub_plasma.f90
 module_sub_plasma ./module_sub_plasma_sms.f.tmp
 module_sunloc ../eldyn/module_sunloc.f
 module_unit_conversion ../main/module_unit_conversion.f90
-module_deplete_flux_tube ./module_deplete_flux_tube_sms.f.tmp
-module_calcpoleval ./calcPoleVal_sms.f.tmp
-module_preppoleval ../main/prepPoleVal_sms.f.tmp

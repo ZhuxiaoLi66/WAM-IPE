@@ -29,10 +29,10 @@ PROGRAM  test_plasma
  USE module_close_files
  USE module_IPE_dimension
 !SMS$IGNORE BEGIN
-!#ifdef TESTING
-! USE module_MDI
+#ifdef TESTING
+ USE module_MDI
  USE module_eldyn
-!#endif
+#endif
 !SMS$IGNORE END
    IMPLICIT NONE
    INCLUDE "gptl.inc"
@@ -47,9 +47,9 @@ PROGRAM  test_plasma
 
 
 !SMS$IGNORE BEGIN
-!#ifdef TESTING
-!     CALL mdi % Build( )
-!#endif
+#ifdef TESTING
+     CALL mdi % Build( )
+#endif
 !SMS$IGNORE END
      CALL gptlprocess_namelist ('GPTLnamelist', 77, ret) 
      ret = gptlinitialize ()
@@ -95,6 +95,10 @@ PROGRAM  test_plasma
        PRINT *,'after CALL io_plasma_bin finished! READ: start_time=', start_time,stop_time
      END IF
 
+    ! Write the initial conditions to file
+    WRITE( iterChar, '(I8.8)' )start_time
+    CALL io_plasma_bin ( 1, start_time, 'iter_'//iterChar )
+
 
 ! initialization of electrodynamic module:
 ! read in E-field
@@ -111,134 +115,130 @@ PROGRAM  test_plasma
 
      iterate = 0
 
-!dbg20170916
-print*,'driver:start_time=',start_time, stop_time, time_step
      DO utime_driver = start_time, stop_time, time_step
        iterate = iterate + 1
 
-       PRINT*,'driver:utime_driver=',utime_driver
+       PRINT*,'utime_driver=',utime_driver
 
 !sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-5")
 
 
 !SMS$IGNORE BEGIN
-!#ifdef TESTING
+#ifdef TESTING
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "eldyn", &
-!                          "ed1_90 before eldyn", &
-!                          0, &
-!                          SIZE(ed1_90), &
-!                          PACK(ed1_90,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "eldyn", &
+                          "ed1_90 before eldyn", &
+                          0, &
+                          SIZE(ed1_90), &
+                          PACK(ed1_90,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "eldyn", &
-!                          "ed2_90 before eldyn", &
-!                          0, &
-!                          SIZE(ed2_90), &
-!                          PACK(ed2_90,.TRUE.) )   
-!
-!#endif
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "eldyn", &
+                          "ed2_90 before eldyn", &
+                          0, &
+                          SIZE(ed2_90), &
+                          PACK(ed2_90,.TRUE.) )   
+
+#endif
 !SMS$IGNORE END
        ret = gptlstart ('eldyn')
-       IF ( sw_perp_transport>=1.AND. MOD( (utime_driver-start_time),ip_freq_eldyn)==0 ) THEN
-!dbg20170916
-print*,'driver:before eldyn, utime_driver',utime_driver
+       IF ( sw_perp_transport>=1 ) THEN
          CALL eldyn ( utime_driver )
        ENDIF
        ret = gptlstop  ('eldyn')
 
 !SMS$IGNORE BEGIN
-!#ifdef TESTING
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "eldyn", &
-!                          "ed1_90 after eldyn", &
-!                          0, &
-!                          SIZE(ed1_90), &
-!                          PACK(ed1_90,.TRUE.) )   
-!
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "eldyn", &
-!                          "ed2_90 after eldyn", &
-!                          0, &
-!                          SIZE(ed2_90), &
-!                          PACK(ed2_90,.TRUE.) )   
-!#endif
+#ifdef TESTING
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "eldyn", &
+                          "ed1_90 after eldyn", &
+                          0, &
+                          SIZE(ed1_90), &
+                          PACK(ed1_90,.TRUE.) )   
+
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "eldyn", &
+                          "ed2_90 after eldyn", &
+                          0, &
+                          SIZE(ed2_90), &
+                          PACK(ed2_90,.TRUE.) )   
+#endif
 !SMS$IGNORE end
 
 !sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-6")
 
 !SMS$IGNORE BEGIN
-!#ifdef TESTING
-!        
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "ON_m3 before neutral", &
-!                          0, &
-!                          SIZE(ON_m3), &
-!                          PACK(ON_m3,.TRUE.) )   
+#ifdef TESTING
+        
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "ON_m3 before neutral", &
+                          0, &
+                          SIZE(ON_m3), &
+                          PACK(ON_m3,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "HN_m3 before neutral", &
-!                          0, &
-!                          SIZE(HN_m3), &
-!                          PACK(HN_m3,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "HN_m3 before neutral", &
+                          0, &
+                          SIZE(HN_m3), &
+                          PACK(HN_m3,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "N2N_m3 before neutral", &
-!                          0, &
-!                          SIZE(N2N_m3), &
-!                          PACK(N2N_m3,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "N2N_m3 before neutral", &
+                          0, &
+                          SIZE(N2N_m3), &
+                          PACK(N2N_m3,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "O2N_m3 before neutral", &
-!                          0, &
-!                          SIZE(O2N_m3), &
-!                          PACK(O2N_m3,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "O2N_m3 before neutral", &
+                          0, &
+                          SIZE(O2N_m3), &
+                          PACK(O2N_m3,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "N4S_m3 before neutral", &
-!                          0, &
-!                          SIZE(N4S_m3), &
-!                          PACK(N4S_m3,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "N4S_m3 before neutral", &
+                          0, &
+                          SIZE(N4S_m3), &
+                          PACK(N4S_m3,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "TN_k before neutral", &
-!                          0, &
-!                          SIZE(TN_k), &
-!                          PACK(TN_k,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "TN_k before neutral", &
+                          0, &
+                          SIZE(TN_k), &
+                          PACK(TN_k,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "TINF_k before neutral", &
-!                          0, &
-!                          SIZE(TINF_k), &
-!                          PACK(TINF_k,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "TINF_k before neutral", &
+                          0, &
+                          SIZE(TINF_k), &
+                          PACK(TINF_k,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "Un_ms1 before neutral", &
-!                          0, &
-!                          SIZE(Un_ms1), &
-!                          PACK(Un_ms1,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "Un_ms1 before neutral", &
+                          0, &
+                          SIZE(Un_ms1), &
+                          PACK(Un_ms1,.TRUE.) )   
 
-!#endif
+#endif
 !SMS$IGNORE END
         ! update neutral 3D structure: 
         ! use MSIS/HWM to get the values in the flux tube grid
        IF ( MOD( (utime_driver-start_time),ip_freq_msis)==0 ) THEN 
 
 !SMS$IGNORE BEGIN
-!#ifdef DEBUG
+#ifdef DEBUG
          PRINT *,'CALL MSIS',utime_driver,start_time, &
                   ip_freq_msis,(utime_driver-start_time), &
                   MOD( (utime_driver-start_time),ip_freq_msis)
-!#endif
+#endif
 !SMS$IGNORE END
          ret = gptlstart ('neutral')
          CALL neutral ( utime_driver )
@@ -249,76 +249,76 @@ print*,'driver:before eldyn, utime_driver',utime_driver
 !sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-7")
 
 !SMS$IGNORE BEGIN
-!#ifdef TESTING
+#ifdef TESTING
         
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "ON_m3 after neutral", &
-!                          0, &
-!                          SIZE(ON_m3), &
-!                          PACK(ON_m3,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "ON_m3 after neutral", &
+                          0, &
+                          SIZE(ON_m3), &
+                          PACK(ON_m3,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "HN_m3 after neutral", &
-!                          0, &
-!                          SIZE(HN_m3), &
-!                          PACK(HN_m3,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "HN_m3 after neutral", &
+                          0, &
+                          SIZE(HN_m3), &
+                          PACK(HN_m3,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "N2N_m3 after neutral", &
-!                          0, &
-!                          SIZE(N2N_m3), &
-!                          PACK(N2N_m3,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "N2N_m3 after neutral", &
+                          0, &
+                          SIZE(N2N_m3), &
+                          PACK(N2N_m3,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "O2N_m3 after neutral", &
-!                          0, &
-!                          SIZE(O2N_m3), &
-!                          PACK(O2N_m3,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "O2N_m3 after neutral", &
+                          0, &
+                          SIZE(O2N_m3), &
+                          PACK(O2N_m3,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "N4S_m3 after neutral", &
-!                          0, &
-!                          SIZE(N4S_m3), &
-!                          PACK(N4S_m3,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "N4S_m3 after neutral", &
+                          0, &
+                          SIZE(N4S_m3), &
+                          PACK(N4S_m3,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "TN_k after neutral", &
-!                          0, &
-!                          SIZE(TN_k), &
-!                          PACK(TN_k,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "TN_k after neutral", &
+                          0, &
+                          SIZE(TN_k), &
+                          PACK(TN_k,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "TINF_k after neutral", &
-!                          0, &
-!                          SIZE(TINF_k), &
-!                          PACK(TINF_k,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "TINF_k after neutral", &
+                          0, &
+                          SIZE(TINF_k), &
+                          PACK(TINF_k,.TRUE.) )   
 
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "neutral", &
-!                          "Un_ms1 after neutral", &
-!                          0, &
-!                          SIZE(Un_ms1), &
-!                          PACK(Un_ms1,.TRUE.) )   
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "neutral", &
+                          "Un_ms1 after neutral", &
+                          0, &
+                          SIZE(Un_ms1), &
+                          PACK(Un_ms1,.TRUE.) )   
 
-!#endif
+#endif
 !SMS$IGNORE END
 
 !SMS$IGNORE BEGIN
-!#ifdef TESTING
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "plasma", &
-!                          "plasma_3d begin plasma", &
-!                          0, &
-!                          SIZE(plasma_3d), &
-!                          PACK(plasma_3d,.TRUE.) )   
-!#endif
+#ifdef TESTING
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "plasma", &
+                          "plasma_3d begin plasma", &
+                          0, &
+                          SIZE(plasma_3d), &
+                          PACK(plasma_3d,.TRUE.) )   
+#endif
 !SMS$IGNORE END
 
 ! update plasma
@@ -326,24 +326,24 @@ print*,'driver:before eldyn, utime_driver',utime_driver
 !ghgm - a dummy timestamp (13 characters) needs to be here
 ! because we use timestamps in the fully coupleid WAM-IPE
 ! Obviously needs a better solution.....
-        CALL plasma ( utime_driver  )
+        CALL plasma ( utime_driver, 'dummytimestam' )
         ret = gptlstop  ('plasma')
 
 !sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-8")
 
 !SMS$IGNORE BEGIN
-!#ifdef TESTING
-!       CALL mdi % Update( "driver_ipe.f90", &
-!                          "plasma", &
-!                          "plasma_3d end plasma", &
-!                          0, &
-!                          SIZE(plasma_3d), &
-!                          PACK(plasma_3d,.TRUE.) )   
-!#endif
+#ifdef TESTING
+       CALL mdi % Update( "driver_ipe.f90", &
+                          "plasma", &
+                          "plasma_3d end plasma", &
+                          0, &
+                          SIZE(plasma_3d), &
+                          PACK(plasma_3d,.TRUE.) )   
+#endif
 !SMS$IGNORE END
 
-       IF( MOD(utime_driver,ip_freq_output)==0)THEN
-          WRITE( iterChar, '(I8.8)' )utime_driver
+       IF( MOD(utime_driver-start_time+time_step,ip_freq_output)==0)THEN
+          WRITE( iterChar, '(I8.8)' )utime_driver+time_step
           CALL io_plasma_bin ( 1, utime_driver, 'iter_'//iterChar )
        ENDIF
        ret = gptlstart ('output')
@@ -353,10 +353,10 @@ print*,'driver:before eldyn, utime_driver',utime_driver
 !sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-9")
 
 !SMS$IGNORE BEGIN
-!#ifdef TESTING
-!       CALL mdi % Write_ModelDataInstances( "ipe" )
-!       CALL mdi % CalculateStorageCost(  )
-!#endif
+#ifdef TESTING
+       CALL mdi % Write_ModelDataInstances( "ipe" )
+       CALL mdi % CalculateStorageCost(  )
+#endif
 !SMS$IGNORE END
      END DO
 
@@ -375,9 +375,9 @@ print*,'driver:before eldyn, utime_driver',utime_driver
 
      ret = gptlstop  ('Total')
 !SMS$IGNORE BEGIN
-!#ifdef TESTING
-!     CALL mdi % Trash( )
-!#endif
+#ifdef TESTING
+     CALL mdi % Trash( )
+#endif
 !SMS$IGNORE END
      CALL stop
 

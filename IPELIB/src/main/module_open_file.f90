@@ -44,9 +44,11 @@
       INQUIRE ( UNIT=UNIT_dum, OPENED=flag ) 
       WRITE( UNIT=LUN_LOG, FMT=*) flag
       IF ( .NOT. flag ) THEN
+        print *, 'opening file : ',filename_dum
         WRITE( UNIT=LUN_LOG, FMT=*) 'opening file:',filename_dum
         OPEN(UNIT=UNIT_dum,FILE=TRIM(filename_dum),STATUS=STATUS_dum,FORM=FORM_dum,IOSTAT=istat)
         IF ( istat /= 0 ) THEN
+          print *,'ERROR OPENING FILE : ',filename_dum
           WRITE( UNIT=LUN_LOG, FMT=*)'ERROR OPENING FILE',filename_dum
           STOP
         END IF
