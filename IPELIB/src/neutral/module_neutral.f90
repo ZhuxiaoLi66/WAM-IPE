@@ -218,7 +218,7 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
 
                         dist = earth_radius/(earth_radius+plasma_grid_Z(ipts,lp))
                         dist1 = earth_radius/(earth_radius+plasma_grid_Z(ipts1,lp))
-
+                        
                         Hk_O  = GSCON * Tn_k(ipts ,lp,mp) / (massn_kg(1)*G0*dist*dist)
                         Hk1_O = GSCON * Tn_k(ipts1,lp,mp) / (massn_kg(1)*G0*dist1*dist1)
                         Hk_O2  = GSCON * Tn_k(ipts ,lp,mp) / (massn_kg(2)*G0*dist*dist)

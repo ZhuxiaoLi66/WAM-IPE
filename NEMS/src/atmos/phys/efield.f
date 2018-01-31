@@ -1,5 +1,5 @@
 
-      module efield
+      module efield_wam
 !--------------------------------------------------------------------- 
 ! description: calculates the electric potential for a given year,
 !      day of year,UT, F10.7, B_z(K_p)
@@ -1667,7 +1667,7 @@
 
       end subroutine DerivPotential
 
-      end module efield
+      end module efield_wam
 !      
 ! Purpose: 
 ! Subroutines to calculate the electric potentials from the Weimer '96 model of
@@ -1702,7 +1702,7 @@
 !-----------------------------------------------------------------------
 !
 !       use shr_kind_mod, only: r8 => shr_kind_r8
-        use efield, only: Coef =>Coef,ML=>ML,MM=>MM1
+        use efield_wam, only: Coef =>Coef,ML=>ML,MM=>MM1
         implicit none 
 !
 !-----------------------------Return Value------------------------------
@@ -1777,7 +1777,7 @@
 !     use units,         only : getunit, freeunit
 !     use abortutils,    only : endrun
 !     use cam_logfile,   only : iulog
-      use efield, only: ALAMN =>ALAMN,ALAMX=>ALAMX,ALAMR=>ALAMR,
+      use efield_wam, only: ALAMN =>ALAMN,ALAMX=>ALAMX,ALAMR=>ALAMR,
      &STPD=>STPD,STP2=>STP2,CSTP=>CSTP,SSTP=>SSTP,
      &Cn=>Cn,MaxL=>MaxL,MaxM=>MaxM,MaxN=>MaxN
       implicit none 
@@ -1981,7 +1981,7 @@ c1000 FORMAT(3I8)
 !-----------------------------------------------------------------------
 !
 !       use shr_kind_mod, only: r8 => shr_kind_r8
-      use efield, only: Cn=>Cn,MaxL=>MaxL,MaxM=>MaxM,MaxN=>MaxN
+      use efield_wam, only: Cn=>Cn,MaxL=>MaxL,MaxM=>MaxM,MaxN=>MaxN
      &,Coef=>coef,ML=>ML,MM=>MM1
         implicit none 
 !
@@ -2175,7 +2175,7 @@ c1000 FORMAT(3I8)
 !-----------------------------------------------------------------
 !
 !       use shr_kind_mod, only: r8 => shr_kind_r8
-        use efield, only:CX=>CX,ST=>ST,CT=>CT,AM=>AM
+        use efield_wam, only:CX=>CX,ST=>ST,CT=>CT,AM=>AM
      &,EPOCH=>EPOCH,TH0=>TH0,PH0=>PH0,DIPOLE=>DIPOLE
 
         implicit none 
@@ -2475,7 +2475,7 @@ c1000 FORMAT(3I8)
 !     use shr_kind_mod, only: r8 => shr_kind_r8
 !     use cam_logfile,  only : iulog
 !     use abortutils,   only : endrun
-      use efield, only:CX=>CX,ST=>ST,CT=>CT,AM=>AM
+      use efield_wam, only:CX=>CX,ST=>ST,CT=>CT,AM=>AM
 
       implicit none 
 !
@@ -2675,7 +2675,7 @@ c1000 FORMAT(3I8)
 !-----------------------------------------------------------------------
 !
 !       use shr_kind_mod, only: r8 => shr_kind_r8
-      use efield, only: CX=>CX,ST=>ST,CT=>CT,AM=>AM
+      use efield_wam, only: CX=>CX,ST=>ST,CT=>CT,AM=>AM
         implicit none 
 !
 !-----------------------------Return Value------------------------------
@@ -2720,7 +2720,7 @@ c1000 FORMAT(3I8)
 !-----------------------------------------------------------------------
 !
 !       use shr_kind_mod, only: r8 => shr_kind_r8
-      use efield, only:CX=>CX,ST=>ST,CT=>CT,AM=>AM
+      use efield_wam, only:CX=>CX,ST=>ST,CT=>CT,AM=>AM
         implicit none 
 !
 !-----------------------------Return Value------------------------------
@@ -2761,7 +2761,7 @@ c1000 FORMAT(3I8)
 !-----------------------------------------------------------------------
 !
 !       use shr_kind_mod, only: r8 => shr_kind_r8
-      use efield, only:CX=>CX,ST=>ST,CT=>CT,AM=>AM
+      use efield_wam, only:CX=>CX,ST=>ST,CT=>CT,AM=>AM
         implicit none 
 !
 !-------------------------------Commons---------------------------------
@@ -2805,7 +2805,7 @@ c1000 FORMAT(3I8)
 !-----------------------------------------------------------------------
 !
 !     use shr_kind_mod, only: r8 => shr_kind_r8
-      use efield, only: ALAMN =>ALAMN,ALAMX=>ALAMX,ALAMR=>ALAMR,
+      use efield_wam, only: ALAMN =>ALAMN,ALAMX=>ALAMX,ALAMR=>ALAMR,
      &STPD=>STPD,STP2=>STP2,CSTP=>CSTP,SSTP=>SSTP
       implicit none 
 !

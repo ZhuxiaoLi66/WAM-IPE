@@ -85,10 +85,6 @@ PROGRAM  test_plasma
        PRINT *,'after CALL io_plasma_bin finished! READ: start_time=', start_time,stop_time
      END IF
 
-    ! Write the initial conditions to file
-    WRITE( iterChar, '(I8.8)' )start_time
-    CALL io_plasma_bin ( 1, start_time, 'iter_'//iterChar )
-
 
 ! initialization of electrodynamic module:
 ! read in E-field
@@ -105,21 +101,28 @@ PROGRAM  test_plasma
 
      iterate = 0
 
+!dbg20170916
+print*,'driver:start_time=',start_time, stop_time, time_step
      DO utime_driver = start_time, stop_time, time_step
        iterate = iterate + 1
 
-       PRINT*,'utime_driver=',utime_driver
+       PRINT*,'driver:utime_driver=',utime_driver
 
 !sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-5")
 
+
        ret = gptlstart ('eldyn')
-       IF ( sw_perp_transport>=1 ) THEN
+       IF ( sw_perp_transport>=1.AND. MOD( (utime_driver-start_time),ip_freq_eldyn)==0 ) THEN
+!dbg20170916
+print*,'driver:before eldyn, utime_driver',utime_driver
          CALL eldyn ( utime_driver )
        ENDIF
        ret = gptlstop  ('eldyn')
 
 
+
 !sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-6")
+
 
         ! update neutral 3D structure: 
         ! use MSIS/HWM to get the values in the flux tube grid
@@ -134,19 +137,20 @@ PROGRAM  test_plasma
 !sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-7")
 
 
+
 ! update plasma
         ret = gptlstart ('plasma')
 !ghgm - a dummy timestamp (13 characters) needs to be here
 ! because we use timestamps in the fully coupleid WAM-IPE
 ! Obviously needs a better solution.....
-        CALL plasma ( utime_driver, 'dummytimestam' )
+        CALL plasma ( utime_driver  )
         ret = gptlstop  ('plasma')
 
 !sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-8")
 
 
-       IF( MOD(utime_driver-start_time+time_step,ip_freq_output)==0)THEN
-          WRITE( iterChar, '(I8.8)' )utime_driver+time_step
+       IF( MOD(utime_driver,ip_freq_output)==0)THEN
+          WRITE( iterChar, '(I8.8)' )utime_driver
           CALL io_plasma_bin ( 1, utime_driver, 'iter_'//iterChar )
        ENDIF
        ret = gptlstart ('output')
@@ -171,6 +175,7 @@ PROGRAM  test_plasma
 
 
      ret = gptlstop  ('Total')
+
      CALL stop
 
 

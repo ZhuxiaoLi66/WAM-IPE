@@ -16,15 +16,16 @@
 !     & h_r  = 130.0e3,    ! reference height [m] (same as for apex.F90)     
       SUBROUTINE GET_EFIELD90km ( utime )
       USE module_precision
-      USE efield,ONLY: nmlat,ylatm,dlonm,potent,ylonm,nmlon
+      USE efield_ipe,ONLY: nmlat,ylatm,dlonm,potent,ylonm,nmlon
       USE module_physical_constants,ONLY:pi,rtd,dtr,earth_radius,zero
       USE module_eldyn,ONLY:j0,j1,theta90_rad,ed1_90,ed2_90,coslam_m
       USE module_IPE_dimension,ONLY: NMP,NLP
       USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_GL,JMIN_IN,JMAX_IS &
-     &,mlon_rad,ht90,Be3,apexE,VEXBup,east,north,up, VEXBe,l_mag
+     &,mlon_rad,ht90,Be3,apexE,VEXBup,east,north,up, VEXBe,l_mag, VEXBth
       USE module_input_parameters,ONLY: sw_debug,NYEAR,NDAY,sw_exb_up    &
      &,sw_perp_transport,lpmin_perp_trans,lpmax_perp_trans,mype          &
-     &,lps
+     &,lps,start_time,ip_freq_output                                     &
+     &,sw_th_or_R
       USE module_magfield,ONLY:sunlons
       USE module_sunloc,ONLY:sunloc
       IMPLICIT NONE
@@ -48,14 +49,16 @@
       REAL(KIND=real_prec),DIMENSION(0:nmlon) :: mlon130_rad
       REAL(KIND=real_prec) :: mlon130_0
       REAL(KIND=real_prec) :: cos2Lambda_m,sinLambda_m(2),sinI_m(2)
-      INTEGER (KIND=int_prec ) :: midpoint
+      INTEGER (KIND=int_prec ) :: midpoint, ipts
       REAL    (KIND=real_prec) :: v_e(2)   !1:ed2/be3 (4.18) ;2: -ed1/be3 (4.19)
       REAL    (KIND=real_prec) :: vexbgeo(east:up) !EXB in gegraphic frame
+!      REAL    (KIND=real_prec) :: vperp !EXB at 90km only for th method
 
 
 ! array initialization
       Ed1_90=zero
       Ed2_90=zero
+
 
       IF ( j0(1,lps)<0 ) THEN
 ! array initialization
@@ -73,7 +76,14 @@
      &               (90.-theta90_rad(j)*rtd)
           endif
         END DO mlat_loop130km0
+!SMS$SERIAL BEGIN
+      OPEN( UNIT=6000, FILE='plasma_grid_GL.check' )
+      WRITE( 6000, * ) plasma_grid_GL
+      CLOSE( 6000 )
+!SMS$SERIAL END
 
+
+!dbg20160408 sms debug: original parallel begin location
 !SMS$PARALLEL(dh, lp, mp) BEGIN
 
 ! note that mlat90km is the constant in m-lon
@@ -84,7 +94,12 @@
           IN = JMIN_IN(lp)
           coslam_m(1,lp)=COS(pi*0.5-plasma_grid_GL(IN,lp))
 
-          if(coslam_m(1,lp)<=0.or.coslam_m(1,lp)>=1.)then
+!SMS$IGNORE begin
+       print*,'coslam=',coslam_m(1,lp),' lp=',lp,' IN=',IN,' mype',mype &
+     &,plasma_grid_GL(IN,lp),(pi*0.5-plasma_grid_GL(IN,lp))
+!SMS$IGNORE end
+
+          if(coslam_m(1,lp)<=0.0 .or. coslam_m(1,lp)>=1.0 )then
 !SMS$IGNORE BEGIN
             print*,'sub-get_e:NH!STOP! INVALID coslam!',lp,IN,mype
             print*, coslam_m(1,lp),(90.-plasma_grid_GL(IN,lp)*rtd),     &
@@ -96,7 +111,7 @@
           IS = JMAX_IS(lp)
           coslam_m(2,lp) = COS( pi*0.5-plasma_grid_GL(IS,lp) )
 
-          if(coslam_m(2,lp)<=0.or.coslam_m(2,lp)>=1.)then
+          if(coslam_m(2,lp)<=0.0 .or. coslam_m(2,lp)>=1.0 )then
 !SMS$IGNORE BEGIN
             print*,'sub-get_e:SH!STOP! INVALID coslam!',lp,IS,mype
             print*, coslam_m(2,lp),(90.-plasma_grid_GL(IS,lp)*rtd),     & 
@@ -115,6 +130,7 @@
             j1(1,lp)=nmlat/2
             j0(2,lp)=nmlat/2     !2:SH
             j1(2,lp)=nmlat/2-1
+
           ELSE ! plasma_grid_3d(IN,mp)%GL>=4.49(R130 apex)
 
 !           NH find the closest j of mlat90 from 130km
@@ -134,6 +150,7 @@
                 j1(1,lp)=j-1
                 j0(2,lp)=nmlat-(j-1)  !2:SH
                 j1(2,lp)=nmlat-j
+
                 EXIT mlat_loop130km1
               ELSE
                 IF ( j==nmlat/2 ) THEN
@@ -160,7 +177,7 @@
 !dbg20160408 sms debug
 !SMS$PARALLEL END
 
-      END IF !( j0(1,1)>0 ) THEN
+      END IF                    !( j0(1,lps)>0 ) THEN
 
       d_phi_m = dlonm * dtr !constant
       r = earth_radius + ht90 ![m]
@@ -171,10 +188,7 @@
       iyr=1999 
 !     iday=97
       utsecs=REAL(utime, real_prec)
-      print *,'GHGM HERE INNIT ', utime, utsecs
-
       CALL sunloc(iyr,NDAY,utsecs) !iyr,iday,secs)        
-
       if (sw_debug) print *,'sunlons(1)',sunlons(1),' iyr',iyr,utsecs
 !     convert from MLT(ylonm)[rad] to mlon[deg]
       mlon130_loop0: DO i=0,nmlon
@@ -184,9 +198,11 @@
         IF( mlon130_rad(i)>=pi*2.0) mlon130_rad(i)=mlon130_rad(i)-pi*2.0
       END DO mlon130_loop0 !: DO i=0,nmlon
 
-!dbg20160408 sms debug:
+
+!dbg20160408 sms debug: 
 !SMS$PARALLEL(dh, lp, mp) BEGIN
       mlon_loop90km0: DO mp=1,NMP
+
 !       mlon_rad: from 0 to 355.5 with dlon_ipe=4.5 deg resolution
 !       mlon90_deg = mlon_rad(mp)*rtd
 !       dbg REAL((mp-1),real_prec) * dlonm90km 
@@ -195,6 +211,9 @@
 !       find i of mlon 130km
 !       dlonm: delon lon grid spacing in degree
 !       BUG?  i = INT( (mlon90_deg/dlonm) , int_prec )
+!
+
+
         mlon130_loop1: DO i=0,nmlon
           i0=i
           i1=i+1
@@ -234,7 +253,7 @@
      &            ,IN,(90.-plasma_grid_GL(IN,lp)*rtd)                   &
      &            ,IS,(90.-plasma_grid_GL(IS,lp)*rtd)
           endif
-!         computing ed1_90(lp,mp)
+!         computipng ed1_90(lp,mp)
 !         FUNC-linearinterpolation does not work! need more debugging. temporary use the average of the two potentials.
 !         linear interpolation of the potent at plasma_grid_3d(IN,mp) in mlat
 !         NH
@@ -246,17 +265,30 @@
 !         d     &   ,potent(i1(mp),j0(1,lp)),plasma_grid_3d(IN,mp)%GL)
 !         ii0=i0
 !         ii1=i1
+
+
+
+
+
+
           jj0=j0(1,lp)              !1:NH
           jj1=j1(1,lp)
           pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50 
           pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
+
+!SMS$IGNORE begin
+       print*,'coslam=',coslam_m(1,lp),' lp=',lp,' mype',mype
+!SMS$IGNORE end
+
           if (r<=0..or.coslam_m(1,lp)==0..or.d_phi_m==0.)then
 !SMS$IGNORE BEGIN
-            print*,'sub-get_e:NH!STOP! INVALID',lp,ihem,mp,mype
-            print*, r,coslam_m(1,lp),d_phi_m
+            print*,'sub-get_e:NH!STOP! INVALID:lp=',lp                  &
+     &,' mp=',mp,' mype=',mype
+            print*,'r=',r,' coslam_m=',coslam_m(1,lp),'d_phi_m=',d_phi_m
 !SMS$IGNORE END
             STOP
           endif
+
           ed1_90(1,lp,mp)=-1.0/r/coslam_m(1,lp)                         &
      &                         *(pot_i1-pot_i0)/d_phi_m
 !         SH
@@ -274,7 +306,7 @@
           pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
           if (r<=0..or.coslam_m(2,lp)==0..or.d_phi_m==0.)then
 !SMS$IGNORE BEGIN
-            print*,'sub-get_e:SH!STOP! INVALID',lp,ihem,mp,mype
+            print*,'sub-get_e:SH!STOP! INVALID',lp,mp,mype
             print*, r,coslam_m(2,lp),d_phi_m
 !SMS$IGNORE END
             STOP
@@ -297,7 +329,8 @@
             print *,'sub-get_ed2:NH!STOP! INVALID',lp,d_lam_m
             STOP
           endif
-          ed2_90(1,lp,mp)=+1.0/r/sinI_m(ihem)*(pot_j1-pot_j0)/d_lam_m
+          ed2_90(1,lp,mp)=+1.0/r/sinI_m(ihem)*(pot_j1-pot_j0)/d_lam_m   &
+     &*(-1.) !dbg20140224
 !         dbg20111108     &*(-1.)*sinI_m(ihem)     !E_m_lambda (5.10)
 !         SH
           ihem=2
@@ -306,7 +339,8 @@
           d_lam_m = theta90_rad( jj1 ) - theta90_rad( jj0 )
           pot_j1=( potent(i0,jj1)+potent(i1,jj1) )*0.50
           pot_j0=( potent(i0,jj0)+potent(i1,jj0) )*0.50
-          ed2_90(2,lp,mp)=+1.0/r/sinI_m(ihem)*(pot_j1-pot_j0) /d_lam_m
+          ed2_90(2,lp,mp)=+1.0/r/sinI_m(ihem)*(pot_j1-pot_j0) /d_lam_m  &
+     &*(-1.) !dbg20140224
 !         dbg20111108     &*(-1.)*sinI_m(ihem)  !E_m_lambda (5.10)
 
           IF(sw_exb_up<=1.and.sw_perp_transport>=1) then
@@ -315,6 +349,7 @@
 !initialization
                 VEXBup(lp,mp)=zero
                 VEXBe(lp,mp)=zero
+                VEXBth(lp,mp)=zero
 
 !           (0) self consistent electrodynamics comming soon...
 !           (1) WACCM E empirical model
@@ -328,12 +363,8 @@
 
             v_e(1) =   Ed2_90(1,lp,mp) / Be3(lp,mp) !(4.18) +mag-east(d1?) 
             v_e(2) = - Ed1_90(1,lp,mp) / Be3(lp,mp) !(4.19) +down/equatorward(d2?)
-            if(sw_debug) then
-              print *,'sub-StR:',ihem,'ve2[m/s]',v_e(2),'ed1[mV/m]',    &
-     &           Ed1_90(1,lp,mp)*1.0E+3,' Be3[tesla]',Be3(lp,mp) 
-            endif
-!nm20130201
-! EXB in geographic frame
+
+! EXB in geographic frame at (midpoint,lp,mp)
             vexbgeo(east )=(v_e(1)*apexE(midpoint,lp,mp,east,1))        &
      &                    +(v_e(2)*apexE(midpoint,lp,mp,east,2))
             vexbgeo(north)=(v_e(1)*apexE(midpoint,lp,mp,north,1))       &
@@ -341,34 +372,72 @@
             vexbgeo(up   )=(v_e(1)*apexE(midpoint,lp,mp,up   ,1))       &
      &                    +(v_e(2)*apexE(midpoint,lp,mp,up   ,2))
             if(sw_debug) then
-              print *,'sub-StR:',v_e(1),apexE(midpoint,lp,mp,up,1)      &
+              print *,'sub-getE90:',v_e(1),apexE(midpoint,lp,mp,up,1)   &
      &                          ,v_e(2),apexE(midpoint,lp,mp,up,2)
             endif
-! EXB in magnetic APEX frame
-! magnetic exact upward
-            VEXBup(lp,mp)=vexbgeo(up)
-!     &                    (v_e(1)*apexE(midpoint,lp,mp,up,1))           &
-!     &                   +(v_e(2)*apexE(midpoint,lp,mp,up,2))
-!nm20130201: the new, correct definition
-!     &       vexbgeo(east)  * l_mag(midpoint,lp,mp,east ,2)
-!     &
-!     &     + vexbgeo(north) * l_mag(midpoint,lp,mp,north,2)
-!     &
-!     &     + vexbgeo(up   ) * l_mag(midpoint,lp,mp,up   ,2)
+! EXB  magnetic exact upward at APEX (midpoint) 
+            VEXBup(lp,mp) = v_e(2) * (-1.0) !convert from down to UPward
+
+!nm20140528: VEXBth at 90km required for th method, sinI_m for NH
+            if ( sw_th_or_R==0 ) then !th method(ctipe/shawn)
+               ipts = JMIN_IN(lp) ! if ihem=1 NH
+!               ipts = JMAX_IS(lp) ! if ihem=2 SH
+      if(sw_debug)                                                      &
+     & write(9001,*)'!dbg20140616 sw_th_or_R=',sw_th_or_R,ipts,mp,lp
+! EXB in geographic frame at 90km NH (IN,lp,mp)
+            vexbgeo(east )=(v_e(1)*apexE(ipts,lp,mp,east,1))            &
+     &                    +(v_e(2)*apexE(ipts,lp,mp,east,2))
+            vexbgeo(north)=(v_e(1)*apexE(ipts,lp,mp,north,1))           &
+     &                    +(v_e(2)*apexE(ipts,lp,mp,north,2))
+            vexbgeo(up   )=(v_e(1)*apexE(ipts,lp,mp,up   ,1))           &
+     &                    +(v_e(2)*apexE(ipts,lp,mp,up   ,2))
+! vperp at 90km NH +poleward
+!VEXBth: horizontal component, positive EQUATORward: is calculated only for th-method
+!dbg20150319: it might be better to estimate sinI at JMIN_IN
+               VEXBth(lp,mp) = v_e(2) * sinI_m(1) !if ihem=1 NH
+
+!            else if ( sw_th_or_R==1 ) then !R method(gip)
+!               ipts = midpoint
+            end if !( sw_th_or_R==1
 ! exact magnetic eastward  
-            VEXBe(lp,mp)=vexbgeo(east)*l_mag(midpoint,lp,mp,east ,1)    &
-     &                  +vexbgeo(north)*l_mag(midpoint,lp,mp,north,1)   &
-     &                  +vexbgeo(up  ) *l_mag(midpoint,lp,mp,up   ,1)
-!nm20130201: temporary solution to test the code
-            VEXBe(lp,mp)=zero
+! R method: at APEX
+! th method: at 90km JMIN_IN
+
+            if( sw_th_or_R==0 ) then
+               VEXBe(lp,mp) = v_e(1)  !+magnetic eastward
+            else if( sw_th_or_R==1 )then
+!temporary solution to test the code
+               VEXBe(lp,mp) = 0.0
+            endif
 
 
-         end if                 !(lp>=lpmin_perp_trans.AND.lp<=lpmax_perp_trans) THEN 
-      END IF                    !( sw_exb_up<=1.and. ... ) 
+              if ( sw_perp_transport==1 )   VEXBe(lp,mp)=zero
 
-      END DO mlat_loop90km1     !: DO lp=1,NLP
+            else                   ! (lp<lpmin_perp_trans.or.lp>lpmax_perp_trans) THEN 
+               VEXBup(lp,mp)=zero
+               VEXBe(lp,mp)=zero
+               VEXBth(lp,mp)=zero 
+            end if              !(lp>=lpmin_perp_trans.AND.lp<=lpmax_perp_trans) THEN 
+          END IF !( sw_exb_up<=1.and. ... ) 
+
+
+        END DO mlat_loop90km1 !: DO lp=1,NLP
       END DO mlon_loop90km0     !: DO mp=1,nmp
+!dbg20160408 sms debug 
 !SMS$PARALLEL END
+
+
+!dbg20140228
+!      if ( sw_debeg_eld ) then 
+         IF ( MOD( (utime-start_time),ip_freq_output)==0 ) THEN
+!SMS$SERIAL(<vexbup,vexbe,vexbth,IN>:default=ignore) BEGIN
+            write(unit=2011,FMT='(20E12.4)') vexbup
+            write(unit=2012,FMT='(20E12.4)') vexbe
+            write(unit=2013,FMT='(E12.4)  ') sunlons(1)
+            write(unit=2014,FMT='(20E12.4)') vexbth
+!SMS$SERIAL END
+         END IF                 ! ( MOD( (utime-start_time),ip_freq_output)==0 ) THEN
+!      endif                     !( sw_debug_eld ) then 
 
       END SUBROUTINE GET_EFIELD90km
 !

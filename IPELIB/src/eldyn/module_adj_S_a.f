@@ -62,7 +62,7 @@ c     use cam_logfile,   only: iulog
 ! adjust S_a -> S_aM   eqn.8-11 Scherliess draft
 !------------------------------------------------------------------
 !nm20121003
-      USE efield !,ONLY:
+      USE efield_ipe !,ONLY:
       implicit none
 
 !-----------------------------------------------------------------

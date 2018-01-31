@@ -60,7 +60,6 @@
 !          input: iyr,iday,ihr,imn,sec
 !          output: sbsllat,sbsllon 
 !                  
-      print *,'GHGM YOWZER 1 ',iyr,iday,ihr,imn,isec
       call subsol(iyr,iday,ihr,imn,sec ,sbsllat,sbsllon)
       
       date = float(iyr) + float(iday)/365. + float(ihr)/24./365. +
@@ -74,9 +73,6 @@
       call solgmlon(sbsllat,sbsllon,colat,elon,xmlon) 
 !
       sunlons(1) = xmlon*dtr
-
-      print *,'GHGM YOWZER 2 ',xmlon*dtr
-  
 !      sunlons(1) = 1.247029293721108 ! for cpmapring with TIEGCM code
 !     
       end subroutine sunloc

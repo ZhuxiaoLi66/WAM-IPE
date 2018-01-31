@@ -657,8 +657,8 @@ if [ $gfsio_in = .true. ] ; then export GB=1 ; fi
 export IDEA=${IDEA:-.false.}
 export WAM_IPE_COUPLING=${WAM_IPE_COUPLING:-.false.}
 export HEIGHT_DEPENDENT_G=${HEIGHT_DEPENDENT_G:-.false.}
-export F107_KP_SIZE=${F107_KP_SIZE:-56}
-export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-56}
+export F107_KP_SIZE=${F107_KP_SIZE:-$((60*37+1))}
+export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-$((60*37+1))}
 export F107_KP_SKIP_SIZE=${F107_KP_SKIP_SIZE:-0}
 export F107_KP_INTERVAL=${F107_KP_INTERVAL:-10800}
 
@@ -803,7 +803,11 @@ $LOGSCRIPT
 ${NCP:-cp} $FCSTEXEC $DATA
 
 #------------------------------------------------------------
-if [ $FHROT -gt 0 ] ; then export RESTART=.true. ; fi
+if [ $FHROT -gt 0 ] ; then
+  export RESTART=.true.
+  export NEMSIO_IN=.true.
+  export SIGIO_IN=.false.
+fi
 export RESTART=${RESTART:-.false.}
 if [ $RESTART = .false. ] ; then # when restarting should not remove - Weiyu
   rm -f NULL
@@ -1318,13 +1322,35 @@ cat > SMSnamelist <<EOF
   compare_var_on=f
   exact_parallel_sum=f
   load_balance_method=2,1
-  load_balance_on=f,f
-  load_balance_size=40,0
+  load_balance_on=t,f
+  load_balance_size=58,0
   process_layout=${IPEDECOMPARR[0]},${IPEDECOMPARR[1]}
   set_process_layout=t
 /
 EOF
-
+cat > load_balance_groups1 <<EOF
+           1           2           3           4           5           6
+           7           8           9          10          11          12
+          13          14          15          16          17          19
+          21          23          25          27          29          31
+          33          35          37          39          41          43
+          45          48          51          54          57          60
+          63          66          69          73          77          81
+          85          89          92          95          98         101
+         104         107         110         113         116         119
+         123         131         144         170
+EOF
+cat > GPTLnamelist << EOF
+&gptlnl
+ print_method = 'full_tree' ! print full call tree
+ utr          = 'nanotime'  ! fastest available underlying timer (Intel processors only)
+! eventlist   = 'PAPI_FP_OPS','GPTL_CI' ! PAPI-based counters (only if PAPI is available)
+/
+EOF
+# raw_high_lat specific files
+cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/tiros_spectra_ipe .
+cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/ionprof_ipe .
+#
 cat  > IPE.inp <<EOF
 &ipedims
   nlp=170
@@ -1353,6 +1379,7 @@ cat  > IPE.inp <<EOF
   sw_neutral_heating_flip=0
   sw_ohpls=1
   sw_optw_flip=t
+  sw_pe2s=1
   sw_tei=1
   sw_wind_flip=1
   zlbdy_flip=120.00
@@ -1374,27 +1401,31 @@ cat  > IPE.inp <<EOF
   time_step=$DELTIM
 /
 &nmmsis
-  ap(1)=${AP3HR}
-  ap(2)=${AP3HR}
-  ap(3)=${AP3HR}
-  ap(4)=${AP3HR}
-  ap(5)=${AP3HR}
-  ap(6)=${AP3HR}
-  ap(7)=${AP3HR}
-  kp_eld=${KP3HR}
+  ap(1)=4.
+  ap(2)=4.
+  ap(3)=4.
+  ap(4)=4.
+  ap(5)=4.
+  ap(6)=4.
+  ap(7)=4.
+  f107_kp_size=$F107_KP_SIZE,
+  f107_kp_interval=$F107_KP_INTERVAL,
+  f107_kp_skip_size=$F107_KP_SKIP_SIZE
+  f107_kp_data_size=$F107_KP_DATA_SIZE
 /
 &nmswitch
   duration=$(((10#$FHMAX-10#$FHINI)*3600))
   fac_bm=1.00
   iout(1)=1
   iout(2)=60
-  lpFort167=57
-  lpmax_perp_trans=151
-  lpmin_perp_trans=15
-  mpFort167=71
+  lpFort167=11
+  lpmax_perp_trans=74
+  lpmin_perp_trans=1
+  mpFort167=1
   mpstop=80
-  peFort167=56
   record_number_plasma_start=0
+  sw_aurora=1
+  sw_ctip_input=t
   sw_dbg_perp_trans=f
   sw_debug=f
   sw_debug_mpi=f
@@ -1411,17 +1442,19 @@ cat  > IPE.inp <<EOF
   swNeuPar(5)=t
   swNeuPar(6)=t
   swNeuPar(7)=t
-  swEsmfTime=t
+  swEsmfTime=f
   sw_output_fort167=f
   sw_output_wind=t
   sw_output_plasma_grid=f
   sw_use_wam_fields_for_restart=t
   sw_para_transport=1
   sw_pcp=0
-  sw_perp_transport=1
-  sw_record_number=2
-  sw_th_or_r=1
+  sw_perp_transport=2
+  sw_record_number=1
+  sw_th_or_r=0
   ut_start_perp_trans=${START_UT_SEC}
+  utime0LPI=${START_UT_SEC}
+  barriersOn=f
 /
 &ipecap
   mesh_height_min = 0.
@@ -1882,6 +1915,7 @@ cat  > atm_namelist <<EOF
   f107_kp_size=$F107_KP_SIZE,
   f107_kp_interval=$F107_KP_INTERVAL,
   f107_kp_skip_size=$F107_KP_SKIP_SIZE,
+  f107_kp_data_size=$F107_KP_DATA_SIZE,
   ngptc=$NGPTC, hybrid=$HYBRID, tfiltc=$TFILTC,
   gen_coord_hybrid=$GEN_COORD_HYBRID,
   thermodyn_id=$THERMODYN_ID, sfcpress_id=$SFCPRESS_ID,

@@ -9,3 +9,6 @@ module_open_output_files ../main/module_open_output_files_sms.f.tmp
 module_output ../main/module_output.f90
 module_precision ../main/module_precision.f90
 module_sub_PLASMA ../plasma/module_sub_plasma.f90
+module_calcpoleval ../plasma/calcPoleVal_sms.f90
+module_io ../main/module_io.f90
+module_open_file ../main/module_open_file.f90
