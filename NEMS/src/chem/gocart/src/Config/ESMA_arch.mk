@@ -101,7 +101,7 @@ ifeq ($(ARCH),Linux)
   SITE := $(patsubst g2%,wcoss,$(SITE))
   SITE := $(patsubst ga%,gaea,$(SITE))
   SITE := $(patsubst tf%,theia,$(SITE))
-echo SITE= ${SITE}
+#echo SITE= ${SITE}
 
 #
 #                    Linux Site Specific
