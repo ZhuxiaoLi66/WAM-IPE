@@ -352,8 +352,11 @@ c
 ! The following is to output the interface restart file for WAM-IPE
 ! coupling restart run.
 !------------------------------------------------------------------
+        ! Joe Schoonover ( Jan. 31, 2018 ) : Needed to change kdt to
+        ! kdt+1 to write the neutrals at a multiple of FHRES, instead
+        ! of a FHRES+dt
         IF(wam_ipe_cpl_rst_output .AND.
-     &    MOD(NINT(deltim) * kdt, NINT(FHRES) * 3600) == 0) THEN
+     &    MOD(NINT(deltim) * (kdt+1), NINT(FHRES) * 3600) == 0) THEN
 ! restart file will keep the last output file.
 !---------------------------------------------
           rewind 181
