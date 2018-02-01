@@ -128,15 +128,8 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
           end do
 
         endif
-!SMS$SERIAL BEGIN
-        PRINT*, "WARM_START = ", simulation_is_warm_start, utime
-!SMS$SERIAL END
 
         if( simulation_is_warm_start .or. utime > start_time )then
-       
-!SMS$SERIAL BEGIN
-          PRINT*, "WARM_START CONDITIONAL TIME =", utime
-!SMS$SERIAL END
 
           midpoint = IN + (IS-IN)/2
 
@@ -167,7 +160,6 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
 ! NH and SH denote Northern and Southern Hemispheres respectively
 !---------------------------------------------------------------------------
 
-          PRINT*, 'MODULE_NEUTRAL : Exchange with WAMfield Start'
           tn_k(IN:ihTopN,lp,mp)           =  WamField(IN:ihTopN,lp,mp,1)          !Tn < 800km NH
           tn_k(ihTopS:IS,lp,mp)           =  WamField(ihTopS:IS,lp,mp,1)          !Tn < 800km SH
           tn_k(ihTopN+1:midpoint  ,lp,mp) =  WamField(ihTopN,lp,mp,1)             !Tn >800km NH
@@ -188,8 +180,6 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
           o2n_m3( ihTopS:IS,lp,mp)        =  WamField(ihTopS:IS,lp,mp,6)          !O2 < 800km SH       
           n2n_m3( IN:ihTopN,lp,mp)        =  WamField(IN:ihTopN,lp,mp,7)          !N2 < 800km NH       
           n2n_m3( ihTopS:IS,lp,mp)        =  WamField(ihTopS:IS,lp,mp,7)          !N2 < 800km SH       
-          PRINT*, 'MODULE_NEUTRAL : Exchange with WAMfield End'
-
 
          DO ihem=1,2
 
@@ -286,18 +276,6 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
         END DO !: DO lp = 1,NLP
       END DO   !: DO mp = 1,NMP
 !SMS$PARALLEL END
-
-!SMS$SERIAL (<tn_k,tinf_k,Un_ms1,Vn_ms1,on_m3,o2n_m3,n2n_m3,IN> :DEFAULT=IGNORE) BEGIN
-
-  PRINT*, 'Jmin/max tn_k', MINVAL(tn_k), MAXVAL(tn_k), utime, start_time
-  PRINT*, 'Jmin/max tinf_k',MINVAL(tinf_k), MAXVAL(tinf_k), utime, start_time
-  PRINT*, 'Jmin/max Vn_ms1',MINVAL(Vn_ms1), MAXVAL(Vn_ms1), utime, start_time
-  PRINT*, 'Jmin/max Un_ms1',MINVAL(Un_ms1), MAXVAL(Un_ms1), utime, start_time
-  PRINT*, 'Jmin/max on_m3',MINVAL(on_m3), MAXVAL(on_m3), utime, start_time
-  PRINT*, 'Jmin/max o2n_m3',MINVAL(o2n_m3), MAXVAL(o2n_m3), utime, start_time
-  PRINT*, 'Jmin/max n2n_m3',MINVAL(n2n_m3), MAXVAL(n2n_m3), utime, start_time
-
-!SMS$SERIAL END
 
       else if (sw_neutral.eq.3) then 
 
