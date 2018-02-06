@@ -3274,11 +3274,13 @@ contains
 
   end subroutine polint
 
-  subroutine FieldRegrid(rh, fieldName, rc)
+  subroutine FieldRegrid(rh, fieldName, auxArray, options, rc)
 
-    type(rhType)                  :: rh
-    character(len=*),  intent(in) :: fieldName
-    integer, optional, intent(out) :: rc
+    type(rhType)                            :: rh
+    character(len=*),           intent(in)  :: fieldName
+    type(ESMF_Array), optional, intent(in)  :: auxArray
+    character(len=*), optional, intent(in)  :: options
+    integer,          optional, intent(out) :: rc
 
     ! -- local variables
     type(ESMF_Field) :: srcField, dstField
@@ -3292,7 +3294,8 @@ contains
     write(6,'("-- FieldRegrid: entering ...")')
     
     write(6,'("-- FieldRegrid: getting src field ",a,"(",a,")")') trim(fieldName), trim(rh % label)
-    srcField = StateGetField(rh % srcState, fieldName, rc=localrc)
+    srcField = StateGetField(rh % srcState, fieldName, &
+      auxArray=auxArray, options=options, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__,  &
       file=__FILE__,  &
@@ -3331,7 +3334,6 @@ contains
     write(6,'("-- FieldRegrid: ",a,"(",a,")")') trim(fieldName), trim(rh % label)
     call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
       zeroregion=ESMF_REGION_SELECT, &
-!     zeroregion=ESMF_REGION_TOTAL, &
       routehandle=rh % rh, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__,  &
