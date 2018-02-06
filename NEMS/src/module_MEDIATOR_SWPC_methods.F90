@@ -2365,7 +2365,8 @@ contains
           s => p % stateList
           do while (associated(s))
             s % localGrid  = grid
-            s % localField = ESMF_FieldCreate(grid, ESMF_TYPEKIND_R8, rc=rc)
+            s % localField = ESMF_FieldCreate(grid, ESMF_TYPEKIND_R8, &
+              staggerloc=ESMF_STAGGERLOC_CENTER, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
@@ -2511,7 +2512,8 @@ contains
           do while (associated(s))
             if (present(mesh3d)) then
               s % localMesh = mesh3d
-              s % localField = ESMF_FieldCreate(mesh3d, ESMF_TYPEKIND_R8, rc=localrc)
+              s % localField = ESMF_FieldCreate(mesh3d, ESMF_TYPEKIND_R8, &
+                meshloc=ESMF_MESHLOC_NODE, rc=localrc)
               if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
                 line=__LINE__,  &
                 file=__FILE__,  &
@@ -2525,6 +2527,7 @@ contains
                 rcToReturn=rc)) return  ! bail out
               write(6,'("-- NamespaceSetLocalMesh: l/u = ",2i8)') lb(1),ub(1)
               s % localIntField = ESMF_FieldCreate(mesh2d, ESMF_TYPEKIND_R8, &
+                meshloc=ESMF_MESHLOC_NODE, &
                 ungriddedLBound=lb, ungriddedUBound=ub, rc=localrc)
               if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
                 line=__LINE__,  &
@@ -4682,7 +4685,8 @@ contains
 
   ! -- create height Array if requested
   if (present(hArray)) then
-    field = ESMF_FieldCreate(wam2dmesh, ESMF_TYPEKIND_R8,    &
+    field = ESMF_FieldCreate(wam2dmesh, ESMF_TYPEKIND_R8, &
+          meshloc=ESMF_MESHLOC_NODE, &
           ungriddedLBound=(/1/), ungriddedUBound=(/totallevels/), &
           rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
