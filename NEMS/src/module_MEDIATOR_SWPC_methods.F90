@@ -190,6 +190,10 @@ contains
         line=__LINE__, &
         file=__FILE__, &
         rcToReturn=rc)) return
+      ! -- initialize state
+      nullify(s % fieldNames, s % fieldOptions, s % next)
+      s % trAction    = ""
+      s % ugDimLength = 0
     end if
     if (associated(s % fieldNames)) then
       if (trim(s % trAction) /= trAction) then
