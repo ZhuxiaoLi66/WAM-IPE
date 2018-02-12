@@ -18,11 +18,14 @@ module module_MED_SWPC_methods
     character(len=ESMF_MAXSTR) :: trAction
     type(ESMF_Grid)            :: localGrid
     type(ESMF_Mesh)            :: localMesh
-    type(ESMF_Field)           :: localField
-    type(ESMF_Field)           :: localIntField
+    type(ESMF_Field)           :: uvec(2)
+    type(ESMF_Field)           :: localField(2)
+    type(ESMF_Field)           :: localIntField(2)
+    type(ESMF_Field)           :: localCartField
     type(ESMF_Array)           :: localLevels
     type(ESMF_Array)           :: remoteLevels
     integer                    :: ugDimLength
+    integer                    :: fieldMaxRank
     integer, dimension(:), pointer :: fieldDepMap => null()
     type(stateType),   pointer :: next 
   end type stateType
@@ -59,6 +62,7 @@ module module_MED_SWPC_methods
     rhType
 
   public :: &
+    FieldGet,                          &
     FieldPrintMinMax,                  &
     FieldRegrid,                       &
     GridAddNewCoord,                   &
@@ -167,7 +171,7 @@ contains
 
     ! -- local variables
     integer :: i, item, localCount, pairCount, pos
-    integer :: localrc, fieldCount, totalCount, ugDimLength
+    integer :: localrc, fieldCount, totalCount, ugDimLength, localRank
     integer,                    dimension(:), allocatable :: localDepMap, tmpMap
     character(len=ESMF_MAXSTR), dimension(:), allocatable :: localNames, localOptions, tmp
 
@@ -219,6 +223,7 @@ contains
         if (present(fieldOptions)) then
           localOptions(i-1:i) = fieldOptions(item)
         end if
+        localRank = 2
       else
         localNames(i) = fieldNames(item)
         if (present(fieldOptions)) &
@@ -235,8 +240,9 @@ contains
         rcToReturn=rc)) return
       ! -- initialize state
       nullify(s % fieldNames, s % fieldOptions, s % next)
-      s % trAction    = ""
-      s % ugDimLength = 0
+      s % trAction     = ""
+      s % ugDimLength  = 0
+      s % fieldMaxRank = 1
     end if
     if (associated(s % fieldNames)) then
       if (trim(s % trAction) /= trAction) then
@@ -305,12 +311,12 @@ contains
         file=__FILE__, &
         rcToReturn=rc)) return
       tmpMap = s % fieldDepMap
-      deallocate(s % fieldDeMap, stat=localrc)
+      deallocate(s % fieldDepMap, stat=localrc)
       if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__, &
         rcToReturn=rc)) return
-      allocate(s % fieldDeMap(totalCount), stat=localrc)
+      allocate(s % fieldDepMap(totalCount), stat=localrc)
       if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__, &
@@ -322,6 +328,7 @@ contains
         line=__LINE__, &
         file=__FILE__, &
         rcToReturn=rc)) return
+      s % fieldMaxRank = max(s % fieldMaxRank, localRank)
     else
       allocate(s % fieldNames(localCount), &
                s % fieldOptions(localCount), &
@@ -335,6 +342,7 @@ contains
       s % trAction      = trAction
       s % fieldOptions  = localOptions
       s % fieldDepMap   = localDepMap
+      s % fieldMaxRank  = localRank
     end if
     s % parent = state
     nullify(s % next)
@@ -2562,7 +2570,7 @@ contains
     type(compType),  pointer :: p
     type(stateType), pointer :: s
     logical                  :: proceed
-    integer                  :: localrc
+    integer                  :: localrc, item
     integer, dimension(1)    :: lb, ub
 
     ! -- begin
@@ -2591,12 +2599,14 @@ contains
           do while (associated(s))
             if (present(mesh3d)) then
               s % localMesh = mesh3d
-              s % localField = ESMF_FieldCreate(mesh3d, ESMF_TYPEKIND_R8, &
-                meshloc=ESMF_MESHLOC_NODE, rc=localrc)
-              if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-                line=__LINE__,  &
-                file=__FILE__,  &
-                rcToReturn=rc)) return  ! bail out
+              do item = 1, s % fieldMaxRank
+                s % localField(item) = ESMF_FieldCreate(mesh3d, ESMF_TYPEKIND_R8, &
+                  meshloc=ESMF_MESHLOC_NODE, rc=localrc)
+                if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                  line=__LINE__,  &
+                  file=__FILE__,  &
+                  rcToReturn=rc)) return  ! bail out
+              end do
             end if
             if (present(mesh2d) .and. present(levArray)) then
               call ESMF_ArrayGet(levArray, undistLBound=lb, undistUBound=ub, rc=localrc)
@@ -2605,26 +2615,15 @@ contains
                 file=__FILE__,  &
                 rcToReturn=rc)) return  ! bail out
               write(6,'("-- NamespaceSetLocalMesh: l/u = ",2i8)') lb(1),ub(1)
-              s % localIntField = ESMF_FieldCreate(mesh2d, ESMF_TYPEKIND_R8, &
-                meshloc=ESMF_MESHLOC_NODE, &
-                ungriddedLBound=lb, ungriddedUBound=ub, rc=localrc)
-              if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-                line=__LINE__,  &
-                file=__FILE__,  &
-                rcToReturn=rc)) return  ! bail out
-              call ESMF_FieldGet(s % localIntField, rank=lb(1), rc=localrc)
-              if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-                line=__LINE__,  &
-                file=__FILE__,  &
-                rcToReturn=rc)) return  ! bail out
-              write(6,'("-- NamespaceSetLocalMesh: rank = ",i8)') lb(1)
-              call ESMF_FieldGet(s % localField, rank=lb(1), rc=localrc)
-              if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-                line=__LINE__,  &
-                file=__FILE__,  &
-                rcToReturn=rc)) return  ! bail out
-              write(6,'("-- NamespaceSetLocalMesh: rank3d = ",i8)') lb(1)
-              flush 6
+              do item = 1, s % fieldMaxRank
+                s % localIntField(item) = ESMF_FieldCreate(mesh2d, ESMF_TYPEKIND_R8, &
+                  meshloc=ESMF_MESHLOC_NODE, &
+                  ungriddedLBound=lb, ungriddedUBound=ub, rc=localrc)
+                if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                  line=__LINE__,  &
+                  file=__FILE__,  &
+                  rcToReturn=rc)) return  ! bail out
+              end do
               s % localLevels = levArray
             end if
             s => s % next
@@ -3353,6 +3352,46 @@ contains
 
   end subroutine polint
 
+  subroutine FieldGet(state, fieldName, compList, compCount, rc)
+
+    ! -- input variables
+    type(stateType),            intent(in) :: state
+    character(len=*),           intent(in) :: fieldName
+
+    ! -- output
+    character(len=*), optional, intent(out) :: compList(2)
+    integer,          optional, intent(out) :: compCount
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: comp, item
+
+    ! -- begin
+    if (present(rc)) rc = ESMF_RC_NOT_FOUND
+
+    if (present(compCount)) compCount = 0
+    if (present(compList))  compList  = ""
+
+    if (associated(state % fieldNames)) then
+      do item = 1, size(state % fieldNames)
+        if (trim(state % fieldNames(item)) == trim(fieldName)) then
+          comp = state % fieldDepMap(item)
+          if (comp > 0) then
+            if (present(compCount)) compCount = 2
+            if (present(compList)) then
+              compList(1) = trim(state % fieldNames(item))
+              compList(2) = trim(state % fieldNames(comp))
+            end if
+          end if
+          if (present(rc)) rc = ESMF_SUCCESS
+          exit
+        end if
+      end do
+    end if
+
+  end subroutine FieldGet
+
+
   subroutine FieldRegrid(rh, fieldName, auxArray, options, rc)
 
     type(rhType)                            :: rh
@@ -3363,54 +3402,73 @@ contains
 
     ! -- local variables
     type(ESMF_Field) :: srcField, dstField
+    type(ESMF_Field), dimension(2) :: srcFieldComp, dstFieldComp
     integer :: localrc
-    integer :: localDeCount
+    integer :: localDeCount, comp, compCount
     logical, save :: first = .true.
+    character(len=ESMF_MAXSTR) :: compList(2)
 
     ! -- begin 
     if (present(rc)) rc = ESMF_SUCCESS
 
     write(6,'("-- FieldRegrid: entering ...")')
-    
-    write(6,'("-- FieldRegrid: getting src field ",a,"(",a,")")') trim(fieldName), trim(rh % label)
-    srcField = StateGetField(rh % srcState, fieldName, &
-      auxArray=auxArray, options=options, rc=localrc)
-    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__,  &
-      file=__FILE__,  &
-      rcToReturn=rc)) return  ! bail out
-    call ESMF_FieldGet(srcField, localDeCount=localDeCount, rc=localrc)
-    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__,  &
-      file=__FILE__,  &
-      rcToReturn=rc)) return  ! bail out
-    write(6,'("-- FieldRegrid: got src field ",a,"(",a,") on ",i0," DEs")') trim(fieldName), trim(rh % label), localDeCount
 
-    write(6,'("-- FieldRegrid: getting dst field ",a,"(",a,")")') trim(fieldName), trim(rh % label)
-    dstField = StateGetField(rh % dstState, fieldName, rc=localrc)
+    call FieldGet(rh % srcState, fieldName, compList=compList, compCount=compCount, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__,  &
       file=__FILE__,  &
       rcToReturn=rc)) return  ! bail out
-    call ESMF_FieldGet(srcField, localDeCount=localDeCount, rc=localrc)
-    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__,  &
-      file=__FILE__,  &
-      rcToReturn=rc)) return  ! bail out
-    write(6,'("-- FieldRegrid: got dst field ",a,"(",a,") on ",i0," DEs")') trim(fieldName), trim(rh % label), localDeCount
 
-    if (first) then
-      call ESMF_FieldFill(srcField, dataFillScheme="one", rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail out
-      first = .false.
+    if (compCount < 1) return
+
+    do comp = 1, compCount
+      write(6,'("-- FieldRegrid: getting src field ",a,"(",a,")")') trim(compList(comp)), trim(rh % label)
+      srcFieldComp(comp) = StateGetField(rh % srcState, compList(comp), &
+        auxArray=auxArray, options=options, component=comp, rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) return  ! bail out
+
+      ! -- initialize field to 1 (to be removed)
+      if (first) then
+        call ESMF_FieldFill(srcFieldComp(comp), dataFillScheme="one", rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+        first = .false.
+      end if
+
+      ! -- print diagnostic info
+      call FieldPrintMinMax(srcFieldComp(comp), "pre  - src:" // trim(compList(comp)), rc)
+
+      write(6,'("-- FieldRegrid: getting dst field ",a,"(",a,")")') trim(compList(comp)), trim(rh % label)
+      dstFieldComp(comp) = StateGetField(rh % dstState, compList(comp), component=comp, rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) return  ! bail out
+    end do
+
+    if (compCount == 2) then
+      ! -- convert to Cartesian 3D vector
+      call Cardinal_to_Cart3D(srcFieldComp(2), srcFieldComp(1), &
+        rh % srcState % uvec(2), rh % srcState % uvec(1), &
+        rh % srcState % localCartField, rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) return  ! bail out
+
+      srcField = rh % srcState % localCartField
+      dstField = rh % dstState % localCartField
+    else
+      srcField = srcFieldComp(1)
+      dstField = dstFieldComp(1)
     end if
-    ! -- print diagnostic info
-    call FieldPrintMinMax(srcField, "pre  - src:" // trim(fieldName), rc)
 
-    write(6,'("-- FieldRegrid: ",a,"(",a,")")') trim(fieldName), trim(rh % label)
+    ! -- perform regrid
     call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
       zeroregion=ESMF_REGION_SELECT, &
       routehandle=rh % rh, rc=localrc)
@@ -3418,36 +3476,49 @@ contains
       line=__LINE__,  &
       file=__FILE__,  &
       rcToReturn=rc)) return  ! bail out
-    write(6,'("-- FieldRegrid: ",a,"(",a,") done")') trim(fieldName), trim(rh % label)
 
-    ! -- print diagnostic info
-    call FieldPrintMinMax(dstField, "post - dst:" // trim(fieldName), rc)
+    if (compCount == 2) then
+      ! -- convert back to cardinal vectors
+      call Cart3D_to_Cardinal(dstField, &
+        rh % dstState % uvec(2), rh % dstState % uvec(1), &
+        dstFieldComp(2), dstFieldComp(2), rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) return  ! bail out
+    end if
 
-    write(6,'("-- FieldRegrid: storing src field ",a,"(",a,")")') trim(fieldName), trim(rh % label)
-    call StateStoreField(rh % srcState, srcField, fieldName, rc=localrc)
-    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__,  &
-      file=__FILE__,  &
-      rcToReturn=rc)) return  ! bail out
-    write(6,'("-- FieldRegrid: done src field ",a,"(",a,")")') trim(fieldName), trim(rh % label)
+    do comp = 1, compCount
+      ! -- print diagnostic info
+      call FieldPrintMinMax(dstFieldComp(comp), "post - dst:" // trim(compList(comp)), rc)
 
-    write(6,'("-- FieldRegrid: storing dst field ",a,"(",a,")")') trim(fieldName), trim(rh % label)
-    call StateStoreField(rh % dstState, dstField, fieldName, rc=localrc)
-    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__,  &
-      file=__FILE__,  &
-      rcToReturn=rc)) return  ! bail out
-    write(6,'("-- FieldRegrid: done dst field ",a,"(",a,")")') trim(fieldName), trim(rh % label)
+      write(6,'("-- FieldRegrid: storing src field ",a,"(",a,")")') trim(compList(comp)), trim(rh % label)
+      call StateStoreField(rh % srcState, srcFieldComp(comp), compList(comp), rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) return  ! bail out
+      write(6,'("-- FieldRegrid: done src field ",a,"(",a,")")') trim(compList(comp)), trim(rh % label)
+
+      write(6,'("-- FieldRegrid: storing dst field ",a,"(",a,")")') trim(compList(comp)), trim(rh % label)
+      call StateStoreField(rh % dstState, dstFieldComp(comp), compList(comp), rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) return  ! bail out
+      write(6,'("-- FieldRegrid: done dst field ",a,"(",a,")")') trim(compList(comp)), trim(rh % label)
+    end do
 
   end subroutine FieldRegrid
 
-  function StateGetField(state, fieldName, auxArray, options, rc)
+  function StateGetField(state, fieldName, auxArray, options, component, rc)
 
     ! -- input variables
     type(stateType),            intent(inout) :: state
     character(len=*),           intent(in)    :: fieldName
     type(ESMF_Array), optional, intent(in)    :: auxArray
     character(len=*), optional, intent(in)    :: options
+    integer,          optional, intent(in)    :: component
 
     ! -- output 
     type(ESMF_Field)               :: StateGetField
@@ -3457,7 +3528,7 @@ contains
     logical :: isFieldCreated
     logical :: isNative, isNoData, isOrigin
     integer :: localrc
-    integer :: localDeCount
+    integer :: localDeCount, localComp
     real(ESMF_KIND_R8), pointer :: fptr1d(:), fptr2d(:,:)
     type(ESMF_Field)            :: field
     type(ESMF_StateIntent_Flag) :: stateIntent
@@ -3474,6 +3545,27 @@ contains
       isNoData = (trim(options) == "nodata")
       isNative = (trim(options) == "native")
       isOrigin = (trim(options) == "origin")
+    end if
+
+    localComp = 1
+    if (present(component)) then
+      if (component < 1) then
+        call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+          msg="component must be greater than 0", &
+          line=__LINE__, &
+          file=__FILE__, &
+          rcToReturn=rc)
+        return ! bail out
+      else if (component > state % fieldMaxRank) then
+        call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+          msg="component not found", &
+          line=__LINE__, &
+          file=__FILE__, &
+          rcToReturn=rc)
+        return ! bail out
+      else
+        localComp = component
+      end if
     end if
 
     call ESMF_StateGet(state % parent, stateintent=stateIntent, rc=localrc)
@@ -3504,7 +3596,7 @@ contains
     end if
 
     write(6,'("-- StateGetField: checking if field is created ...")')
-    isFieldCreated = ESMF_FieldIsCreated(state % localField, rc=localrc)
+    isFieldCreated = ESMF_FieldIsCreated(state % localField(localComp), rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__,  &
       file=__FILE__,  &
@@ -3514,7 +3606,7 @@ contains
 
     if (isFieldCreated) then
       if (isNoData) then
-        StateGetField = state % localField
+        StateGetField = state % localField(localComp)
         return
       end if
       call ESMF_FieldGet(field, geomtype=geomtype, rc=localrc)
@@ -3522,7 +3614,7 @@ contains
         line=__LINE__,  &
         file=__FILE__,  &
         rcToReturn=rc)) return  ! bail out
-      call ESMF_FieldGet(state % localField, geomtype=lgeomtype, rc=localrc)
+      call ESMF_FieldGet(state % localField(localComp), geomtype=lgeomtype, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__,  &
         file=__FILE__,  &
@@ -3540,7 +3632,7 @@ contains
       if (geomtype == ESMF_GEOMTYPE_MESH) then
 
         ! -- interpolate from 2d+1 Mesh to 3d Mesh
-        call FieldInterpolate(field, state % localIntField, &
+        call FieldInterpolate(field, state % localIntField(localComp), &
           srcLevels=state % remoteLevels, &
           dstLevels=state % localLevels, &
           auxArray=auxArray, options=options, rc=localrc)
@@ -3550,15 +3642,15 @@ contains
           rcToReturn=rc)) return  ! bail out
 
         if (isNative) then
-          StateGetField = state % localIntField
+          StateGetField = state % localIntField(localComp)
         else
           ! -- assuming 1 DE/PET
-          call ESMF_FieldGet(state % localField, farrayPtr=fptr1d, rc=localrc)
+          call ESMF_FieldGet(state % localField(localComp), farrayPtr=fptr1d, rc=localrc)
           if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__,  &
             file=__FILE__,  &
             rcToReturn=rc)) return  ! bail out
-          call ESMF_FieldGet(state % localIntField, farrayPtr=fptr2d, rc=localrc)
+          call ESMF_FieldGet(state % localIntField(localComp), farrayPtr=fptr2d, rc=localrc)
           if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__,  &
             file=__FILE__,  &
@@ -3568,13 +3660,13 @@ contains
           flush 6
           fptr1d = reshape(fptr2d, (/ size(fptr1d) /))
 
-          StateGetField = state % localField
+          StateGetField = state % localField(localComp)
         end if
 
       else if (geomtype == ESMF_GEOMTYPE_GRID) then
 
         ! -- use localLevels only on Mesh to reduce complexity for the time being
-        call FieldInterpolate(field, state % localField, srcLevels=state % remoteLevels, &
+        call FieldInterpolate(field, state % localField(localComp), srcLevels=state % remoteLevels, &
           auxArray=auxArray, options=options, rc=localrc)
         if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__,  &
@@ -3598,7 +3690,7 @@ contains
 !           file=__FILE__,  &
 !           rcToReturn=rc)) return  ! bail out
 !       end if
-        StateGetField = state % localField
+        StateGetField = state % localField(localComp)
 
       else
         call ESMF_LogSetError(ESMF_RC_OBJ_BAD, &
@@ -3618,18 +3710,19 @@ contains
 
   end function StateGetField
 
-  subroutine StateStoreField(state, field, fieldName, rc)
+  subroutine StateStoreField(state, field, fieldName, component, rc)
 
     ! -- input variables
     type(stateType),   intent(in)  :: state
     type(ESMF_Field),  intent(in)  :: field
     character(len=*),  intent(in)  :: fieldName
+    integer, optional, intent(in)  :: component
 
     ! -- output 
     integer, optional, intent(out) :: rc
 
     ! -- local variable
-    integer                     :: localrc
+    integer                     :: localrc, localComp
     real(ESMF_KIND_R8), pointer :: fptr1d(:), fptr2d(:,:)
     type(ESMF_Field)            :: dstField
     type(ESMF_GeomType_Flag)    :: geomtype
@@ -3637,6 +3730,27 @@ contains
 
     ! -- begin
     if (present(rc)) rc = ESMF_SUCCESS
+
+    localComp = 1
+    if (present(component)) then
+      if (component < 1) then
+        call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+          msg="component must be greater than 0", &
+          line=__LINE__, &
+          file=__FILE__, &
+          rcToReturn=rc)
+        return ! bail out
+      else if (component > state % fieldMaxRank) then
+        call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+          msg="component not found", &
+          line=__LINE__, &
+          file=__FILE__, &
+          rcToReturn=rc)
+        return ! bail out
+      else
+        localComp = component
+      end if
+    end if
 
     call ESMF_StateGet(state % parent, stateintent=stateIntent, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -3646,7 +3760,7 @@ contains
 
     if (stateIntent /= ESMF_STATEINTENT_EXPORT) return
 
-    if (field == state % localField) then
+    if (field == state % localField(localComp)) then
 
       call ESMF_FieldGet(field, geomtype=geomtype, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -3664,12 +3778,12 @@ contains
       if (geomtype == ESMF_GEOMTYPE_MESH) then
 
         ! -- assuming 1 DE/PET
-        call ESMF_FieldGet(state % localField, farrayPtr=fptr1d, rc=localrc)
+        call ESMF_FieldGet(state % localField(localComp), farrayPtr=fptr1d, rc=localrc)
         if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__,  &
           file=__FILE__,  &
           rcToReturn=rc)) return  ! bail out
-        call ESMF_FieldGet(state % localIntField, farrayPtr=fptr2d, rc=localrc)
+        call ESMF_FieldGet(state % localIntField(localComp), farrayPtr=fptr2d, rc=localrc)
         if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__,  &
           file=__FILE__,  &
@@ -3681,7 +3795,7 @@ contains
         fptr2d = reshape(fptr1d, shape(fptr2d))
 
         ! -- interpolate from 2d+1 Mesh to 3d Mesh
-        call FieldInterpolate(state % localIntField, dstField, &
+        call FieldInterpolate(state % localIntField(localComp), dstField, &
           srcLevels=state % localLevels, &
           dstLevels=state % remoteLevels, &
           rc=localrc)
@@ -4593,7 +4707,7 @@ contains
 
   ! WAM dimension order:  lons, lats (192, 94)
   allocate(wamlon(wamdims(1), wamdims(2)), &
-  	   wamlat(wamdims(1), wamdims(2)))
+           wamlat(wamdims(1), wamdims(2)))
   status = nf90_get_var(nc1, varid, wamlon)
   call CheckNCError(status, 'lons')
   status = nf90_inq_varid(nc1,'lats', varid)
@@ -5353,6 +5467,558 @@ contains
   end subroutine CheckNCError
 
 end subroutine initGrids
+
+
+! Fill a Field with 3D Cartesian unit vectors corresponding to cardinal directions
+! This assumes that the incoming fields are built on the same Mesh, and have an undistributed dim of 3
+subroutine Set_Field_Cardinal_UVecs(north_field, east_field, rc)
+  type(ESMF_Field) :: north_field, east_field
+  type(ESMF_Mesh) :: mesh
+  type(ESMF_VM) :: vm
+  integer :: localPet
+  integer :: numNodes
+  real(ESMF_KIND_R8), allocatable :: nodeCoords(:)
+  real(ESMF_KIND_R8), pointer :: north_field_ptr(:,:)
+  real(ESMF_KIND_R8), pointer :: east_field_ptr(:,:)
+  real(ESMF_KIND_R8) :: lat, lon
+  integer :: localDECount, i
+  integer :: rc
+
+  ! Error checking
+  real(ESMF_KIND_R8) :: max_coord(2), g_max_coord(2)
+  real(ESMF_KIND_R8) :: min_coord(2), g_min_coord(2)
+
+
+  ! debug
+  real(ESMF_KIND_R8) :: len
+
+  ! Get mesh
+  call ESMF_FieldGet(north_field, mesh=mesh, &
+                     localDECount=localDECount, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  ! If there are no DEs on this processor, then leave
+  if (localDECount .eq. 0) then
+     return
+  endif
+
+  ! If there is more than 1 DE then complain, because we aren't handling
+  ! that case right now
+  if (localDECount .gt. 1) then
+     return
+  endif
+
+
+  ! Get Coordinates
+  call ESMF_MeshGet(mesh, numOwnedNodes=numNodes, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+   ! Allocate space for coordinates
+   allocate(nodeCoords(3*numNodes))
+
+   ! Set interpolated function
+   call ESMF_MeshGet(mesh, ownedNodeCoords=nodeCoords, rc=rc)
+   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+
+  ! Get pointer to north field array
+  ! (Should only be 1 localDE)
+  call ESMF_FieldGet(north_field, 0, north_field_ptr, &
+       rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+
+  ! Error checking of Field Bounds
+  if ((lbound(north_field_ptr,1) .ne. 1) .or. &
+       (ubound(north_field_ptr,1) .ne. 3) .or. &
+       (lbound(north_field_ptr,2) .ne. 1) .or. &
+       (ubound(north_field_ptr,2) .ne. numNodes)) then
+     call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, &
+          msg="north Field bounds wrong", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
+     return
+  endif
+
+  ! Get pointer to east field array
+  ! (Should only be 1 localDE)
+  call ESMF_FieldGet(east_field, 0, east_field_ptr, &
+       rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+
+  ! Error checking of Field Bounds
+  if ((lbound(east_field_ptr, 1) .ne. 1) .or. &
+       (ubound(east_field_ptr, 1) .ne. 3) .or. &
+       (lbound(east_field_ptr, 2) .ne. 1) .or. &
+       (ubound(east_field_ptr, 2) .ne. numNodes)) then
+     call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, &
+          msg="east Field bounds wrong", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
+     return
+  endif
+
+  ! For error checking
+  min_coord= HUGE(min_coord)
+  max_coord=-HUGE(max_coord)
+
+  ! Loop setting unit vectors
+  do i=1,numNodes
+
+     ! Get position on sphere
+     lon=nodeCoords(3*(i-1)+1)
+     lat=nodeCoords(3*(i-1)+2)
+
+     ! Get min/max of coord for error checking
+     if (lon < min_coord(1)) min_coord(1)=lon
+     if (lon > max_coord(1)) max_coord(1)=lon
+     if (lat < min_coord(2)) min_coord(2)=lat
+     if (lat > max_coord(2)) max_coord(2)=lat
+
+     ! Convert to radians
+     lon=lon*ESMF_COORDSYS_DEG2RAD
+     lat=lat*ESMF_COORDSYS_DEG2RAD
+
+     ! Set east vector
+     east_field_ptr(1,i)=cos(lon)
+     east_field_ptr(2,i)=sin(lon)
+     east_field_ptr(3,i)=0.0
+
+     ! Set north vector
+     north_field_ptr(1,i)=-sin(lat)*sin(lon)
+     north_field_ptr(2,i)= sin(lat)*cos(lon)
+     north_field_ptr(3,i)= cos(lat)
+
+  enddo
+
+
+  ! Get current vm
+  call ESMF_VMGetCurrent(vm, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  ! set up local pet info
+  call ESMF_VMGet(vm, localPet=localPet, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+
+  ! Compute global max
+  call ESMF_VMAllReduce(vm, max_coord, g_max_coord, 2, &
+       ESMF_REDUCE_MAX, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  call ESMF_VMAllReduce(vm, min_coord, g_min_coord, 2, &
+       ESMF_REDUCE_MIN, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  ! Report error
+  if ((g_max_coord(1) - g_min_coord(1)) < 20.0) then
+     call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, &
+ msg="Longitude range of grid unexpectedly small (< 20 deg) possibly using radians or 7.1.0 snapshot before 16", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
+     return
+  endif
+
+  if ((g_max_coord(2) - g_min_coord(2)) < 20.0) then
+     call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, &
+msg="Latitude range of grid unexpectedly small (< 20 deg) possibly using radians or 7.1.0 snapshot before 16", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
+     return
+  endif
+
+  ! Get rid of coordinates
+  deallocate(nodeCoords)
+
+  ! return success
+  rc=ESMF_SUCCESS
+
+end subroutine Set_Field_Cardinal_UVecs
+
+
+! This function does the same thing as the above. However, it starts from Cart coordinates in the Mesh.
+! This is due to a bug in redisting the mesh. When we switch to 7.1.0 you can get rid of this subroutine and
+! use the above for both meshes.
+subroutine Set_Field_Cardinal_UVecsCart(north_field, east_field, rc)
+  type(ESMF_Field) :: north_field, east_field
+  type(ESMF_Mesh) :: mesh
+  integer :: numNodes
+  real(ESMF_KIND_R8), allocatable :: nodeCoords(:)
+  real(ESMF_KIND_R8), pointer :: north_field_ptr(:,:)
+  real(ESMF_KIND_R8), pointer :: east_field_ptr(:,:)
+  real(ESMF_KIND_R8) :: lat, lon, r
+  integer :: localDECount, i
+  integer :: rc
+  real(ESMF_KIND_R8) :: x,y,z
+  real(ESMF_KIND_R8),parameter :: half_pi=1.5707963267949_ESMF_KIND_R8
+  real(ESMF_KIND_R8),parameter :: two_pi=6.28318530717959_ESMF_KIND_R8
+
+  ! debug
+  real(ESMF_KIND_R8) :: len
+
+  ! Get mesh
+  call ESMF_FieldGet(north_field, mesh=mesh, &
+                     localDECount=localDECount, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+  ! If there are no DEs on this processor, then leave
+  if (localDECount .eq. 0) then
+     return
+  endif
+
+  ! If there is more than 1 DE then complain, because we aren't handling
+  ! that case right now
+  if (localDECount .gt. 1) then
+     return
+  endif
+
+
+  ! Get Coordinates
+  call ESMF_MeshGet(mesh, numOwnedNodes=numNodes, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+   ! Allocate space for coordinates
+   allocate(nodeCoords(3*numNodes))
+
+   ! Set interpolated function
+   call ESMF_MeshGet(mesh, ownedNodeCoords=nodeCoords, rc=rc)
+   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+
+  ! Get pointer to north field array
+  ! (Should only be 1 localDE)
+  call ESMF_FieldGet(north_field, 0, north_field_ptr, &
+       rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+
+  ! Error checking of Field Bounds
+  if ((lbound(north_field_ptr,1) .ne. 1) .or. &
+       (ubound(north_field_ptr,1) .ne. 3) .or. &
+       (lbound(north_field_ptr,2) .ne. 1) .or. &
+       (ubound(north_field_ptr,2) .ne. numNodes)) then
+     call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, &
+          msg="north Field bounds wrong", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
+     return
+  endif
+
+  ! Get pointer to east field array
+  ! (Should only be 1 localDE)
+  call ESMF_FieldGet(east_field, 0, east_field_ptr, &
+       rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+
+  ! Error checking of Field Bounds
+  if ((lbound(east_field_ptr, 1) .ne. 1) .or. &
+       (ubound(east_field_ptr, 1) .ne. 3) .or. &
+       (lbound(east_field_ptr, 2) .ne. 1) .or. &
+       (ubound(east_field_ptr, 2) .ne. numNodes)) then
+     call ESMF_LogSetError(ESMF_RC_VAL_OUTOFRANGE, &
+          msg="east Field bounds wrong", &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)
+     return
+  endif
+
+  ! Loop setting unit vectors
+  do i=1,numNodes
+
+     ! Get position on sphere
+     x=nodeCoords(3*(i-1)+1)
+     y=nodeCoords(3*(i-1)+2)
+     z=nodeCoords(3*(i-1)+3)
+
+     ! convert to lon/lat/r
+     r=sqrt(x*x+y*y+z*z)
+
+     lon=atan2(y,x)
+     if (lon < 0.0) lon = lon + two_pi
+
+     lat=half_pi-acos(z/r)
+
+     ! Set east vector
+     east_field_ptr(1,i)=cos(lon)
+     east_field_ptr(2,i)=sin(lon)
+     east_field_ptr(3,i)=0.0
+
+     ! Set north vector
+     north_field_ptr(1,i)=-sin(lat)*sin(lon)
+     north_field_ptr(2,i)= sin(lat)*cos(lon)
+     north_field_ptr(3,i)= cos(lat)
+
+  enddo
+
+  ! Get rid of coordinates
+  deallocate(nodeCoords)
+
+  ! return success
+  rc=ESMF_SUCCESS
+
+end subroutine Set_Field_Cardinal_UVecsCart
+
+
+! Convert Cardinal vectors to one 3D cartesian vector
+subroutine Cardinal_to_Cart3D(north_field, east_field, &
+                              north_uvec, east_uvec, &
+                              cart_vec, rc)
+  type(ESMF_Field) :: north_field, east_field
+  type(ESMF_Field) :: north_uvec, east_uvec
+  type(ESMF_Field) :: cart_vec
+  integer :: rc
+  real(ESMF_KIND_R8), pointer :: north_field_ptr(:)
+  real(ESMF_KIND_R8), pointer :: east_field_ptr(:)
+  real(ESMF_KIND_R8), pointer :: north_uvec_ptr(:,:)
+  real(ESMF_KIND_R8), pointer :: east_uvec_ptr(:,:)
+  real(ESMF_KIND_R8), pointer :: cart_vec_ptr(:,:)
+  integer :: localDECount, lDE
+  integer :: clbnd(1), cubnd(1), i
+
+
+  ! Get localDECount
+  ! (Asssumes that all the incoming Fields have the same local DE Count)
+  call ESMF_FieldGet(north_field, &
+                     localDECount=localDECount, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+
+  ! Loop over local DEs processing data
+  do lDE=0,localDECount-1
+
+     ! Get pointer to north field array
+     call ESMF_FieldGet(north_field, lDE, north_field_ptr, &
+          computationalLBound=clbnd, computationalUBound=cubnd, &
+          rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+
+     ! Get pointer to east field array
+     call ESMF_FieldGet(east_field, lDE, east_field_ptr, &
+          rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+
+     ! Get pointer to north unit vector array
+     call ESMF_FieldGet(north_uvec, lDE, north_uvec_ptr, &
+          rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+
+     ! Get pointer to north unit vector array
+     call ESMF_FieldGet(east_uvec, lDE, east_uvec_ptr, &
+          rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+
+     ! Get pointer to east unit vector array
+     call ESMF_FieldGet(east_uvec, lDE, east_uvec_ptr, &
+          rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+
+
+     ! Get pointer to east unit vector array
+     call ESMF_FieldGet(cart_vec, lDE, cart_vec_ptr, &
+          rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+
+     ! Loop over points processing
+     do i=clbnd(1), cubnd(1)
+
+
+#if 0
+        cart_vec_ptr(1,i)=east_uvec_ptr(1,i)
+        cart_vec_ptr(2,i)=east_uvec_ptr(2,i)
+        cart_vec_ptr(3,i)=east_uvec_ptr(3,i)
+#endif
+
+        cart_vec_ptr(1,i)=east_field_ptr(i)*east_uvec_ptr(1,i)+ &
+                          north_field_ptr(i)*north_uvec_ptr(1,i)
+
+        cart_vec_ptr(2,i)=east_field_ptr(i)*east_uvec_ptr(2,i)+ &
+                          north_field_ptr(i)*north_uvec_ptr(2,i)
+
+        cart_vec_ptr(3,i)=east_field_ptr(i)*east_uvec_ptr(3,i)+ &
+                          north_field_ptr(i)*north_uvec_ptr(3,i)
+     enddo
+  enddo
+
+  ! return success
+  rc=ESMF_SUCCESS
+
+end subroutine Cardinal_to_Cart3D
+
+
+
+! Convert 3D cartesian vector to Cardinal vectors
+subroutine Cart3D_to_Cardinal(cart_vec, &
+                              north_uvec, east_uvec, &
+                              north_field, east_field, rc)
+  type(ESMF_Field) :: cart_vec
+  type(ESMF_Field) :: north_uvec, east_uvec
+  type(ESMF_Field) :: north_field, east_field
+  integer :: rc
+  real(ESMF_KIND_R8), pointer :: north_field_ptr(:)
+  real(ESMF_KIND_R8), pointer :: east_field_ptr(:)
+  real(ESMF_KIND_R8), pointer :: north_uvec_ptr(:,:)
+  real(ESMF_KIND_R8), pointer :: east_uvec_ptr(:,:)
+  real(ESMF_KIND_R8), pointer :: cart_vec_ptr(:,:)
+  integer :: localDECount, lDE
+  integer :: clbnd(1), cubnd(1), i
+
+
+  ! Get localDECount
+  ! (Asssumes that all the incoming Fields have the same local DE Count)
+  call ESMF_FieldGet(north_field, &
+                     localDECount=localDECount, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       return  ! bail out
+
+
+  ! Loop over local DEs processing data
+  do lDE=0,localDECount-1
+
+     ! Get pointer to north field array
+     call ESMF_FieldGet(north_field, lDE, north_field_ptr, &
+          computationalLBound=clbnd, computationalUBound=cubnd, &
+          rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+
+     ! Get pointer to east field array
+     call ESMF_FieldGet(east_field, lDE, east_field_ptr, &
+          rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+
+     ! Get pointer to north unit vector array
+     call ESMF_FieldGet(north_uvec, lDE, north_uvec_ptr, &
+          rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+
+     ! Get pointer to north unit vector array
+     call ESMF_FieldGet(east_uvec, lDE, east_uvec_ptr, &
+          rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+
+     ! Get pointer to east unit vector array
+     call ESMF_FieldGet(east_uvec, lDE, east_uvec_ptr, &
+          rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+
+
+     ! Get pointer to east unit vector array
+     call ESMF_FieldGet(cart_vec, lDE, cart_vec_ptr, &
+          rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+
+     ! Loop over points processing
+     do i=clbnd(1), cubnd(1)
+
+        east_field_ptr(i)=cart_vec_ptr(1,i)*east_uvec_ptr(1,i)+ &
+                          cart_vec_ptr(2,i)*east_uvec_ptr(2,i)+ &
+                          cart_vec_ptr(3,i)*east_uvec_ptr(3,i)
+
+        north_field_ptr(i)=cart_vec_ptr(1,i)*north_uvec_ptr(1,i)+ &
+                           cart_vec_ptr(2,i)*north_uvec_ptr(2,i)+ &
+                           cart_vec_ptr(3,i)*north_uvec_ptr(3,i)
+
+!        if (i .lt. 1000) then
+!           write(*,*) i," east=",east_field_ptr(i)," north=",north_field_ptr(i)
+!        endif
+
+     enddo
+  enddo
+
+  ! return success
+  rc=ESMF_SUCCESS
+
+end subroutine Cart3D_to_Cardinal
 
 
 end module module_MED_SWPC_methods
