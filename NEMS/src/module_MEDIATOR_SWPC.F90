@@ -140,14 +140,13 @@ module module_MED_SWPC
 
     call NamespaceAdd("ATM",importState, &
       (/ &
-        "height                         ", &
-        "eastward_wind_neutral          ", &
-        "northward_wind_neutral         ", &
-        "upward_wind_neutral            ", &
-        "temp_neutral                   ", &
-        "O_Density                      ", &
-        "O2_Density                     ", &
-        "N2_Density                     "  &
+        "height                                      ", &
+        "eastward_wind_neutral:northward_wind_neutral", &
+        "upward_wind_neutral                         ", &
+        "temp_neutral                                ", &
+        "O_Density                                   ", &
+        "O2_Density                                  ", &
+        "N2_Density                                  "  &
       /), &
       "cannot provide", &
       ungriddedVerticalDim=.true., &
@@ -159,17 +158,15 @@ module module_MED_SWPC
 
     call NamespaceAdd("IPM",exportState, &
       (/ &
-        "eastward_wind_neutral          ", &
-        "northward_wind_neutral         ", &
-        "upward_wind_neutral            ", &
-        "temp_neutral                   ", &
-        "O_Density                      ", &
-        "O2_Density                     ", &
-        "N2_Density                     "  &
+        "eastward_wind_neutral:northward_wind_neutral", &
+        "upward_wind_neutral                         ", &
+        "temp_neutral                                ", &
+        "O_Density                                   ", &
+        "O2_Density                                  ", &
+        "N2_Density                                  "  &
       /), &
       "cannot provide", &
       fieldOptions=(/ &
-        "none", &
         "none", &
         "none", &
         "none", &
