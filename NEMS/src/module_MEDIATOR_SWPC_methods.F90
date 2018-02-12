@@ -13,29 +13,31 @@ module module_MED_SWPC_methods
   type stateType
     type(ESMF_State) :: parent
     type(ESMF_State) :: self
-    character(len=ESMF_MAXSTR), dimension(:), pointer :: fieldNames
-    character(len=ESMF_MAXSTR), dimension(:), pointer :: fieldOptions
+    character(len=ESMF_MAXSTR), dimension(:), pointer :: fieldNames   => null()
+    character(len=ESMF_MAXSTR), dimension(:), pointer :: fieldOptions => null()
     character(len=ESMF_MAXSTR) :: trAction
     type(ESMF_Grid)            :: localGrid
     type(ESMF_Mesh)            :: localMesh
     type(ESMF_Field)           :: localField
     type(ESMF_Field)           :: localIntField
     type(ESMF_Array)           :: localLevels
-    integer                    :: ugDimLength
     type(ESMF_Array)           :: remoteLevels
+    integer                    :: ugDimLength
+    integer, dimension(:), pointer :: fieldDepMap => null()
     type(stateType),   pointer :: next 
   end type stateType
 
   type compType
     character(len=ESMF_MAXSTR) :: name
-    type(stateType),   pointer :: stateList
-    type(compType),    pointer :: next
+    type(stateType),   pointer :: stateList => null()
+    type(compType),    pointer :: next      => null()
   end type compType
 
   type rhType
     character(len=ESMF_MAXSTR) :: label
     type(ESMF_RouteHandle)   :: rh
-    type(stateType), pointer :: srcState, dstState
+    type(stateType), pointer :: srcState => null()
+    type(stateType), pointer :: dstState => null()
     type(rhType),    pointer :: next
   end type rhType
 
@@ -46,6 +48,8 @@ module module_MED_SWPC_methods
     module procedure VerticalInterpolate1D
     module procedure VerticalInterpolate2D
   end interface Interpolate
+
+  character(len=*), parameter :: fieldSep = ":"
 
 
   private
@@ -162,8 +166,10 @@ contains
     integer,             optional, intent(out) :: rc
 
     ! -- local variables
+    integer :: i, item, localCount, pairCount, pos
     integer :: localrc, fieldCount, totalCount, ugDimLength
-    character(len=ESMF_MAXSTR), dimension(:), allocatable :: tmp
+    integer,                    dimension(:), allocatable :: localDepMap, tmpMap
+    character(len=ESMF_MAXSTR), dimension(:), allocatable :: localNames, localOptions, tmp
 
     ! -- begin
     if (present(rc)) rc = ESMF_SUCCESS
@@ -173,6 +179,7 @@ contains
       if (ungriddedVerticalDim) ugDimLength = -1
     end if
 
+    ! -- if present, field options must be provided for each field entry
     if (present(fieldOptions)) then
       if (size(fieldNames) /= size(fieldOptions)) then
         call ESMF_LogSetError(ESMF_RC_OBJ_BAD, &
@@ -184,6 +191,42 @@ contains
       end if
     end if
 
+    ! -- unpack field pairs to determine full field list
+    fieldCount = size(fieldNames)
+    pairCount  = count(scan(fieldNames, fieldSep) /=0)
+    localCount = fieldCount + pairCount
+
+    allocate(localNames(localCount), localOptions(localCount), &
+      localDepMap(localCount), stat=localrc)
+    if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__, &
+      rcToReturn=rc)) return
+
+    localOptions = "none"
+    localDepMap = 0
+
+    i = 0
+    do item = 1, fieldCount
+      pos = scan(fieldNames(item), fieldSep)
+      i = i + 1
+      if (pos > 0) then
+        localNames(i)  = fieldNames(item)(1:pos-1)
+        localDepMap(i) = i + 1
+        i = i + 1
+        localNames(i)  = fieldNames(item)(pos+1:)
+        localDepMap(i) = -i - 1
+        if (present(fieldOptions)) then
+          localOptions(i-1:i) = fieldOptions(item)
+        end if
+      else
+        localNames(i) = fieldNames(item)
+        if (present(fieldOptions)) &
+          localOptions(i) = fieldOptions(item)
+      end if
+    end do
+
+    ! -- create state if it does not exist
     if (.not.associated(s)) then
       allocate(s, stat=localrc)
       if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -216,12 +259,13 @@ contains
           return ! bail out
       end if 
       fieldCount = size(s % fieldNames)
-      totalCount = fieldCount + size(fieldNames)
+      totalCount = fieldCount + localCount
       allocate(tmp(fieldCount), stat=localrc)
       if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__, &
         rcToReturn=rc)) return
+      ! -- add field names
       tmp(1:fieldCount) = s % fieldNames
       deallocate(s % fieldNames, stat=localrc)
       if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -234,7 +278,8 @@ contains
         file=__FILE__, &
         rcToReturn=rc)) return
       s % fieldNames(1:fieldCount)      = tmp
-      s % fieldNames(fieldCount + 1:)   = fieldNames
+      s % fieldNames(fieldCount + 1:)   = localNames
+      ! -- add field options
       tmp(1:fieldCount) = s % fieldOptions
       deallocate(s % fieldOptions, stat=localrc)
       if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -247,30 +292,58 @@ contains
         file=__FILE__, &
         rcToReturn=rc)) return
       s % fieldOptions(1:fieldCount)      = tmp
-      s % fieldOptions(fieldCount + 1:)   = fieldOptions
+      s % fieldOptions(fieldCount + 1:)   = localOptions
       deallocate(tmp, stat=localrc)
       if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__, &
         rcToReturn=rc)) return
-    else
-      allocate(s % fieldNames(size(fieldNames)), &
-               s % fieldOptions(size(fieldNames)), stat=localrc)
+      ! -- add field depMap
+      allocate(tmpMap(fieldCount), stat=localrc)
       if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__, &
         rcToReturn=rc)) return
-      s % fieldNames      = fieldNames
-      s % ugDimLength     = ugDimLength
-      s % trAction        = trAction
-      if (present(fieldOptions)) then
-        s % fieldOptions  = fieldOptions
-      else
-        s % fieldOptions  = "none"
-      end if
+      tmpMap = s % fieldDepMap
+      deallocate(s % fieldDeMap, stat=localrc)
+      if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)) return
+      allocate(s % fieldDeMap(totalCount), stat=localrc)
+      if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)) return
+      s % fieldDepMap(1:fieldCount)      = tmpMap
+      s % fieldDepMap(fieldCount + 1:)   = localDepMap
+      deallocate(tmpMap, stat=localrc)
+      if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)) return
+    else
+      allocate(s % fieldNames(localCount), &
+               s % fieldOptions(localCount), &
+               s % fieldDepMap(localCount), stat=localrc)
+      if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)) return
+      s % fieldNames    = localNames
+      s % ugDimLength   = ugDimLength
+      s % trAction      = trAction
+      s % fieldOptions  = localOptions
+      s % fieldDepMap   = localDepMap
     end if
     s % parent = state
     nullify(s % next)
+
+    deallocate(localNames, localOptions, localDepMap, stat=localrc)
+    if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__, &
+      rcToReturn=rc)) return
 
   end subroutine StateAdd
 
