@@ -2433,7 +2433,8 @@ contains
     ! -- local variables
     type(compType),  pointer :: p
     type(stateType), pointer :: s
-    logical                  :: isGridCreated
+    integer                  :: item
+    logical                  :: isGridCreated, isFieldCreated
 
     ! -- begin
     rc = ESMF_SUCCESS
@@ -2452,12 +2453,27 @@ contains
           s => p % stateList
           do while (associated(s))
             s % localGrid  = grid
-            s % localField = ESMF_FieldCreate(grid, ESMF_TYPEKIND_R8, &
-              staggerloc=ESMF_STAGGERLOC_CENTER, rc=rc)
-            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-              line=__LINE__, &
-              file=__FILE__)) &
-              return  ! bail out
+            do item = 1, s % fieldMaxRank
+              ! -- if local field exists, destroy and recreate
+              isFieldCreated = ESMF_FieldIsCreated(s % localField(item), rc=rc)
+              if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+                line=__LINE__,  &
+                file=__FILE__)) &
+                return  ! bail out
+              if (isFieldCreated) then
+                call ESMF_FieldDestroy(s % localField(item), noGarbage=.true., rc=rc)
+                if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+                  line=__LINE__,  &
+                  file=__FILE__)) &
+                  return  ! bail out
+              end if
+              s % localField(item) = ESMF_FieldCreate(grid, ESMF_TYPEKIND_R8, &
+                staggerloc=ESMF_STAGGERLOC_CENTER, rc=rc)
+              if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+                line=__LINE__, &
+                file=__FILE__)) &
+                return  ! bail out
+            end do
             s => s % next
           end do
         end if
@@ -2569,7 +2585,7 @@ contains
     ! -- local variables
     type(compType),  pointer :: p
     type(stateType), pointer :: s
-    logical                  :: proceed
+    logical                  :: proceed, isCreated
     integer                  :: localrc, item
     integer, dimension(1)    :: lb, ub
 
@@ -2600,6 +2616,19 @@ contains
             if (present(mesh3d)) then
               s % localMesh = mesh3d
               do item = 1, s % fieldMaxRank
+                ! -- if local field exists, destroy and recreate
+                isCreated = ESMF_FieldIsCreated(s % localField(item), rc=localrc)
+                if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                  line=__LINE__,  &
+                  file=__FILE__,  &
+                  rcToReturn=rc)) return  ! bail out
+                if (isCreated) then
+                  call ESMF_FieldDestroy(s % localField(item), noGarbage=.true., rc=localrc)
+                  if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                    line=__LINE__,  &
+                    file=__FILE__,  &
+                    rcToReturn=rc)) return  ! bail out
+                end if
                 s % localField(item) = ESMF_FieldCreate(mesh3d, ESMF_TYPEKIND_R8, &
                   meshloc=ESMF_MESHLOC_NODE, rc=localrc)
                 if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -2607,6 +2636,14 @@ contains
                   file=__FILE__,  &
                   rcToReturn=rc)) return  ! bail out
               end do
+              if (s % fieldMaxRank == 2) then
+                ! -- init unit vectors on new mesh
+                call StateSetLocalVectors(s, rc=localrc)
+                if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                  line=__LINE__,  &
+                  file=__FILE__,  &
+                  rcToReturn=rc)) return  ! bail out
+              end if
             end if
             if (present(mesh2d) .and. present(levArray)) then
               call ESMF_ArrayGet(levArray, undistLBound=lb, undistUBound=ub, rc=localrc)
@@ -2616,6 +2653,19 @@ contains
                 rcToReturn=rc)) return  ! bail out
               write(6,'("-- NamespaceSetLocalMesh: l/u = ",2i8)') lb(1),ub(1)
               do item = 1, s % fieldMaxRank
+                ! -- if local field exists, destroy and recreate
+                isCreated = ESMF_FieldIsCreated(s % localIntField(item), rc=localrc)
+                if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                  line=__LINE__,  &
+                  file=__FILE__,  &
+                  rcToReturn=rc)) return  ! bail out
+                if (isCreated) then
+                  call ESMF_FieldDestroy(s % localIntField(item), noGarbage=.true., rc=localrc)
+                  if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                    line=__LINE__,  &
+                    file=__FILE__,  &
+                    rcToReturn=rc)) return  ! bail out
+                end if
                 s % localIntField(item) = ESMF_FieldCreate(mesh2d, ESMF_TYPEKIND_R8, &
                   meshloc=ESMF_MESHLOC_NODE, &
                   ungriddedLBound=lb, ungriddedUBound=ub, rc=localrc)
@@ -3820,6 +3870,89 @@ contains
     end if
 
   end subroutine StateStoreField
+
+
+  subroutine StateSetLocalVectors(state, rc)
+
+    ! -- input/output variables
+    type(stateType), intent(inout) :: state
+    integer, optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc, item
+    logical :: isCreated
+
+    ! -- begin
+    if (present(rc)) rc = ESMF_SUCCESS
+
+    do item = 1, size(state % uvec)
+      isCreated = ESMF_FieldIsCreated(state % uvec(item), rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) return  ! bail out
+      if (isCreated) then
+        call ESMF_FieldDestroy(state % uvec(item), noGarbage=.true., rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__,  &
+          file=__FILE__,  &
+          rcToReturn=rc)) return  ! bail out
+      end if
+      ! -- create unit vectors
+      state % uvec(item) = ESMF_FieldCreate(state % localMesh, ESMF_TYPEKIND_R8, &
+         gridToFieldMap=(/2/), ungriddedLBound=(/1/), ungriddedUBound=(/3/), &
+         rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) return  ! bail out
+    end do
+
+    ! -- set 3D Cartesian unit vectors
+    ! -- USE CART VERSION BECAUSE OF A BUG IN MESHREDIST() IN ESMF 7.0.0 and before, once in 7.1.0 USE NON-CART VERSION
+    if (ESMF_VERSION_MAJOR > 7) then
+      call Set_Field_Cardinal_UVecs(state % uvec(2), state % uvec(1), rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) return  ! bail out
+    else if ((ESMF_VERSION_MAJOR == 7) .and. (ESMF_VERSION_MINOR > 0)) then
+      call Set_Field_Cardinal_UVecs(state % uvec(2), state % uvec(1), rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) return  ! bail out
+    else
+      call Set_Field_Cardinal_UVecsCart(state % uvec(2), state % uvec(1), rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) return  ! bail out
+    endif
+
+    ! -- now set local Cartesian vector
+    isCreated = ESMF_FieldIsCreated(state % localCartField, rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__,  &
+      file=__FILE__,  &
+      rcToReturn=rc)) return  ! bail out
+    if (isCreated) then
+      call ESMF_FieldDestroy(state % localCartField, noGarbage=.true., rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) return  ! bail out
+    end if
+    state % localCartField = ESMF_FieldCreate(state % localMesh, ESMF_TYPEKIND_R8, &
+      gridToFieldMap=(/2/), ungriddedLBound=(/1/), ungriddedUBound=(/3/), &
+      meshloc=ESMF_MESHLOC_NODE, rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__,  &
+      file=__FILE__,  &
+      rcToReturn=rc)) return  ! bail out
+
+  end subroutine StateSetLocalVectors
+
 
   subroutine FieldInterpolate(srcField, dstField, srcLevels, dstLevels, auxArray, options, rc)
     type(ESMF_Field),            intent(in) :: srcField
