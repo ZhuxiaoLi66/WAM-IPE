@@ -1879,6 +1879,7 @@ contains
     ! -- extend connection list for new Grid
     allocate(newConnectionList(connectionCount), &
              newPositionVector(ldimCount), newOrientationVector(ldimCount), &
+             positionVector(dimCount),     orientationVector(dimCount), &
              stat=localrc)
     if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
@@ -1911,7 +1912,8 @@ contains
         rcToReturn=rc)) return
     end do
 
-    deallocate(newPositionVector, newOrientationVector, connectionList, stat=localrc)
+    deallocate(positionVector, newPositionVector, orientationVector, newOrientationVector, &
+      connectionList, stat=localrc)
     if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__, &
