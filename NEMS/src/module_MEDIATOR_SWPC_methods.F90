@@ -3010,7 +3010,7 @@ contains
 
     kk = 1
     do k = 1, nd
-      do while (kk <= np .and. xs(kk) < xd(k))
+      do while (kk < np .and. xs(kk) < xd(k))
         kk = kk + 1
       end do
       if (kk > extrap_start_level) then
@@ -3145,7 +3145,7 @@ contains
     if (present(rt)) then
       kk = 1
       do k = 1, nd
-        do while (kk <= np .and. xs(kk) < xd(k))
+        do while (kk < np .and. xs(kk) < xd(k))
           kk = kk + 1
         end do
         if (kk > extrap_start_level) then
