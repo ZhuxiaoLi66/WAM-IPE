@@ -1,17 +1,7 @@
-This pull request is to merge  < name of feature branch > into < name of destination branch > .
-The changes brought in by this feature include :
-* Modifications to existing source code
-* Modifications to existing compset scripts
-* New variables or variable name changes
-* New source code or scripts
+### Template
 
-Before issuing this pull request, I < have/have not > brought in the latest changes from < destination branch >.
-This branch has been tested on :
-* < compute cluster > with < compilers > on the < test case name >.
-* " "
-* " "
+Tell us why we should merge this feature; make reference to any issues on the issue tracker.
 
-Model output and difference plots with the current version of the < name of destination branch > can be found at : 
-< link to documentation of testing >
+Provide evidence that the proposed issue has been completed and that the code base still functions as expected.
 
-For this pull request, I am requesting review from @mentions.
+### Assign another developer to this pull request to test your branch and assign another developer as a reviewer to review the code changes.
