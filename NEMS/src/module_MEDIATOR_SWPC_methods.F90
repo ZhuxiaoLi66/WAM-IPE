@@ -26,6 +26,7 @@ module module_MED_SWPC_methods
     type(ESMF_Array)           :: remoteLevels
     integer                    :: ugDimLength
     integer                    :: fieldMaxRank
+    logical                    :: doRotation
     integer, dimension(:), pointer :: fieldDepMap => null()
     type(stateType),   pointer :: next 
   end type stateType
@@ -343,6 +344,7 @@ contains
       s % fieldOptions  = localOptions
       s % fieldDepMap   = localDepMap
       s % fieldMaxRank  = localRank
+      s % doRotation    = .false.
     end if
     s % parent = state
     nullify(s % next)
@@ -1282,8 +1284,93 @@ contains
 
     nullify(p, s)
 
+    ! -- initialize internal structures for vector rotation
+    call NamespaceSetupRotation(rc)
+
   end subroutine NamespaceInitializeFields
   
+  subroutine NamespaceSetupRotation(rc)
+    integer, intent(out) :: rc
+
+    ! -- local variable
+    type(compType),  pointer :: p
+    type(stateType), pointer :: s
+    type(ESMF_Mesh)          :: mesh
+    type(ESMF_Field)         :: field
+    type(ESMF_GeomType_Flag) :: geomtype
+    integer                  :: item
+
+    ! -- begin
+    rc = ESMF_SUCCESS
+
+    print *,'--NamespaceSetupRotation: entering ...'
+
+    p => compList
+    nullify(s)
+    do while (associated(p))
+      print *,'--NamespaceSetupRotation: name = '//trim(p%name)
+      s => p % stateList
+      do while (associated(s))
+        print *,'--NamespaceSetupRotation: name = '//trim(p%name)//': accessing state...', associated(s % fieldNames)
+        if (s % fieldMaxRank > 1) then
+          if (.not.ESMF_FieldIsCreated(s % localCartField)) then
+            if (ESMF_GridIsCreated(s % localGrid)) then
+              ! -- do nothing for now
+            else if (ESMF_MeshIsCreated(s % localMesh)) then
+              s % doRotation = .true.
+            else
+              item = size(s % fieldNames)
+              if (item > 0) then
+                call ESMF_StateGet(s % self, itemName=trim(s % fieldNames(item)), &
+                  field=field, rc=rc)
+                if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+                  line=__LINE__,  &
+                  file=__FILE__)) return  ! bail out
+                call ESMF_FieldGet(field, geomtype=geomtype, rc=rc)
+                if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+                  line=__LINE__,  &
+                  file=__FILE__)) return  ! bail out
+                if (geomtype == ESMF_GEOMTYPE_MESH) then
+                  call ESMF_FieldGet(field, mesh=mesh, rc=rc)
+                  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+                    line=__LINE__,  &
+                    file=__FILE__)) return  ! bail out
+                  s % localMesh = mesh
+                  s % doRotation = .true.
+                end if
+              end if
+            end if
+            if (s % doRotation) then
+              ! -- create localCartField on Mesh only for now
+              s % localCartField = ESMF_FieldCreate(s % localMesh, ESMF_TYPEKIND_R8, &
+                gridToFieldMap=(/2/), ungriddedLBound=(/1/), ungriddedUBound=(/3/), &
+                meshloc=ESMF_MESHLOC_NODE, rc=rc)
+              if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+                line=__LINE__,  &
+                file=__FILE__)) return  ! bail out
+            end if
+          end if
+        end if
+        if (s % doRotation) then
+          call StateSetLocalVectors(s, rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__,  &
+            file=__FILE__)) return ! bail out
+        else
+          ! -- reset fields as scalars if no rotation is performed
+          s % fieldDepMap = 0
+        end if
+        s => s % next
+      end do
+      p => p % next
+    end do
+
+    nullify(p, s)
+
+    print *,'--NamespaceSetupRotation: exiting '
+
+  end subroutine NamespaceSetupRotation
+
   subroutine NamespaceDestroy(nsList, rc)
 
     type(compType), optional, pointer     :: nsList
@@ -3432,6 +3519,11 @@ contains
               compList(1) = trim(state % fieldNames(item))
               compList(2) = trim(state % fieldNames(comp))
             end if
+          else
+            if (present(compCount)) compCount = 1
+            if (present(compList)) then
+              compList(1) = trim(state % fieldNames(item))
+            end if
           end if
           if (present(rc)) rc = ESMF_SUCCESS
           exit
@@ -3455,6 +3547,7 @@ contains
     type(ESMF_Field), dimension(2) :: srcFieldComp, dstFieldComp
     integer :: localrc
     integer :: localDeCount, comp, compCount
+    logical :: isSrcCart, isDstCart
     logical, save :: first = .true.
     character(len=ESMF_MAXSTR) :: compList(2)
 
@@ -3884,6 +3977,21 @@ contains
 
     ! -- begin
     if (present(rc)) rc = ESMF_SUCCESS
+
+    isCreated = ESMF_MeshIsCreated(state % localMesh, rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__,  &
+      file=__FILE__,  &
+      rcToReturn=rc)) return  ! bail out
+
+    if (.not.isCreated) then
+      call ESMF_LogSetError(ESMF_RC_NOT_VALID, &
+        msg="local Mesh must be created before local vectors", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return ! bail out
+    end if
 
     do item = 1, size(state % uvec)
       isCreated = ESMF_FieldIsCreated(state % uvec(item), rc=localrc)
