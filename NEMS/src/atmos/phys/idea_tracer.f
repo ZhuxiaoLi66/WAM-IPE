@@ -459,7 +459,8 @@
 ! Keddy parameters: mean, width in scale heights, height of max
 
       real, parameter:: pi = 3.141592653
-      real, parameter:: kmax = 120.
+!     real, parameter:: kmax = 120.
+      real, parameter:: kmax = 140.
 ! semiannual amp
       real, parameter:: kampsa = 60.
 !      real, parameter:: dkeddy = 2.

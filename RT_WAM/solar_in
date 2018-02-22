@@ -1,5 +1,5 @@
 &solar_parms_nl
- idea_solar_fix = 2
+ idea_solar_fix = 1 
  solar_file = 'wam_nems_feuv_2012.nc'
  Dir_swpc = './'
  Dir_uid =  './'

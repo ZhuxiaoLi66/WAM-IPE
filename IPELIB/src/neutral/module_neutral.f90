@@ -1,3 +1,5 @@
+!nm20170427: implement gradually shift from msis to wam
+! DATE: 08 September, 2011
 !********************************************
 !***      Copyright 2011 NAOMI MARUYAMA   ***
 !***      ALL RIGHTS RESERVED             ***
@@ -13,11 +15,11 @@
       MODULE module_NEUTRAL_MKS            
 
       USE module_precision
-      USE module_IPE_dimension, ONLY: NMP, NLP
-      USE module_FIELD_LINE_GRID_MKS, ONLY: ON_m3, O2N_m3, N2N_m3, HN_m3, HE_m3, N4S_m3, TN_k, TINF_k, Un_ms1, &
-                                            Vn_ms1_4output
-
-      USE module_input_parameters, ONLY : mesh_height_max
+      USE module_IPE_dimension
+      USE module_FIELD_LINE_GRID_MKS
+      USE module_input_parameters
+      USE module_unit_conversion
+      USE module_physical_constants
 
       IMPLICIT NONE
 
@@ -27,20 +29,12 @@
 
       CONTAINS
 !---------------------------
-      subroutine neutral (utime, start_time) 
+      subroutine neutral (utime_local, start_time) 
 
-      USE module_IPE_dimension, ONLY: IPDIM
-      USE module_FIELD_LINE_GRID_MKS, ONLY : plasma_grid_3d, plasma_grid_Z, apexD, &
-                                             JMIN_IN, JMAX_IS, east, north, up, IGCOLAT, IGLON, WamField
-
-      USE module_physical_constants, ONLY: pi,zero,earth_radius,g0,gscon,massn_kg
-      USE module_input_parameters, ONLY: F107D,F107AV,AP,NYEAR,NDAY,mpstop, sw_neutral,simulation_is_warm_start 
-
-      USE module_unit_conversion, ONLY: M_TO_KM
 
       implicit none
 
-      INTEGER(KIND=int_prec), INTENT(in) :: utime  !universal time[sec]
+      INTEGER(KIND=int_prec), INTENT(in) :: utime_local  !universal time[sec]
       INTEGER(KIND=int_prec), INTENT(in) :: start_time
 
       integer :: npts  !=IPDIM
@@ -72,14 +66,45 @@
 
 !------
 
+      if ( sw_ctip_input ) then
+        LPI = INT( ( utime_local - utime0LPI ) / real(input_params_interval) ) + 1 + input_params_begin
+      else
+        LPI=1
+      end if
+      f107D_dum  = F107_new(lpi)
+      f107A_dum  = F107d_new(lpi)
+      AP_dum(1) = apa_eld(lpi)
+      AP_dum(2) =  ap_eld(lpi)
+      AP_dum(3) =  ap_eld(lpi-INT( 3.*60*60/input_params_interval))
+      AP_dum(4) =  ap_eld(lpi-INT( 6.*60*60/input_params_interval))
+      AP_dum(5) =  ap_eld(lpi-INT( 9.*60*60/input_params_interval))
+      AP_dum(6) = apa_eld(lpi-INT(12.*60*60/input_params_interval))
+      AP_dum(7) = apa_eld(lpi-INT(36.*60*60/input_params_interval))
+      ut_hour = REAL(utime_local)/3600. !convert from sec to hours
+     
+
+!SMS$SERIAL BEGIN
+      OPEN( UNIT=500, FILE='Module_Neutral.Diagnostics', ACTION="WRITE", ACCESS="APPEND" )
+
+      WRITE(500,*) 'SOLAR_WIND : LPI', LPI
+      WRITE(500,*) 'SOLAR_WIND : f107D_dum', f107D_dum  
+      WRITE(500,*) 'SOLAR_WIND : f107A_dum', f107D_dum  
+      WRITE(500,*) 'SOLAR_WIND : AP_dum(1)', f107D_dum  
+      WRITE(500,*) 'SOLAR_WIND : AP_dum(2)', f107D_dum  
+      WRITE(500,*) 'SOLAR_WIND : AP_dum(3)', f107D_dum  
+      WRITE(500,*) 'SOLAR_WIND : AP_dum(4)', f107D_dum  
+      WRITE(500,*) 'SOLAR_WIND : AP_dum(5)', f107D_dum  
+      WRITE(500,*) 'SOLAR_WIND : AP_dum(6)', f107D_dum  
+      WRITE(500,*) 'SOLAR_WIND : AP_dum(7)', f107D_dum  
+!SMS$SERIAL END
+
+
+
+
 !sw_neutral
 !1: IPE coupled to WAM
 !3: IPE utilizing MSIS (ie, standalone mode).
 
-      f107D_dum  = F107D
-      f107A_dum  = F107AV
-      AP_dum(1:7)= AP(1:7)
-      ut_hour = REAL(utime)/3600. !convert from sec to hours
 
 if (sw_neutral.eq.1) then
 
@@ -116,7 +141,7 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
                  , tinf_k_dummy(IN:IS) &
                  , Vn_ms1_dummy(1:3,1:NPTS))
 
-        if( utime == start_time )then
+        if( utime_local == start_time )then
         
           ! At the first timestep - the geographic wind comes from the value read in from
           ! the plasma parameters file....
@@ -129,7 +154,7 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
 
         endif
 
-        if( simulation_is_warm_start .or. utime > start_time )then
+        if( simulation_is_warm_start .or. utime_local > start_time )then
 
           midpoint = IN + (IS-IN)/2
 
@@ -276,6 +301,23 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
         END DO !: DO lp = 1,NLP
       END DO   !: DO mp = 1,NMP
 !SMS$PARALLEL END
+
+!SMS$SERIAL (<tn_k,tinf_k,Un_ms1,Vn_ms1,on_m3,o2n_m3,n2n_m3,IN> :DEFAULT=IGNORE)BEGIN
+
+  WRITE(500,*) 'min/max tn_k', MINVAL(tn_k), MAXVAL(tn_k), utime, start_time
+  WRITE(500,*) 'min/max tinf_k',MINVAL(tinf_k), MAXVAL(tinf_k), utime, start_time
+  WRITE(500,*) 'min/max Vn_ms1',MINVAL(Vn_ms1), MAXVAL(Vn_ms1), utime, start_time
+  WRITE(500,*) 'min/max Un_ms1',MINVAL(Un_ms1), MAXVAL(Un_ms1), utime, start_time
+  WRITE(500,*) 'min/max on_m3',MINVAL(on_m3), MAXVAL(on_m3), utime, start_time
+  WRITE(500,*) 'min/max o2n_m3',MINVAL(o2n_m3), MAXVAL(o2n_m3), utime, start_time
+  WRITE(500,*) 'min/max n2n_m3',MINVAL(n2n_m3), MAXVAL(n2n_m3), utime, start_time
+  WRITE(500,*) 'min/max he_m3',MINVAL(he_m3), MAXVAL(he_m3), utime, start_time
+  WRITE(500,*) 'min/max hn_m3',MINVAL(hn_m3), MAXVAL(hn_m3), utime, start_time
+  WRITE(500,*) 'min/max n4s_m3',MINVAL(n4s_m3), MAXVAL(n4s_m3), utime, start_time
+
+  CLOSE(500)
+
+!SMS$SERIAL END
 
       else if (sw_neutral.eq.3) then 
 

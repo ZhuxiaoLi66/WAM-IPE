@@ -11,6 +11,9 @@
 ! Apr 06 2012   Henry Juang, initial implement for NEMS
 ! Oct 12 2012   Jun Wang     change reading files by 1 pe reading and 
 !                            broardcasting to all pes
+! Dec 2017 Rashid Akmaev: 
+!     -changed CO2-O collisional deactivation rate
+!     -updated surface CO2 concentration to 2016 global annual mean
 !
 ! Contains modules and subroutines
 !     1) To create a global mean vertical CO2 profile either according
@@ -64,7 +67,9 @@
 ! Profile parameters
 !
 ! - Surface VMR
-      integer,parameter:: ico2am = 361
+! RAA: updated to 2016 global annual mean
+!      integer,parameter:: ico2am = 361
+      integer,parameter:: ico2am = 400
 ! This is a cut from radparm for reference as of Dec 7, 2006
 ! CO2 calculation parameters introduced into mtparm Aug 7, 2002, moved
 ! here Sep 13, 2002
@@ -771,7 +776,9 @@
 ! -collisional deactivation rate by O [1/(cm**3 s)]
 !
 !     real,parameter:: zco2o=1.5e-12
-      real,parameter:: zco2o=3.e-12
+! RAA: increase collisional deactivation rate
+       real,parameter:: zco2o=3.e-12
+!      real,parameter:: zco2o=6.e-12
 !
 ! -composition on Victor grid needed for x above 12.5 (index=1-itm50),
 !       stored here in case it can be reused

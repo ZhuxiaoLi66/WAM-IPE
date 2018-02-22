@@ -1,0 +1,9 @@
+In this directory are three routines for load balancing:
+loadBalance.F90  loadBalanceFluxTubeBiasMethod.F90  loadBalanceFluxTube.F90
+
+loadBalanceFluxTubeBiasMethod.F90 and loadBalanceFluxTube.F90 are two load balancing methods based of balancing the flux tubes.
+loadBalance.F90 is based on balancing the times from a representative run.
+
+For the current (3/24/17) cases loadBalance.F90 works best.
+
+For more information see the comments in loadBalance.F90.

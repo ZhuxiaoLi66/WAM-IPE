@@ -176,14 +176,14 @@
       return                                                            
       end  SUBROUTINE WAM_COOLNO1
 !
-      subroutine getno1d(levs,f107in,kpin,mlatrad,doy,alt,pr,n,am,no)
+      subroutine getno1d(levs,f107in,kpain,mlatrad,doy,alt,pr,n,am,no)
 !
 ! Oct 2016 VAY: new interface  getno1d ... mozaic of bugs in 2012-14 versions
 !               (a) rad/deg (b) pr(cb) but expected in Pa (c) no-NO for lat > 80deg
 !               (d) dangerous interp-n and DATA for eofs etc...
 !
 !       use idea_solar_input, only : F107 => wf107_s
-!       use idea_solar_input, only : KP => wkp_s
+!       use idea_solar_input, only : kp => wkp_s
 !       use idea_solar, only       : amno
        use idea_solarno_input, only : eof => no_eof, nom => no_m, z16 => no_zkm , lat33 => no_mlat
        use idea_solarno_input, only : no_ny33, no_nz16
@@ -196,7 +196,7 @@
       integer, intent(in)  :: doy          ! day of year from 1 to 365   
 
       real,    intent(in)  :: f107in       !F10.7 index
-      real,    intent(in)  :: kpin         ! Kp index
+      real,    intent(in)  :: kpain         ! 24hr average kp index
       real,    intent(in)  :: mlatrad      ! magnetic latitude in radians
 
       real,    intent(in)  :: alt(levs)    ! in km WAM
@@ -212,20 +212,20 @@
       real :: mlat          ! degrees like in snoe data
       real ::  zm(no_nz16)
       real ::  dz(levs)
-      real ::  f107, kp
+      real ::  f107, kpa
       real ::  dx, dl,m1,m2,m3,theta0,dec
 !
       integer :: iref,kref(levs)
       integer :: i,k,il,k1,k2
       integer :: kup
 !
-       kp =kpin
+       kpa =kpain
        f107 = f107in
 
        mlat = mlatrad *r2d
 
-!       print *, kp, f107, ' getno1d-VAY-mlat-deg ', mlat
-       if(kp .lt. 0.7)   kp=0.7
+!       print *, kpa, f107, ' getno1d-VAY-mlat-deg ', mlat
+       if(kpa .lt. 0.7)   kpa=0.7
        if(f107.lt.70.0) f107 = 70.0
 !
 ! find interp latitude lat33 in degrees...
@@ -249,9 +249,9 @@
          endif
 !
 !  snoe NO interpolated to model grid (molecules/cm^3)
-!... eof1 - kp
-!     m1 =  kp * 0.689254 - 1.53366
-      m1 =  kp * 0.785760 - 1.94262           !waccmx-2015
+!... eof1 - kpa
+!     m1 =  kpa * 0.689254 - 1.53366
+      m1 =  kpa * 0.785760 - 1.94262           !waccmx-2015
 !... eof2 - declination
       theta0 = twopi/365.*float(doy - 1)
       dec = 0.006918                                                    
@@ -314,6 +314,22 @@
         do k=1,levs
           no(k)=max(no(k), con_nzero)
         enddo
+!
+! incease NO by a factor when kpa gt 5.0, same with CTIPe, based on CHAMP
+! neutral density obervations 
+!  
+        do k=1,levs
+          if (kpa.gt.5.0.and.kpa.le.6.0) then
+            no(k) = no(k)*1.5
+          elseif (kpa.gt.6.0.and.kpa.le.7.0) then
+            no(k) = no(k)*2.5
+          elseif (kpa.gt.7.0.and.kpa.le.8.0) then
+            no(k) = no(k)*3.5
+          elseif (kpa.gt.8.0.and.kpa.le.9.0) then
+            no(k) = no(k)*4.5
+          endif
+        enddo
+!
 !
 ! check no
 !       print *, ' getno-ZmNOi2 ', maxval(NO), minval(NO)

@@ -657,8 +657,8 @@ if [ $gfsio_in = .true. ] ; then export GB=1 ; fi
 export IDEA=${IDEA:-.false.}
 export WAM_IPE_COUPLING=${WAM_IPE_COUPLING:-.false.}
 export HEIGHT_DEPENDENT_G=${HEIGHT_DEPENDENT_G:-.false.}
-export F107_KP_SIZE=${F107_KP_SIZE:-56}
-export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-56}
+export F107_KP_SIZE=${F107_KP_SIZE:-$((60*37+1))}
+export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-$((60*37+1))}
 export F107_KP_SKIP_SIZE=${F107_KP_SKIP_SIZE:-0}
 export F107_KP_INTERVAL=${F107_KP_INTERVAL:-10800}
 
@@ -951,7 +951,10 @@ if [[ $ENS_NUM -le 1 ]] ; then
       ln -fs $GRDI  grid_ini
       ln -fs $GRDI2 grid_ini2
       ln -fs $SIGI2 sig_ini2
-      ln -fs $RSTR  WAM_IPE_RST_rd
+      if [ $WAM_IPE_COUPLING ];then
+        export RESTART_AND_COUPLED=.true.
+        ln -fs $RSTR  WAM_IPE_RST_rd
+      fi
     else
       export RESTART=.false.
     fi
@@ -964,7 +967,10 @@ if [[ $ENS_NUM -le 1 ]] ; then
     ln -fs $NSTI  nst_ini
     ln -fs $PLASI ipe_grid_plasma_params
     ln -fs $NEUTI ipe_grid_neutral_params
-    ln -fs $RSTR  WAM_IPE_RST_rd
+    if [ $WAM_IPE_COUPLING ];then
+      export RESTART_AND_COUPLED=.true.
+      ln -fs $RSTR  WAM_IPE_RST_rd
+    fi
     export RESTART=.true.
   fi
 #        For output
@@ -1318,13 +1324,35 @@ cat > SMSnamelist <<EOF
   compare_var_on=f
   exact_parallel_sum=f
   load_balance_method=2,1
-  load_balance_on=f,f
-  load_balance_size=40,0
+  load_balance_on=t,f
+  load_balance_size=58,0
   process_layout=${IPEDECOMPARR[0]},${IPEDECOMPARR[1]}
   set_process_layout=t
 /
 EOF
-
+cat > load_balance_groups1 <<EOF
+           1           2           3           4           5           6
+           7           8           9          10          11          12
+          13          14          15          16          17          19
+          21          23          25          27          29          31
+          33          35          37          39          41          43
+          45          48          51          54          57          60
+          63          66          69          73          77          81
+          85          89          92          95          98         101
+         104         107         110         113         116         119
+         123         131         144         170
+EOF
+cat > GPTLnamelist << EOF
+&gptlnl
+ print_method = 'full_tree' ! print full call tree
+ utr          = 'nanotime'  ! fastest available underlying timer (Intel processors only)
+! eventlist   = 'PAPI_FP_OPS','GPTL_CI' ! PAPI-based counters (only if PAPI is available)
+/
+EOF
+# raw_high_lat specific files
+cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/tiros_spectra_ipe .
+cp /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/ionprof_ipe .
+#
 cat  > IPE.inp <<EOF
 &ipedims
   nlp=170
@@ -1353,48 +1381,53 @@ cat  > IPE.inp <<EOF
   sw_neutral_heating_flip=0
   sw_ohpls=1
   sw_optw_flip=t
+  sw_pe2s=1
   sw_tei=1
   sw_wind_flip=1
   zlbdy_flip=120.00
   zlbnp_inp=115.00
 /
 &nmipe
-  simulation_is_warm_start=${RESTART:1:1}
-  f107av=${F107AVG}
-  f107d=${F107DAY}
-  internalTimeLoopMax=1
-  ip_freq_eldyn=$DELTIM
-  ip_freq_msis=$DELTIM
-  ip_freq_plasma=$DELTIM
-  ip_freq_output=$IPEFREQ
-  dumpFrequency=3600
+  internalTimeLoopMax=18
+  ip_freq_eldyn=60
+  ip_freq_msis=180
+  ip_freq_plasma=10
+  ip_freq_output=900
   nday=$DOY
+  simulation_is_warm_start=${RESTART:1:1}
   nyear=2000
   start_time=$START_UT_SEC
   time_step=$DELTIM
+  solar_forcing_time_step=$F107_KP_INTERVAL
+  perp_transport_time_step=10
+  ip_freq_output=$IPEFREQ
 /
 &nmmsis
-  ap(1)=${AP3HR}
-  ap(2)=${AP3HR}
-  ap(3)=${AP3HR}
-  ap(4)=${AP3HR}
-  ap(5)=${AP3HR}
-  ap(6)=${AP3HR}
-  ap(7)=${AP3HR}
-  kp_eld=${KP3HR}
+  ap(1)=4.
+  ap(2)=4.
+  ap(3)=4.
+  ap(4)=4.
+  ap(5)=4.
+  ap(6)=4.
+  ap(7)=4.
+  f107_kp_size=$F107_KP_SIZE,
+  f107_kp_interval=$F107_KP_INTERVAL,
+  f107_kp_skip_size=$F107_KP_SKIP_SIZE
+  f107_kp_data_size=$F107_KP_DATA_SIZE
 /
 &nmswitch
   duration=$(((10#$FHMAX-10#$FHINI)*3600))
   fac_bm=1.00
   iout(1)=1
   iout(2)=60
-  lpFort167=57
-  lpmax_perp_trans=151
-  lpmin_perp_trans=15
-  mpFort167=71
+  lpFort167=11
+  lpmax_perp_trans=74
+  lpmin_perp_trans=1
+  mpFort167=1
   mpstop=80
-  peFort167=56
   record_number_plasma_start=0
+  sw_aurora=1
+  sw_ctip_input=t
   sw_dbg_perp_trans=f
   sw_debug=f
   sw_debug_mpi=f
@@ -1411,17 +1444,19 @@ cat  > IPE.inp <<EOF
   swNeuPar(5)=t
   swNeuPar(6)=t
   swNeuPar(7)=t
-  swEsmfTime=t
+  swEsmfTime=f
   sw_output_fort167=f
   sw_output_wind=t
   sw_output_plasma_grid=f
   sw_use_wam_fields_for_restart=t
   sw_para_transport=1
   sw_pcp=0
-  sw_perp_transport=1
-  sw_record_number=2
-  sw_th_or_r=1
+  sw_perp_transport=2
+  sw_record_number=1
+  sw_th_or_r=0
   ut_start_perp_trans=${START_UT_SEC}
+  utime0LPI=0
+  barriersOn=f
 /
 &ipecap
   mesh_height_min = 0.
@@ -1868,7 +1903,7 @@ cat  > atm_namelist <<EOF
   SPPT=0.0,0.0,0.0,0.0,0.0,SPPT_TAU=21600,2592500,25925000,7776000,31536000,SPPT_LSCALE=500000,1000000,2000000,2000000,2000000,SPPT_LOGIT=.TRUE.,ISEED_SPPT=0,
   SKEB=0.0, -999., -999., -999, -999,SKEB_TAU=2.164E4, 1.728E5, 2.592E6, 7.776E6, 3.1536E7,SKEB_LSCALE=1000.E3, 1000.E3, 2000.E3, 2000.E3, 2000.E3,SKEB_VFILT=40,SKEB_DISS_SMOOTH=12,ISEED_SKEB=0,
   VC=0.0,VC_TAU=4.32E4, 1.728E5, 2.592E6, 7.776E6, 3.1536E7,VC_LSCALE=1000.E3, 1000.E3, 2000.E3, 2000.E3, 2000.E3,VCAMP=0.0, -999., -999., -999, -999,ISEED_VC=0,
-  wam_ipe_cpl_rst_input=${RESTART},wam_ipe_cpl_rst_output=${WAM_IPE_COUPLING},
+  wam_ipe_cpl_rst_input=${RESTART_AND_COUPLED},wam_ipe_cpl_rst_output=${WAM_IPE_COUPLING},
   $DYNVARS /
  &nam_phy
   FHOUT=$FHOUT, FHMAX=$FHMAX, IGEN=$IGEN,
@@ -1882,6 +1917,7 @@ cat  > atm_namelist <<EOF
   f107_kp_size=$F107_KP_SIZE,
   f107_kp_interval=$F107_KP_INTERVAL,
   f107_kp_skip_size=$F107_KP_SKIP_SIZE,
+  f107_kp_data_size=$F107_KP_DATA_SIZE,
   ngptc=$NGPTC, hybrid=$HYBRID, tfiltc=$TFILTC,
   gen_coord_hybrid=$GEN_COORD_HYBRID,
   thermodyn_id=$THERMODYN_ID, sfcpress_id=$SFCPRESS_ID,

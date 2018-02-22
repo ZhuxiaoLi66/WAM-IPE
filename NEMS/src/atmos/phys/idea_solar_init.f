@@ -112,7 +112,8 @@
 !
       use wam_f107_kp_mod,    ONLY: read_wam_f107_kp_txt, 
      &                              f107_wy, kp_wy, f107_kp_size,
-     &                              fix_spweather_data
+     &                              fix_spweather_data, kpa_wy, hp_wy, hpi_wy, f107d_wy,
+     &                              swbt_wy, swvel_wy, swang_wy, swbz_wy
 !
 
 !
@@ -422,8 +423,16 @@
 
         if (trim(SPW_DRIVERS)=='swpc_fst') then 
 
-          IF(.NOT. ASSOCIATED(f107_wy)) ALLOCATE(f107_wy(f107_kp_size))
-          IF(.NOT. ASSOCIATED(kp_wy))   ALLOCATE(kp_wy  (f107_kp_size))
+          IF(.NOT. ALLOCATED(f107_wy))  ALLOCATE(f107_wy (f107_kp_size))
+          IF(.NOT. ALLOCATED(kp_wy))    ALLOCATE(kp_wy   (f107_kp_size))
+          IF(.NOT. ALLOCATED(f107d_wy)) ALLOCATE(f107d_wy(f107_kp_size))
+          IF(.NOT. ALLOCATED(kpa_wy))   ALLOCATE(kpa_wy  (f107_kp_size))
+          IF(.NOT. ALLOCATED(hp_wy))    ALLOCATE(hp_wy   (f107_kp_size))
+          IF(.NOT. ALLOCATED(hpi_wy))   ALLOCATE(hpi_wy  (f107_kp_size))
+          IF(.NOT. ALLOCATED(swbt_wy))  ALLOCATE(swbt_wy (f107_kp_size))
+          IF(.NOT. ALLOCATED(swang_wy)) ALLOCATE(swang_wy(f107_kp_size))
+          IF(.NOT. ALLOCATED(swvel_wy)) ALLOCATE(swvel_wy(f107_kp_size))
+          IF(.NOT. ALLOCATED(swbz_wy))  ALLOCATE(swbz_wy (f107_kp_size))
           call read_wam_f107_kp_txt
           if (mpi_id ==0 ) write(6,*) 
      & ' SPW_DRIVERS => swpc_fst, 3-day forecasts:', trim(SPW_DRIVERS)

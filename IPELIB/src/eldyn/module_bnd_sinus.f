@@ -84,7 +84,7 @@ c     use cam_logfile,   only: iulog
 
 c     use sv_decomp, only : svdcmp, svbksb
 !nm20121003
-      USE efield !,ONLY:  
+      USE efield_ipe !,ONLY:  
       USE module_svdcmp ,ONLY: svdcmp 
       USE module_ff ,ONLY:ff   
       USE module_svbksb ,ONLY: svbksb
