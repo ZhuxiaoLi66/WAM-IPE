@@ -15,7 +15,7 @@ case "$FULL_MACHINE_ID" in
     yellowstone|gaea)
         CHOSEN_MODULE=$FULL_MACHINE_ID/ESMF_NUOPC
         ;;
-    wcoss*|theia)
+    wcoss*|theia|pleiades|nas)
         CHOSEN_MODULE=$FULL_MACHINE_ID/ESMF_700_gsm
         ;;
 esac
