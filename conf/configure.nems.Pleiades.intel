@@ -30,8 +30,8 @@ PARADIR=/nobackupp8/dtkleist/save/supplibs/lib
 POSTDIR=/nobackupp8/akubaryk/save/gfs/Q1FY15/projects/post/sorc/ncep_post.fd
 CRTMDIR=/nobackupp8/akubaryk/save/crtm/2.2.3
 
-NEMSIO_INC   = -I${LIBDIR}/incmod/nemsio
-NEMSIO_LIB   = -L${LIBDIR} -lnemsio
+NEMSIO_INC   = -I${NEMSIO_INC}
+ESMF_INC     = -I${ESMF_INC}
 
 BACIO_LIB    = -L${LIBDIR} -lbacio_v2.0.1_4
 W3_LIB       = -L${LIBDIR} -lw3nco_d -lw3emc_v2.2.0_d
