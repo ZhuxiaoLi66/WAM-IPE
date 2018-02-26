@@ -132,7 +132,7 @@
       subroutine idea_ion(pres,solhr,cospass,zg,grav,o_n,o2_n,n2_n,cp,       
      &  adu,adv,adt,dudt,dvdt,dtdt,rho,rlat,rlon,ix,im,levs,              
      &  dayno,utsec,sda,maglon,maglat,btot,dipang,essa,
-     &  f107, f107d, kp, hp, hpi, SPW_DRIVERS)
+     &  f107, f107d, kp, nhp, nhpi, shp, shpi, SPW_DRIVERS)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! driver      dtdt(i,k)=jh(i,k)/cp(i,k), dudt dvdt
 !              ion darge and Joule heating
@@ -141,7 +141,7 @@
       implicit none
       REAL  , INTENT(IN)   :: f107, f107d, kp  ! solar-geo inputs from different WAM applications
                                                ! CLIMATE-SWPC-RDATA, controlled in idea_phys
-      REAL  , INTENT(IN)   :: hp, hpi          ! solar-geo inputs from wam_f107_kp.tst
+      REAL  , INTENT(IN)   :: nhp, nhpi, shp, shpi ! solar-geo inputs from wam_f107_kp.tst
       Character,INTENT(IN) :: SPW_DRIVERS      ! SPACE weather/climate driver
 !
 !      REAL, PARAMETER :: DTR=3.141592653/180.0
@@ -208,7 +208,7 @@
 !      endif
       call GetIonParams(pres,
 !     &   dayno,utsec,F107,KP,sda,sza,rlat,zg,grav,      
-     &   dayno,utsec,F107,f107d,KP,HP,HPI,spw_drivers,sda,sza,rlat,zg,grav,      
+     &   dayno,utsec,F107,f107d,KP,NHP,NHPI,spw_drivers,sda,sza,rlat,zg,grav,      
      &   o_n, o2_n, n2_n,adu,adv,adt,rho,rlt,rlon,ix,im,levs,k91,       
      &   btot,dipang,maglon,maglat,essa,                                
      &   dudt,dvdt,jh) 
