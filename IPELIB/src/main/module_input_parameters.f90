@@ -327,7 +327,7 @@
         SUBROUTINE read_input_parameters ( )
         USE module_IPE_dimension,ONLY: NLP,NMP,NPTS2D
         USE ipe_f107_kp_mod,ONLY: read_ipe_f107_kp_txt,& ! function(s)
-                                  hp_wy,hpi_wy,swbt_wy,swbz_wy,swvel_wy,swang_wy,f107_wy,f107d_wy,kp_wy,kpa_wy ! arrays
+                                  nhp_wy,nhpi_wy,swbt_wy,swbz_wy,swvel_wy,swang_wy,f107_wy,f107d_wy,kp_wy,kpa_wy,shp_wy,shpi_wy ! arrays
 
         IMPLICIT NONE
 !MPI requirement 
@@ -412,18 +412,18 @@
         f107_kp_skip_size = 0
         input_params_interval = f107_kp_interval
         ! allocate *_wy arrays and the target arrays
-        ALLOCATE(hp_wy(f107_kp_size),hpi_wy(f107_kp_size),swbt_wy(f107_kp_size),swbz_wy(f107_kp_size),kp_wy(f107_kp_size),    &
+        ALLOCATE(nhp_wy(f107_kp_size),nhpi_wy(f107_kp_size),swbt_wy(f107_kp_size),swbz_wy(f107_kp_size),kp_wy(f107_kp_size),    &
                  swvel_wy(f107_kp_size),swang_wy(f107_kp_size),f107_wy(f107_kp_size),f107d_wy(f107_kp_size),kpa_wy(f107_kp_size), &
                  kp_eld(f107_kp_size),f107_new(f107_kp_size),f107d_new(f107_kp_size),gwatts(f107_kp_size),levpi(f107_kp_size), &
                  bz(f107_kp_size),swbt(f107_kp_size),swangle(f107_kp_size),swvel(f107_kp_size),ap_eld(f107_kp_size),kpa_eld(f107_kp_size), &
-                 apa_eld(f107_kp_size))
+                 apa_eld(f107_kp_size),shp_wy(f107_kp_size),shpi_wy(f107_kp_size))
 !SMS$SERIAL(<IOST_RD,istat,OUT>) BEGIN
         IOST_RD = 0
         istat   = 0
         call read_ipe_f107_kp_txt  ! now we have *_wy arrays
         ! assign *_wy arrays to module-local public arrays
-        gwatts = hp_wy
-        levpi = hpi_wy
+        gwatts = nhp_wy ! need to discuss nh/sh split, ignoring duplicate SH for now
+        levpi = nhpi_wy ! need to discuss nh/sh split, ignoring duplicate SH for now
         swbt  = swbt_wy
         swvel = swvel_wy
         bz    = swbz_wy
