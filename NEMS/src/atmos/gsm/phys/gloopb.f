@@ -105,7 +105,8 @@
 !================================================================= WAM-related 201702
       use wam_f107_kp_mod,        ONLY: read_wam_f107_kp_txt, 
      &                                  f107_wy, kp_wy, f107_kp_size, 
-     &                                  kpa_wy, f107d_wy, hp_wy, hpi_wy,
+     &                                  kpa_wy, f107d_wy, nhp_wy, nhpi_wy,
+     &                                  shp_wy, shpi_wy
      &                                  swbt_wy, swang_wy, swvel_wy, 
      &                                  swbz_wy
       use mersenne_twister
@@ -420,8 +421,10 @@
           IF(.NOT.ALLOCATED(kp_wy   )) ALLOCATE(kp_wy   (f107_kp_size))
           IF(.NOT.ALLOCATED(f107d_wy)) ALLOCATE(f107d_wy(f107_kp_size))
           IF(.NOT.ALLOCATED(kpa_wy  )) ALLOCATE(kpa_wy  (f107_kp_size))
-          IF(.NOT.ALLOCATED(hp_wy   )) ALLOCATE(hp_wy   (f107_kp_size))
-          IF(.NOT.ALLOCATED(hpi_wy  )) ALLOCATE(hpi_wy  (f107_kp_size))
+          IF(.NOT.ALLOCATED(nhp_wy  )) ALLOCATE(nhp_wy  (f107_kp_size))
+          IF(.NOT.ALLOCATED(nhpi_wy )) ALLOCATE(nhpi_wy (f107_kp_size))
+          IF(.NOT.ALLOCATED(shp_wy  )) ALLOCATE(shp_wy  (f107_kp_size))
+          IF(.NOT.ALLOCATED(shpi_wy )) ALLOCATE(shpi_wy (f107_kp_size))
           IF(.NOT.ALLOCATED(swbt_wy )) ALLOCATE(swbt_wy (f107_kp_size))
           IF(.NOT.ALLOCATED(swang_wy)) ALLOCATE(swang_wy(f107_kp_size))
           IF(.NOT.ALLOCATED(swvel_wy)) ALLOCATE(swvel_wy(f107_kp_size))

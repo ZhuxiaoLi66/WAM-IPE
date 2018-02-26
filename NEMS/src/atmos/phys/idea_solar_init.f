@@ -112,7 +112,8 @@
 !
       use wam_f107_kp_mod,    ONLY: read_wam_f107_kp_txt, 
      &                              f107_wy, kp_wy, f107_kp_size,
-     &                              fix_spweather_data, kpa_wy, hp_wy, hpi_wy, f107d_wy,
+     &                              fix_spweather_data, kpa_wy, nhp_wy, nhpi_wy, f107d_wy,
+     &                              shp_w, shpi_wy,
      &                              swbt_wy, swvel_wy, swang_wy, swbz_wy
 !
 

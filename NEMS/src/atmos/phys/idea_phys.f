@@ -56,7 +56,8 @@
       use idea_composition, only : mmr_min, amo, amo2, amo3, amn2
       use wam_ion,          only : idea_ion
 !     use wam_f107_kp_mod,  only : f107_wy, kp_wy, kdt_interval, interpolate_weight, kpa_wy, f107d_wy, hp_wy, hpi_wy 
-      use wam_f107_kp_mod,  only : f107_wy, kp_wy, kdt_interval, interpolate_weight, kpa_wy, f107d_wy, hp_wy, hpi_wy, 
+      use wam_f107_kp_mod,  only : f107_wy, kp_wy, kdt_interval, interpolate_weight, kpa_wy, f107d_wy, nhp_wy, 
+     &                             shpi_wy, shp_wy, nhpi_wy, 
      &                             swbz_wy, swvel_wy, swbt_wy, swang_wy 
 
 !     Changed by Zhuxiao.Li(05/2017) for back to the path to read in F10.7 and Kp
@@ -216,16 +217,20 @@
           kp_curdt    = kp_wy   (kdt_interval) * interpolate_weight  + kp_wy   (kdt_interval+1) * (1-interpolate_weight)
           f107d_curdt = f107d_wy(kdt_interval) * interpolate_weight  + f107d_wy(kdt_interval+1) * (1-interpolate_weight)
           kpa_curdt   = kpa_wy  (kdt_interval) * interpolate_weight  + kpa_wy  (kdt_interval+1) * (1-interpolate_weight)
-          hp_curdt    = hp_wy   (kdt_interval) * interpolate_weight  + hp_wy   (kdt_interval+1) * (1-interpolate_weight)
-          hpi_curdt   = hpi_wy  (kdt_interval) * interpolate_weight  + hpi_wy  (kdt_interval+1) * (1-interpolate_weight)
+          nhp_curdt   = nhp_wy  (kdt_interval) * interpolate_weight  + nhp_wy  (kdt_interval+1) * (1-interpolate_weight)
+          nhpi_curdt  = nhpi_wy (kdt_interval) * interpolate_weight  + nhpi_wy (kdt_interval+1) * (1-interpolate_weight)
+          shp_curdt   = shp_wy  (kdt_interval) * interpolate_weight  + shp_wy  (kdt_interval+1) * (1-interpolate_weight)
+          shpi_curdt  = shpi_wy (kdt_interval) * interpolate_weight  + shpi_wy (kdt_interval+1) * (1-interpolate_weight)
           swbt_curdt  = swbt_wy (kdt_interval) * interpolate_weight  + swbt_wy (kdt_interval+1) * (1-interpolate_weight)
           swang_curdt = swang_wy(kdt_interval) * interpolate_weight  + swang_wy(kdt_interval+1) * (1-interpolate_weight)
           swvel_curdt = swvel_wy(kdt_interval) * interpolate_weight  + swvel_wy(kdt_interval+1) * (1-interpolate_weight)
           swbz_curdt  = swbz_wy (kdt_interval) * interpolate_weight  + swbz_wy (kdt_interval+1) * (1-interpolate_weight)
        else
           kpa_curdt   = 0.0
-          hp_curdt    = 0.0
-          hpi_curdt   = 0.0
+          shp_curdt   = 0.0
+          shpi_curdt  = 0.0
+          nhp_curdt   = 0.0
+          nhpi_curdt  = 0.0
           swbt_curdt  = 0.0
           swang_curdt = 0.0
           swvel_curdt = 0.0

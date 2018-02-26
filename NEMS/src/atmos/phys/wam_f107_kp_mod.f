@@ -14,8 +14,9 @@
 ! mark them as f107_wy, kp_wy tp avoid mixture with real f107/kp
 ! add fixed sets for          f107_fix, f107d_fix, kp_fix
 !
-      REAL, ALLOCATABLE, DIMENSION(:) :: f107_wy, kp_wy, kpa_wy, f107d_wy, hp_wy
-      REAL, ALLOCATABLE, DIMENSION(:) :: hpi_wy, swbz_wy, swvel_wy, swbt_wy, swang_wy
+      REAL, ALLOCATABLE, DIMENSION(:) :: f107_wy, kp_wy, kpa_wy, f107d_wy, nhp_wy
+      REAL, ALLOCATABLE, DIMENSION(:) :: nhpi_wy, swbz_wy, swvel_wy, swbt_wy, swang_wy
+      REAL, ALLOCATABLE, DIMENSION(:) :: shp_wy, shpi_wy
       REAL                        :: f107_fix, f107d_fix, kp_fix
       REAL                        :: swpcf107_fix, swpcf107d_fix, swpckp_fix
       REAL                        :: interpolate_weight
@@ -64,8 +65,8 @@
 !
         READ(79, *) realdate(i), f107_wy(i), kp_wy(i),             &
              f107_flag(i), kp_flag(i), f107d_wy(i), kpa_wy(i),     &
-             hp_wy(i), hpi_wy(i), swbt_wy(i), swang_wy(i),         &
-             swvel_wy(i), swbz_wy(i)
+             nhp_wy(i), nhpi_wy(i), shp_wy(i), shpi_wy(i),         &
+             swbt_wy(i), swang_wy(i), swvel_wy(i), swbz_wy(i)
 !        write(6,*) i, f107_wy(i), kp_wy(i)
       END DO
       CLOSE(79)
@@ -76,9 +77,11 @@
       DO i = f107_kp_read_in_size + 1, f107_kp_size
           f107_wy (i) = f107_wy (f107_kp_read_in_size)
           kp_wy   (i) = kp_wy   (f107_kp_read_in_size)
-          hp_wy   (i) = hp_wy   (f107_kp_read_in_size)
+          nhp_wy  (i) = nhp_wy  (f107_kp_read_in_size)
+          shp_wy  (i) = shp_wy  (f107_kp_read_in_size)
+          shpi_wy (i) = shpi_wy (f107_kp_read_in_size)
           f107d_wy(i) = f107d_wy(f107_kp_read_in_size)
-          hpi_wy  (i) = hpi_wy  (f107_kp_read_in_size)
+          nhpi_wy (i) = nhpi_wy (f107_kp_read_in_size)
           kpa_wy  (i) = kpa_wy  (f107_kp_read_in_size)
           swbt_wy (i) = swbt_wy (f107_kp_read_in_size)
           swang_wy(i) = swang_wy(f107_kp_read_in_size)

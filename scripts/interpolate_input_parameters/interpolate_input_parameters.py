@@ -199,17 +199,19 @@ def output(file, start_date, kp, f107, f107d, kp_avg, swbt, swangle, swvel, swbz
   f.write("Issue Date          "+output_timestamp(start_date)+"\n")
   f.write("Flags:  0=Forecast, 1=Estimated, 2=Observed \n\n")
 
-  f.write(" Date_Time                   F10          Kp     F10Flag      KpFlag  F10_81dAvg   24HrKpAvg     HemiPow  HemiPowIdx  SW_Bt       SW_Angle    SW_Velocity SW_Bz        \n")
-  f.write("--------------------------------------------------------------------------------------------------------------------------------------------------------------------   \n")
+  f.write(" Date_Time                   F10          Kp     F10Flag      KpFlag  F10_81dAvg   24HrKpAvg    NHemiPow NHemiPowIdx    SHemiPow SHemiPowIdx       SW_Bt    SW_Angle SW_Velocity       SW_Bz   \n")
+  f.write("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------   \n")
   for i in range(0,len(kp)):
     f.write("{0}{1:>12.7f}{2:>12.7f}{3:>12}{4:>12}{5:>12.7f}{6:>12.7f}{7:>12.7f}{8:>12}{9:>12.7f}{10:>12.7f}{11:>12.7f}{12:>12.7f}\n".format( \
-            output_timestamp(start_date,i+1), \
+            output_timestamp(start_date,i), \
             f107[i],                          \
             kp[i],                            \
             '2','1',                          \
             f107d[i],                         \
             kp_avg[i],                        \
             hemi_pow[i],                      \
+            hemi_pow_idx[i],                  \
+            hemi_pow[i],                      \ # repeat NH/SH for archived data, as it is not split by hemisphere
             hemi_pow_idx[i],                  \
             swbt[i],                          \
             swangle[i],                       \
