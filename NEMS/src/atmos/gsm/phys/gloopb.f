@@ -105,8 +105,8 @@
 !================================================================= WAM-related 201702
       use wam_f107_kp_mod,        ONLY: read_wam_f107_kp_txt, 
      &                                  f107_wy, kp_wy, f107_kp_size, 
-     &                                  kpa_wy, f107d_wy, nhp_wy, nhpi_wy,
-     &                                  shp_wy, shpi_wy
+     &                                  kpa_wy, f107d_wy, nhp_wy, 
+     &                                  nhpi_wy, shp_wy, shpi_wy,
      &                                  swbt_wy, swang_wy, swvel_wy, 
      &                                  swbz_wy
       use mersenne_twister
