@@ -140,8 +140,8 @@
       integer, parameter  :: ntrac_i=2                  ! number of 2 WAM chem. tracers (O-O2)
 !
 !     real    :: f107_curdt, f107d_curdt, kp_curdt, f107a_fix    
-      real    :: f107_curdt, f107d_curdt, kp_curdt, kpa_curdt, hp_curdt, hpi_curdt
-      real    :: swbz_curdt, swvel_curdt, swbt_curdt, swang_curdt
+      real    :: f107_curdt, f107d_curdt, kp_curdt, kpa_curdt, nhp_curdt, nhpi_curdt
+      real    :: swbz_curdt, swvel_curdt, swbt_curdt, swang_curdt, shp_curdt, shpi_curdt
       integer :: Mjdat(ndwam)                           ! IDAT_WAM + FHOUR
       real    :: Hcur                                   !  current hour+min+sec real 
 !
@@ -312,8 +312,8 @@
 
          if (me == 0 .and. kstep <= 1) then
             print *
-            print *, f107_curdt, f107d_curdt, kp_curdt, kpa_curdt, hp_curdt, hpi_curdt, interpolate_weight, 'F107-kp-VAY'
-            print *, swbt_curdt, swang_curdt, swvel_curdt, swbz_curdt
+            print *, f107_curdt, f107d_curdt, kp_curdt, kpa_curdt, nhp_curdt, nhpi_curdt, interpolate_weight
+            print *, swbt_curdt, swang_curdt, swvel_curdt, swbz_curdt, shp_curdt, shpi_curdt, 'f107-kp data'
 !           print *, 'VAY-GW:',trim(IMPL_UNIF_GW)
             print *
             print *, 'ID-phys SPW-drivers option: ', trim(SPW_DRIVERS)
@@ -546,8 +546,8 @@
       call idea_ion(prsl, solhr,cospass,zg, grav, o_n,o2_n,n2_n,cp,
      &              adu,adv,adt,dudt,dvdt,dtdt,rho,xlat,xlon,ix,im,levs,
      &              dayno,utsec,sda,maglon,maglat,btot,dipang,essa,
-     &              f107_curdt, f107d_curdt, kp_curdt, hp_curdt, 
-     &              hpi_curdt,SPW_DRIVERS)
+     &              f107_curdt, f107d_curdt, kp_curdt, nhp_curdt, 
+     &              nhpi_curdt, shp_curdt, shpi_curdt, SPW_DRIVERS)
 ! Merge the  IPE back coupling WAM dudt, dvdt and dtdt arrays into WAM.
 !----------------------------------------------------------------------
       IF(ipe_to_wam_coupling) THEN
