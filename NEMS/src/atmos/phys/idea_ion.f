@@ -219,8 +219,13 @@
 !         jh_fac = 2.25+0.75*tanh(2.*rlat(i))*cos((dayno+9.)*2.*pi/365.)                    
 !     &   + 0.5*(1.+cos(4.*pi*(dayno-80.)/365.))
 
+!<<<<<<< HEAD
          jh_fac = 2.25+0.5*tanh(2.*rlat(i))*cos((dayno+9.)*2.*pi/365.)                    
      &                +0.5*(cos(4.*pi*(dayno-80.)/365.))
+!=======
+!         jh_fac = 2.35+0.4*tanh(2.*rlat(i))*cos((dayno+9.)*2.*pi/365.)                    
+!     &               + 0.4*(cos(4.*pi*(dayno-80.)/365.))
+!>>>>>>> 8f7db60904d812476a305b3f6c3dd69211f108f0
 
       do k=1,levs
            dtdt(i,k)=jh(i,k)*jh_fac/cp(i,k)
