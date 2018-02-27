@@ -313,14 +313,9 @@
 !!       if (me == 0 .and. kstep <= 1) then
          if (me == 0) then
             print *
-<<<<<<< Updated upstream
             print *, f107_curdt, f107d_curdt, kp_curdt, kpa_curdt, nhp_curdt, nhpi_curdt, interpolate_weight
             print *, swbt_curdt, swang_curdt, swvel_curdt, swbz_curdt, shp_curdt, shpi_curdt, 'f107-kp data'
-=======
             print *, 'idea_phys'
-            print *, f107_curdt, f107d_curdt, kp_curdt, kpa_curdt, hp_curdt, hpi_curdt, interpolate_weight, 'F107-kp-Var'
-            print *, swbt_curdt, swang_curdt, swvel_curdt, swbz_curdt
->>>>>>> Stashed changes
 !           print *, 'VAY-GW:',trim(IMPL_UNIF_GW)
             print *
             print *, 'ID-phys SPW-drivers option: ', trim(SPW_DRIVERS)
