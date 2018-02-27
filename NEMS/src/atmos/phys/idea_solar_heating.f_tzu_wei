@@ -15,7 +15,7 @@
 !=============================================================================
       subroutine idea_sheat(im,ix,levs,te,dt,cospass,
      & o_n,o2_n,o3_n,n2_n,     
-     &ro,cp,lat,dayno,prsl,zg,grav,am,maglat,dt6dt, f107, f107d, kpa)
+     &ro,cp,lat,dayno,prsl,zg,grav,am,maglat,dt6dt, f107, f107d, Kp)
 !----------------------------------------------------------------------------
 ! calculete solar heating, NO coooling from 2Pa up
 !----------------------------------------------------------------------------
@@ -35,7 +35,7 @@
       integer, intent(in) :: dayno    ! calender day
 !
 !VAY-2016
-      real, intent(in)    :: f107, f107d, kpa ! solar-geo drivers
+      real, intent(in)    :: f107, f107d, Kp ! solar-geo drivers
 !
       real, intent(in)    :: te(ix,levs)  !temperature
       real, intent(in)    :: cospass(im)  ! cos zenith angle
@@ -106,15 +106,11 @@
 !
 !         print *, 'VAY idea_dissociation index ', i
 !!        call getno(1,1,levs,maglat(i),dayno,alt,prr,nn,amm,no_new,
-!!     &      f107, kpa)
+!!     &      f107, kp)
 
-       call getno1d(levs,f107,kpa,maglat(i),dayno,
+       call getno1d(levs,f107,kp,maglat(i),dayno,
      &      alt,prr,nn,amm,no_new)
-!!     
-        print *, 'after call getno1d'
-        print *, 'f107', f107
-        print *, 'kpa=', kpa
-              
+!!                   
 !!        call COOLNO1(levs,nps,t,o,no_new,qno)   
 
        call WAM_COOLNO1(levs, nps, t, o, no_new, qno)                  
@@ -348,15 +344,15 @@
       do J = 1, NWAVES  
         jinv = nwaves+1-J
 !
-         if (idea_solar_fix.ge.1) then 
+!!         if (idea_solar_fix.ge.1) then 
 !parameterized EUV 
 ! RAA: normalize flux by SED
 !           flux(J)=sfmin(jinv)*max(0.8, (1.0+afac(jinv)*pind) )
-           flux(J)=sfmin(jinv)*max(0.8, (1.0+afac(jinv)*pind) )*sfeps
-         else              
+            flux(J)=sfmin(jinv)*max(0.8, (1.0+afac(jinv)*pind) )*sfeps
+!         else              
 ! solar_fix == 0 use observed EUV               
-            flux(J)=euv37(j)                                          
-         endif
+!!            flux(J)=euv37(j)                                          
+!!         endif
          IF (flux(J) .LT. 0.0) flux(J) = 0.0
       enddo
 !      

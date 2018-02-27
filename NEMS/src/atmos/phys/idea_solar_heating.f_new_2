@@ -1,21 +1,22 @@
-!=============================================================================
+!----------------------------------------------------------------------------
 ! Rashid Akmaev, Dec 2017: Sun-Earth distance (SED) factor, some cleaning
-!
+
 ! VAY-DEC 2016: Revision of idea_solar_heating.f with separation on
 !               a) idea_solar_2014.f    - old non-tiegcm "idea"
 !               b) idea_solar_heating.f - new tiegcm, SRB +Lya +slant columns
-!               c) idea_solar_init.f    - time-inv fixed data and updated eff.
+!               c) idea_solar_init.f    - all time-inv fixed data and updated eff.
 !                                         with 3 options to treat solar drivers
 !
 ! Contains : idea_sheat
 !            presolar  
 !            solar_heat_dissociation_TIEGCM
 !            idea_dissociation
+!            srb_jo2_heat, src_jo2_heat, lya_jo2_heat
 !            get_slantcolumns
-!=============================================================================
+!----------------------------------------------------------------------------
       subroutine idea_sheat(im,ix,levs,te,dt,cospass,
      & o_n,o2_n,o3_n,n2_n,     
-     &ro,cp,lat,dayno,prsl,zg,grav,am,maglat,dt6dt, f107, f107d, kpa)
+     &ro,cp,lat,dayno,prsl,zg,grav,am,maglat,dt6dt, f107, f107d, Kp)
 !----------------------------------------------------------------------------
 ! calculete solar heating, NO coooling from 2Pa up
 !----------------------------------------------------------------------------
@@ -35,7 +36,7 @@
       integer, intent(in) :: dayno    ! calender day
 !
 !VAY-2016
-      real, intent(in)    :: f107, f107d, kpa ! solar-geo drivers
+      real, intent(in)    :: f107, f107d, Kp  ! solar-geo drivers for current timestep
 !
       real, intent(in)    :: te(ix,levs)  !temperature
       real, intent(in)    :: cospass(im)  ! cos zenith angle
@@ -51,25 +52,33 @@
       real, intent(in)    :: grav(ix,levs)! (m/s2)
       real, intent(in)    :: ro(ix,levs)  ! density (kg/m3) 
       real, intent(inout) :: dt6dt(ix,levs,6)  ! 
-      real, intent(out)    :: dt(ix,levs) ! (K/s) solar heating rate
-! Locals
+      real, intent(out)    :: dt(ix,levs) ! (K/s)temp change due to solar heating
       integer  i,k
       real t(levs),n2(levs), o(levs),o2(levs),o3(levs)
       real :: ho(levs), ho2(levs),hn2(levs)
       real :: sheat(levs),qno(levs),no_new(levs),
      &amm(levs),prr(levs),alt(levs),nn(levs),sh1(levs),sh2(levs)
+!
+! vay-2015 remove f107/f107a   now values passed by " use idea_solar_input "
+!
+   
       real  :: ht(levs)
       real  :: dissociation_rate(levs), Jo3(levs)
-
+!
       real :: vay_rgas_o, vay_rgas_o2,vay_rgas_n2 
-
+!
       real :: vay_avgd, tg_vay, vay_cprho, rcpro, ron2
-
+!
       vay_rgas_o =  1.e3*rgas/amo
       vay_rgas_o2 = 1.e3*rgas/amo2
       vay_rgas_n2 = 1.e3*rgas/amn2
       vay_avgd    = 1.e3*avgd 
       ron2 = amo/amn2          
+!    
+    
+! OK radians !!!!     
+!      print *, 'VAY-maglat ', maxval(maglat), minval(maglat) 
+!
       do i=1,im
         do k=1,levs
           o(k)=o_n(i,k)                            !/m3 in idea_phys
@@ -81,11 +90,13 @@
           ho(k) =vay_rgas_o*tg_vay                  !m
           ho2(k)=.5*ho(k) 
           hn2(k)=ron2*ho(k)  
+!          ho(k)=1.e3*rgas*t(k)/(amo*grav(i,k))          
           ht(k) =  zg(i,k)
           alt(k) = 1.e-3*ht(k)
           prr(k)=prsl(i,k)
           nn(k)=o(k)+o2(k)+o3(k)+n2(k)
-          amm(k)=am(i,k)*vay_avgd 
+          amm(k)=am(i,k)*vay_avgd                  ! normal mol weight 29-17 compute it in idea_phys.f
+                                                   !  & pass it to all RAD-subs am2d(k)=am(i,k)*vay_avgd 
         enddo
 !                  
 ! get heating
@@ -100,21 +111,14 @@
 !        call solar_heat(levs,nps,o,o2,n2,ho,ho2,hn2,effeuv,effuv,       
 !     &   f107, cospass(i),sheat,sh1,sh2)
        ENDIF
-
-!        print *, 'dissociation_rate=', dissociation_rate
-!        print *, 'Jo3=', Jo3
 !
 !         print *, 'VAY idea_dissociation index ', i
 !!        call getno(1,1,levs,maglat(i),dayno,alt,prr,nn,amm,no_new,
-!!     &      f107, kpa)
+!!     &      f107, kp)
 
-       call getno1d(levs,f107,kpa,maglat(i),dayno,
+       call getno1d(levs,f107,kp,maglat(i),dayno,
      &      alt,prr,nn,amm,no_new)
-!!     
-        print *, 'after call getno1d'
-        print *, 'f107', f107
-        print *, 'kpa=', kpa
-              
+!!                   
 !!        call COOLNO1(levs,nps,t,o,no_new,qno)   
 
        call WAM_COOLNO1(levs, nps, t, o, no_new, qno)                  
@@ -219,17 +223,19 @@
 
 ! RAA Dec 2017: SED correction factors, some cleanup
 !vay-2015   solar_heat_dissociation_TIEGCM   1D_height subroutine
-
+!
        use idea_composition, only  : R0 => REARTH, pi
-       use idea_solar,       only  : euv37, nsp_euv ! EUV-flux(nsp_euv=37)
+       use idea_solar,       only  : euv37, nsp_euv        ! current EUV-flux(nsp_euv=37)
+!       use idea_solar_input, only  : idea_solar_fix 
        use idea_solar,       only  : o2_scale_factor,  SRBEFF  ! (levs)-arrays
-       use idea_solar,       only  : effuv, effeuv             ! CTIP-orig
-       use idea_solar,       only  : eff_src, eff_srb, eff_lya ! (levs)-arrays
-       use idea_solar,       only  : rwpcc                     ! pcc/wavelength
+!
+       use idea_solar,       only  : effuv, effeuv             ! from CTIP-originally
+       use idea_solar,       only  : eff_src, eff_srb, eff_lya !   (levs)-arrays
+       use idea_solar,       only  : rwpcc                     !   pcc/wavelength
        use idea_solar,       only  : csao, csao2, csan2, csao3
        use idea_solar,       only  : csio, csio2, csin2
        use idea_solar,       only  : csdo2, csdeo2
-!       use idea_solar,       only  : eccentric
+       use idea_solar,       only  : eccentric
        use idea_solar,       only  : sfmin, afac
        use idea_solar,       only  : nwaves, nwaves_euv
        use idea_solar,       only  : lyman_a_num,nwaves_src
@@ -239,8 +245,7 @@
 !        moved to idea_sola_init and passed through "idea_solar"
 !-------------------------------------------------------------------------
 !  **
-!  calculates solar heating and dissociation rates 
-!     from EUV and UV(SRC+LYA+SRB)
+!  calculates solar heating from EUV and UV(SRC+LYA+SRB)
 !  
 !  Input:
 !  O atomic oxygen number density profile m-3
@@ -255,7 +260,7 @@
 !  dayno day of year ( 1 to 366)
 !
 !  Output:
-!  SHEAT, sh1(euv), sh2(uv) heating rates J/m3
+!  SHEAT, sh1(euv), sh2(uv) heating rates W/m3
 !  O2dissociation_rate dissociation rates s-1
 !---------------------------------------------------------------------------
       implicit none
@@ -275,15 +280,16 @@
       real, intent(in)    :: cospass    ! cos zenith angle
       real, intent(in)    :: dayno      ! day of year
       real, intent(in)    :: height(np) !layer height (m)
-
+!
 ! output
-
+!
       real, intent(out)   :: sheat(np),sh1(np),sh2(np)   ! W/m3 heating rate
-      real, intent(out)   :: O2dissociation_rate(np)
-      real, intent(out)   :: O3dissociation_rate(np)
-
+      real, intent(out)   :: O2dissociation_rate(np)     ! photo dissociation rate
+      real, intent(out)   :: O3dissociation_rate(np)     ! photo dissociation rate
+!
 ! locals 
-
+!
+!
       real sPAEUV              ! VAY scalar instead of 2D-array PAEUV
       real Z, coschi
       real seco,seco2, seco3, secn2
@@ -292,12 +298,12 @@
       real nightfac
       real  attenuation, local_flux
       real rnight_o,rnight_o2,rnight_o3,rnight_n2
-
+!
 ! Solar variability factor for SRB dissociation calculation
       REAL FLUX(NWAVES)
       REAL fmxfmn
       REAL pind
-      real, dimension(np) :: sco2, sco, scn2,sco3 ! slant columns o2/o/n2
+      real, dimension(np) :: sco2, sco, scn2,sco3     ! slant columns o2/o/n2 in .. 1/cm2
 ! local  O2 dissociation rates
       REAL pre_loc, PAEUV_loc,  JSRC_loc,                       
      &     JLYA_loc, JSRB_loc,  JEUV_loc
@@ -309,53 +315,52 @@
 ! SRB
       REAL srband, srband_fac,srbheat(np)
       real, dimension(np) :: shsrc, shsrb, shlya
-
+!
 ! vay-2015
-
+!
       real :: vay1, vay2, vay3, vay4, rnight
 !   
       real :: vay_fmxfmn, vay_srband_fac, vay_srb3
       real Zrnight_o2(np)
       real :: sfeps
       real :: temp1, sco3t
+! RAA: solar 10-cm radioflux normalized to 1 AU and SED factor
+      real f107_1au, f107d_1au,sedfac
 !
       integer i,j,jinv
 
-! RAA: solar 10-cm flux normalized to 1 AU
-      real f107_1au, f107d_1au
+! RAA: calculate SED factor, normalize solar radio fluxes
+      sedfac = (1.0+0.0167*COS(2.0*pi*(dayno-3.)/366.0))**2
+      f107_1au = f107/sedfac
+      f107d_1au = f107d/sedfac
 
-        nightfac=1.e-9         ! Ratio of nightime ionisation to sec=1.
+        nightfac=1.e-9                    ! Ratio of nightime ionisation to sec=1.
+        sfeps   = 1.0                      ! eccentric
 
-! RAA: reintroduce the SED factor, normalize solar flux to 1 AU
-!        sfeps   = 1.0
-        sfeps   = (1.0+0.0167*COS(2.0*pi*(dayno-3.)/366.0))**2
-        f107_1au = f107/sfeps
-        f107d_1au = f107d/sfeps
-
-!vay-2017 fmxfmn=(F107-71.)/(220-71.) does not make sense for F107~70.
+! Constants as functions of F107
+!
+!                                         ! eccentric=(1.0+0.0167*COS(2.0*pi*(dayno-3)/366.0))**2=sfeps
+!vay-2017        fmxfmn=(F107-71.)/(220-71.)       ! does not make sense for F107~70.
+! RAA: Replace f107 by normalized flux
+!        fmxfmn=(f107-65.)/165.   
         fmxfmn=(f107_1au-65.)/165.   
+!                                         ! fmxfmn=(f107d-65.)/165.      !TIMEGCM/WX o2srbc.F
         srband_fac=0.784591675
         vay_fmxfmn=(1.+0.11*fmxfmn)
         vay_srband_fac=(1.+srband_fac)*.1
+        vay_srb3=vay_srband_fac * vay_fmxfmn * eccentric
 
-! RAA: replace eccentric with sfeps
-!        vay_srb3=vay_srband_fac * vay_fmxfmn * eccentric
-        vay_srb3=vay_srband_fac * vay_fmxfmn * sfeps
-
+! RAA: Replace f107 by normalized flux
+!        pind=0.5*(f107+f107d) -80.
         pind=0.5*(f107_1au+f107d_1au) -80.
-!
 
       do J = 1, NWAVES  
         jinv = nwaves+1-J
 !
-         if (idea_solar_fix.ge.1) then 
-!parameterized EUV 
-! RAA: normalize flux by SED
-!           flux(J)=sfmin(jinv)*max(0.8, (1.0+afac(jinv)*pind) )
-           flux(J)=sfmin(jinv)*max(0.8, (1.0+afac(jinv)*pind) )*sfeps
+         if (idea_solar_fix.ge.1) then                               ! idea_solar_fix == 1 or 2
+           flux(J)=sfmin(jinv)*max(0.8, (1.0+afac(jinv)*pind) )      !parameterized EUV 
          else              
-! solar_fix == 0 use observed EUV               
-            flux(J)=euv37(j)                                          
+           flux(J)=euv37(j)                                          ! solar_fix == 0   use observed EUV    
          endif
          IF (flux(J) .LT. 0.0) flux(J) = 0.0
       enddo
@@ -419,14 +424,19 @@
       CALL SUB_CHAPMAN(cospass, HO(i)*.333,z,nightfac,seco3,rnight_o3)
       CALL SUB_CHAPMAN(cospass, HN2(i),z, nightfac, secn2,rnight_n2) 
        Zrnight_o2(i) = rnight_o2
-
+!
 ! For tau convert column abundance from m^-2 to cm^-2 (10^-4)
         WO= O(i) *HO(i) *SECO*1.e-4
         WO2=O2(i)*HO2(i)*SECO2*1.e-4
         WN2=N2(i)*HN2(i)*SECN2*1.e-4
+!
+!        WO = sco(i)
+!        WO2= sco2(i)
+!        WN2 =scn2(i)
         WO3 =sco3(i)
-
+! 
 !  loop over all 37 bands
+! 
        sh1(i)=0.
        sh2(i)=0.
        O2dissociation_rate(i)=0.
@@ -437,8 +447,9 @@
          TAUN2=CSAN2(J)*WN2
          TAUO3=CSAO3(J)*WO3
          TAU=TAUO+TAUO2+TAUN2
-
+!
 ! use parameters: solar_tuny = 1.e-36, min_flux =1.e-20, tau_max=200.
+!
       IF (tau .ge.  1.e-36 .AND. tau <= 200.) then 
            attenuation = exp(-tau)
       else  if (tau < 1.e-36 ) then  
@@ -446,142 +457,152 @@
       else  
             attenuation=0.
       ENDIF
+!   A tau of zero means all light gets through (none is absorbed attenuation = 1.
 
-! RAA: Remove eccentric, flux is already normalized to SED
-!          local_flux=flux(J)*attenuation*eccentric
-          local_flux=flux(J)*attenuation
+          local_flux=flux(J)*attenuation*eccentric
 
           IF(local_flux < 1.e-20 ) local_flux=0.
 
-! EUV heating calculation(W/m3)
+! EUV heating calculation(J/m3/s)
           IF(J <= NWAVES_EUV) THEN
- 
-! For SI units convert flux to m^-2 (x10^4)
-!  convert cross sections to m^2 (x10^-4)
+! 
+! For SI units convert flux to m^-2 (x10^4)   convert cross sections to m^2 (x10^-4)
+!
          sPAEUV=local_flux*(CSAO(J)*O(i)*rnight_o+                  
      &    CSAO2(J)*O2(i)*rnight_o2+CSAN2(J)*N2(i)*rnight_n2)*RWPCC(J)
          sh1(i)    =sh1(i)  + Spaeuv
-
 ! EUV JO2
           Jeuv_loc = Jeuv_loc+local_flux*(CSDO2(J)+CSDeO2(J))
-
 ! EUV JO3
           Jo3_euvloc = Jo3_euvloc +local_flux*CSAO3(J)
          ELSE
-
+! 
 !  UV SRC/LYa channels 
+! 
          sPAEUV=local_flux*CSAO2(J)*O2(i)*RWPCC(J)*rnight_o2
-
-! calculate JSRC, excluding JLYA
+!                                                              !calculate JSRC, excluding JLYA
            IF(J /= lyman_a_num) then 
               JSRC_loc=JSRC_loc+local_flux*CSAO2(J)
               shsrc(i)  =shsrc(i)  +spaeuv
               Jo3_srcloc = Jo3_srcloc +local_flux*CSAO3(J)
-           ELSE                                                
-
-! calculate JLYA 
+           ELSE                                                ! calculate JLYA 
               JLYA_loc=local_flux*CSAO2(J)
               shlya(i)  =  spaeuv                              !* effuv(i) 
-              pdnolya = (0.68431  *exp(-8.22114e-21*sco2(i))+
-     &             0.229841 *exp(-1.77556e-20*sco2(i))+
-     &             0.0865412*exp(-8.22112e-21*sco2(i)))*
-     &             flux(lyman_a_num)
+             pdnolya = (0.68431  *exp(-8.22114e-21*sco2(i))+
+     &                  0.229841 *exp(-1.77556e-20*sco2(i))+
+     &                  0.0865412*exp(-8.22112e-21*sco2(i)))*
+     &                       flux(lyman_a_num)
+!
+! TIME-GCM JO2_LYA:
+!             JLYA_loc= (6.0073e-21*exp(-8.2166e-21 *sco2(i))+
+!     &                      4.28569e-21*exp(-1.63296e-20*sco2(i))+
+!     &                      1.28059e-20*exp(-4.85121e-17*sco2(i)))*
+!     &                      flux(lyman_a_num)
+!
               Jo3_lyaloc =2.27e-17*pdnolya
            ENDIF                                               ! src/lya
          ENDIF          ! UV/EUV
         enddo           ! end of wavelength loop - J-index
-
 !==========================================================
 !  qtotal(k,i,lat) = qtotal(k,i,lat)+ho2src(k,i)+ho2srb(k,i) 
 !  Calculate O2 Schumunn Runge band heating  see "o2srbc.F"
 !==========================================================
-      IF (WO2 < 1.E18) THEN
-         srband=O2(i)*2.43E-25  !!1.e-19*1.e-6  Strobel-78 exp(21) 20% accuracy
-      ELSE
-         srband=O2(i)*1.e-6/(0.66*WO2+3.44E9*SQRT(WO2))
-      ENDIF
-      
-      srband =srband * vay_srb3 ! (vay_srband_fac*vay_fmxfmn*eccentric)
-      if(srband.lt.0.)   srband  = 0.
+       IF (WO2 < 1.E18) THEN
+              srband=O2(i)*2.43E-25    !!1.e-19*1.e-6  Strobel-78 exp(21) 20% accuracy
+       ELSE
+              srband=O2(i)*1.e-6/(0.66*WO2+3.44E9*SQRT(WO2))! [17,20] in 60-100km Strobel-78 0.67 =>/0.66
+       ENDIF
 
+       srband =srband * vay_srb3        ! (vay_srband_fac*vay_fmxfmn*eccentric)
+       if(srband.lt.0.)   srband  = 0.
+!
+!      ho2srb(k) = (26.4960E-20/sqrt(1.+1.734E-18*sco2(k))*
+!     &       exp(-0.02388*(sqrt(1.+1.734E-18*sco2(k))-1.)))*sfeps
+!
 !      sum srb+src+lya heating into the total UV heat
 !=====================================================
 !      apply Heat-efficiency factors & rnight_o2
-      shsrb(i) = srband*rnight_o2
-      sh1(i)   = sh1(i)  *effeuv(i)                
-      shsrc(i) = shsrc(i)*effuv(i)                 
-      shlya(i)  = shlya(i)*effuv(i)                
-      sh2(i)   = shsrc(i) + shlya(i) +shsrb(i)     
-
+!
+         shsrb(i) = srband*rnight_o2                  ! srbeff(i)=1.0 ML-93
+         sh1(i)   = sh1(i)  *effeuv(i)                ! constant =0.05 in TIME-GCM
+         shsrc(i) = shsrc(i)*effuv(i)                 !effuv(i)                 ! 0.80  !1(50km)=>0.75(80km)=>0.85 (110km) > ???
+         shlya(i)  = shlya(i)*effuv(i)                ! 0.95
+         sh2(i)   = shsrc(i) + shlya(i) +shsrb(i)     ! see SRC-fits in TGCM  ML-93, p10,527
 ! total
-      sheat(i) = sh1(i) +sh2(i) ! EUV + UV
-
+         sheat(i) = sh1(i) +sh2(i)                    ! EUV + UV
 !===============================================
-! calculate JO2 due to SRB
-      IF (WO2.LT.1.E19) THEN
-
-! RAA: add SED factor
-!     JSRB_loc = vay_fmxfmn*1.1E-7*EXP(-1.97E-10*(WO2**0.522))  
-         JSRB_loc = vay_fmxfmn*1.1E-7*EXP(-1.97E-10*(WO2**0.522))*sfeps
-         
-      ELSE
-!     JSRB_loc =vay_fmxfmn*1.45E8*(WO2**(-0.83))
-         JSRB_loc =vay_fmxfmn*1.45E8*(WO2**(-0.83))*sfeps
-      ENDIF
-
-! sum dissociation rates, eccentric is inclued in the local_flux and SRB
- 
-      JSRC(i)   = JSRC_loc
-      JSRB(i)   = JSRB_loc          
-      JLYA(i)   = JLYA_loc
-      JEUV(i)   = JEUV_loc
-!     
-      O2dissociation_rate(i) =O2_scale_factor(i)*rnight_o2*
-     &     (JSRC_loc+JLYA_loc+JSRB_loc+JEUV_loc)
+!                                                     ! calculate JO2 due to SRB
+         IF (WO2.LT.1.E19) THEN
+           JSRB_loc = vay_fmxfmn*1.1E-7*EXP(-1.97E-10*(WO2**0.522))  
+!  vay_fmxfmn*1.1E-7  =    5.56E-8  
+!  Jsrb_TGCM= do2srb(k) = (5.56E-8*exp(-1.97E-10*sco2(k)**0.522))* [sfac*sfeps=vay_fmxfmn] [1/sec]
+         ELSE
+            JSRB_loc =vay_fmxfmn*1.45E8*(WO2**(-0.83))
+         ENDIF
+!
+!        vay_fmxfmn*1.45E8 = 0.70E+8
+!        Jsrb_tgcm(k) = (0.70E+8/(sco2(k)**0.83))*[sfac*sfeps=vay_fmxfmn] [1/sec]
+! sum dissociation rates, eccentric is inclued in the local_flux
+! 
+       JSRC(i)   = JSRC_loc
+       JSRB(i)   = JSRB_loc          
+       JLYA(i)   = JLYA_loc
+       JEUV(i)   = JEUV_loc
+!
+       O2dissociation_rate(i) =O2_scale_factor(i)*rnight_o2*
+     &   (JSRC_loc+JLYA_loc+JSRB_loc+JEUV_loc)
 !
 ! Jo3_harloc & Jo3_chhloc
 !         
-      sco3t = sco3(i)                        
-      if (sco3t < 1.e+5) sco3t = 1.e+5
-      temp1 = 1.0e-3*exp(-1.5577e-13*sco3t**0.6932)
-      if (sco3t < 1.6e+20) 
-     &     temp1 = 1.04e-2*exp(-1.0217e-6*sco3t**0.3587)
+          sco3t = sco3(i)                        
+          if (sco3t < 1.e+5) sco3t = 1.e+5
+          temp1 = 1.0e-3*exp(-1.5577e-13*sco3t**0.6932)
+          if (sco3t < 1.6e+20) 
+     &      temp1 = 1.04e-2*exp(-1.0217e-6*sco3t**0.3587)
 ! Hartley bands of O3:
 !          Jo3_harloc = sfeps*0.68*
 !     &      (temp1 + 1.085*exp(-1.4912e-14*sco2(i)**0.5298)*
 !     &      ( 4.053e-4  *exp(-8.1381e-16*sco3t**0.8856) +
 !     &        4.700e-6  *exp(-1.5871e-14*sco3t**0.7665)   )*
 !     &       *exp(-1.4655e-25*sco2(i)**1.0743) )
-      Jo3_harloc = 
-     &     (temp1*0.68+exp(-1.4912e-14*sco2(i)**0.5298)*
-     &     (4.053e-4  *exp(-8.1381e-16*sco3t**0.8856)+
-     &     4.7e-6    *exp(-1.5871e-14*sco3t**0.7665))*
-     &     1.085     *exp(-1.4655e-25*sco2(i)**1.0743)*0.68)*sfeps   
+          Jo3_harloc = 
+     &      (temp1*0.68+exp(-1.4912e-14*sco2(i)**0.5298)*
+     &      (4.053e-4  *exp(-8.1381e-16*sco3t**0.8856)+
+     &       4.7e-6    *exp(-1.5871e-14*sco3t**0.7665))*
+     &       1.085     *exp(-1.4655e-25*sco2(i)**1.0743)*0.68)*sfeps   
 !
 ! Chappius and Huggins bands:
 !
-      Jo3_chhloc = sfeps*
+          Jo3_chhloc = sfeps*
      &     (    4.5e-4*exp(-3.4786e-11*sco2(i)**0.3366
-     &     -1.0061e-20*sco3t  **0.9719)
-     &     + ( 7.5e-4 *exp(-2.7663e-19*sco3t**1.0801 )
-     &     +2.5e-4/(1.+1.5772e-18  *sco3t**0.9516))
-     &     *exp(-1.0719e-10*sco2(i)**0.3172 )  )
+     &                     -1.0061e-20*sco3t  **0.9719)
+     &      + ( 7.5e-4 *exp(-2.7663e-19*sco3t**1.0801 )
+     &        +2.5e-4/(1.+1.5772e-18  *sco3t**0.9516))
+     &      *exp(-1.0719e-10*sco2(i)**0.3172 )  )
 !
-      O3dissociation_rate(i) = rnight_o3*(Jo3_EUVloc+
-     &     Jo3_SRCloc+Jo3_LYAloc+Jo3_harloc+Jo3_chhloc)
+       O3dissociation_rate(i) = rnight_o3*(Jo3_EUVloc+
+     &   Jo3_SRCloc+Jo3_LYAloc+Jo3_harloc+Jo3_chhloc)
       enddo    ! height loop
 !
 !
       do i=1,nps-1
-         sco3t =  exp(-abs(float(i-nps))*0.2) 
+        sco3t =  exp(-abs(float(i-nps))*0.2) 
 !
 ! Jo3 (O3P+O1D) below ~50 km is ~ constant with small decrease 
 !
 
-         O2dissociation_rate(i) = O2dissociation_rate(nps)*sco3t 
-         O3dissociation_rate(i) = O3dissociation_rate(nps)*sco3t  
+        O2dissociation_rate(i) = O2dissociation_rate(nps)*sco3t 
+        O3dissociation_rate(i) = O3dissociation_rate(nps)*sco3t  
       enddo
-!
+
+! RAA: if using parameterized solar fluxes, normalize heating and dissociation
+!     rates by SED factor
+      if (idea_solar_fix.ge.1) then
+         sheat(:) = sheat(:)*sedfac
+         O2dissociation_rate(:) = O2dissociation_rate(:)*sedfac
+         O3dissociation_rate(:) = O3dissociation_rate(:)*sedfac
+      endif
+
       RETURN
       END SUBROUTINE solar_heat_dissociation_TIEGCM
 !
@@ -907,3 +928,8 @@
        ENDIF
 
       END SUBROUTINE SUB_Chapman
+!
+! see also
+! /scratch3/NCEPDEV/swpc/save/Valery.Yudin/NCAR/TIMEGCM/timegcm_waccmx2016/timegcm_trunk/src/chapman.F
+!  to compute sco2.... & vco2     
+!=================================================================    
