@@ -211,7 +211,7 @@ def output(file, start_date, kp, f107, f107d, kp_avg, swbt, swangle, swvel, swbz
             kp_avg[i],                        \
             hemi_pow[i],                      \
             hemi_pow_idx[i],                  \
-            hemi_pow[i],                      \ # repeat NH/SH for archived data, as it is not split by hemisphere
+            hemi_pow[i],                      \ 
             hemi_pow_idx[i],                  \
             swbt[i],                          \
             swangle[i],                       \
