@@ -1421,7 +1421,7 @@ cat  > IPE.inp <<EOF
   iout(1)=1
   iout(2)=60
   lpFort167=11
-  lpmax_perp_trans=74
+  lpmax_perp_trans=151
   lpmin_perp_trans=1
   mpFort167=1
   mpstop=80
