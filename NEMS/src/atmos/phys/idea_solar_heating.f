@@ -111,9 +111,9 @@
        call getno1d(levs,f107,kpa,maglat(i),dayno,
      &      alt,prr,nn,amm,no_new)
 !!     
-        print *, 'after call getno1d'
-        print *, 'f107', f107
-        print *, 'kpa=', kpa
+!        print *, 'after call getno1d'
+!        print *, 'f107', f107
+!        print *, 'kpa=', kpa
               
 !!        call COOLNO1(levs,nps,t,o,no_new,qno)   
 

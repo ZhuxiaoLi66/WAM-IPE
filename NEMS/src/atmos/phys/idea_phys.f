@@ -310,8 +310,8 @@
         endif
 !
 
-!!       if (me == 0 .and. kstep <= 1) then
-         if (me == 0) then
+       if (me == 0 .and. kstep <= 1) then
+!         if (me == 0) then
             print *
             print *, f107_curdt, f107d_curdt, kp_curdt, kpa_curdt, nhp_curdt, nhpi_curdt, interpolate_weight
             print *, swbt_curdt, swang_curdt, swvel_curdt, swbz_curdt, shp_curdt, shpi_curdt, 'f107-kp data'
