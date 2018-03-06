@@ -83,23 +83,6 @@
       ut_hour = REAL(utime_local)/3600. !convert from sec to hours
      
 
-!SMS$SERIAL BEGIN
-      OPEN( UNIT=500, FILE='Module_Neutral.Diagnostics', ACTION="WRITE", ACCESS="APPEND" )
-
-      WRITE(500,*) 'SOLAR_WIND : LPI', LPI
-      WRITE(500,*) 'SOLAR_WIND : f107D_dum', f107D_dum  
-      WRITE(500,*) 'SOLAR_WIND : f107A_dum', f107D_dum  
-      WRITE(500,*) 'SOLAR_WIND : AP_dum(1)', f107D_dum  
-      WRITE(500,*) 'SOLAR_WIND : AP_dum(2)', f107D_dum  
-      WRITE(500,*) 'SOLAR_WIND : AP_dum(3)', f107D_dum  
-      WRITE(500,*) 'SOLAR_WIND : AP_dum(4)', f107D_dum  
-      WRITE(500,*) 'SOLAR_WIND : AP_dum(5)', f107D_dum  
-      WRITE(500,*) 'SOLAR_WIND : AP_dum(6)', f107D_dum  
-      WRITE(500,*) 'SOLAR_WIND : AP_dum(7)', f107D_dum  
-!SMS$SERIAL END
-
-
-
 
 !sw_neutral
 !1: IPE coupled to WAM
@@ -301,23 +284,6 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
         END DO !: DO lp = 1,NLP
       END DO   !: DO mp = 1,NMP
 !SMS$PARALLEL END
-
-!SMS$SERIAL (<tn_k,tinf_k,Un_ms1,Vn_ms1,on_m3,o2n_m3,n2n_m3,IN> :DEFAULT=IGNORE)BEGIN
-
-  WRITE(500,*) 'min/max tn_k', MINVAL(tn_k), MAXVAL(tn_k), utime, start_time
-  WRITE(500,*) 'min/max tinf_k',MINVAL(tinf_k), MAXVAL(tinf_k), utime, start_time
-  WRITE(500,*) 'min/max Vn_ms1',MINVAL(Vn_ms1), MAXVAL(Vn_ms1), utime, start_time
-  WRITE(500,*) 'min/max Un_ms1',MINVAL(Un_ms1), MAXVAL(Un_ms1), utime, start_time
-  WRITE(500,*) 'min/max on_m3',MINVAL(on_m3), MAXVAL(on_m3), utime, start_time
-  WRITE(500,*) 'min/max o2n_m3',MINVAL(o2n_m3), MAXVAL(o2n_m3), utime, start_time
-  WRITE(500,*) 'min/max n2n_m3',MINVAL(n2n_m3), MAXVAL(n2n_m3), utime, start_time
-  WRITE(500,*) 'min/max he_m3',MINVAL(he_m3), MAXVAL(he_m3), utime, start_time
-  WRITE(500,*) 'min/max hn_m3',MINVAL(hn_m3), MAXVAL(hn_m3), utime, start_time
-  WRITE(500,*) 'min/max n4s_m3',MINVAL(n4s_m3), MAXVAL(n4s_m3), utime, start_time
-
-  CLOSE(500)
-
-!SMS$SERIAL END
 
       else if (sw_neutral.eq.3) then 
 
