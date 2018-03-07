@@ -65,7 +65,7 @@
 !
         READ(79, *) realdate(i), f107_wy(i), kp_wy(i),             &
              f107_flag(i), kp_flag(i), f107d_wy(i), kpa_wy(i),     &
-             nhp_wy(i), nhpi_wy(i), shpi_wy(i), shp_wy(i),         &
+             nhp_wy(i), nhpi_wy(i), shp_wy(i), shpi_wy(i),         &
              swbt_wy(i), swang_wy(i), swvel_wy(i), swbz_wy(i)
 !        write(6,*) i, f107_wy(i), kp_wy(i)
       END DO
