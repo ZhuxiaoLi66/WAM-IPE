@@ -82,7 +82,8 @@ if [ $IDEA = .true. ] ; then
 		for i in "${VALID_IPE_PET[@]}" ; do
 			if [ $NPROCIPE = $i ] ; then valid=1 ; fi
 		done
-		[ $valid = 0 ] && echo "   could not match NPROCIPE against the list of allowed configurations, check ipe.config! exiting." && exit 1
+		#[ $valid = 0 ] && echo "   could not match NPROCIPE against the list of allowed configurations, check ipe.config! exiting." && exit 1
+		[ $valid = 0 ] && echo "   WARNING: I don't understand what constitutes a valid NPROCIPE anymore but this wouldn't have worked before..."
 
 		echo "checking IPEDECOMP against NPROCIPE: (${IPEDECOMPARR[0]}x${IPEDECOMPARR[1]})"
 		if [[ ${#IPEDECOMPARR[*]} -ne 2 ]] || ! [[ ${IPEDECOMPARR[0]} =~ $re ]] || ! [[ ${IPEDECOMPARR[1]} =~ $re ]] ; then
@@ -167,7 +168,7 @@ else # restart conditions
 	echo "checking for atmospheric/surface restart files in RESTARTDIR $RESTARTDIR"
 	NFHOUR_ARR=()
 	IDATE_ARR=()
-	for file in $SIGR1 $SIGR2 $SFCR $GRDR1 $GRDR2 $FORT1051 $RSTR ; do
+	for file in $SIGR1 $SIGR2 $SFCR $GRDR1 $GRDR2 $FORT1051; do
 		if ! [[ -n "$(ls $file)" ]] ; then # file not found
 			echo "   restart file $file not found! exiting." ; exit 1
 		else # file found
@@ -183,6 +184,26 @@ else # restart conditions
 			fi
 	        fi
 	done
+
+        echo $WAM_IPE_COUPLING
+        if [ "$WAM_IPE_COUPLING" == ".true." ]; then
+	  for file in $RSTR ; do
+		if ! [[ -n "$(ls $file)" ]] ; then # file not found
+			echo "   restart file $file not found! exiting." ; exit 1
+		else # file found
+			# it's good that we found the file, but we also want to be sure these files are compatible.
+			# in other words, we want to have idate and fhour that all match.
+			if [ $file != $FORT1051 ] && [ $file != $RSTR ] ; then # $FORT1051 is binary, $RSTR is unformatted
+			# we pull the nemsio nfhour and idate into arrays:
+			nfhour=`$NEMSIOGET ${file} nfhour | tr -s ' ' | cut -d' ' -f 3   | sed -e 's/\s//g'`
+			idate=` $NEMSIOGET ${file} idate  | tr -s ' ' | cut -d' ' -f 3-7 | sed -e 's/\s//g'`
+			# likely unnecessary to separate out the array addition, but we do it anyway
+	                NFHOUR_ARR+=("$nfhour")
+	                IDATE_ARR+=("$idate")
+			fi
+	        fi
+	  done
+        fi
 
 	# count the number of unique entries in our arrays
 	uniq_fhour=($(echo "${NFHOUR_ARR[@]}" | tr ' ' '\n' | sort -u | wc -l))

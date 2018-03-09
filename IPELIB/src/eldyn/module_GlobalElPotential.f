@@ -73,7 +73,7 @@ c     use cam_logfile,   only: iulog
 ! Author: A. Maute Dec 2003  am 12/17/03 
 !-----------------------------------------------------------------------
 !nm20121003
-      USE efield !,ONLY:
+      USE efield_ipe !,ONLY:
       USE module_interp_poten ,ONLY: interp_poten
       USE module_efield_mid ,ONLY:efield_mid
       USE module_prep_weimer ,ONLY:prep_weimer
@@ -84,6 +84,7 @@ c     use cam_logfile,   only: iulog
       USE module_bnd_sinus ,ONLY:      bnd_sinus
       USE module_highlat_adjust ,ONLY: highlat_adjust
       USE module_EpotVal ,ONLY: EpotVal
+      USE module_input_parameters,ONLY: mype
 !-----------------------------------------------------------------------
 ! local variables
 !-----------------------------------------------------------------------
@@ -119,6 +120,7 @@ c     use cam_logfile,   only: iulog
         end do
       end do
 
+
 !-----------------------------------------------------------------------
 ! hight latitude potential from Weimer model
 ! at the poles Weimer potential is not longitudinal dependent
@@ -130,6 +132,9 @@ c     use cam_logfile,   only: iulog
         mlat_90 = 90. - ylatm(ilat)  ! mag. latitude
         do ilon = 0,nmlon
     	  pot  = 1000.*EpotVal( mlat_90, ylonm(ilon)*deg2mlt ) ! calculate potential (kv -> v)
+
+
+
 !-----------------------------------------------------------------------
 ! NH/SH symmetry
 !-----------------------------------------------------------------------
@@ -139,6 +144,8 @@ c     use cam_logfile,   only: iulog
     	  pot_highlats(ilon,nmlat-ilat) = pot
         end do
       end do     
+
+
 
 !-----------------------------------------------------------------------
 ! weighted smoothing of high latitude potential
@@ -175,11 +182,16 @@ c     use cam_logfile,   only: iulog
 !-----------------------------------------------------------------------
       idlat = 2                 ! smooth over -2:2 = 5 grid points
       call pot_latsmo2( potent, idlat )
+
+
+
 !-----------------------------------------------------------------------
 ! potential smoothing in longitude
 !-----------------------------------------------------------------------
       idlat = nmlon/48          ! smooth over -idlat:idlat grid points
       call pot_lonsmo( potent, idlat )
+
+
 
 !-----------------------------------------------------------------------
 ! output

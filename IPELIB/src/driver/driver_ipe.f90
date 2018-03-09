@@ -37,7 +37,7 @@ PROGRAM  test_plasma
    INTEGER(KIND=int_prec)           :: utime_driver ! Universal Time [sec]
    INTEGER(KIND=int_prec),parameter :: luntmp=300   !
    INTEGER(KIND=int_prec)           :: istat,mp,ret ! 
-   INTEGER(KIND=int_prec)           :: iterate
+   INTEGER(KIND=int_prec)           :: utime_sub_loop, sub_time_loop, main_time_loop, n_time_steps
    CHARACTER(8)                     :: iterChar
 
 
@@ -48,41 +48,26 @@ PROGRAM  test_plasma
 
 !SMS$INSERT parallelBuild=.true.
 ! set up input parameters
-     ret = gptlstart ('read_input')
 !SMS$INSERT         MPI_COMM_IPE = MPI_COMM_WORLD
      CALL read_input_parameters ( )
-     ret = gptlstop  ('read_input')
 
 ! open Input/Output files
-     ret = gptlstart ('open_output_files')
 !SMS$SERIAL BEGIN
      CALL open_output_files ( )
 !SMS$SERIAL END
-     ret = gptlstop  ('open_output_files')
 
 ! set up plasma grids by reading file
-     ret = gptlstart ('init_plasma_grid')
      CALL init_plasma_grid ( )
-     ret = gptlstop  ('init_plasma_grid')
 
-!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-1")
 
      IF ( sw_output_plasma_grid ) THEN
-       ret = gptlstart ('output_plasma_grid')
-       PRINT *, 'sub-init_p: output plasma_grid'
        CALL output_plasma_grid ( )
-       ret = gptlstop  ('output_plasma_grid')
      END IF
 
-!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-2")
 
 ! initialise the flux tubes from previous runs
      IF ( HPEQ_flip==0.0 ) THEN
-       PRINT *,'before CALL io_plasma_bin finished! READ: start_time=', start_time,stop_time
-       ret = gptlstart ('io_plasma_bin')
        CALL io_plasma_bin ( 2, start_time )
-       ret = gptlstop  ('io_plasma_bin')
-       PRINT *,'after CALL io_plasma_bin finished! READ: start_time=', start_time,stop_time
      END IF
 
     ! Write the initial conditions to file
@@ -93,85 +78,46 @@ PROGRAM  test_plasma
 ! initialization of electrodynamic module:
 ! read in E-field
 
-     ret = gptlstart ('init_eldyn')
      IF ( sw_perp_transport>=1 ) THEN
        CALL init_eldyn ( )
      ENDIF
-     ret = gptlstop  ('init_eldyn')
-
-!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-4")
-
-     ret = gptlstart ('time_loop')
-
-     iterate = 0
-
-     DO utime_driver = start_time, stop_time, time_step
-       iterate = iterate + 1
-
-       PRINT*,'utime_driver=',utime_driver
-
-!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-5")
-
-       ret = gptlstart ('eldyn')
-       IF ( sw_perp_transport>=1 ) THEN
-         CALL eldyn ( utime_driver )
-       ENDIF
-       ret = gptlstop  ('eldyn')
 
 
-!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-6")
+     utime_driver = start_time
+     n_time_steps = (stop_time - start_time)/(time_step)
 
-        ! update neutral 3D structure: 
-        ! use MSIS/HWM to get the values in the flux tube grid
-       IF ( MOD( (utime_driver-start_time),ip_freq_msis)==0 ) THEN 
+     DO main_time_loop = 1, n_time_steps
 
-         ret = gptlstart ('neutral')
-         CALL neutral ( utime_driver, start_time )
-         ret = gptlstop  ('neutral')
+       CALL neutral ( utime_driver, start_time )
 
-       END IF
+       utime_sub_loop = utime_driver
+       DO sub_time_loop = 1, time_step/solar_forcing_time_step
 
-!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-7")
+         CALL eldyn ( utime_sub_loop )
 
+         CALL plasma ( utime_sub_loop )
 
-! update plasma
-        ret = gptlstart ('plasma')
-!ghgm - a dummy timestamp (13 characters) needs to be here
-! because we use timestamps in the fully coupleid WAM-IPE
-! Obviously needs a better solution.....
-        CALL plasma ( utime_driver, 'dummytimestam' )
-        ret = gptlstop  ('plasma')
+         utime_sub_loop = utime_sub_loop + solar_forcing_time_step
 
-!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-8")
+       ENDDO
 
+       utime_driver = utime_driver + time_step
 
-       IF( MOD(utime_driver-start_time+time_step,ip_freq_output)==0)THEN
-          WRITE( iterChar, '(I8.8)' )utime_driver+time_step
+       IF( MOD(utime_driver,ip_freq_output)==0)THEN
+          WRITE( iterChar, '(I8.8)' )utime_driver
           CALL io_plasma_bin ( 1, utime_driver, 'iter_'//iterChar )
        ENDIF
-       ret = gptlstart ('output')
        CALL output ( utime_driver )
-       ret = gptlstop  ('output')
 
-!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-9")
 
      END DO
 
-     ret = gptlstop  ('time_loop')
 
     ! Deallocate arrays
-     ret = gptlstart ('allocate_arrays1')
      CALL allocate_arrays ( 1 )
-     ret = gptlstop  ('allocate_arrays1')
 
      ! close all open files
-     ret = gptlstart ('close_files')
      CALL close_files ( )
-     ret = gptlstop  ('close_files')
-
-
-     ret = gptlstop  ('Total')
-     CALL stop
 
 
 END PROGRAM  test_plasma

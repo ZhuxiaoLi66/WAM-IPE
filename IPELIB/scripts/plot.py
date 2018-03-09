@@ -30,13 +30,19 @@ def fmt(x, pos):
 	b = int(b)
 	return r'${} \times 10^{{{}}}$'.format(a, b)
 
-def make_plot(data,title,cbartitle,lon,lat,mymin,mymax,myticks,ncolors,ncontours,mycolormap,timestamp,savename,ufield=None,vfield=None):
+def make_plot(data,title,cbartitle,lon,lat,mymin,mymax,myticks,ncolors,ncontours,mycolormap,timestamp,savename,ufield=None,vfield=None,polar=False):
 	fontfam='serif'
 	plt.figure()
 	# basemap
-	m = Basemap(llcrnrlon=lon[0],llcrnrlat=lat[0],urcrnrlon=lon[-1],urcrnrlat=lat[-1],projection='cyl')
+	if polar:
+		m = Basemap(lon_0=0,lat_0=90,projection='ortho')
+	else:
+		m = Basemap(llcrnrlon=lon[0],llcrnrlat=lat[0],urcrnrlon=lon[-1],urcrnrlat=lat[-1],projection='cyl')
 	lon,lat = np.meshgrid(lon,lat)
 	x,y = m(lon,lat)
+	if polar:
+		b = np.reshape(data[:,0],(-1,1))
+		data = np.hstack((data,b))
 	m.drawcoastlines()
 	m.drawstates()
 	m.drawcountries()
@@ -54,9 +60,10 @@ def make_plot(data,title,cbartitle,lon,lat,mymin,mymax,myticks,ncolors,ncontours
 	# standard labeling
 	#plt.xlabel('Geographic Longitude ($^o$E)', fontsize=18, fontname=fontfam)
 	#plt.ylabel('Geographic Latitude ($^o$N)',  fontsize=18, fontname=fontfam)
-        plt.xticks([0, 90, 180, 270, 360],['$0^o E$', '$90^o E$', '$180^o E$', '$270^o E$', '$360^o E$'])
-        plt.yticks([-90, -45, 0, 45, 90],['$90^o S$', '$45^o S$', '$0^o$', '$45^o N$', '$90^o N$'])
-        plt.grid()
+	if not polar:
+	        plt.xticks([0, 90, 180, 270, 360],['$0^o E$', '$90^o E$', '$180^o E$', '$270^o E$', '$360^o E$'])
+	        plt.yticks([-90, -45, 0, 45, 90],['$90^o S$', '$45^o S$', '$0^o$', '$45^o N$', '$90^o N$'])
+	        plt.grid()
 	plt.title(title+'\n'+timestamp, fontsize=20, fontname=fontfam)
 	# output
 	plt.savefig(path.join(args.output_directory,savename+'.'+timestamp+'.eps'))
@@ -68,21 +75,23 @@ def make_plots(i):
 	timestamp = get_timestamp(input_file)
 	dataset = Dataset(path.join(args.input_directory,input_file))
 	lon = dataset.variables['longitude'][:]
+	if args.polar:
+		lon = np.append(lon,lon[0])
 	lat = dataset.variables['latitude'][:]
 	## make plots
 	# Electron Density at 300km
 	make_plot(np.clip(dataset.variables['e'][0,42,:,:]/1E12,eDensityMin,eDensityMax),'Electron Density at 300km','[$10^{12} m^{-3}$]',
-		  lon,lat,eDensityMin,eDensityMax,eDensityTicks,nColors,nContours,eDensityColorMap,timestamp,'ElectronDensity300km')
+		  lon,lat,eDensityMin,eDensityMax,eDensityTicks,nColors,nContours,eDensityColorMap,timestamp,'ElectronDensity300km',polar=args.polar)
 	# TEC
 	make_plot(np.clip(dataset.variables['TEC'][0,:,:],TECMin,TECMax),'Total Electron Content','[TECU]',
-		  lon,lat,TECMin,TECMax,TECTicks,nColors,nContours,TECColorMap,timestamp,'TEC')
+		  lon,lat,TECMin,TECMax,TECTicks,nColors,nContours,TECColorMap,timestamp,'TEC',polar=args.polar)
 	# Nmf2
 	make_plot(np.clip(dataset.variables['nmf2'][0,:,:]/1E12,nmf2Min,nmf2Max),'NmF2','[$10^{12} m^{-3}$]',
-		  lon,lat,nmf2Min,nmf2Max,nmf2Ticks,nColors,nContours,TECColorMap,timestamp,'NmF2')
+		  lon,lat,nmf2Min,nmf2Max,nmf2Ticks,nColors,nContours,TECColorMap,timestamp,'NmF2',polar=args.polar)
 	# Temperature at 300km
 	make_plot(np.clip(dataset.variables['tn'][0,42,:,:],tempMin,tempMax),'Temperature, Neutral Wind at 300km','[K]',
 		  lon,lat,tempMin,tempMax,tempTicks,nColors,nContours,tempColorMap,timestamp,'ThermosphereTemperature',
-		  dataset.variables['vn_zonal'][0,42,:,:],dataset.variables['vn_meridional'][0,42,:,:])
+		  dataset.variables['vn_zonal'][0,42,:,:],dataset.variables['vn_meridional'][0,42,:,:],polar=args.polar)
 	
 def writetex():
 	# file name definitions to search for
@@ -159,6 +168,7 @@ tempTicks = 11
 parser = ArgumentParser(description='Make plots from height-gridded NetCDF IPE output', formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument('-i', '--input_directory',  help='directory where IPE height-gridded NetCDF files are stored', type=str, required=True)
 parser.add_argument('-o', '--output_directory', help='directory where plots are stored', type=str, required=True)
+parser.add_argument('-p', '--polar',            help='do polar instead of global plots', dest='polar', default=False, action='store_true')
 args = parser.parse_args()
 
 ## get our list of files

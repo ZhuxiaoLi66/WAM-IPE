@@ -104,11 +104,15 @@
 !
 !================================================================= WAM-related 201702
       use wam_f107_kp_mod,        ONLY: read_wam_f107_kp_txt, 
-     &                                  f107_wy, kp_wy, f107_kp_size
+     &                                  f107_wy, kp_wy, f107_kp_size, 
+     &                                  kpa_wy, f107d_wy, nhp_wy, 
+     &                                  nhpi_wy, shp_wy, shpi_wy,
+     &                                  swbt_wy, swang_wy, swvel_wy, 
+     &                                  swbz_wy
       use mersenne_twister
       use idea_composition, only: prlog,pr_idea,amgm,amgms,nlev_co2,k43,
      &                            nlevc_h2o,k71,gg,prsilvl
-      use efield,           only: efield_init
+      use efield_wam,           only: efield_init
       USE IDEA_WAM_CONTROL,        only : SPW_DRIVERS
       USE namelist_wamphysics_def, only : wam_control_default
       USE module_IPE_to_WAM,       only : lowst_ipe_level, 
@@ -413,8 +417,18 @@
          if (trim(SPW_DRIVERS)=='swpc_fst') then
 ! read the f10.7 and kp multi-time input data.
 !---------------------------------------------
-          IF(.NOT. ASSOCIATED(f107_wy)) ALLOCATE(f107_wy(f107_kp_size))
-          IF(.NOT. ASSOCIATED(kp_wy))   ALLOCATE(kp_wy (f107_kp_size))
+          IF(.NOT.ALLOCATED(f107_wy )) ALLOCATE(f107_wy (f107_kp_size))
+          IF(.NOT.ALLOCATED(kp_wy   )) ALLOCATE(kp_wy   (f107_kp_size))
+          IF(.NOT.ALLOCATED(f107d_wy)) ALLOCATE(f107d_wy(f107_kp_size))
+          IF(.NOT.ALLOCATED(kpa_wy  )) ALLOCATE(kpa_wy  (f107_kp_size))
+          IF(.NOT.ALLOCATED(nhp_wy  )) ALLOCATE(nhp_wy  (f107_kp_size))
+          IF(.NOT.ALLOCATED(nhpi_wy )) ALLOCATE(nhpi_wy (f107_kp_size))
+          IF(.NOT.ALLOCATED(shp_wy  )) ALLOCATE(shp_wy  (f107_kp_size))
+          IF(.NOT.ALLOCATED(shpi_wy )) ALLOCATE(shpi_wy (f107_kp_size))
+          IF(.NOT.ALLOCATED(swbt_wy )) ALLOCATE(swbt_wy (f107_kp_size))
+          IF(.NOT.ALLOCATED(swang_wy)) ALLOCATE(swang_wy(f107_kp_size))
+          IF(.NOT.ALLOCATED(swvel_wy)) ALLOCATE(swvel_wy(f107_kp_size))
+          IF(.NOT.ALLOCATED(swbz_wy )) ALLOCATE(swbz_wy (f107_kp_size))
           call read_wam_f107_kp_txt
           if (me==0) write(6,*) 
      & ' SPW_DRIVERS => swpc_fst, 3-day forecasts:', trim(SPW_DRIVERS)

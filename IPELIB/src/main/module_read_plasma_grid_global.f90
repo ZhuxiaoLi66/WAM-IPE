@@ -148,6 +148,9 @@ READ (UNIT=LUN_pgrid, FMT=*) dum0          !bcol_2d
 do lp=1,NLP
   plasma_grid_GL(JMIN_IN(lp):JMAX_IS(lp),lp) = dum0(JMIN_ING(lp):JMAX_ISG(lp),1) !GL
 enddo
+
+
+
 print *,"reading GL_rad etc completed"
 READ (UNIT=LUN_pgrid, FMT=*) dum0, dum1 !integral_ds_2d, apex_BMAG_2d
 do lp=1,NLP
