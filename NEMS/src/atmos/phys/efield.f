@@ -1011,6 +1011,12 @@
 ! Author: A. Maute Nov 2003  am 11/20/03
 !-----------------------------------------------------------------
 
+      use idea_wam_control, only : SPW_DRIVERS, WAM_SWIN
+      use wam_f107_kp_mod,  only : kdt_interval,interpolate_weight,  
+     &                             swbz_wy, swvel_wy, swbt_wy, swang_wy
+
+      real    :: swbz_curdt, swvel_curdt, swbt_curdt, swang_curdt
+
 !-----------------------------------------------------------------
 !  local variables
 !-----------------------------------------------------------------
@@ -1041,6 +1047,16 @@
 !    &iday,imo,iday_m,ut
       tilt = get_tilt( iyear, imo, iday_m, ut )
 
+      if (trim(SPW_DRIVERS)=='swpc_fst' .and. WAM_SWIN ) then
+          swbt_curdt  = swbt_wy (kdt_interval) * interpolate_weight  + swbt_wy (kdt_interval+1) * (1-interpolate_weight)
+          swang_curdt = swang_wy(kdt_interval) * interpolate_weight  + swang_wy(kdt_interval+1) * (1-interpolate_weight)
+          swvel_curdt = swvel_wy(kdt_interval) * interpolate_weight  + swvel_wy(kdt_interval+1) * (1-interpolate_weight)
+          swbz_curdt  = swbz_wy (kdt_interval) * interpolate_weight  + swbz_wy (kdt_interval+1) * (1-interpolate_weight)
+
+        bt    = swbt_curdt
+        angle = swangle_curdt
+        v_sw  = swvel_curdt
+
 !      if(debug) then
 !       write(iulog,"(/,'efield prep_weimer:')")
 !       write(iulog,*)  '  Bz   =',bz
@@ -1050,6 +1066,7 @@
 !       write(iulog,*)  '  VSW  =',v_sw
 !       write(iulog,*)  '  tilt =',tilt
 !      end if
+      end if
 
       call SetModel( angle, bt, tilt, v_sw )
 

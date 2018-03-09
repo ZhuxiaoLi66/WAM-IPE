@@ -23,6 +23,8 @@
       logical wam_swpc_3day
       logical wam_cires_rdata
       logical wam_sair2012
+!  in case wam_swpc_3day='true', and nowcast
+      logical wam_swin
 ! wam-climate/perturb cases
       logical wam_smin
       logical wam_smax
@@ -57,6 +59,7 @@
       wam_sair2012    =.false.   ! simulations with realistic daily F107/Kp/EUV 2012-file
       spw_drivers  = 'cires_wam' ! 'swpc_fst', 'cires_wam', 'sair_wam', 'wam_climate'
       
+      wam_swin   =.false.   ! simulations with kp f107, not solar wind
 !
 ! wam_climate state:  Solar Min, Solar Max Solar Aver and perturbed case GEOSTORM
 !
@@ -101,14 +104,15 @@
       module idea_wam_control
 
       character(len=80) :: SPW_DRIVERS     ! four options a) 'swpc_fst' & b) 'cires_wam'
-                                           !  c) 'sair_wam', d) 'wam_climate;
+      logical           :: wam_swin                                     !  c) 'sair_wam', d) 'wam_climate;
       integer, parameter :: nlun_con = 133 ! unit for nam_wam_control
       character(len=80)  :: nml_control='wam_control_in'    ! in $RUNDIR
       end module idea_wam_control
 
       subroutine idea_wamcontrol_init(mpi_id)
 !
-      use idea_wam_control, only : SPW_DRIVERS, nlun_con, nml_control
+!     use idea_wam_control, only : SPW_DRIVERS, nlun_con, nml_control
+      use idea_wam_control, only : SPW_DRIVERS, wam_swin, nlun_con, nml_control
       use namelist_wamphysics_def                                       ! ./gsmphys/namelist_wamphysics_def.f
 !
       use idea_mpi_def,    only :   mpi_WAM_quit                        !(iret, message)
@@ -117,6 +121,7 @@
       integer :: ierr
       namelist /nam_wam_control/ 
      & wam_climate, wam_swpc_3day, wam_cires_rdata,wam_sair2012,
+     & wam_swin,
      & wam_smin, wam_smax,
      & wam_saver, wam_geostorm,
      & wam_gwphys, wam_solar_in, wam_ion_in, wam_das_in, wam_smet_in,
@@ -139,6 +144,7 @@
        if (mpi_id == 0) then
        print *, ' VAY idea_wamcontrol_init '
        print *, ' VAY SPW_DRIVERS ', SPW_DRIVERS
+       print *, ' WAM_SWIN ', wam_swin
        print *,' nluncon=',nlun_con,'nam_wam_control =',
      &                 trim(nml_control)
        write(6, nam_wam_control)    
