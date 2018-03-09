@@ -104,7 +104,7 @@
       module idea_wam_control
 
       character(len=80) :: SPW_DRIVERS     ! four options a) 'swpc_fst' & b) 'cires_wam'
-      logical           :: wam_swin                                     !  c) 'sair_wam', d) 'wam_climate;
+      character(len=80) :: swin_drivers    !  c) 'sair_wam', d) 'wam_climate;
       integer, parameter :: nlun_con = 133 ! unit for nam_wam_control
       character(len=80)  :: nml_control='wam_control_in'    ! in $RUNDIR
       end module idea_wam_control
@@ -112,7 +112,7 @@
       subroutine idea_wamcontrol_init(mpi_id)
 !
 !     use idea_wam_control, only : SPW_DRIVERS, nlun_con, nml_control
-      use idea_wam_control, only : SPW_DRIVERS, wam_swin, nlun_con, nml_control
+      use idea_wam_control, only : SPW_DRIVERS, swin_drivers, nlun_con, nml_control
       use namelist_wamphysics_def                                       ! ./gsmphys/namelist_wamphysics_def.f
 !
       use idea_mpi_def,    only :   mpi_WAM_quit                        !(iret, message)
@@ -140,6 +140,8 @@
        if (wam_swpc_3day) SPW_DRIVERS = 'swpc_fst'
        if (wam_cires_rdata) SPW_DRIVERS = 'cires_wam'
        if (wam_sair2012)    SPW_DRIVERS = 'sair_wam'
+   
+       if(wam_swin)   swin_drivers = 'swin_wam'
 
        if (mpi_id == 0) then
        print *, ' VAY idea_wamcontrol_init '

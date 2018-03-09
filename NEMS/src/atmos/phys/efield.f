@@ -1011,7 +1011,7 @@
 ! Author: A. Maute Nov 2003  am 11/20/03
 !-----------------------------------------------------------------
 
-      use idea_wam_control, only : SPW_DRIVERS, WAM_SWIN
+      use idea_wam_control, only : SPW_DRIVERS, SWIN_DRIVERS
       use wam_f107_kp_mod,  only : kdt_interval,interpolate_weight,  
      &                             swbz_wy, swvel_wy, swbt_wy, swang_wy
 
@@ -1047,7 +1047,7 @@
 !    &iday,imo,iday_m,ut
       tilt = get_tilt( iyear, imo, iday_m, ut )
 
-      if (trim(SPW_DRIVERS)=='swpc_fst' .and. WAM_SWIN ) then
+      if (trim(SPW_DRIVERS)=='swpc_fst' .and. trim(SWIN_DRIVERS)=='swin_wam' ) then
           swbt_curdt  = swbt_wy (kdt_interval) * interpolate_weight  + swbt_wy (kdt_interval+1) * (1-interpolate_weight)
           swang_curdt = swang_wy(kdt_interval) * interpolate_weight  + swang_wy(kdt_interval+1) * (1-interpolate_weight)
           swvel_curdt = swvel_wy(kdt_interval) * interpolate_weight  + swvel_wy(kdt_interval+1) * (1-interpolate_weight)
