@@ -32,16 +32,16 @@
       INTEGER(KIND=int_prec),ALLOCATABLE,PUBLIC :: JMIN_IN (:),JMAX_IS (:)   !.. first and last indices on field line grid
       INTEGER(KIND=int_prec),ALLOCATABLE,PUBLIC :: JMIN_ING(:),JMAX_ISG(:)   !.. first and last indices on field line grid
       INTEGER(KIND=int_prec),ALLOCATABLE,PUBLIC :: midpnt  (:)
+
       TYPE :: plasma_grid
-!dbg20110927         REAL(KIND=real_prec) :: Z  !.. altitude [meter]
          REAL(KIND=real_prec) :: SL !.. distance of point from northern hemisphere foot point [meter]
          REAL(KIND=real_prec) :: BM !.. magnetic field strength [T]
          REAL(KIND=real_prec) :: GR !.. Gravity [m2 s-1]
-!dbg20110927         REAL(KIND=real_prec) :: GL !.. magnetic co-latitude Eq(6.1) [rad]
          REAL(KIND=real_prec) :: Q  
          REAL(KIND=real_prec) :: GCOLAT !.. geographic co-latitude [rad]
          REAL(KIND=real_prec) :: GLON   !.. geographic longitude [rad]
       END TYPE plasma_grid
+
       INTEGER (KIND=int_prec) :: ISL=1,IBM=2,IGR=3,IQ=4,IGCOLAT=5,IGLON=6
       INTEGER (KIND=int_prec) :: sendCount
 !SMS$DISTRIBUTE(dh,,2) BEGIN
@@ -62,6 +62,16 @@
       REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: l_mag       (:,:,:,:,:)!MaxFluxTube,NLP,NMP,3,2.. Eq(3.11-12) Richmond 1995
       REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: hrate_mks3d   (:,:,:,:)!MaxFluxTube,NLP,NMP,7 each component of Neutral heating rate(eV/kg/s)
       REAL(KIND=real_prec),ALLOCATABLE,PUBLIC,dimension(:,:,:) :: ON_m3,HN_m3,N2N_m3,O2N_m3,HE_m3,N4S_m3,TN_k,TINF_k
+
+      ! ------------- Coupling fields to be passed to WAM ------------- !
+      REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: eastward_momentum_tendency(:,:,:) ! MaxFluxTube,NLP,NMP
+      REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: northward_momentum_tendency(:,:,:) ! MaxFluxTube,NLP,NMP
+      REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: solar_heating_rate(:,:,:) ! MaxFluxTube,NLP,NMP
+      REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: joule_heating_rate(:,:,:) ! MaxFluxTube,NLP,NMP
+      REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: auroral_heating_rate(:,:,:) ! MaxFluxTube,NLP,NMP
+      REAL(KIND=real_prec),ALLOCATABLE,PUBLIC        :: o2_dissociation_rate(:,:,:) ! MaxFluxTube,NLP,NMP
+      ! ---------------------------------------------------------------
+!
 !SMS$DISTRIBUTE END
 
 
@@ -79,22 +89,11 @@
       REAL(KIND=real_prec),ALLOCATABLE,PUBLIC,TARGET :: mlon_rad      (:)    !mag longitude in [rad]
 
       REAL(KIND=real_prec),PARAMETER  ,PUBLIC        :: dlonm90km = 4.5 ![deg]
-!      REAL(KIND=real_prec), ALLOCATABLE, PUBLIC ::  GCOLAT(:,:)    !.. geographic co-latitude [rad]
-!      REAL(KIND=real_prec), ALLOCATABLE, PUBLIC ::  GLON(:,:)      !.. geographic longitude [rad]
-!      REAL(KIND=real_prec), ALLOCATABLE, PUBLIC ::  Qvalue(:,:)
-!      REAL(KIND=real_prec), ALLOCATABLE, PUBLIC ::  GL_rad(:,:)    !.. magnetic co-latitude Eq(6.1) [rad]
-!      REAL(KIND=real_prec), ALLOCATABLE, PUBLIC ::  SL_meter(:,:)  !.. distance of point from northern hemisphere foot point [meter]
-!      REAL(KIND=real_prec), ALLOCATABLE, PUBLIC ::  BM_T(:,:)      !.. magnetic field strength [T]
-
 !------------
-!...calculated parameters
-!      REAL(KIND=real_prec), ALLOCATABLE,     PUBLIC ::  Z_meter(:,:) !.. altitude [meter]
       REAL(KIND=real_prec), ALLOCATABLE,     PUBLIC ::  Pvalue(:)  !.. p coordinate (L-shell)
-!      REAL(KIND=real_prec), ALLOCATABLE,     PUBLIC ::  GR_mks(:,:)  !.. Gravity [m2 s-1]
 
 
 !-------------
-!nm20160420:pole values needed for special 3 point interpolation
       REAL    (KIND=real_prec),ALLOCATABLE, PUBLIC :: poleVal(:,:) ! MaxFluxTube,ISTOT
       INTEGER (KIND=int_prec) ,ALLOCATABLE, PUBLIC :: DISPLS(:),MPends(:),recvCounts(:) ! nprocs
 !
@@ -107,8 +106,6 @@
 
       INTEGER (KIND=int_prec) :: east=1,north=2,up=3
 !
-!nm20121003:subroutines read_plasma_grid_global init_plasma_grid are separated into module_sub_field_line_grid.f90.
-
 
 !---------------------------
       END MODULE module_FIELD_LINE_GRID_MKS
