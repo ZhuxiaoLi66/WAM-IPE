@@ -14,13 +14,7 @@
       SUBROUTINE allocate_arrays ( switch )
       USE module_precision
       USE module_IPE_dimension,ONLY: NMP,NLP,ISTOT
-      USE module_FIELD_LINE_GRID_MKS,ONLY: &
-     & plasma_grid_3d,plasma_3d,plasma_mp,plasma_mpG,r_meter2D,ON_m3,HN_m3,N2N_m3,O2N_m3&
-     &,apexD,apexE,VEXBup,VEXBe,VEXBth,MaxFluxTube,HE_m3,N4S_m3,TN_k,TINF_K,Un_ms1 &
-     &,Be3, Pvalue, JMIN_IN, JMAX_IS,hrate_mks3d,midpnt &
-     &,mlon_rad, plasma_grid_Z, plasma_grid_GL, plasma_3d_old &
-     &,apexDscalar, l_mag, WamField, poleVal,DISPLS,MPends,recvCounts &
-     &,vn_ms1_4output
+      USE module_FIELD_LINE_GRID_MKS
   
       USE module_input_parameters,ONLY: sw_neutral_heating_flip,mpHaloSize,nprocs &
 !nm20170424 wind output corrected
@@ -59,6 +53,19 @@
      &,           Un_ms1(MaxFluxTube,NLP,NMP,3:3) &
      &,           vn_ms1_4output(MaxFluxTube,NLP,NMP,3) )
 
+        ALLOCATE( eastward_momentum_tendency(MaxFluxTube,NLP,NMP), &  
+                  northward_momentum_tendency(MaxFluxTube,NLP,NMP), & 
+                  solar_heating_rate(MaxFluxTube,NLP,NMP), &          
+                  joule_heating_rate(MaxFluxTube,NLP,NMP), &          
+                  auroral_heating_rate(MaxFluxTube,NLP,NMP), &        
+                  o2_dissociation_rate(MaxFluxTube,NLP,NMP)  )
+
+        eastward_momentum_tendency  = 0.0
+        northward_momentum_tendency = 0.0
+        solar_heating_rate          = 0.0
+        joule_heating_rate          = 0.0
+        auroral_heating_rate        = 0.0
+        o2_dissociation_rate        = 0.0
 
 !SMS$ignore begin                                                                  
 print*, mype,'allocate_arrays:  size=',size(tn_k)
@@ -148,6 +155,12 @@ print*, mype,'q shape=',shape(tn_k)
      &,           Un_ms1     &
      &,           vn_ms1_4output )
 
+      DEALLOCATE( eastward_momentum_tendency, &  
+                  northward_momentum_tendency, & 
+                  solar_heating_rate, &          
+                  joule_heating_rate, &          
+                  auroral_heating_rate, &        
+                  o2_dissociation_rate  )
 !nm20170424 wind output corrected
 !t       if ( sw_neutral==0.or.sw_neutral==1 ) then 
           DEallocate( WamField )
