@@ -16,6 +16,7 @@ module module_MED_SWPC_methods
     character(len=ESMF_MAXSTR), dimension(:), pointer :: fieldNames   => null()
     character(len=ESMF_MAXSTR), dimension(:), pointer :: fieldOptions => null()
     character(len=ESMF_MAXSTR) :: trAction
+    character(len=1)           :: fieldSep
     type(ESMF_Grid)            :: localGrid
     type(ESMF_Mesh)            :: localMesh
     type(ESMF_Field)           :: uvec(2)
@@ -53,7 +54,6 @@ module module_MED_SWPC_methods
     module procedure VerticalInterpolate2D
   end interface Interpolate
 
-  character(len=*), parameter :: fieldSep = ":"
 
 
   private
@@ -98,13 +98,15 @@ contains
 
   ! -- Namespace: Add(Create)/Remove objects/Destroy: begin definition --
   
-  subroutine NamespaceAdd(name, state, fieldNames, trAction, ungriddedVerticalDim, fieldOptions, rc)
+  subroutine NamespaceAdd(name, state, fieldNames, trAction, ungriddedVerticalDim, &
+    fieldOptions, fieldSep, rc)
     character(len=*),               intent(in) :: name
     type(ESMF_State)                           :: state
     character(len=*), dimension(:), intent(in) :: fieldNames
     character(len=*),               intent(in) :: trAction
     logical,             optional,  intent(in) :: ungriddedVerticalDim
     character(len=*), dimension(:), optional, intent(in) :: fieldOptions
+    character(len=*),               optional, intent(in) :: fieldSep
     integer,             optional, intent(out) :: rc
 
     ! -- local variables
@@ -142,7 +144,7 @@ contains
 
     call StateAdd(compState, state, fieldNames, trAction, &
       ungriddedVerticalDim=ungriddedVerticalDim, &
-      fieldOptions=fieldOptions, rc=rc)
+      fieldOptions=fieldOptions, fieldSep=fieldSep, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
@@ -161,13 +163,14 @@ contains
      
   end subroutine NamespaceAdd
 
-  subroutine StateAdd(s, state, fieldNames, trAction, ungriddedVerticalDim, fieldOptions, rc)
+  subroutine StateAdd(s, state, fieldNames, trAction, ungriddedVerticalDim, fieldOptions, fieldSep,  rc)
     type(stateType),                   pointer :: s
     type(ESMF_State)                           :: state
     character(len=*), dimension(:), intent(in) :: fieldNames
     character(len=*),               intent(in) :: trAction
     logical,             optional,  intent(in) :: ungriddedVerticalDim
     character(len=*), dimension(:), optional, intent(in) :: fieldOptions
+    character(len=*),               optional, intent(in) :: fieldSep
     integer,             optional, intent(out) :: rc
 
     ! -- local variables
@@ -175,6 +178,7 @@ contains
     integer :: localrc, fieldCount, totalCount, ugDimLength, localRank
     integer,                    dimension(:), allocatable :: localDepMap, tmpMap
     character(len=ESMF_MAXSTR), dimension(:), allocatable :: localNames, localOptions, tmp
+    character(len=1) :: localFieldSep
 
     ! -- begin
     if (present(rc)) rc = ESMF_SUCCESS
@@ -196,9 +200,13 @@ contains
       end if
     end if
 
+    ! -- set field separator string to identify field pairs
+    localFieldSep = ":"
+    if (present(fieldSep)) localFieldSep = fieldSep(1:1)
+
     ! -- unpack field pairs to determine full field list
     fieldCount = size(fieldNames)
-    pairCount  = count(scan(fieldNames, fieldSep) /=0)
+    pairCount  = count(scan(fieldNames, localFieldSep) /=0)
     localCount = fieldCount + pairCount
 
     allocate(localNames(localCount), localOptions(localCount), &
@@ -213,7 +221,7 @@ contains
 
     i = 0
     do item = 1, fieldCount
-      pos = scan(fieldNames(item), fieldSep)
+      pos = scan(fieldNames(item), localFieldSep)
       i = i + 1
       if (pos > 0) then
         localNames(i)  = fieldNames(item)(1:pos-1)
@@ -342,6 +350,7 @@ contains
       s % ugDimLength   = ugDimLength
       s % trAction      = trAction
       s % fieldOptions  = localOptions
+      s % fieldSep      = localFieldSep
       s % fieldDepMap   = localDepMap
       s % fieldMaxRank  = localRank
       s % doRotation    = .false.
@@ -581,11 +590,6 @@ contains
             file=__FILE__)) &
             return  ! bail out
 
-          write(6,'("--- Adjust field geom: ",a)') trim(fieldName)
-          write(6,'("--- Adjust field geom: get deCount = ",i8," dimCount = ",i8," tileCount = ",i8)') deCount, dimCount, tileCount
-          write(6,'("--- Adjust field geom: get minIndexPTile = ",10i12)') minIndexPTile
-          write(6,'("--- Adjust field geom: get maxIndexPTile = ",10i12)') maxIndexPTile
-
           allocate(regDecompPTile(dimCount,tileCount))
           regDecompPTile = 0
           do i = 0, max(petCount, tileCount) -1
@@ -603,6 +607,7 @@ contains
             file=__FILE__)) &
             return  ! bail out
 
+#if 0
           !------- TEST BEGIN
           call ESMF_DistGridGet(distgrid, deCount=j, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -622,6 +627,7 @@ contains
           end do
           deallocate(deToTileMap)
           !------- TEST END
+#endif
 
           deallocate(regDecompPTile)
 
@@ -3456,14 +3462,14 @@ contains
 
   end subroutine polint
 
-  subroutine FieldGet(state, fieldName, compList, compCount, rc)
+  subroutine FieldGet(state, fieldName, compNames, compCount, rc)
 
     ! -- input variables
     type(stateType),            intent(in) :: state
     character(len=*),           intent(in) :: fieldName
 
     ! -- output
-    character(len=*), optional, intent(out) :: compList(2)
+    character(len=*), optional, intent(out) :: compNames(2)
     integer,          optional, intent(out) :: compCount
     integer,          optional, intent(out) :: rc
 
@@ -3474,7 +3480,7 @@ contains
     if (present(rc)) rc = ESMF_RC_NOT_FOUND
 
     if (present(compCount)) compCount = 0
-    if (present(compList))  compList  = ""
+    if (present(compNames)) compNames = ""
 
     if (associated(state % fieldNames)) then
       do item = 1, size(state % fieldNames)
@@ -3482,14 +3488,14 @@ contains
           comp = state % fieldDepMap(item)
           if (comp > 0) then
             if (present(compCount)) compCount = 2
-            if (present(compList)) then
-              compList(1) = trim(state % fieldNames(item))
-              compList(2) = trim(state % fieldNames(comp))
+            if (present(compNames)) then
+              compNames(1) = trim(state % fieldNames(item))
+              compNames(2) = trim(state % fieldNames(comp))
             end if
           else if (comp == 0) then
             if (present(compCount)) compCount = 1
-            if (present(compList)) then
-              compList(1) = trim(state % fieldNames(item))
+            if (present(compNames)) then
+              compNames(1) = trim(state % fieldNames(item))
             end if
           end if
           if (present(rc)) rc = ESMF_SUCCESS
@@ -3516,12 +3522,12 @@ contains
     integer :: localDeCount, comp, compCount
     logical :: isSrcCart, isDstCart
     logical, save :: first = .true.
-    character(len=ESMF_MAXSTR) :: compList(2)
+    character(len=ESMF_MAXSTR) :: compNames(2)
 
     ! -- begin 
     if (present(rc)) rc = ESMF_SUCCESS
 
-    call FieldGet(rh % srcState, fieldName, compList=compList, compCount=compCount, rc=localrc)
+    call FieldGet(rh % srcState, fieldName, compNames=compNames, compCount=compCount, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__,  &
       file=__FILE__,  &
@@ -3530,7 +3536,7 @@ contains
     if (compCount < 1) return
 
     do comp = 1, compCount
-      srcFieldComp(comp) = StateGetField(rh % srcState, compList(comp), &
+      srcFieldComp(comp) = StateGetField(rh % srcState, compNames(comp), &
         auxArray=auxArray, options=options, component=comp, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__,  &
@@ -3548,9 +3554,9 @@ contains
       end if
 
       ! -- print diagnostic info
-      call FieldPrintMinMax(srcFieldComp(comp), "pre  - src:" // trim(compList(comp)), rc)
+      call FieldPrintMinMax(srcFieldComp(comp), "pre  - src:" // trim(compNames(comp)), rc)
 
-      dstFieldComp(comp) = StateGetField(rh % dstState, compList(comp), component=comp, rc=localrc)
+      dstFieldComp(comp) = StateGetField(rh % dstState, compNames(comp), component=comp, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__,  &
         file=__FILE__,  &
@@ -3596,15 +3602,15 @@ contains
 
     do comp = 1, compCount
       ! -- print diagnostic info
-      call FieldPrintMinMax(dstFieldComp(comp), "post - dst:" // trim(compList(comp)), rc)
+      call FieldPrintMinMax(dstFieldComp(comp), "post - dst:" // trim(compNames(comp)), rc)
 
-      call StateStoreField(rh % srcState, srcFieldComp(comp), compList(comp), rc=localrc)
+      call StateStoreField(rh % srcState, srcFieldComp(comp), compNames(comp), rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__,  &
         file=__FILE__,  &
         rcToReturn=rc)) return  ! bail out
 
-      call StateStoreField(rh % dstState, dstFieldComp(comp), compList(comp), rc=localrc)
+      call StateStoreField(rh % dstState, dstFieldComp(comp), compNames(comp), rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__,  &
         file=__FILE__,  &
@@ -4400,86 +4406,103 @@ contains
 
   ! -- Namespace: Utilities: begin definition --
 
-  subroutine NamespacePrint(rc)
-    integer, intent(out) :: rc
+  subroutine NamespacePrint(logUnit, rc)
+    integer, intent(in),  optional :: logUnit
+    integer, intent(out), optional :: rc
 
     ! -- local variables
     type(compType),     pointer :: p
     type(stateType),    pointer :: s
     type(ESMF_StateIntent_Flag) :: stateintent
-    character(len=ESMF_MAXSTR)  :: stateName
-    integer :: i, localPet
+    character(len=ESMF_MAXSTR)  :: stateName, compNames(2)
+    integer :: compCount, i, localPet, localrc, lunit
     type(ESMF_VM) :: vm
 
+    integer, parameter :: defaultLogUnit = 6
+
     ! -- begin
-    rc = ESMF_SUCCESS
+    if (present(rc)) rc = ESMF_SUCCESS
 
-    call ESMF_VMGetCurrent(vm, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
+    lunit = defaultLogUnit
+    if (present(logUnit)) lunit = logUnit
 
-    call ESMF_VMGet(vm, localPet=localPet, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+    call ESMF_VMGetCurrent(vm, rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
+      file=__FILE__, &
+      rcToReturn=rc)) return  ! bail out
+
+    call ESMF_VMGet(vm, localPet=localPet, rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__, &
+      rcToReturn=rc)) return  ! bail out
 
     if (localPet /= 0) return
 
     nullify(s)
-    print *,'Printing namespace...'
-    print *,'====================='
+    write(lunit,'("Namespaces defined")')
+    write(lunit,'("==================")')
     p => compList
     do while (associated(p))
-      print *,'Namespace: ', trim(p % name)
+      write(lunit,'("Namespace: ",a)') trim(p % name)
       s => p % stateList
       do while (associated(s))
-        call ESMF_StateGet(s % parent, stateintent=stateintent, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        call ESMF_StateGet(s % parent, stateintent=stateintent, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        call ESMF_StateGet(s % self, name=stateName, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          file=__FILE__, &
+          rcToReturn=rc)) return  ! bail out
+        call ESMF_StateGet(s % self, name=stateName, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
+          file=__FILE__, &
+          rcToReturn=rc)) return  ! bail out
         if (stateintent == ESMF_STATEINTENT_IMPORT) then
-          print *,"State: ",trim(stateName), ": Import"
+          write(lunit,'("State: ",a,": Import")') trim(stateName)
         else if (stateintent == ESMF_STATEINTENT_EXPORT) then
-          print *,"State: ",trim(stateName), ": Export"
+          write(lunit,'("State: ",a,": Export")') trim(stateName)
         else if (stateintent == ESMF_STATEINTENT_UNSPECIFIED) then
-          print *,"State: ",trim(stateName), ": Intent unspecified"
+          write(lunit,'("State: ",a,": Intent unspecified")') trim(stateName)
         else
-          print *,"State: ",trim(stateName), ": Intent N/A"
+          write(lunit,'("State: ",a,": Intent N/A")') trim(stateName)
         end if
         if (associated(s % fieldNames)) then
           do i = 1, size(s % fieldNames)
-            print *,i,trim(s % fieldNames(i))
+            call FieldGet(s, trim(s % fieldNames(i)), compNames=compNames, &
+              compCount=compCount, rc=localrc)
+            if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__, &
+              rcToReturn=rc)) return  ! bail out
+            if (compCount == 1) then
+              write(lunit,'(i4,2x,a)') i, trim(compNames(1))
+            else if (compCount == 2) then
+              write(lunit,'(i4,2x,"(",3a,")")') i, trim(compNames(1)), &
+                s % fieldSep, trim(compNames(2))
+            end if
           end do
         else
-          print *,'No fields attached'
+          write(lunit,'("No fields attached")')
         end if
         if (associated(s % fieldOptions)) then
           do i = 1, size(s % fieldOptions)
-            print *,i,trim(s % fieldOptions(i))
+            write(lunit,'(i4,2x,a)') i, trim(s % fieldOptions(i))
           end do
         else
-          print *,'No field options attached'
+          write(lunit,'("No field options attached")')
         end if
         if (s % ugDimLength /= 0) then
-          print *,'Length of ungridded dimension: ', s % ugDimLength
+          write(lunit,'("Length of ungridded dimension: ",i0)') s % ugDimLength
         else
-          print *,'No ungridded dimension'
+          write(lunit,'("No ungridded dimension")')
         end if
-        print *,'transferAction: ', trim(s % trAction)
+        write(lunit,'("transferAction: ",a)') trim(s % trAction)
         s => s % next
       end do
       p => p % next
     end do
-    print *,'====================='
+    write(lunit,'("==================")')
 
     nullify(p, s)
 

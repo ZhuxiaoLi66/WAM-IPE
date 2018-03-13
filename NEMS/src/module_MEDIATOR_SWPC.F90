@@ -150,6 +150,7 @@ module module_MED_SWPC
       /), &
       "cannot provide", &
       ungriddedVerticalDim=.true., &
+      fieldSep=":", &
       rc=rc) 
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
@@ -174,6 +175,7 @@ module module_MED_SWPC
         "32.0", &
         "28.0"  &
       /), &
+      fieldSep=":", &
       rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
@@ -186,7 +188,7 @@ module module_MED_SWPC
       file=__FILE__)) &
       return  ! bail out
 
-    call NamespacePrint(rc)
+    call NamespacePrint(rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
