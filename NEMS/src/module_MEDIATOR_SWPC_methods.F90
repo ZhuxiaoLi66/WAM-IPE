@@ -680,7 +680,6 @@ contains
       integer                        :: itemCount, localrc
       integer, dimension(:), pointer :: ugLBound, ugUBound, gridToFieldMap
 
-      print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - entering ...'
       ! -- retrieve field object
       call ESMF_StateGet(s % self, field=field, itemName=trim(fieldName), rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -688,7 +687,6 @@ contains
         file=__FILE__)) &
         return  ! bail out
 
-      print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - checking status ...'
       ! -- check field status
       call ESMF_FieldGet(field, status=fieldStatus, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -697,13 +695,11 @@ contains
         return  ! bail out
 
       if (fieldStatus == ESMF_FIELDSTATUS_GRIDSET) then
-        print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - status is GRIDSET'
         ! the Connector instructed the Mediator to accept geom object
         ! the transferred geom object is already set, allocate memory 
         ! for data by complete
         nullify(ugLBound, ugUBound, gridToFieldMap)
         ! deal with gridToFieldMap
-        print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - getting gridToFieldMap...'
         call ESMF_AttributeGet(field, name="GridToFieldMap", &
           convention="NUOPC", purpose="Instance", &
           itemCount=itemCount, rc=rc)
@@ -711,7 +707,6 @@ contains
           line=__LINE__, &
           file=__FILE__)) &
           return  ! bail out
-        print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - gridToFieldMap itemCount = ',itemCount
         if (itemCount > 0) then
           allocate(gridToFieldMap(itemCount), stat=localrc)
           if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -727,7 +722,6 @@ contains
             return  ! bail out
         endif
         ! deal with ungriddedLBound
-        print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - getting UngriddedLBound...'
         call ESMF_AttributeGet(field, name="UngriddedLBound", &
           convention="NUOPC", purpose="Instance", &
           itemCount=itemCount, rc=rc)
@@ -735,7 +729,6 @@ contains
           line=__LINE__, &
           file=__FILE__)) &
           return  ! bail out
-        print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - UngriddedLBound itemCount = ',itemCount
         if (itemCount > 0) then
           if (s % ugDimLength < 0 .and. itemCount > 1) then
             call ESMF_LogSetError(ESMF_RC_OBJ_BAD, &
@@ -766,9 +759,7 @@ contains
             file=__FILE__)) &
             return  ! bail out
         end if
-        print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - done UngriddedLBound'
         ! deal with ungriddedUBound
-        print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - getting UngriddedUBound...'
         call ESMF_AttributeGet(field, name="UngriddedUBound", &
           convention="NUOPC", purpose="Instance", &
           itemCount=itemCount, rc=rc)
@@ -816,11 +807,8 @@ contains
             return  ! bail out
           end if
         end if
-        print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - done UngriddedUBound'
 
-        print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - completing field...'
         if (associated(ugLBound) .and. associated(ugUBound)) then
-          print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - ugL/U'
           if (associated(gridToFieldMap)) then
             call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R8, &
               ungriddedLBound=ugLBound, ungriddedUBound=ugUBound, &
@@ -843,26 +831,20 @@ contains
             file=__FILE__, &
             rcToReturn=rc)) return
         else
-          print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - no ugL/U', associated(gridToFieldMap)
           if (associated(gridToFieldMap)) then
-            print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - no ugL/U, with map...'
             call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R8, &
               gridToFieldMap=gridToFieldMap, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail out
-            print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - no ugL/U, with map - DONE'
           else
-            print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - no ugL/U, no map...'
             call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R8, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail out
-            print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - no ugL/U, no map - DONE'
           end if
-          print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - no ugL/U - DONE'
         end if
 
         if (associated(ugLBound)) then
@@ -890,7 +872,6 @@ contains
         end if
 
       end if
-      print *,'--RealizeFieldGeometry: '//trim(fieldName)//' - EXIT'
       
   end subroutine RealizeFieldGeometry
 
@@ -1147,23 +1128,17 @@ contains
     ! -- begin
     rc = ESMF_SUCCESS
 
-    print *,'--NamespaceRealizeFields: entering ...'
-
     p => compList
     nullify(s)
     do while (associated(p))
-      print *,'--NamespaceRealizeFields: name = '//trim(p%name)
       s => p % stateList
       do while (associated(s))
-        print *,'--NamespaceRealizeFields: name = '//trim(p%name)//': accessing state...', associated(s % fieldNames)
         do item = 1, size(s % fieldNames)
-          print *,'MED: realizing with geom ',trim(s % fieldNames(item))
           call RealizeFieldGeometry(s, trim(s % fieldNames(item)), rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
             return  ! bail out
-          print *,'MED: done realizing with geom ',trim(s % fieldNames(item))
         end do
         s => s % next
       end do
@@ -1171,8 +1146,6 @@ contains
     end do
 
     nullify(p, s)
-
-    print *,'--NamespaceRealizeFields: exiting '
 
   end subroutine NamespaceRealizeFields
 
@@ -1228,8 +1201,6 @@ contains
             file=__FILE__,  &
             rcToReturn=rc)) &
             return  ! bail out
-
-          print *,'MED: initializing field ',trim(s % fieldNames(item)), ' w/ dims = ',rank
 
           select case (rank)
             case(1)
@@ -1303,17 +1274,15 @@ contains
     ! -- begin
     rc = ESMF_SUCCESS
 
-    print *,'--NamespaceSetupRotation: entering ...'
-
     p => compList
     nullify(s)
     do while (associated(p))
-      print *,'--NamespaceSetupRotation: name = '//trim(p%name)
       s => p % stateList
       do while (associated(s))
-        print *,'--NamespaceSetupRotation: name = '//trim(p%name)//': accessing state...', associated(s % fieldNames)
         if (s % fieldMaxRank > 1) then
-          if (.not.ESMF_FieldIsCreated(s % localCartField)) then
+          if (ESMF_FieldIsCreated(s % localCartField)) then
+            s % doRotation = .true.
+          else
             if (ESMF_GridIsCreated(s % localGrid)) then
               ! -- do nothing for now
             else if (ESMF_MeshIsCreated(s % localMesh)) then
@@ -1366,8 +1335,6 @@ contains
     end do
 
     nullify(p, s)
-
-    print *,'--NamespaceSetupRotation: exiting '
 
   end subroutine NamespaceSetupRotation
 
@@ -3519,7 +3486,7 @@ contains
               compList(1) = trim(state % fieldNames(item))
               compList(2) = trim(state % fieldNames(comp))
             end if
-          else
+          else if (comp == 0) then
             if (present(compCount)) compCount = 1
             if (present(compList)) then
               compList(1) = trim(state % fieldNames(item))
@@ -3554,8 +3521,6 @@ contains
     ! -- begin 
     if (present(rc)) rc = ESMF_SUCCESS
 
-    write(6,'("-- FieldRegrid: entering ...")')
-
     call FieldGet(rh % srcState, fieldName, compList=compList, compCount=compCount, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__,  &
@@ -3565,7 +3530,6 @@ contains
     if (compCount < 1) return
 
     do comp = 1, compCount
-      write(6,'("-- FieldRegrid: getting src field ",a,"(",a,")")') trim(compList(comp)), trim(rh % label)
       srcFieldComp(comp) = StateGetField(rh % srcState, compList(comp), &
         auxArray=auxArray, options=options, component=comp, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -3586,7 +3550,6 @@ contains
       ! -- print diagnostic info
       call FieldPrintMinMax(srcFieldComp(comp), "pre  - src:" // trim(compList(comp)), rc)
 
-      write(6,'("-- FieldRegrid: getting dst field ",a,"(",a,")")') trim(compList(comp)), trim(rh % label)
       dstFieldComp(comp) = StateGetField(rh % dstState, compList(comp), component=comp, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__,  &
@@ -3624,7 +3587,7 @@ contains
       ! -- convert back to cardinal vectors
       call Cart3D_to_Cardinal(dstField, &
         rh % dstState % uvec(2), rh % dstState % uvec(1), &
-        dstFieldComp(2), dstFieldComp(2), rc=localrc)
+        dstFieldComp(2), dstFieldComp(1), rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__,  &
         file=__FILE__,  &
@@ -3635,21 +3598,17 @@ contains
       ! -- print diagnostic info
       call FieldPrintMinMax(dstFieldComp(comp), "post - dst:" // trim(compList(comp)), rc)
 
-      write(6,'("-- FieldRegrid: storing src field ",a,"(",a,")")') trim(compList(comp)), trim(rh % label)
       call StateStoreField(rh % srcState, srcFieldComp(comp), compList(comp), rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__,  &
         file=__FILE__,  &
         rcToReturn=rc)) return  ! bail out
-      write(6,'("-- FieldRegrid: done src field ",a,"(",a,")")') trim(compList(comp)), trim(rh % label)
 
-      write(6,'("-- FieldRegrid: storing dst field ",a,"(",a,")")') trim(compList(comp)), trim(rh % label)
       call StateStoreField(rh % dstState, dstFieldComp(comp), compList(comp), rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__,  &
         file=__FILE__,  &
         rcToReturn=rc)) return  ! bail out
-      write(6,'("-- FieldRegrid: done dst field ",a,"(",a,")")') trim(compList(comp)), trim(rh % label)
     end do
 
   end subroutine FieldRegrid
@@ -3680,7 +3639,6 @@ contains
     ! -- begin
     if (present(rc)) rc = ESMF_SUCCESS
 
-    write(6,'("-- StateGetField: entering ...")')
     isNoData = .false.
     isNative = .false.
     isOrigin = .false.
@@ -4127,9 +4085,6 @@ contains
         rcToReturn=rc)
       return ! bail out
     end if
-
-    write(6,'(" --- rank src/dst = ",2i8)') rank, lrank
-    flush 6
 
     if (lrank /= rank) then
       call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
