@@ -951,7 +951,7 @@ if [[ $ENS_NUM -le 1 ]] ; then
       ln -fs $GRDI  grid_ini
       ln -fs $GRDI2 grid_ini2
       ln -fs $SIGI2 sig_ini2
-      if [ $WAM_IPE_COUPLING ];then
+      if [ $WAM_IPE_COUPLING = .true. ];then
         export RESTART_AND_COUPLED=.true.
         ln -fs $RSTR  WAM_IPE_RST_rd
       fi
@@ -967,7 +967,7 @@ if [[ $ENS_NUM -le 1 ]] ; then
     ln -fs $NSTI  nst_ini
     ln -fs $PLASI ipe_grid_plasma_params
     ln -fs $NEUTI ipe_grid_neutral_params
-    if [ $WAM_IPE_COUPLING ];then
+    if [ $WAM_IPE_COUPLING = .true. ];then
       export RESTART_AND_COUPLED=.true.
       ln -fs $RSTR  WAM_IPE_RST_rd
     fi
