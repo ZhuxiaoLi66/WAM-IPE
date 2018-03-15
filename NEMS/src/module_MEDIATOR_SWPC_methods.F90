@@ -175,7 +175,7 @@ contains
 
     ! -- local variables
     integer :: i, item, localCount, pairCount, pos
-    integer :: localrc, fieldCount, totalCount, ugDimLength, localRank
+    integer :: localrc, fieldCount, totalCount, ugDimLength, localMaxRank
     integer,                    dimension(:), allocatable :: localDepMap, tmpMap
     character(len=ESMF_MAXSTR), dimension(:), allocatable :: localNames, localOptions, tmp
     character(len=1) :: localFieldSep
@@ -217,7 +217,8 @@ contains
       rcToReturn=rc)) return
 
     localOptions = "none"
-    localDepMap = 0
+    localDepMap  = 0
+    localMaxRank = 1
 
     i = 0
     do item = 1, fieldCount
@@ -232,7 +233,7 @@ contains
         if (present(fieldOptions)) then
           localOptions(i-1:i) = fieldOptions(item)
         end if
-        localRank = 2
+        localMaxRank = 2
       else
         localNames(i) = fieldNames(item)
         if (present(fieldOptions)) &
@@ -337,7 +338,7 @@ contains
         line=__LINE__, &
         file=__FILE__, &
         rcToReturn=rc)) return
-      s % fieldMaxRank = max(s % fieldMaxRank, localRank)
+      s % fieldMaxRank = max(s % fieldMaxRank, localMaxRank)
     else
       allocate(s % fieldNames(localCount), &
                s % fieldOptions(localCount), &
@@ -352,7 +353,7 @@ contains
       s % fieldOptions  = localOptions
       s % fieldSep      = localFieldSep
       s % fieldDepMap   = localDepMap
-      s % fieldMaxRank  = localRank
+      s % fieldMaxRank  = localMaxRank
       s % doRotation    = .false.
     end if
     s % parent = state
