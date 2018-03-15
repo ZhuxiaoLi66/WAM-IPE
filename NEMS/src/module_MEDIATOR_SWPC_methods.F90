@@ -4478,8 +4478,11 @@ contains
       return  ! bail out
 #endif
 
-  !wamfilename = 'data/wam3dgridnew.nc'
-  wamfilename = 'wam3dgridnew_20160427.nc'
+  ! Set file name for intermediate fixed height grid
+  wamfilename = 'WAMFixedHgtGrid_20180312.nc'
+  ! wamfilename = 'wam3dgridnew_20160427.nc' ! Last version
+
+
   filename = 'wam2dmesh.nc'
 ! minheight = 90.
 ! maxheight = 782.

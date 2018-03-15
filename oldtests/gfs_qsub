@@ -1,16 +1,16 @@
 #! /bin/ksh --login
 
-#PBS -e /scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_100054/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart/err
-#PBS -o /scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_100054/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart/out
-#PBS -N rt_100054_2
+#PBS -e /scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_25855/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170/err
+#PBS -o /scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_25855/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170/out
+#PBS -N rt_25855_1
 #PBS -A swpc
 #PBS -q debug
 #PBS -l procs=40
 #PBS -l walltime=00:30:00
 #PBS -W umask=027
 
-if [[ -e  /scratch3/NCEPDEV/swpc/noscrub/Joseph.Schoonover/Software/WAM-IPE_MS0.6/NEMS/src/conf/modules.nems ]]; then
-  source /scratch3/NCEPDEV/swpc/noscrub/Joseph.Schoonover/Software/WAM-IPE_MS0.6/NEMS/src/conf/modules.nems.sh
+if [[ -e  /scratch3/NCEPDEV/swpc/noscrub/Robert.Oehmke/bob_issue69/NEMS/src/conf/modules.nems ]]; then
+  source /scratch3/NCEPDEV/swpc/noscrub/Robert.Oehmke/bob_issue69/NEMS/src/conf/modules.nems.sh
   module list
 fi
 
@@ -24,7 +24,7 @@ export SCHEDULER=pbs
 
 export FIXGLOBAL=/scratch4/NCEPDEV/nems/noscrub/emc.nemspara/RT/WAM-IPE/WAM-IPE_NEMS201606-20170302/data/GSM/fix_am
 
-cd /scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_100054/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart
+cd /scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_25855/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170
 
 echo "Model started:  " `date`
 
@@ -34,7 +34,7 @@ echo "Model started:  " `date`
 
 export TASKSIZE=40
 
-/scratch3/NCEPDEV/swpc/scrub/Joseph.Schoonover/rt_100054/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_restart/gfs_fcst_run
+/scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_25855/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170/gfs_fcst_run
 
 echo "Model ended:    " `date`
 

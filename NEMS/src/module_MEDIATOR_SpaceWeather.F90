@@ -819,8 +819,10 @@ module module_MEDSpaceWeather
       file=__FILE__)) &
       return  ! bail out
 
-  !wamfilename = 'data/wam3dgridnew.nc'
-  wamfilename = 'wam3dgridnew_20160427.nc'
+  ! Set file name for intermediate fixed height grid
+  wamfilename = 'WAMFixedHgtGrid_20180312.nc'
+  !wamfilename = 'wam3dgridnew_20160427.nc' ! The last version
+
   filename = 'wam2dmesh.nc'
   minheight = 90
   maxheight = 800

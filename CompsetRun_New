@@ -549,7 +549,7 @@ setup_spaceweather_gsm%wam%T62_ipe%80x170(){
   elif [ $MACHINE_ID = theia ] ; then
     cp -f ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/ipe3dgrid2.nc ${RUNDIR}/.
     cp -f ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew2.nc ${RUNDIR}/.
-    ln -s ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew_20160427.nc ${RUNDIR}/.
+    ln -s ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/WAMFixedHgtGrid_20180312.nc ${RUNDIR}/.
   elif [ $MACHINE_ID = yellowstone ] ; then
     echo "not yet implemented"
   fi
