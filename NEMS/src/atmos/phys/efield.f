@@ -50,7 +50,8 @@
 !     use physconst,     only: pi
 !     use abortutils,    only: endrun
 !     use cam_logfile,   only: iulog
-   
+      use IDEA_IO_UNITS, only : iulog  
+ 
       implicit none
 
       public :: efield_init,   ! interface routine                     
@@ -91,7 +92,7 @@
      &nmlonh= nmlon/2,      ! mlon/2
      &nmlonp1 = nmlon+1,    ! mlon+1 
      &nmlatp1 = nmlat+1,     ! mlat+1
-     &iulog=10
+!     &iulog=10
 
       real ::         
      &  ylatm(0:nmlat),      ! magnetic latitudes (deg)
@@ -112,10 +113,10 @@
      & day      ! iday+ut
 
       logical, parameter :: iutav=.false.   ! .true.  means UT-averaging 
-                                        ! .false. means no UT-averaging
-!     real, parameter ::  v_sw = 400.      ! solar wind velocity [km/s]
-      real, parameter ::  v_sw = 450.      ! solar wind velocity [km/s]
 
+!     for wam_swin case, use observation solar wind instead                                        ! .false. means no UT-averaging
+!     real, parameter ::  v_sw = 450.      ! solar wind velocity [km/s]
+!     real  :: v_sw
 !---------------------------------------------------------------------- 
 ! boundary for Weimer
 !---------------------------------------------------------------------- 
@@ -192,7 +193,7 @@
      &lat_sft = 54.	 ! shift of highlat_bnd to 54 deg
       integer :: ilat_sft        ! index of shift for high latitude boundary
       integer, parameter :: nmax_sin = 2 ! max. wave number to be represented
-      logical, parameter :: debug =.false.
+      logical, parameter :: debug =.true.
 !
       contains
 
@@ -1023,8 +1024,8 @@
       real ::  
      &  angle,  ! IMF angle
      &  bt,    ! IMF magnitude
-     &  tilt       ! tilt of earth
-
+     &  tilt,       ! tilt of earth
+     &  v_sw
 !-----------------------------------------------------------------
 ! function declarations
 !-----------------------------------------------------------------
@@ -1054,19 +1055,22 @@
           swbz_curdt  = swbz_wy (kdt_interval) * interpolate_weight  + swbz_wy (kdt_interval+1) * (1-interpolate_weight)
 
         bt    = swbt_curdt
-        angle = swangle_curdt
+        angle = swang_curdt
         v_sw  = swvel_curdt
+        bz    = swbz_curdt
 
-!      if(debug) then
-!       write(iulog,"(/,'efield prep_weimer:')")
-!       write(iulog,*)  '  Bz   =',bz
-!       write(iulog,*)  '  By   =',by
-!       write(iulog,*)  '  Bt   =',bt
-!       write(iulog,*)  '  angle=',angle
-!       write(iulog,*)  '  VSW  =',v_sw
-!       write(iulog,*)  '  tilt =',tilt
-!      end if
       end if
+
+      if(debug) then
+       write(iulog,"(/,'efield prep_weimer:')")
+       write(iulog,*)  '  Bz   =',bz
+       write(iulog,*)  '  By   =',by
+       write(iulog,*)  '  Bt   =',bt
+       write(iulog,*)  '  angle=',angle
+       write(iulog,*)  '  VSW  =',v_sw
+       write(iulog,*)  '  tilt =',tilt
+      end if
+
 
       call SetModel( angle, bt, tilt, v_sw )
 
@@ -1829,7 +1833,7 @@
 
       CHARACTER*15 skip
 
-      INTEGER iulog
+!     INTEGER iulog
 !     INTEGER MaxL,MaxM,MaxN,iulog
 !     REAL Cn( 0:3 , 0:1 , 0:4 , 0:1 , 0:8 , 0:3 )
 !     COMMON /AllCoefs/Cn,MaxL,MaxM,MaxN
@@ -1837,7 +1841,7 @@
       character(len=256) :: locfn
 !
 !-----------------------------------------------------------------------
-      iulog=14
+!      iulog=14
       STEP = 10.
       STPR = STEP/6671.
       STPD = STPR*R2D
@@ -2095,7 +2099,7 @@ c1000 FORMAT(3I8)
 !
         integer m, lm2, l, iulog
         real xx, fact
-        iulog=14
+!       iulog=14
 !
 !-----------------------------------------------------------------------
 !
@@ -2508,9 +2512,10 @@ c1000 FORMAT(3I8)
 !
 !---------------------------Local variables-----------------------------
 !
-      integer id, j, iulog
+!      integer id, j, iulog
+      integer id, j
       real xa, ya, za
-      iulog=14
+!     iulog=14
 !
 !-----------------------------------------------------------------------
 !
