@@ -56,16 +56,10 @@
       alt  = alt_km  (i)
 
       stl  = sec/3600. + glon/15.
-!dbg20110923
-!dbg      if ( stl>=24.) stl=stl-24.
 
       ! horizontal & vertical wind
-
       w(:)=0.0000000
-!dbg20110729
-!dbg      print *,'call gws5',iyd,sec,alt,glat,glon,stl,f107a_msis,f107d_msis,ap_hwm(1),w
       call gws5(iyd,sec,alt,glat,glon,stl,f107a_msis,f107d_msis,ap_hwm(1),w)
-!dbg      print *,'(2)w=',w
 
       vn_ms1_dum(1,i) =   w(2)  !eastward
       vn_ms1_dum(2,i) =   w(1)  !northward
@@ -73,12 +67,8 @@
 
       ! composition & temperature
 
-!dbg20110923
-!dbg print *,'call gtd7',iyd,sec,alt,glat,glon,stl,f107a_msis,f107d_msis,ap_msis,mass
       call gtd7(iyd,sec,alt,glat,glon,stl,f107a_msis,f107d_msis,ap_msis,mass,d,t)
-!dbg print *,'msis output',d,t
 
-! convert from cm-3 to m-3
       he_density_m3 (i) = d(1)/M3_TO_CM3 !*1.e6
       o_density_m3  (i) = d(2)/M3_TO_CM3
       n2_density_m3 (i) = d(3)/M3_TO_CM3
