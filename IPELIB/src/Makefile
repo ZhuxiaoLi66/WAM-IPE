@@ -84,10 +84,10 @@ endif
     MODCMD    = $(shell ./modcmd generic pgi)
     FCP       = gfortran -ffree-line-length-none
     FCS       = gfortran -ffree-line-length-none
-    OPT_FLAGS = -Ofast -cpp
+    OPT_FLAGS = -pg -g -O0 -Wall -fcheck=all -cpp
     SMS       =
     ifeq ($(DEBUG),yes)
-      DEBUG_FLAGS = -g -O0 -Mbounds
+      DEBUG_FLAGS = -g -O0
     endif
 
 #INTEL
@@ -159,7 +159,8 @@ endif
     FCS       = ifort
     CC        = icc
     #OPT_FLAGS = -O3  -fpp
-    OPT_FLAGS = -g -O0 -traceback -warn all -check all -debug all -ftrapuv -fp-model precise -fpp
+    #OPT_FLAGS = -g -O0 -traceback -warn all -check all -debug all -ftrapuv -fp-model precise -fpp
+    OPT_FLAGS = -g -O0 -traceback -check all -debug all -ftrapuv -fp-model precise -fpp
     SMS       = /scratch3/NCEPDEV/swpc/noscrub/sms/SMSr825-intel_14.0.2-mpi_5.1.2.150
     ifeq ($(DEBUG),yes)
       DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0 -fpp

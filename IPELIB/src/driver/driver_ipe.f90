@@ -66,12 +66,11 @@ PROGRAM  test_plasma
 
 
 ! initialise the flux tubes from previous runs
+    WRITE( iterChar, '(I8.8)' )start_time
      IF ( HPEQ_flip==0.0 ) THEN
        CALL io_plasma_bin ( 2, start_time, 'iter_'//iterChar  )
      END IF
 
-    ! Write the initial conditions to file
-    WRITE( iterChar, '(I8.8)' )start_time
     CALL io_plasma_bin ( 1, start_time, 'iter_'//iterChar )
 
 
