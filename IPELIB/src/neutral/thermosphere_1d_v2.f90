@@ -59,7 +59,8 @@
 
       ! horizontal & vertical wind
       w(:)=0.0000000
-      call gws5(iyd,sec,alt,glat,glon,stl,f107a_msis,f107d_msis,ap_hwm(1),w)
+      !call gws5(iyd,sec,alt,glat,glon,stl,f107a_msis,f107d_msis,ap_hwm(1),w)
+      call hwm14(iyd,sec,alt,glat,glon,stl,f107a_msis,f107d_msis,ap_hwm(1),w)
 
       vn_ms1_dum(1,i) =   w(2)  !eastward
       vn_ms1_dum(2,i) =   w(1)  !northward
