@@ -1,15 +1,15 @@
 Starting :
-Thu Mar 15 17:07:30 UTC 2018
+Thu Mar 15 17:34:13 UTC 2018
 ======================================================================
 Setting up to run NEMS on compset: 'swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170'.
-RUNDIR: '/scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_25855/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170'.
+RUNDIR: '/scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_120236/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170'.
 Test 
 WAM-IPE 1h coupled run
 GFS, 40 proc, 1 thread
 
 
 baseline dir = /scratch4/NCEPDEV/nems/noscrub/Weiyu.Yang/REGRESSION_TEST/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170_V0003
-working dir  = /scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_25855/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170
+working dir  = /scratch3/NCEPDEV/swpc/scrub/Robert.Oehmke/rt_120236/swpc%20130316_1hr_spacewx_gsm%wam%T62_ipe%80x170
 Checking test  results ....
  Comparing IPE.inp............MISSING baseline
  Comparing SMSnamelist............MISSING baseline
@@ -43,4 +43,4 @@ Test  FAIL
 
 
 ======================================================================
-Thu Mar 15 17:08:58 UTC 2018
+Thu Mar 15 17:35:36 UTC 2018
