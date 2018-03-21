@@ -5,6 +5,7 @@ from os import path
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import datetime
 from itertools import chain
+import math
 
 ## takes 3hr-avg Kp, daily F10.7, and minute-binned hemispheric power and 24hr-avg Kp
 ## and translates them all to the same cadence (hard-coded 1 minute)
@@ -150,6 +151,81 @@ def get_solar_data(dates):
   
   return swbt, swangle, swvel, bz, hemi_pow, hemi_pow_idx
 
+def start_fixed_data(mduration):
+  # read f107, kp
+  with open(args.fixed,'r') as f:
+    lines = f.read().splitlines()
+    return [float(lines[0])]*mduration, [float(lines[1])]*mduration
+
+def finish_fixed_data(mduration):
+  # read swbt, swang, swvel, swbz, gwatts, HPI
+  with open(args.fixed,'r') as f:
+    lines = f.read().splitlines()
+    return [float(lines[2])]*mduration, [float(lines[3])]*mduration, [float(lines[4])]*mduration, \
+           [float(lines[5])]*mduration, [float(lines[6])]*mduration, [float(lines[7])]*mduration,
+
+def hpi_from_gw(gw):
+  if gw <= 2.5:
+    return '1'
+  elif gw <= 3.94:
+    return '2'
+  elif gw <= 6.22:
+    return '3'
+  elif gw <= 9.82:
+    return '4'
+  elif gw <= 15.49:
+    return '5'
+  elif gw <= 24.44:
+    return '6'
+  elif gw <= 38.56:
+    return '7'
+  elif gw <= 60.85:
+    return '8'
+  elif gw <= 96.0:
+    return '9'
+  else:
+    return '10'
+
+def swbt_calc(swbz,swby):
+  return math.sqrt(swbz**2+swby**2)
+
+def swden_calc(): # this isn't used?
+  return 5.0
+
+def swvel_calc(kp):
+  return 317.0+55.84*kp-2.71*kp**2
+
+def swang_calc(bz):
+  if bz >= 0.0:
+    return 0.0
+  else:
+    return 180.0
+
+def swby_calc():
+  return 0.0
+
+def swbz_calc(kp,f107):
+  return -0.85*kp**2 - 0.081*kp + 0.434 + 0.0079 * f107 + 0.0022 * kp * f107
+
+def hemi_pow_calc(kp):
+  return 1.29 + 15.60*kp - 4.93*kp**2 + 0.64*kp**3
+
+def calc_solar_data(kp,f107):
+  swbt     = []
+  swangle  = []
+  swvel    = []
+  swbz     = []
+  hemi_pow = []
+  hemi_pow_idx = []
+  for i in range(len(f107)):
+    swbz.append(    swbz_calc(kp[i],f107[i]))
+    swbt.append(    swbt_calc(swbz[i],swby_calc()))
+    hemi_pow.append(hemi_pow_calc(kp[i]))
+    swangle.append( swang_calc(swbz[i]))
+    swvel.append(   swvel_calc(kp[i]))
+    hemi_pow_idx.append(hpi_from_gw(hemi_pow[i]))
+  return swbt,swangle,swvel,swbz,hemi_pow,hemi_pow_idx
+
 def parse(start_date, end_date, hduration):
   ## start_date: YYYYMMDDHH string
   ## end_date:   YYYYMMDDHH string
@@ -170,17 +246,32 @@ def parse(start_date, end_date, hduration):
     max_f107 = new_timestamp(end_date,    24)
   else:                                                                    # end interpolation at current day
     max_f107 = end_date
-  # now get data for the days described
-  kp, f107, f107d = get_kp_f107(get_dates(min_f107, max_f107))
-  kp_avg          = get_24hr_kp_avg(get_dates(start_date,end_date))
-  swbt, swangle, swvel, swbz, hemi_pow, hemi_pow_idx = get_solar_data(get_dates(start_date,end_date))
 
-  # and select the right ones
-  kp_offset     = time_diff(start_date+'00', hourless(min_f107) + kp_midpoint_string)
-  f107_offset   = time_diff(start_date+'00', hourless(min_f107) + f107_midpoint_string)
-  kp_avg_offset = time_diff(start_date+'00', hourless(start_date) + '0000')
-  hemi_offset   = kp_avg_offset
-  # return our subarray
+  # KP/F107
+  if args.mode[:4] == 'time':
+    kp_offset     = time_diff(start_date+'00', hourless(min_f107) + kp_midpoint_string)
+    f107_offset   = time_diff(start_date+'00', hourless(min_f107) + f107_midpoint_string)
+    kp_avg_offset = time_diff(start_date+'00', hourless(start_date) + '0000')
+    kp, f107, f107d = get_kp_f107(get_dates(min_f107, max_f107))
+    kp_avg          = get_24hr_kp_avg(get_dates(start_date,end_date))
+  else: # fixed kp/f107
+    kp_offset     = 0
+    f107_offset   = 0
+    kp_avg_offset = 0
+    kp, f107 = start_fixed_data(mduration)
+    kp_avg = kp ; f107d = f107 # 24hr avg kp = kp, f10.7 daily = f10.7
+  # SOLAR WIND DATA
+  if args.mode[-6:] != 'derive': # either timeobs (equation) or fixall (0)
+    hemi_offset = kp_avg_offset
+    if args.mode[-3:] == 'obs': # get solar data from obs
+      swbt, swangle, swvel, swbz, hemi_pow, hemi_pow_idx = get_solar_data(get_dates(start_date,end_date))
+    else: # values are fixed from input
+      swbt, swangle, swvel, swbz, hemi_pow, hemi_pow_idx = finish_fixed_data(mduration)
+  else: # use Tim's algorithms: https://github.com/SWPC-IPE/WAM-IPE/issues/126#issuecomment-374304207
+    hemi_offset = 0
+    swbt, swangle, swvel, swbz, hemi_pow, hemi_pow_idx = calc_solar_data(kp[kp_offset:kp_offset+mduration], f107[f107_offset:f107_offset+mduration])
+
+  # return our subarrays
   return kp[kp_offset:kp_offset+mduration], f107[f107_offset:f107_offset+mduration], f107d[f107_offset:f107_offset+mduration], \
          kp_avg[kp_avg_offset:kp_avg_offset+mduration], swbt[hemi_offset:hemi_offset+mduration], \
          swangle[hemi_offset:hemi_offset+mduration], swvel[hemi_offset:hemi_offset+mduration], swbz[hemi_offset:hemi_offset+mduration], \
@@ -234,6 +325,9 @@ parser.add_argument('-d', '--duration',   help='duration of run (hours) (default
 parser.add_argument('-s', '--start_date', help='starting date of run (YYYYMMDDhh)',     type=str, required=True)
 parser.add_argument('-p', '--path',       help='path to database files',                type=str, required=True)
 parser.add_argument('-o', '--output',     help='path to output file',                   type=str, default='wam_input_f107_kp.txt')
+parser.add_argument('-m', '--mode', help='timeobs (time-varying from obs), timederive (time-varying kp/f10.7, derived solar wind drivers), '+\
+                                         'fixderive (fixed kp/f10.7, derived solar wind drivers), or fixall (everything fixed)', type=str, default='timeobs')
+parser.add_argument('-f', '--fixed', help='full path to file containing fixed data for run', type=str, default='')
 
 ## global variables
 args = parser.parse_args()
