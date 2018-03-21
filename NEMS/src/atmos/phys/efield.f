@@ -91,7 +91,7 @@
      &nmlath= nmlat/2,      ! mlat/2
      &nmlonh= nmlon/2,      ! mlon/2
      &nmlonp1 = nmlon+1,    ! mlon+1 
-     &nmlatp1 = nmlat+1,     ! mlat+1
+     &nmlatp1 = nmlat+1     ! mlat+1
 !     &iulog=10
 
       real ::         

@@ -1257,6 +1257,7 @@ if [ $IDEA = .true. ]; then
     else
        LEN_F107=`wc -l wam_input_f107_kp.txt | cut -d' ' -f 1`
        export F107_KP_SIZE=$((LEN_F107-5))
+       export F107_KP_DATA_SIZE=$((LEN_F107-5))
        export F107_KP_SKIP_SIZE=$((36*60))
        export F107_KP_INTERVAL=60
     fi
