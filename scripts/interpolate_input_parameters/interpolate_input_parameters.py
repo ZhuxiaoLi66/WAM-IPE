@@ -258,7 +258,7 @@ def parse(start_date, end_date, hduration):
     kp_offset     = 0
     f107_offset   = 0
     kp_avg_offset = 0
-    kp, f107 = start_fixed_data(mduration)
+    f107, kp = start_fixed_data(mduration)
     kp_avg = kp ; f107d = f107 # 24hr avg kp = kp, f10.7 daily = f10.7
   # SOLAR WIND DATA
   if args.mode[-6:] != 'derive': # either timeobs (equation) or fixall (0)
