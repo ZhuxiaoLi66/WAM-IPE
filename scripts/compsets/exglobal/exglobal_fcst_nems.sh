@@ -657,6 +657,7 @@ if [ $gfsio_in = .true. ] ; then export GB=1 ; fi
 export IDEA=${IDEA:-.false.}
 export WAM_IPE_COUPLING=${WAM_IPE_COUPLING:-.false.}
 export HEIGHT_DEPENDENT_G=${HEIGHT_DEPENDENT_G:-.false.}
+export INPUT_PARAMETERS=${INPUT_PARAMETERS:-timeobs}
 export F107_KP_SIZE=${F107_KP_SIZE:-$((60*37+1))}
 export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-$((60*37+1))}
 export F107_KP_SKIP_SIZE=${F107_KP_SKIP_SIZE:-0}
@@ -1234,7 +1235,7 @@ fi
 if [ $IDEA = .true. ]; then
   START_UT_SEC=$((10#$INI_HOUR*3600))
 
-  if [ ${REALTIME:-NO} = YES ] ; then
+  if [ $INPUT_PARAMETERS = realtime ] ; then
     # copy in xml kp/f107
     if [ -e $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${INI_HOUR}15.xml ] ; then
       ${NCP} $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${INI_HOUR}15.xml ./wam_input2.xsd
@@ -1251,7 +1252,16 @@ if [ $IDEA = .true. ]; then
     fi
   else
     # work from the database
-    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((36+ 10#$FHMAX)) -s `$NDATE -36 $CDATE` -p $PARAMETER_PATH
+    echo "$FIX_F107"   >> temp_fix
+    echo "$FIX_KP"     >> temp_fix
+    echo "$FIX_SWBT"   >> temp_fix
+    echo "$FIX_SWANG"  >> temp_fix
+    echo "$FIX_SWVEL"  >> temp_fix
+    echo "$FIX_SWBZ"   >> temp_fix
+    echo "$FIX_GWATTS" >> temp_fix
+    echo "$FIX_HPI"    >> temp_fix
+    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((36+ 10#$FHMAX)) -s `$NDATE -36 $CDATE` -p $PARAMETER_PATH -m $INPUT_PARAMETERS -f temp_fix
+    rm -rf temp_fix
     if [ ! -e wam_input_f107_kp.txt ] ; then
        echo "failed, no f107 file" ; exit 1
     else
