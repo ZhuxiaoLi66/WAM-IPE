@@ -367,24 +367,46 @@ module module_MEDSpaceWeather
       ! PETs (PetCnt), not need to redistribute.  Otherwise, redistribute
       ! the elementDistgrid to use PetCnt processors
       if (PetCnt /= decount) then
+         
+         ! create a new distgrid evenly distribute the nodes over all the PEs.
+         ipedistgrid = ESMF_DistGridCreate((/minIndices(1,1)/), (/maxIndices(1,1)/), &
+           rc=rc)
+         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+           line=__LINE__, &
+           file=__FILE__)) &
+           return  ! bail out
+
+         call ESMF_MeshGet(ipemesh, elementDistgrid=meddistgrid, rc=rc)
+         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+           line=__LINE__, &
+           file=__FILE__)) &
+           return  ! bail out
+         call ESMF_DistGridGet(meddistgrid, &
+           minIndexPTile=minIndices, maxIndexPTile=maxIndices, rc=rc) 
+         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+           line=__LINE__, &
+           file=__FILE__)) &
+           return  ! bail out
+
          ! create a new distgrid evenly distribute the nodes over all the PEs.
          meddistgrid = ESMF_DistGridCreate((/minIndices(1,1)/), (/maxIndices(1,1)/), &
-	 	       rc=rc)
+           rc=rc)
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            	line=__LINE__, &
-            	file=__FILE__)) &
-            	return  ! bail out
-         medmesh = ESMF_MeshCreate(meddistgrid, meddistgrid, &
-             	  rc=rc)
+           line=__LINE__, &
+           file=__FILE__)) &
+           return  ! bail out
+
+         medmesh = ESMF_MeshCreate(ipemesh, nodalDistgrid=ipedistgrid, &
+           elementDistgrid=meddistgrid, rc=rc)
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            	line=__LINE__, &
-        	file=__FILE__)) &
-        	return  ! bail out
+           line=__LINE__, &
+           file=__FILE__)) &
+           return  ! bail out
          call ESMF_MeshDestroy(ipemesh, rc=rc)
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            	line=__LINE__, &
-        	file=__FILE__)) &
-        	return  ! bail out
+           line=__LINE__, &
+           file=__FILE__)) &
+           return  ! bail out
         ! replace the field with new mesh     
         k=1 ! initialize
         do i=1, itemCount

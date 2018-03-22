@@ -478,9 +478,9 @@ contains
 
       ! -- local variables
       type(ESMF_Field)           :: field
-      type(ESMF_DistGrid)        :: distgrid
+      type(ESMF_DistGrid)        :: distgrid, eDistgrid
       type(ESMF_Grid)            :: grid
-      type(ESMF_Mesh)            :: mesh
+      type(ESMF_Mesh)            :: mesh, newMesh
       type(ESMF_GeomType_flag)   :: geomtype
       integer                    :: item, deCount, dimCount, tileCount, localrc
       integer, dimension(:,:), allocatable :: minIndexPTile, maxIndexPTile
@@ -533,14 +533,15 @@ contains
 
         else if (geomtype == ESMF_GEOMTYPE_MESH) then
 
-          ! empty field holds a Grid with DistGrid
+          ! empty field holds a Mesh with DistGrids
           call ESMF_FieldGet(field, mesh=mesh, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
             return  ! bail out
-          ! access the DistGrid
-          call ESMF_MeshGet(mesh, elementDistgrid=distgrid, rc=rc)
+          ! access the DistGrids (use nodal Distgrid in following code)
+          call ESMF_MeshGet(mesh, nodalDistgrid=distgrid, &
+            elementDistgrid=eDistgrid, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
@@ -591,49 +592,23 @@ contains
             file=__FILE__)) &
             return  ! bail out
 
-          allocate(regDecompPTile(dimCount,tileCount))
-          regDecompPTile = 0
-          do i = 0, max(petCount, tileCount) -1
-            j = mod(i, tileCount) + 1
-            regDecompPTile(1, j) = regDecompPTile(1, j) + 1
-          end do
-          regDecompPTile(2:,:) = 1
-
           ! create the new DistGrid with the same minIndexPTile and maxIndexPTile,
           ! but with a default regDecompPTile
           distgrid = ESMF_DistGridCreate(minIndexPTile=minIndexPTile, &
-            maxIndexPTile=maxIndexPTile, regDecompPTile=regDecompPTile, rc=rc)
+            maxIndexPTile=maxIndexPTile, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
             return  ! bail out
-
-#if 0
-          !------- TEST BEGIN
-          call ESMF_DistGridGet(distgrid, deCount=j, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
-          allocate(deToTileMap(j))
-          deToTileMap = 0
-          call ESMF_DistGridGet(distgrid, deToTileMap=deToTileMap, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
-          write(6,'("--- Adjust field DistGrid: deToTileMap    = ",10i12)') deToTileMap
-          do i = 1, tileCount
-            write(6,'("--- Adjust field DistGrid: regDecompPTile = ",10i12)') regDecompPTile(:,i)
-          end do
-          deallocate(deToTileMap)
-          !------- TEST END
-#endif
-
-          deallocate(regDecompPTile)
 
           if (geomtype == ESMF_GEOMTYPE_GRID) then
 
+            ! Destroy old Grid object
+            call ESMF_GridDestroy(grid, rc=rc)    
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail out
             ! Create a new Grid on the new DistGrid and swap it in the Field
             grid = ESMF_GridCreate(distgrid, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -648,13 +623,39 @@ contains
 
           else if (geomtype == ESMF_GEOMTYPE_MESH) then
 
-            ! Create a new Grid on the new DistGrid and swap it in the Field
-            mesh = ESMF_MeshCreate(distgrid, rc=rc)
+            ! nodal Distgrid available, create new element DIstgrid
+
+            ! get minIndex and maxIndex arrays
+            call ESMF_DistGridGet(eDistgrid, minIndexPTile=minIndexPTile, &
+              maxIndexPTile=maxIndexPTile, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail out
-            call ESMF_FieldEmptySet(field, mesh=mesh, rc=rc)    
+
+            ! create the new DistGrid with the same minIndexPTile and maxIndexPTile,
+            ! but with a default regDecompPTile
+            eDistgrid = ESMF_DistGridCreate(minIndexPTile=minIndexPTile, &
+              maxIndexPTile=maxIndexPTile, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail out
+
+            ! Create a new Grid on the new DistGrid and swap it in the Field
+            newMesh = ESMF_MeshCreate(mesh, nodalDistgrid=distgrid, &
+              elementDistgrid=eDistgrid, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail out
+            call ESMF_FieldEmptySet(field, mesh=newMesh, rc=rc)    
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail out
+            ! destroy old Mesh object
+            call ESMF_MeshDestroy(mesh, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
