@@ -1731,7 +1731,7 @@ subroutine RunRegrid(model, importState, exportState, rc)
            do i=1,localnodes
               kk = 1  ! source ind
               do k=startlevel, wamdims(3)
-                 do while (kk<=inlevels .and. hgtbuf(i,kk)<wamhgt(k))
+                 do while (kk<inlevels .and. hgtbuf(i,kk)<wamhgt(k))
 	            kk=kk+1
                  enddo
                  if (kk>extrap_start_level) then
@@ -1790,7 +1790,7 @@ subroutine RunRegrid(model, importState, exportState, rc)
   	    do i=1,localnodes
               kk = 1  ! source ind
               do k=startlevel, wamdims(3)
-                 do while (kk<=inlevels .and. hgtbuf(i,kk)<wamhgt(k))
+                 do while (kk<inlevels .and. hgtbuf(i,kk)<wamhgt(k))
 	            kk=kk+1
                  enddo
 	         if (kk>extrap_start_level) then
