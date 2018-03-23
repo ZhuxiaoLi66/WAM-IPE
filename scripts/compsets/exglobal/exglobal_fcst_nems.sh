@@ -1237,10 +1237,11 @@ if [ $IDEA = .true. ]; then
 
   if [ $INPUT_PARAMETERS = realtime ] ; then
     # copy in xml kp/f107
-    if [ -e $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${INI_HOUR}15.xml ] ; then
-      ${NCP} $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${INI_HOUR}15.xml ./wam_input2.xsd
+    XML_HOUR=`printf %02d $(($INI_HOUR / 3 * 3))` # 00 > 00, 01 > 00, 02 > 00, 03 > 03, etc.
+    if [ -e $WAMINDIR/wam_input_new-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ] ; then
+      ${NCP} $WAMINDIR/wam_input_new-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ./wam_input2.xsd
       # convert to ascii
-      $BASE_NEMS/../scripts/parse_f107_xml/parse.py
+      $BASE_NEMS/../scripts/parse_f107_xml/parse_new.py -s `$NDATE -36 $CDATE`
       # now f107
       ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
     else
@@ -1264,13 +1265,13 @@ if [ $IDEA = .true. ]; then
     rm -rf temp_fix
     if [ ! -e wam_input_f107_kp.txt ] ; then
        echo "failed, no f107 file" ; exit 1
-    else
-       LEN_F107=`wc -l wam_input_f107_kp.txt | cut -d' ' -f 1`
-       export F107_KP_SIZE=$((LEN_F107-5))
-       export F107_KP_SKIP_SIZE=$((36*60))
-       export F107_KP_INTERVAL=60
     fi
   fi
+  LEN_F107=`wc -l wam_input_f107_kp.txt | cut -d' ' -f 1`
+  export F107_KP_SIZE=$((LEN_F107-5))
+  export F107_KP_DATA_SIZE=$F107_KP_SIZE
+  export F107_KP_INTERVAL=60
+  export F107_KP_SKIP_SIZE=$((36*60))
 
   # global_idea fix files
   ${NLN} $FIX_IDEA/global_idea* .
