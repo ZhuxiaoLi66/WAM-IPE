@@ -1300,35 +1300,6 @@ if [ $IDEA = .true. ]; then
    export DOY=`date -d ${INI_MONTH}/${INI_DAY}/${INI_YEAR} +%j`
    F107AVG=`grep 'F10 81 Day Avg' $DATA/wam_input_f107_kp.txt | awk '{print $5}'`
    F107DAY=`grep ${INI_YEAR}-${INI_MONTH}-${INI_DAY}T${INI_HOUR} wam_input_f107_kp.txt | awk '{print $2}'`
-   KP3HR=`grep ${INI_YEAR}-${INI_MONTH}-${INI_DAY}T${INI_HOUR} wam_input_f107_kp.txt | awk '{print $3}'`
-
-   #convert from kp to ap
-   KPX=(0 1 2  3  4  5  6   7   8   9)
-   APX=(0 4 7 15 27 48 80 132 207 400)
-
-   for i in "${!KPX[@]}"; do
-      if [[ "${KPX[$i]}" = "${KP3HR}" ]]; then
-          echo "${i}";
-          echo "${APX[$i]}";
-          echo "${KPX[$i]}";
-          AP3HR=${APX[$i]};
-          echo ' AP3HR = ' $AP3HR;
-      fi
-   done
-   echo 'F107AVG, F107DAY, KP3HR, AP3HR = ' ${F107AVG}, ${F107DAY}, ${KP3HR}, ${AP3HR}
-
-   # Fallback variables in case the above hase failed.
-   F107AVG=${F107AVG:-$F107AVGFB}
-   F107DAY=${F107DAY:-$F107DAYFB}
-   KP3HR=${KP3HR:-$KP3HRFB}
-   AP3HR=${AP3HR:-$AP3HRFB}
-
-   #To avoid storm for now - storm may crash the model
-   if [ ${KP3HR} -ge 3 ]; then
-      KP3HR=3
-      AP3HR=12
-      echo 'KP3HR change to ' ${KP3HR}
-   fi
 
 
 cat > SMSnamelist <<EOF
