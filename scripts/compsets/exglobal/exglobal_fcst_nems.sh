@@ -1240,11 +1240,13 @@ if [ $IDEA = .true. ]; then
   if [ $INPUT_PARAMETERS = realtime ] ; then
     # copy in xml kp/f107
     XML_HOUR=`printf %02d $(($INI_HOUR / 3 * 3))` # 00 > 00, 01 > 00, 02 > 00, 03 > 03, etc.
-    if [ -e $WAMINDIR/wam_input_new-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ] ; then
-      ${NCP} $WAMINDIR/wam_input_new-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ./wam_input2.xsd
-      # convert to ascii
+    if [ -e $WAMINDIR/wam_input_new-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ] ; then # try new format
+      ${NLN} $WAMINDIR/wam_input_new-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ./wam_input2.xsd
       $BASE_NEMS/../scripts/parse_f107_xml/parse_new.py -s `$NDATE -36 $CDATE`
-      # now f107
+      ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
+    elif [ -e $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ] ; then # then go old format
+      ${NLN} $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ./wam_input2.xsd
+      $BASE_NEMS/../scripts/parse_f107_xml/parse_new.py -s `$NDATE -36 $CDATE`
       ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
     else
       if [ -e $COMOUT/wam_input_f107_kp.txt ] ; then
