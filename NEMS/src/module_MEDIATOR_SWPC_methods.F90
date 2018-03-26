@@ -3523,7 +3523,6 @@ contains
     integer :: localrc
     integer :: localDeCount, comp, compCount
     logical :: isSrcCart, isDstCart
-    logical, save :: first = .true.
     character(len=ESMF_MAXSTR) :: compNames(2)
 
     ! -- begin 
@@ -3544,16 +3543,6 @@ contains
         line=__LINE__,  &
         file=__FILE__,  &
         rcToReturn=rc)) return  ! bail out
-
-      ! -- initialize field to 1 (to be removed)
-      if (first) then
-        call ESMF_FieldFill(srcFieldComp(comp), dataFillScheme="one", rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        first = .false.
-      end if
 
       ! -- print diagnostic info
       call FieldPrintMinMax(srcFieldComp(comp), "pre  - src:" // trim(compNames(comp)), rc)
