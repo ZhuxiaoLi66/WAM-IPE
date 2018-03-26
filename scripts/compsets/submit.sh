@@ -63,7 +63,7 @@ export VERBOSE=YES
 if [ $? != 0 ]; then echo "forecast failed, exit"; exit; fi
 echo "fcst done"
 
-if [[ $((cycle+1)) -le $3 ]] ; then
+if [[ $((cycle+1)) -le ${3:-1} ]] ; then
 echo "resubmitting $1 for cycle $((cycle+1)) out of $3"
 cd $SCRIPTSDIR
 . $pwd/submit.sh $1 $((cycle+1)) $3
