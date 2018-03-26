@@ -45,7 +45,7 @@
       real (KIND=real_prec),intent(in) :: secs    ! ut in seconds
 !
 ! Local:
-      integer :: ihr,imn
+      integer :: ihr,imn,isec
       real :: sec,date,vp,xmlon, ! apex magnetic longitude
      |  sbsllat,    ! geographic latitude of subsolar point (degrees)
      |  sbsllon,    ! geographic longitude of subsolar point (degrees)
@@ -55,6 +55,7 @@
       ihr = int(secs/3600.)
       imn = int((secs - float(ihr)*3600.)/60.)
       sec = secs - float(ihr)*3600. - float(imn)*60.
+      isec = int(sec)
       
 !  calculate subsol point: given universal time
 !          input: iyr,iday,ihr,imn,sec
