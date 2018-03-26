@@ -657,7 +657,9 @@ if [ $gfsio_in = .true. ] ; then export GB=1 ; fi
 export IDEA=${IDEA:-.false.}
 export WAM_IPE_COUPLING=${WAM_IPE_COUPLING:-.false.}
 export HEIGHT_DEPENDENT_G=${HEIGHT_DEPENDENT_G:-.false.}
-export INPUT_PARAMETERS=${INPUT_PARAMETERS:-timeobs}
+export INPUT_PARAMETERS=${INPUT_PARAMETERS:-fixderive}
+export FIX_F107=${FIX_F107:-120.0}
+export FIX_KP=${FIX_KP:-3.0}
 export F107_KP_SIZE=${F107_KP_SIZE:-$((60*37+1))}
 export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-$((60*37+1))}
 export F107_KP_SKIP_SIZE=${F107_KP_SKIP_SIZE:-0}
