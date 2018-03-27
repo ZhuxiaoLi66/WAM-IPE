@@ -42,6 +42,8 @@
 !
 !   Apr 06 2012 Henry Juang, initial implement for nems
 !   Nov 20 2014 Jun   Wang,  change JULDAY to JULDAY_WAM
+!   Mar 18 2017 Zhuxiao Li and Tzu-Wei, add option to read the solar
+!   wind related driving parameteres from outside parameter file.
 !
 ! Author: A. Maute Dec 2003  am 12/30/03 
 !------------------------------------------------------------------------------ 
@@ -1040,6 +1042,18 @@
       angle = angle*rtd
       call adjust( angle )
       bt = sqrt( by*by + bz*bz )
+
+      if(debug) then
+       write(iulog,"(/,'efield prep_weimer:')")
+       write(iulog,"(/,'by code:')")
+       write(iulog,*)  '  Bz   =',bz
+       write(iulog,*)  '  By   =',by
+       write(iulog,*)  '  Bt   =',bt
+       write(iulog,*)  '  angle=',angle
+       write(iulog,*)  '  VSW  =',v_sw
+       write(iulog,*)  '  tilt =',tilt
+      end if
+
 !-------------------------------------------------------------------
 ! use month and day of month - calculated with average no.of days per month
 ! as in Weimer
@@ -1063,6 +1077,7 @@
 
       if(debug) then
        write(iulog,"(/,'efield prep_weimer:')")
+       write(iulog,"(/,'by reading in:')")
        write(iulog,*)  '  Bz   =',bz
        write(iulog,*)  '  By   =',by
        write(iulog,*)  '  Bt   =',bt
@@ -1523,6 +1538,7 @@
       real, parameter :: fac = 1./3.
       integer  :: ilon, ilat
       integer  :: ibnd, tw, hb1, hb2, lat_ind
+      integer  :: min_ilat 
       integer  :: j1, j2
       real :: a, b, lat, b1, b2
       real :: wrk1, wrk2
@@ -1567,10 +1583,13 @@
 	j1   = nmlath - hb1
 	hb2  = nmlath - (ibnd - tw)
 	j2   = nmlath - hb2
+        if (j2 < 0) j2 = 0              ! Tomoko's fix - j2 >= 0
 	wrk1 = pot_midlat(ilon,j1)
 	wrk2 = pot_highlats(ilon,j2)
-!        write(iulog,*) 'pot_all ',ilon,hb1,hb2,nmlath -ibnd,tw
-	do ilat = ibnd-tw,ibnd+tw
+        write(iulog,*) 'pot_all ',ilon,hb1,hb2,nmlath -ibnd,tw
+        min_ilat = ibnd-tw
+        if (min_ilat < 0) min_ilat = 0  ! Tomoko's fix
+        do ilat = min_ilat,ibnd+tw      ! do ilat = ibnd-tw,ibnd+tw
 	  lat_ind = nmlath - ilat
           potent(ilon,ilat) =  
      &    fac*((wrk1 + 2.*pot_midlat(ilon,ilat))*(b1 - a*lat_ind)  

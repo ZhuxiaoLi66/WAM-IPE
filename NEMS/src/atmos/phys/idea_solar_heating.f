@@ -6,7 +6,8 @@
 !               b) idea_solar_heating.f - new tiegcm, SRB +Lya +slant columns
 !               c) idea_solar_init.f    - time-inv fixed data and updated eff.
 !                                         with 3 options to treat solar drivers
-!
+! Feb 2018     Zhuxiao Li and Tzu-Wei Fang, reading the 24hr ave. kp
+!              (from driving parameter file) from idea_phys.f instead of kp. 
 ! Contains : idea_sheat
 !            presolar  
 !            solar_heat_dissociation_TIEGCM

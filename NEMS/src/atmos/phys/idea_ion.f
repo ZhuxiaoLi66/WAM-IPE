@@ -8,6 +8,8 @@
 ! Jul    2017   Zhuxiao Li, Rashid and Tim add the Joule heating factor(JH_fac) to 
 !               include the seasonal variation and semiannual variation of the
 !               Joule Heating.
+! Mar    2018   Zhuxiao Li and Tzu-Wei Fang add the new features to put
+! the driving parameters into the idea_geteb before call get_efield. 
 !====================================================================
 !=                    GetIonParams                      =
 !

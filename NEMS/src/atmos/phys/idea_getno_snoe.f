@@ -182,6 +182,9 @@
 !               (a) rad/deg (b) pr(cb) but expected in Pa (c) no-NO for lat > 80deg
 !               (d) dangerous interp-n and DATA for eofs etc...
 !
+! Mar 2018 Zhuxiao Li and Tzu-Wei Fang,read in the 24hr ave kp (kpa)
+! from driving parameters file instead of reading kp.
+!
 !       use idea_solar_input, only : F107 => wf107_s
 !       use idea_solar_input, only : kp => wkp_s
 !       use idea_solar, only       : amno
