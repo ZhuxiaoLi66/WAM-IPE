@@ -42,6 +42,8 @@
 !
 !   Apr 06 2012 Henry Juang, initial implement for nems
 !   Nov 20 2014 Jun   Wang,  change JULDAY to JULDAY_WAM
+!   Mar 18 2017 Zhuxiao Li and Tzu-Wei, add option to read the solar
+!   wind related driving parameteres from outside parameter file.
 !
 ! Author: A. Maute Dec 2003  am 12/30/03 
 !------------------------------------------------------------------------------ 
@@ -193,7 +195,7 @@
      &lat_sft = 54.	 ! shift of highlat_bnd to 54 deg
       integer :: ilat_sft        ! index of shift for high latitude boundary
       integer, parameter :: nmax_sin = 2 ! max. wave number to be represented
-      logical, parameter :: debug =.true.
+      logical, parameter :: debug =.false.
 !
       contains
 
@@ -1040,6 +1042,18 @@
       angle = angle*rtd
       call adjust( angle )
       bt = sqrt( by*by + bz*bz )
+
+      if(debug) then
+       write(iulog,"(/,'efield prep_weimer:')")
+       write(iulog,"(/,'by code:')")
+       write(iulog,*)  '  Bz   =',bz
+       write(iulog,*)  '  By   =',by
+       write(iulog,*)  '  Bt   =',bt
+       write(iulog,*)  '  angle=',angle
+       write(iulog,*)  '  VSW  =',v_sw
+       write(iulog,*)  '  tilt =',tilt
+      end if
+
 !-------------------------------------------------------------------
 ! use month and day of month - calculated with average no.of days per month
 ! as in Weimer
@@ -1063,6 +1077,7 @@
 
       if(debug) then
        write(iulog,"(/,'efield prep_weimer:')")
+       write(iulog,"(/,'by reading in:')")
        write(iulog,*)  '  Bz   =',bz
        write(iulog,*)  '  By   =',by
        write(iulog,*)  '  Bt   =',bt

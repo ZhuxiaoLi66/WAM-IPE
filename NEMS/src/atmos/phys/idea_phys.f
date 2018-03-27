@@ -310,7 +310,7 @@
         endif
 !
 
-!       if (me == 0 .and. kstep <= 1) then
+!        if (me == 0 .and. kstep <= 1) then
         if (me == 0) then
             print *
             print *, kdt_interval, interpolate_weight
