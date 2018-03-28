@@ -2842,17 +2842,18 @@ contains
      
   end subroutine NamespaceSetRemoteLevels
 
-  subroutine NamespaceSetRemoteLevelsFromField(name, state, fieldName, scale, offset, rc)
+  subroutine NamespaceSetRemoteLevelsFromField(name, state, fieldName, &
+    scale, offset, norm, rc)
     character(len=*), intent(in) :: name
     type(ESMF_State)             :: state
     character(len=*), intent(in) :: fieldName
-    real(ESMF_KIND_R8), optional, intent(in) :: scale, offset
+    real(ESMF_KIND_R8), optional, intent(in) :: scale, offset, norm
     integer,         intent(out) :: rc
 
     ! -- local variables
     logical            :: update
     integer            :: localDe, localDeCount, rank
-    real(ESMF_KIND_R8) :: scale_factor, add_offset
+    real(ESMF_KIND_R8) :: scale_factor, add_offset, div_by_norm
     real(ESMF_KIND_R8), dimension(:),     pointer :: fptr1d
     real(ESMF_KIND_R8), dimension(:,:),   pointer :: fptr2d
     real(ESMF_KIND_R8), dimension(:,:,:), pointer :: fptr3d
@@ -2873,6 +2874,7 @@ contains
     update = .false.
     scale_factor = 1._ESMF_KIND_R8
     add_offset   = 0._ESMF_KIND_R8
+    div_by_norm  = 1._ESMF_KIND_R8
     if (present(scale)) then
       scale_factor = scale
       update = .true.
@@ -2880,6 +2882,11 @@ contains
 
     if (present(offset)) then
       add_offset = offset
+      update = .true.
+    end if
+
+    if (present(norm)) then
+      div_by_norm = norm
       update = .true.
     end if
 
@@ -2903,6 +2910,7 @@ contains
               file=__FILE__)) &
               return  ! bail out
             fptr1d = scale_factor * fptr1d + add_offset
+            fptr1d = fptr1d / div_by_norm
           case(2)
             call ESMF_ArrayGet(localArray, localDe=localDe, farrayPtr=fptr2d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -2910,6 +2918,7 @@ contains
               file=__FILE__)) &
               return  ! bail out
             fptr2d = scale_factor * fptr2d + add_offset
+            fptr2d = fptr2d / div_by_norm
           case(3)
             call ESMF_ArrayGet(localArray, localDe=localDe, farrayPtr=fptr3d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -2917,6 +2926,7 @@ contains
               file=__FILE__)) &
               return  ! bail out
             fptr3d = scale_factor * fptr3d + add_offset
+            fptr3d = fptr3d / div_by_norm
           case default
             call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
               msg="Array rank can only be 1, 2, or 3", &

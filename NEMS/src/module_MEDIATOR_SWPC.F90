@@ -464,7 +464,7 @@ module module_MED_SWPC
       ! -- identify field providing time-changing vertical levels
 #ifdef LEGACY
       call NamespaceSetRemoteLevelsFromField("ATM", importState, "height", &
-        scale=1._ESMF_KIND_R8/1000.0, rc=rc)
+        norm=1000._ESMF_KIND_R8, rc=rc)
 #else
       call NamespaceSetRemoteLevelsFromField("ATM", importState, "height", &
         scale=1._ESMF_KIND_R8/earthRadius, offset=1._ESMF_KIND_R8, rc=rc)
