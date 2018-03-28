@@ -3003,14 +3003,13 @@ contains
 #ifdef LEGACY
         ! -- if using extrap_start_level, make sure auxfarray is from original field (no intermediate interpolation)
         ! -- use option "origin" in StateGetField
-          rt = auxfarray(i,extrap_start_level)  / auxNorm
-!         rt = auxfarray(i,ubound(auxfarray, dim=2)) / auxNorm
+          rt = auxfarray(i,extrap_start_level)
 #else
-          rt = auxfarray(i,ubound(auxfarray, dim=2)) / auxNorm
+          rt = auxfarray(i,ubound(auxfarray, dim=2))
 #endif
           call LogInterpolate(srcCoord(i,:), srcfarray(i,:), &
                               dstCoord(i,:), dstfarray(i,:), &
-                              rt=rt, rc=rc)
+                              rt=rt, ms=auxNorm, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
@@ -3297,13 +3296,14 @@ contains
 
 #else
   ! ---------- TEST
-  subroutine LogInterpolate(xs, ys, xd, yd, rt, rc)
+  subroutine LogInterpolate(xs, ys, xd, yd, rt, ms, rc)
     ! -- note: both xs and xd are assumed to be "normalized" heights
     ! --       x = 1 + z / earthRadius
     ! -- if absolute heights (km) are used, please set earthRadius = 1
     real(ESMF_KIND_R8), dimension(:), intent(in)  :: xs, ys, xd
     real(ESMF_KIND_R8), dimension(:), intent(out) :: yd
-    real(ESMF_KIND_R8), optional, intent(in) :: rt  ! reduced T = T / mass
+    real(ESMF_KIND_R8), optional, intent(in) :: rt  ! T at TOA
+    real(ESMF_KIND_R8), optional, intent(in) :: ms  ! mass
     integer, intent(out) :: rc
 
     ! -- local variables
@@ -3311,6 +3311,7 @@ contains
     real(ESMF_KIND_R8) :: hgt_prev, dist, H_prev, data_prev
     real(ESMF_KIND_R8) :: hgt_curr, H_avg, H_curr, data_curr
     real(ESMF_KIND_R8) :: R, g0, re
+    real(ESMF_KIND_R8) :: mass
 
     integer,            parameter :: extrap_start_level = 149
     real(ESMF_KIND_R8), parameter :: log_min = 1.0E-10
@@ -3337,6 +3338,8 @@ contains
     ! hgtbuf = xs
 
     if (present(rt)) then
+      mass = 1._ESMF_KIND_R8
+      if (present(ms)) mass = ms
       kk = 1
       do k = 1, nd
         do while (kk < np .and. xs(kk) < xd(k))
@@ -3346,13 +3349,13 @@ contains
 !         hgt_prev=re*(xs(extrap_start_level)-1)
           hgt_prev=xs(extrap_start_level)
           dist=re/(re+hgt_prev)
-          H_prev=R*rt/(g0*dist*dist)
+          H_prev=R*rt/(mass*g0*dist*dist)
           data_prev=ys(extrap_start_level)
           do l = k, nd
 !           hgt_curr=re*(xd(l)-1)
             hgt_curr=xd(l)
             dist=re/(re+hgt_curr)
-            H_curr=R*rt/(g0*dist*dist)
+            H_curr=R*rt/(mass*g0*dist*dist)
 
             ! Extrapolate data to this level
             H_avg=0.5*(H_prev+H_curr)
