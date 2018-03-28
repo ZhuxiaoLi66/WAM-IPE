@@ -824,7 +824,11 @@ module module_MEDSpaceWeather
   !wamfilename = 'wam3dgridnew_20160427.nc' ! The last version
 
   filename = 'wam2dmesh.nc'
-  minheight = 90
+
+!  Make min height a little lower to deal with small differences 
+!  in definition of height between fixed height grid and IPE cap.
+!  minheight = 90.0
+  minheight = 89.0
   maxheight = 800
   deg2rad = PI/180.0
 
@@ -986,7 +990,7 @@ module module_MEDSpaceWeather
   
   ! Create the 3D mesh with fixed height
   ! find the lower height level where height > minheight
-  do i=1,wamdims(3)
+  do i=2,wamdims(3)
      if (wamhgt(i) > minheight) then
     	startlevel = i-1
 	exit
