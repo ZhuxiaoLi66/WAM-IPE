@@ -8,13 +8,15 @@ TAG='V0.1'
 # Set the path to the base WAM-IPE directory (containing IPELIB)
 WAMIPEDIR=`pwd`/../..
 # Set the path to the directory where your IPE output can be found
-IPE_RUNDIR="/scratch3/NCEPDEV/swpc/noscrub/Joseph.Schoonover/model_outputs/Q2FY2018/march2013_dev_update_1-10-2018/"
+IPE_RUNDIR="/scratch4/NCEPDEV/stmp3/Adam.Kubaryk/march2013_nrf/"
 # Set the path to where you want the NetCDF output.
-OUTDIR="${IPE_RUNDIR}netcdf/"
+OUTDIR="$IPE_RUNDIR/netcdf/"
 # Set the path to where you want the eps files and the Latex file.
-PLOTDIR="${OUTDIR}plots/"
+PLOTDIR="$OUTDIR/plots/"
 # Set the full path to the restart directory with the grid files can be found.
 RESDIR="/scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/2013160300/grid_80x170/"
+# Set to "-p" or "--polar" for polar orthographic projection, leave blank as "" for global cylinder.
+PLOTTYPE="-p"
 # *************************************************** #
 
 # //////////////////////////////////////////////////////////////////////// #
@@ -90,7 +92,7 @@ module use -a /contrib/modulefiles
 module load anaconda
 #
 ## Run the matlab plotting script
-python plot.py --input_directory $OUTDIR --output_directory $PLOTDIR
+python plot.py --input_directory $OUTDIR --output_directory $PLOTDIR $PLOTTYPE
 
 ## Tar up the output directory
 #tar -cvzf ${PLOTDIR::-1}.tar.gz ${PLOTDIR}

@@ -76,7 +76,7 @@
 !     use cam_control_mod, only: magfield_fix_year
 !     use spmd_utils,      only: masterproc
 !nm20121003
-      USE efield !,ONLY:
+      USE efield_ipe !,ONLY:
       USE module_DerivPotential ,ONLY: DerivPotential
       USE module_GlobalElPotential ,ONLY:GlobalElPotential
       USE module_adj_S_a ,ONLY:adj_S_a

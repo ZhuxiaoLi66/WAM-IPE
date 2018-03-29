@@ -132,7 +132,7 @@
       subroutine idea_ion(pres,solhr,cospass,zg,grav,o_n,o2_n,n2_n,cp,       
      &  adu,adv,adt,dudt,dvdt,dtdt,rho,rlat,rlon,ix,im,levs,              
      &  dayno,utsec,sda,maglon,maglat,btot,dipang,essa,
-     &  f107, f107d, kp)
+     &  f107, f107d, kp, nhp, nhpi, shp, shpi, SPW_DRIVERS)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! driver      dtdt(i,k)=jh(i,k)/cp(i,k), dudt dvdt
 !              ion darge and Joule heating
@@ -141,6 +141,8 @@
       implicit none
       REAL  , INTENT(IN)   :: f107, f107d, kp  ! solar-geo inputs from different WAM applications
                                                ! CLIMATE-SWPC-RDATA, controlled in idea_phys
+      REAL  , INTENT(IN)   :: nhp, nhpi, shp, shpi ! solar-geo inputs from wam_f107_kp.tst
+      Character,INTENT(IN) :: SPW_DRIVERS      ! SPACE weather/climate driver
 !
 !      REAL, PARAMETER :: DTR=3.141592653/180.0
       REAL, PARAMETER :: pi = 3.141592653
@@ -205,20 +207,33 @@
 !      print *, 'vay-rho-ion',  maxval(rho)
 !      endif
       call GetIonParams(pres,
-     &   dayno,utsec,F107,KP,sda,sza,rlat,zg,grav,      
+!     &   dayno,utsec,F107,KP,sda,sza,rlat,zg,grav,      
+     &   dayno,utsec,F107,f107d,KP,NHP,NHPI,spw_drivers,sda,sza,rlat,zg,grav,      
      &   o_n, o2_n, n2_n,adu,adv,adt,rho,rlt,rlon,ix,im,levs,k91,       
      &   btot,dipang,maglon,maglat,essa,                                
      &   dudt,dvdt,jh) 
+
+!       print *, 'F107=  ', F107, 'F107d=  ', f107d
+!       print *, 'NHP=  ', NHP, 'NHPI=  ', NHPI
+
+
 ! update to ........ K/sec
       do i=1,im
 !   Joule heating factor to consider the seasonal variation and
 !   semiannual variation, Zhuxiao.Li
-         jh_fac = 2.25+0.75*tanh(2.*rlat(i))*cos((dayno+9.)*2.*pi/365.)                    
-     &   + 0.5*(1.+cos(4.*pi*(dayno-80.)/365.))
+!         jh_fac = 2.25+0.75*tanh(2.*rlat(i))*cos((dayno+9.)*2.*pi/365.)                    
+!     &   + 0.5*(1.+cos(4.*pi*(dayno-80.)/365.))
+
+!<<<<<<< HEAD
+         jh_fac = 2.25+0.5*tanh(2.*rlat(i))*cos((dayno+9.)*2.*pi/365.)                    
+     &                +0.5*(cos(4.*pi*(dayno-80.)/365.))
+!=======
+!         jh_fac = 2.35+0.4*tanh(2.*rlat(i))*cos((dayno+9.)*2.*pi/365.)                    
+!     &               + 0.4*(cos(4.*pi*(dayno-80.)/365.))
+!>>>>>>> 8f7db60904d812476a305b3f6c3dd69211f108f0
+
       do k=1,levs
-
            dtdt(i,k)=jh(i,k)*jh_fac/cp(i,k)
-
       enddo
       enddo
       return
@@ -226,7 +241,8 @@
       END SUBROUTINE idea_ion
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       SUBROUTINE GetIonParams(pres, 
-     &   dayno,utsec,f107,kp,sda,sza,rlat,ht,grav, 
+!     &   dayno,utsec,f107,kp,sda,sza,rlat,ht,grav, 
+     &   dayno,utsec,f107,f107d,kp,hp,hpi,spw_drivers,sda,sza,rlat,ht,grav, 
      &   o_n, o2_n, n2_n,adu,adv,adt,rho,rlt,rlon,ix,im,levs,lev1,      
      &   btot,dipang,maglon,maglat,essa,                                
      &   dudt,dvdt,jh) 
@@ -256,8 +272,9 @@
       REAL, INTENT(IN)     :: rho(ix,levs)  ! mass density (kg/m3)
       REAL, INTENT(IN)     :: ht(ix,levs)   ! geopotential height (m)
       REAL, INTENT(IN)     :: grav(ix,levs) !  gravity (m/s**2)
-      REAL, INTENT(IN)     :: f107 
-      REAL, INTENT(IN)     :: kp 
+      REAL, INTENT(IN)     :: f107, f107d, kp 
+      REAL, INTENT(IN)     :: hp, hpi
+      CHARACTER,INTENT(IN) :: spw_drivers
       REAL, INTENT(IN)     :: sda      ! solar declination angle (rad)
       REAL, INTENT(IN)     :: sza(im)  ! solar zenith angle (rad) 
       REAL, INTENT(IN)     :: rlt(im)  ! local time (rad) 
@@ -320,7 +337,7 @@
 !===================================================================
 ! VAY-2016: (im, ix) => (im)
 !
-      call idea_geteb(im, dayno,utsec,f107,kp, maglat,maglon,          
+      call idea_geteb(im, dayno,utsec,f107,f107d,kp,maglat,maglon,          
      &     essa,ee1,ee2)
 !     ee1=0.
 !     ee2=0.
@@ -336,8 +353,13 @@
 ! set the power index 1 to 10 eventually read in
 ! set the number of gigawatts of auroral power (used if activity level = 10)
 !
-       tiros_activity_level = tiros_activity_fixnam
-       GW = GW_fixnam
+      IF (trim(SPW_DRIVERS)=='swpc_fst') then
+         tiros_activity_level = hpi
+         GW = hp
+      ELSE          
+         tiros_activity_level = tiros_activity_fixnam
+         GW = GW_fixnam
+      ENDIF
 !
       DO i = 1,im 
 !
@@ -541,9 +563,9 @@
 
 ! idea
 !
-      subroutine idea_geteb(im, dayno,utsec,f107,kp,maglat,maglon,    
+      subroutine idea_geteb(im, dayno,utsec,f107,f107a,kp,maglat,maglon,    
      &   essa,ee1,ee2)
-      use efield         !  iday,iyear,iday_m,imo,f107d,by,bz,ut,v_sw     
+      use efield_wam      !  iday,iyear,iday_m,imo,f107d,by,bz,ut,v_sw     
 !
 ! vay-2016: another interpolation for the Electric fields
 !                           to model-based maglon-maglat  
@@ -558,7 +580,7 @@
       integer, intent(in) :: im  ! number of data points in efield 
       integer, intent(in) :: dayno  ! calender day
       real, intent(in)    :: utsec  ! second
-      real, intent(in)    :: f107  ! 
+      real, intent(in)    :: f107, f107a  ! 
       real, intent(in)    :: kp  ! 
       real, intent(in)    :: maglat(im)  ! magnetic latitude (rad)
       real, intent(in)    :: maglon(im)  ! magnetic longitude (rad)
@@ -583,7 +605,9 @@
 !
       if(utsec.ne.utsec_last) then
         utsec_last=utsec
-        f107d=f107
+!     use f107d directly from observation sheet, revised by Tzu-Wei and
+!     Zhuxiao 
+        f107d=f107a
         ut=utsec/3600.
         iday = dayno                   ! day of year
         imo=idate(2)

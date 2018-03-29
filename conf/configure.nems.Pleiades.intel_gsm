@@ -42,15 +42,9 @@ CRTMDIR=/nobackupp8/dtkleist/save/crtm/CRTM_REL-2.2.1/crtm_v2.2.1/lib
 NETCDF_INC   = -I${NETCDF}/include
 NETCDF_LIB   = -L${NETCDF}/lib -lnetcdf -lnetcdff
 
-NEMSIO_INC   = -I${LIBDIR}/incmod/nemsio_v2.2.1
-NEMSIO_LIB   = -L${LIBDIR} -lnemsio_v2.2.1
-
-BACIO_LIB    = -L${LIBDIR} -lbacio_v2.0.1_4
-W3_LIB       = -L${LIBDIR} -lw3nco_v2.0.6_d -lw3emc_v2.2.0_d
-SP_LIB       = -L${LIBDIR} -lsp_v2.0.2_d
 SYS_LIB      =
  
-EXTLIBS      = $(NEMSIO_LIB) $(BACIO_LIB) $(W3_LIB) $(SP_LIB) $(NETCDF_LIB) $(ESMF_LIB) $(SYS_LIB) -lm
+EXTLIBS      = $(NEMSIO_LIB) $(BACIO_LIB4) $(W3NCO_LIBd) $(W3EMC_LIBd) $(SP_LIBd) $(NETCDF_LIB) $(ESMF_LIB) $(SYS_LIB) -lm
 
 ## for the post quilting option
 POSTMOD     = ${POSTDIR}/incmod/post_4
@@ -83,7 +77,7 @@ FREE         = -free
 FIXED        = -fixed
 R8           = -r8
 
-FINCS        = $(ESMF_INC) $(NEMSIO_INC) $(NETCDF_INC)
+FINCS        = $(ESMF_INC) -I$(NEMSIO_INC) $(NETCDF_INC)
 #TRAPS        = -g -fno-inline -no-ip -traceback -ftrapuv -fpe0 -ftz -check all -check noarg_temp_created -fp-stack-check
 
 FFLAGS       = $(TRAPS) $(FINCS) -fp-model strict

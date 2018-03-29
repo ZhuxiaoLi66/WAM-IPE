@@ -1,3 +1,5 @@
+!nm20170427: implement gradually shift from msis to wam
+! DATE: 08 September, 2011
 !********************************************
 !***      Copyright 2011 NAOMI MARUYAMA   ***
 !***      ALL RIGHTS RESERVED             ***
@@ -13,11 +15,11 @@
       MODULE module_NEUTRAL_MKS            
 
       USE module_precision
-      USE module_IPE_dimension, ONLY: NMP, NLP
-      USE module_FIELD_LINE_GRID_MKS, ONLY: ON_m3, O2N_m3, N2N_m3, HN_m3, HE_m3, N4S_m3, TN_k, TINF_k, Un_ms1, &
-                                            Vn_ms1_4output
-
-      USE module_input_parameters, ONLY : mesh_height_max
+      USE module_IPE_dimension
+      USE module_FIELD_LINE_GRID_MKS
+      USE module_input_parameters
+      USE module_unit_conversion
+      USE module_physical_constants
 
       IMPLICIT NONE
 
@@ -27,20 +29,12 @@
 
       CONTAINS
 !---------------------------
-      subroutine neutral (utime, start_time) 
+      subroutine neutral (utime_local, start_time) 
 
-      USE module_IPE_dimension, ONLY: IPDIM
-      USE module_FIELD_LINE_GRID_MKS, ONLY : plasma_grid_3d, plasma_grid_Z, apexD, &
-                                             JMIN_IN, JMAX_IS, east, north, up, IGCOLAT, IGLON, WamField
-
-      USE module_physical_constants, ONLY: pi,zero,earth_radius,g0,gscon,massn_kg
-      USE module_input_parameters, ONLY: F107D,F107AV,AP,NYEAR,NDAY,mpstop, sw_neutral,simulation_is_warm_start 
-
-      USE module_unit_conversion, ONLY: M_TO_KM
 
       implicit none
 
-      INTEGER(KIND=int_prec), INTENT(in) :: utime  !universal time[sec]
+      INTEGER(KIND=int_prec), INTENT(in) :: utime_local  !universal time[sec]
       INTEGER(KIND=int_prec), INTENT(in) :: start_time
 
       integer :: npts  !=IPDIM
@@ -72,14 +66,28 @@
 
 !------
 
+      if ( sw_ctip_input ) then
+        LPI = INT( ( utime_local - utime0LPI ) / real(input_params_interval) ) + 1 + input_params_begin
+      else
+        LPI=1
+      end if
+      f107D_dum  = F107_new(lpi)
+      f107A_dum  = F107d_new(lpi)
+      AP_dum(1) = apa_eld(lpi)
+      AP_dum(2) =  ap_eld(lpi)
+      AP_dum(3) =  ap_eld(lpi-INT( 3.*60*60/input_params_interval))
+      AP_dum(4) =  ap_eld(lpi-INT( 6.*60*60/input_params_interval))
+      AP_dum(5) =  ap_eld(lpi-INT( 9.*60*60/input_params_interval))
+      AP_dum(6) = apa_eld(lpi-INT(12.*60*60/input_params_interval))
+      AP_dum(7) = apa_eld(lpi-INT(36.*60*60/input_params_interval))
+      ut_hour = REAL(utime_local)/3600. !convert from sec to hours
+     
+
+
 !sw_neutral
 !1: IPE coupled to WAM
 !3: IPE utilizing MSIS (ie, standalone mode).
 
-      f107D_dum  = F107D
-      f107A_dum  = F107AV
-      AP_dum(1:7)= AP(1:7)
-      ut_hour = REAL(utime)/3600. !convert from sec to hours
 
 if (sw_neutral.eq.1) then
 
@@ -116,7 +124,7 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
                  , tinf_k_dummy(IN:IS) &
                  , Vn_ms1_dummy(1:3,1:NPTS))
 
-        if( utime == start_time )then
+        if( utime_local == start_time )then
         
           ! At the first timestep - the geographic wind comes from the value read in from
           ! the plasma parameters file....
@@ -129,7 +137,7 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
 
         endif
 
-        if( simulation_is_warm_start .or. utime > start_time )then
+        if( simulation_is_warm_start .or. utime_local > start_time )then
 
           midpoint = IN + (IS-IN)/2
 

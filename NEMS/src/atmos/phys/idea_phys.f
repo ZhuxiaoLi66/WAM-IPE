@@ -1,4 +1,4 @@
-!
+
 ! WAM-IPE Physics Driver
 !
       subroutine idea_phys(im,ix,levs,prsi,prsl,                        
@@ -55,7 +55,10 @@
       use idea_composition, only : nlev_h2o,nlevc_h2o, nlev_co2
       use idea_composition, only : mmr_min, amo, amo2, amo3, amn2
       use wam_ion,          only : idea_ion
-      use  wam_f107_kp_mod, only : f107_wy, kp_wy, kdt_3h
+!     use wam_f107_kp_mod,  only : f107_wy, kp_wy, kdt_interval, interpolate_weight, kpa_wy, f107d_wy, hp_wy, hpi_wy 
+      use wam_f107_kp_mod,  only : f107_wy, kp_wy, kdt_interval, interpolate_weight, kpa_wy, f107d_wy, nhp_wy, 
+     &                             shpi_wy, shp_wy, nhpi_wy, 
+     &                             swbz_wy, swvel_wy, swbt_wy, swang_wy 
 
 !     Changed by Zhuxiao.Li(05/2017) for back to the path to read in F10.7 and Kp
 !     from solar_in namelist instead of from wam_f107_kp_mod.f
@@ -137,7 +140,8 @@
       integer, parameter  :: ntrac_i=2                  ! number of 2 WAM chem. tracers (O-O2)
 !
 !     real    :: f107_curdt, f107d_curdt, kp_curdt, f107a_fix    
-      real    :: f107_curdt, f107d_curdt, kp_curdt    
+      real    :: f107_curdt, f107d_curdt, kp_curdt, kpa_curdt, nhp_curdt, nhpi_curdt
+      real    :: swbz_curdt, swvel_curdt, swbt_curdt, swang_curdt, shp_curdt, shpi_curdt
       integer :: Mjdat(ndwam)                           ! IDAT_WAM + FHOUR
       real    :: Hcur                                   !  current hour+min+sec real 
 !
@@ -209,9 +213,28 @@
 ! option 1:  SPW_DRIVERS ='swpc_fst'
 !
        if (trim(SPW_DRIVERS)=='swpc_fst') then
-          f107_curdt = f107_wy(kdt_3h)
-          kp_curdt   = kp_wy(kdt_3h)
-          f107d_curdt = f107_curdt
+          f107_curdt  = f107_wy (kdt_interval) * interpolate_weight  + f107_wy (kdt_interval+1) * (1-interpolate_weight)
+          kp_curdt    = kp_wy   (kdt_interval) * interpolate_weight  + kp_wy   (kdt_interval+1) * (1-interpolate_weight)
+          f107d_curdt = f107d_wy(kdt_interval) * interpolate_weight  + f107d_wy(kdt_interval+1) * (1-interpolate_weight)
+          kpa_curdt   = kpa_wy  (kdt_interval) * interpolate_weight  + kpa_wy  (kdt_interval+1) * (1-interpolate_weight)
+          nhp_curdt   = nhp_wy  (kdt_interval) * interpolate_weight  + nhp_wy  (kdt_interval+1) * (1-interpolate_weight)
+          nhpi_curdt  = nhpi_wy (kdt_interval) * interpolate_weight  + nhpi_wy (kdt_interval+1) * (1-interpolate_weight)
+          shp_curdt   = shp_wy  (kdt_interval) * interpolate_weight  + shp_wy  (kdt_interval+1) * (1-interpolate_weight)
+          shpi_curdt  = shpi_wy (kdt_interval) * interpolate_weight  + shpi_wy (kdt_interval+1) * (1-interpolate_weight)
+          swbt_curdt  = swbt_wy (kdt_interval) * interpolate_weight  + swbt_wy (kdt_interval+1) * (1-interpolate_weight)
+          swang_curdt = swang_wy(kdt_interval) * interpolate_weight  + swang_wy(kdt_interval+1) * (1-interpolate_weight)
+          swvel_curdt = swvel_wy(kdt_interval) * interpolate_weight  + swvel_wy(kdt_interval+1) * (1-interpolate_weight)
+          swbz_curdt  = swbz_wy (kdt_interval) * interpolate_weight  + swbz_wy (kdt_interval+1) * (1-interpolate_weight)
+       else
+          kpa_curdt   = 0.0
+          shp_curdt   = 0.0
+          shpi_curdt  = 0.0
+          nhp_curdt   = 0.0
+          nhpi_curdt  = 0.0
+          swbt_curdt  = 0.0
+          swang_curdt = 0.0
+          swvel_curdt = 0.0
+          swbz_curdt  = 0.0
        endif
 !===============================================
 ! option 2:  SPW_DRIVERS ='sair_wam', only year of 2012
@@ -249,6 +272,7 @@
 !for now fixed
             f107_curdt  = f107_fix
             kp_curdt    = kp_fix
+            kpa_curdt   = kp_fix
             f107d_curdt = f107a_fix
 !
       ENDIF     !'sair_wam'
@@ -259,6 +283,7 @@
 !          call fix_spweather_data
           f107_curdt  = f107_fix
           kp_curdt    = kp_fix
+          kpa_curdt    = kp_fix
           f107d_curdt = f107a_fix
        endif
 !
@@ -271,22 +296,26 @@
 !         
 !         CALL solar_waccmx_advance(mpi_id, Mjdat, Hcur, Kstep)   !wf107_s,  wkp_s
 !
-!         f107_curdt  =wf107_s
+!         f107_curdt  = wf107_s
 !         kp_curdt    = wkp_s
 !         f107d_curdt = wf107a_s
 !
 ! For standard WAM-IPE version, fixed values from "solar_in" namelist
 !
-!          call fix_spweather_data
+!         call fix_spweather_data
           f107_curdt = f107_fix
           kp_curdt   = kp_fix
+          kpa_curdt   = kp_fix
           f107d_curdt = f107a_fix
         endif
 !
 
-         if (me == 0 .and. kstep <= 1) then
+       if (me == 0 .and. kstep <= 1) then
+!         if (me == 0) then
             print *
-            print *, f107_curdt, kp_curdt, 'F107-kp-VAY'
+            print *, f107_curdt, f107d_curdt, kp_curdt, kpa_curdt, nhp_curdt, nhpi_curdt, interpolate_weight
+            print *, swbt_curdt, swang_curdt, swvel_curdt, swbz_curdt, shp_curdt, shpi_curdt, 'f107-kp data'
+            print *, 'idea_phys'
 !           print *, 'VAY-GW:',trim(IMPL_UNIF_GW)
             print *
             print *, 'ID-phys SPW-drivers option: ', trim(SPW_DRIVERS)
@@ -440,7 +469,7 @@
 ! 
       call idea_sheat(im,ix,levs,adt,dtRad,cospass,o_n,o2_n,o3_n,n2_n,      
      &                rho, cp,lat,dayno,prsl,zg,grav,am,maglat,dt6dt,
-     &    f107_curdt, f107d_curdt, kp_curdt)
+     &                f107_curdt, f107d_curdt, kpa_curdt)
 
 ! Merge the  IPE back coupling WAM dtrad array into WAM.
 !-------------------------------------------------------
@@ -519,7 +548,8 @@
       call idea_ion(prsl, solhr,cospass,zg, grav, o_n,o2_n,n2_n,cp,
      &              adu,adv,adt,dudt,dvdt,dtdt,rho,xlat,xlon,ix,im,levs,
      &              dayno,utsec,sda,maglon,maglat,btot,dipang,essa,
-     &              f107_curdt, f107d_curdt, kp_curdt)
+     &              f107_curdt, f107d_curdt, kp_curdt, nhp_curdt, 
+     &              nhpi_curdt, shp_curdt, shpi_curdt, SPW_DRIVERS)
 ! Merge the  IPE back coupling WAM dudt, dvdt and dtdt arrays into WAM.
 !----------------------------------------------------------------------
       IF(ipe_to_wam_coupling) THEN

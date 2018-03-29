@@ -28,7 +28,7 @@
 ! Author: A. Maute Dec 2003  am 12/16/03
 !-----------------------------------------------------------------
 !nm20121003
-      USE efield !,ONLY:
+      USE efield_ipe !,ONLY:
 
       integer  :: i, j, ip1f, ip2f, ip3f
       real :: coslm, r_t, fac, wrk
