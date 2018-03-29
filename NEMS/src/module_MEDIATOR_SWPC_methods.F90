@@ -3587,6 +3587,9 @@ contains
     ! -- perform regrid
     call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
       zeroregion=ESMF_REGION_SELECT, &
+#ifdef BFB_REGRID
+      termorderflag=ESMF_TERMORDER_SRCSEQ, &
+#endif
       routehandle=rh % rh, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__,  &
@@ -4565,6 +4568,9 @@ contains
     type(ESMF_StateIntent_flag) :: stateIntent
     character(len=ESMF_MAXSTR)  :: srcName, dstName
     integer                     :: localrc
+#ifdef BFB_REGRID
+    integer                     :: srcTermProcessing
+#endif
 
     ! -- begin
     if (present(rc)) rc = ESMF_SUCCESS
@@ -4628,12 +4634,21 @@ contains
                   rHandle % dstState => r
                   nullify(rHandle % next)
 
+#ifdef BFB_REGRID
+                  srcTermProcessing = 0
+                  write(6,'(" - RHStore: start working on RH ...",a, "(srcTermProcessing = ",i0,")")') &
+                    trim(rHandle % label), srcTermProcessing
+#else
                   write(6,'(" - RHStore: start working on RH ...",a)') trim(rHandle % label)
+#endif
                   call ESMF_FieldRegridStore(srcField, dstField, &
                     regridmethod   = ESMF_REGRIDMETHOD_BILINEAR, &
                     unmappedaction = ESMF_UNMAPPEDACTION_IGNORE, &
                     polemethod     = ESMF_POLEMETHOD_NONE,       &
                     lineType       = ESMF_LINETYPE_GREAT_CIRCLE, &
+#ifdef BFB_REGRID
+                    srcTermProcessing = srcTermProcessing, &
+#endif
                     routehandle=rHandle % rh, rc=localrc)
                   if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
                     line=__LINE__,  &

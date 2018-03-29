@@ -272,6 +272,7 @@ endif
 CPPFLAGS += $(DEP_FRONTS)
 CPPFLAGS += -DESMF_NETCDF
 CPPFLAGS += -DNEW_WAY_VECTOR    # enables vector rotation in SpaceWeather mediator
+CPPFLAGS += -DBFB_REGRID        # ensure bit-for-bit reproducibility of regridding results between different runs
 
 TARGET = ../exe/NEMS.x
 

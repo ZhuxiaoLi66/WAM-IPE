@@ -446,8 +446,10 @@ module module_MEDSpaceWeather
     real(ESMF_KIND_R8)   :: starttime, endtime, timesend(1), timereport(1)
     type(InternalState)  :: is
     real(ESMF_KIND_R8), pointer :: fptr(:)
+#ifdef BFB_REGRID
+    integer              :: srcTermProcessing
+#endif
 
-    
 
     rc = ESMF_SUCCESS
 
@@ -634,11 +636,20 @@ module module_MEDSpaceWeather
       call ESMF_VMBarrier(vm)
       call ESMF_VMWTime(starttime)
 #endif
+#ifdef BFB_REGRID
+      srcTermProcessing = 0
+      if (is%wrap%PetNo==0) then
+         print *, 'Computing RegridStore WAM->IPE with srcTermProcessing = ',srcTermProcessing
+      endif
+#endif
       call ESMF_FieldRegridStore(wamField, ipeField, &
        	 unmappedaction =ESMF_UNMAPPEDACTION_IGNORE, &
 	 regridmethod = ESMF_REGRIDMETHOD_BILINEAR, &
 	 polemethod = ESMF_POLEMETHOD_NONE, &
          lineType = ESMF_LINETYPE_GREAT_CIRCLE, &
+#ifdef BFB_REGRID
+         srcTermProcessing = srcTermProcessing, &
+#endif
 	 routehandle = is%wrap%routehandle, &
 	 rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -1880,6 +1891,9 @@ subroutine RunRegrid(model, importState, exportState, rc)
 
         ! Regrid!!
         call ESMF_FieldRegrid(wamfield, ipefield, is%wrap%routehandle, &
+#ifdef BFB_REGRID
+               termorderflag=ESMF_TERMORDER_SRCSEQ, &
+#endif
 	       zeroregion=ESMF_REGION_SELECT, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
@@ -1936,6 +1950,9 @@ subroutine RunRegrid(model, importState, exportState, rc)
    call ESMF_FieldRegrid(is%wrap%wam_wind_3Dcart_vec, &
                          is%wrap%ipe_wind_3Dcart_vec, &
                          is%wrap%routehandle, &
+#ifdef BFB_REGRID
+                         termorderflag=ESMF_TERMORDER_SRCSEQ, &
+#endif
                          zeroregion=ESMF_REGION_SELECT, rc=rc)
    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
@@ -1958,6 +1975,9 @@ subroutine RunRegrid(model, importState, exportState, rc)
    call ESMF_FieldRegrid(is%wrap%wam_north, &
                          ipe_north, &
                          is%wrap%routehandle, &
+#ifdef BFB_REGRID
+                         termorderflag=ESMF_TERMORDER_SRCSEQ, &
+#endif
                          zeroregion=ESMF_REGION_SELECT, rc=rc)
    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
@@ -1968,6 +1988,9 @@ subroutine RunRegrid(model, importState, exportState, rc)
    call ESMF_FieldRegrid(is%wrap%wam_east, &
                          ipe_east, &
                          is%wrap%routehandle, &
+#ifdef BFB_REGRID
+                         termorderflag=ESMF_TERMORDER_SRCSEQ, &
+#endif
                          zeroregion=ESMF_REGION_SELECT, rc=rc)
    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
