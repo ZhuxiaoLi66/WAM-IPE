@@ -1251,7 +1251,7 @@ if [ $IDEA = .true. ]; then
     fi
   else
     # work from the database
-    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((36+ 10#$FHMAX)) -s `$NDATE -36 $CDATE` -p $PARAMETER_PATH
+    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((36+ 10#$FHMAX - 10#$FHROT)) -s `$NDATE -36 $FDATE` -p $PARAMETER_PATH
     if [ ! -e wam_input_f107_kp.txt ] ; then
        echo "failed, no f107 file" ; exit 1
     else
