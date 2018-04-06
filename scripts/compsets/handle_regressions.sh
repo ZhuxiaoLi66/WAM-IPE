@@ -36,12 +36,12 @@ model_plots(){
   mkdir -p /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/${HASHID}
   
   # Do the polar plots for IPE
-  sed -i '"/PLOTDIR/c\PLOTDIR=/scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/'${HASHID}'/polar_plots/"' ../../IPELIB/scripts/Convert_mpi.batch
+  sed -i '"/PLOTDIR/c\PLOTDIR=/scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/'${CONFIG_FILE}'/'${HASHID}'/ipe/polar_plots/"' ../../IPELIB/scripts/Convert_mpi.batch
   sed -i '/PLOTTYPE/c\PLOTTYPE="-p"' ../../IPELIB/scripts/Convert_mpi.batch
   ../../IPELIB/scripts/Convert_mpi.batch
   
   # Do the mercator plots for IPE
-  sed -i '"/PLOTDIR/c\PLOTDIR=/scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/'${HASHID}'/mercator_plots/"' ../../IPELIB/scripts/Convert_mpi.batch
+  sed -i '"/PLOTDIR/c\PLOTDIR=/scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/'${CONFIG_FILE}'/'${HASHID}'/ipe/mercator_plots/"' ../../IPELIB/scripts/Convert_mpi.batch
   sed -i '/PLOTTYPE/c\PLOTTYPE=""' ../../IPELIB/scripts/Convert_mpi.batch
   ../../IPELIB/scripts/Convert_mpi.batch
 
