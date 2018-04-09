@@ -1,4 +1,5 @@
       subroutine gws5(iyd,sec,alt,glat,glong,stl,f107a,f107,ap,w) 
+
 !      horizontal wind model hwm93 covering all altitude regions        
 !      a. e. hedin  (1/25/93) (4/9/93)                                  
 !      calling argument list made similar to gts5 subroutine for        
