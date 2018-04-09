@@ -137,28 +137,27 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
 
         endif
 
+        midpoint = IN + (IS-IN)/2
+
+        do ipts=in,midpoint
+           if ( plasma_grid_Z(ipts,lp)<=mesh_height_max .and. mesh_height_max<plasma_grid_Z(ipts+1,lp) ) then
+              ihTopN=ipts
+              exit
+           endif
+           ! if midpoint < mesh_height_max[km]
+           if ( ipts==midpoint) ihTopN = midpoint
+        end do 
+        
+        do ipts=is,midpoint, -1
+           if ( plasma_grid_Z(ipts,lp)<=mesh_height_max .and. mesh_height_max<plasma_grid_Z(ipts-1,lp) ) then
+              ihTopS=ipts
+              exit
+           endif
+           ! if midpoint < mesh_height_max[km]
+           if ( ipts==midpoint) ihTopS = midpoint
+        end do       
+
         if( simulation_is_warm_start .or. utime_local > start_time )then
-
-          midpoint = IN + (IS-IN)/2
-
-         do ipts=in,midpoint
-            if ( plasma_grid_Z(ipts,lp)<=mesh_height_max .and. mesh_height_max<plasma_grid_Z(ipts+1,lp) ) then
-               ihTopN=ipts
-               exit
-            endif
-            ! if midpoint < mesh_height_max[km]
-            if ( ipts==midpoint) ihTopN = midpoint
-         end do 
-         
-         do ipts=is,midpoint, -1
-            if ( plasma_grid_Z(ipts,lp)<=mesh_height_max .and. mesh_height_max<plasma_grid_Z(ipts-1,lp) ) then
-               ihTopS=ipts
-               exit
-            endif
-            ! if midpoint < mesh_height_max[km]
-            if ( ipts==midpoint) ihTopS = midpoint
-         end do       
-
 
 !---------------------------------------------------------------------------
 ! The WamField array has indices of:

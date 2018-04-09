@@ -23,3 +23,4 @@ module_read_plasma_grid_global ../main/module_read_plasma_grid_global_sms.f.tmp
 module_sub_PLASMA ../plasma/module_sub_plasma.f90
 module_sunloc ../eldyn/module_sunloc.f
 module_neutral_mks ./module_neutral_sms.f.tmp
+hwm ./hwm14.f90
