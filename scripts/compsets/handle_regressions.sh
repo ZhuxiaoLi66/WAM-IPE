@@ -1,13 +1,6 @@
 #!/bin/bash
 
 
-export CONFIG_FILE='coupled_20130316.config'
-export NCYCLES=3
-
-
-
-#
-
 
 setup(){
   HASHID=$(git log | grep commit | head -1 | awk -F " " '{print substr($2,1,8)}')
