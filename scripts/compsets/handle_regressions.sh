@@ -5,8 +5,8 @@
 setup(){
   HASHID=$(git log | grep commit | head -1 | awk -F " " '{print substr($2,1,8)}')
   echo 'Model Hash ID :' ${HASHID}
-  STMPDIR='/scratch4/NCEPDEV/stmp4/${USER}/${HASHID}'
-  PTMPDIR='/scratch4/NCEPDEV/stmp3/${USER}/${HASHID}'
+  STMPDIR="/scratch4/NCEPDEV/stmp4/${USER}/${HASHID}"
+  PTMPDIR="/scratch4/NCEPDEV/stmp3/${USER}/${HASHID}"
 }
 
 run_model(){
@@ -38,6 +38,27 @@ model_plots(){
   sed -i '/PLOTTYPE/c\PLOTTYPE=""' ../../IPELIB/scripts/Convert_mpi.batch
   ../../IPELIB/scripts/Convert_mpi.batch
 
+}
+
+model_runtimes(){
+
+  nProc=$(ls ${STMPDIR}/PET*.ESMF_LogFile | wc -l)
+  
+  echo -n "" > timepet.out 
+  for petfile in $(ls ${STMPDIR}/PET300.ESMF_LogFile)
+  do
+
+    datestr=''
+    grep sub-update_IPE\ finished ${petfile} | while read -r line ; do
+
+      if [[ -n $datestr ]]; then
+        ./timepet.py "${line:0:15}" "$datestr" >> timepet.out
+      fi
+      datestr=${line:0:15}
+
+    done
+
+  done
 }
 
 # ----- Parse through command line options ----- #
@@ -111,7 +132,8 @@ if [ "${HELP}" = "no" ]; then
   fi
 
   if [ "${PLOT}" = "yes" ]; then
-    model_plots
+#    model_plots
+    model_runtimes
   fi
    
 fi
