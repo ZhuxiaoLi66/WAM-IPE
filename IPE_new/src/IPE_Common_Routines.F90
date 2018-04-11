@@ -2,6 +2,7 @@ MODULE IPE_Common_Routines
 
 USE IPE_Precision
 
+USE netcdf
 
 IMPLICIT NONE
 
@@ -32,5 +33,14 @@ CONTAINS
   
   END FUNCTION NewUnit
 
+  SUBROUTINE Check(status)
+    IMPLICIT NONE
+    INTEGER, INTENT (in) :: status
+    
+     IF(status /= nf90_noerr) THEN 
+       PRINT *, trim(nf90_strerror(status))
+       STOP "NetCDF Error, Stopped"
+     ENDIF
+  END SUBROUTINE Check 
 
 END MODULE IPE_Common_Routines

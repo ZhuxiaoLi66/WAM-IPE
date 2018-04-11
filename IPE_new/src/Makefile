@@ -37,18 +37,21 @@ endif
 libnrlmsis.a:
 	make --directory=./msise00/ libnrlmsis.a
 
+# FLIP Library
 
+
+# IPE Objects
 IPE_Precision.o : IPE_Precision.F90
 	${FC} ${CPPFLAGS} -c IPE_Precision.F90 -o $@
 
 IPE_Common_Routines.o : IPE_Precision.o IPE_Common_Routines.F90
-	${FC} ${CPPFLAGS} -c IPE_Common_Routines.F90 -o $@
+	${FC} ${CPPFLAGS} -c IPE_Common_Routines.F90 ${NCLIB} ${NCINC} -o $@
 
 IPE_Constants_Dictionary.o : IPE_Precision.o IPE_Constants_Dictionary.F90 
 	${FC} ${CPPFLAGS} -c IPE_Constants_Dictionary.F90 -o $@
 
 IPE_Grid_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Common_Routines.o IPE_Grid_Class.F90
-	${FC} ${CPPFLAGS} -c IPE_Grid_Class.F90 -o $@
+	${FC} ${CPPFLAGS} -c IPE_Grid_Class.F90 ${NCLIB} ${NCINC} -o $@
 
 IPE_Neutrals_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class.o IPE_Neutrals_Class.F90
 	${FC} ${CPPFLAGS} ${OPT} -c IPE_Neutrals_Class.F90 -o $@
