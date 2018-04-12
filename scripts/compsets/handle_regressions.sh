@@ -31,14 +31,14 @@ model_plots(){
   CONFIG=$( echo ${CONFIG_FILE} | awk -F "." '{print $1}' )
   
   # Do the polar plots for IPE
-  sed -i '/PLOTDIR=/c\PLOTDIR="/scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/'${HASHID}'/'${CONFIG}'/ipe/polar_plots/"' ../../IPELIB/scripts/Convert_mpi.batch
-  sed -i '/PLOTTYPE=/c\PLOTTYPE="-p"' ../../IPELIB/scripts/Convert_mpi.batch
-  ../../IPELIB/scripts/Convert_mpi.batch
+  sed -i '/PLOTDIR=/c\PLOTDIR="/scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/'${HASHID}'/'${CONFIG}'/ipe/polar_plots/"' ./Convert_mpi.batch
+  sed -i '/PLOTTYPE=/c\PLOTTYPE="-p"' ./Convert_mpi.batch
+  ./Convert_mpi.batch
   
 #  # Do the mercator plots for IPE
-  sed -i '/PLOTDIR=/c\PLOTDIR="/scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/'${HASHID}'/'${CONFIG}'/ipe/polar_plots/"' ../../IPELIB/scripts/Convert_mpi.batch
-  sed -i '/PLOTTYPE=/c\PLOTTYPE=""' ../../IPELIB/scripts/Convert_mpi.batch
-  ../../IPELIB/scripts/Convert_mpi.batch
+#  sed -i '/PLOTDIR=/c\PLOTDIR="/scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/'${HASHID}'/'${CONFIG}'/ipe/mercator_plots/"' ./Convert_mpi.batch
+#  sed -i '/PLOTTYPE=/c\PLOTTYPE=""' ./Convert_mpi.batch
+#  ./Convert_mpi.batch
 
 }
 
@@ -129,6 +129,21 @@ if [ "${HELP}" = "yes" ]; then
   echo '        Only does the plotting of model output. Can only be run'
   echo '        after forecast simulations have been completed'   
   echo ' '
+  echo ' --------------------------------------------------------------------- '
+  echo ' '
+  echo ' Suggested Usage : '
+  echo '   (1) Run the coupled_20130316 test case for five cycles. This attempts'
+  echo '       5 days of model forecasts through 1 day forecasts with restarts. '
+  echo ' '
+  echo '         ./handle_regressions.sh -r coupled_20130316.config             '
+  echo ' '
+  echo '   (2) Once the simulations are complete, you can generate the standard '
+  echo '       set of plots for later inspection'
+  echo ' '
+  echo '         ./handle_regressions.sh -r coupled_20130316.config -p          '
+  echo ' '
+  echo ' --------------------------------------------------------------------- '
+
 fi
 
 # ----- Parse through command line options ----- #
