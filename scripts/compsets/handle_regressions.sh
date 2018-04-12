@@ -24,18 +24,20 @@ model_plots(){
   cp ${STMPDIR}/IPE.inp ${PTMPDIR}
   
   # Set the directory where IPE output is located for Convert_mpi.batch to make plots
-  sed -i '/IPE_RUNDIR/c\IPE_RUNDIR="'${PTMPDIR}'"' ../../IPELIB/scripts/Convert_mpi.batch
+  sed -i '/IPE_RUNDIR=/c\IPE_RUNDIR="'${PTMPDIR}/'"' ../../IPELIB/scripts/Convert_mpi.batch
   
   mkdir -p /scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/${HASHID}
+
+  CONFIG=$( echo ${CONFIG_FILE} | awk -F "." '{print $1}' )
   
   # Do the polar plots for IPE
-  sed -i '"/PLOTDIR/c\PLOTDIR=/scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/'${CONFIG_FILE}'/'${HASHID}'/ipe/polar_plots/"' ../../IPELIB/scripts/Convert_mpi.batch
-  sed -i '/PLOTTYPE/c\PLOTTYPE="-p"' ../../IPELIB/scripts/Convert_mpi.batch
+  sed -i '/PLOTDIR=/c\PLOTDIR="/scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/'${HASHID}'/'${CONFIG}'/ipe/polar_plots/"' ../../IPELIB/scripts/Convert_mpi.batch
+  sed -i '/PLOTTYPE=/c\PLOTTYPE="-p"' ../../IPELIB/scripts/Convert_mpi.batch
   ../../IPELIB/scripts/Convert_mpi.batch
   
-  # Do the mercator plots for IPE
-  sed -i '"/PLOTDIR/c\PLOTDIR=/scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/'${CONFIG_FILE}'/'${HASHID}'/ipe/mercator_plots/"' ../../IPELIB/scripts/Convert_mpi.batch
-  sed -i '/PLOTTYPE/c\PLOTTYPE=""' ../../IPELIB/scripts/Convert_mpi.batch
+#  # Do the mercator plots for IPE
+  sed -i '/PLOTDIR=/c\PLOTDIR="/scratch3/NCEPDEV/swpc/noscrub/wam-ipe_regression-plots/'${HASHID}'/'${CONFIG}'/ipe/polar_plots/"' ../../IPELIB/scripts/Convert_mpi.batch
+  sed -i '/PLOTTYPE=/c\PLOTTYPE=""' ../../IPELIB/scripts/Convert_mpi.batch
   ../../IPELIB/scripts/Convert_mpi.batch
 
 }
@@ -44,10 +46,8 @@ model_runtimes(){
 
   nProc=$(ls ${STMPDIR}/PET*.ESMF_LogFile | wc -l)
   
-  echo -n "" > timepet.out 
-  for petfile in $(ls ${STMPDIR}/PET300.ESMF_LogFile)
+  for petfile in $(ls ${STMPDIR}/PET350.ESMF_LogFile)
   do
-
     datestr=''
     grep sub-update_IPE\ finished ${petfile} | while read -r line ; do
 
@@ -86,7 +86,7 @@ case $key in
     shift # past value
     ;;
     -n|--ncycles)
-    LIBPATH="$2"
+    NCYCLES="$2"
     shift # past argument
     shift # past value
     ;;
@@ -103,6 +103,15 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
+echo ${CONFIG_FILE}
+if [ -z "$CONFIG_FILE" ]; then
+  HELP="yes"
+fi
+
+if [ -z "$NCYCLES" ]; then
+  NCYCLES=1
+fi 
+
 if [ "${HELP}" = "yes" ]; then
   echo 'Usage : ./handle_regressions.sh [options]'
   echo '  Options :'
@@ -111,6 +120,7 @@ if [ "${HELP}" = "yes" ]; then
   echo ' '
   echo '    -r  <config-file>   | --regression-config <config-file>'
   echo '        Sets which base regression test config file to use'   
+  echo '        This option is required'
   echo ' '
   echo '    -n  <number of cycles>   | --ncycles <number of cycles>'
   echo '        Sets the number of forecast cycles to run for the test'   
@@ -132,7 +142,7 @@ if [ "${HELP}" = "no" ]; then
   fi
 
   if [ "${PLOT}" = "yes" ]; then
-#    model_plots
+    model_plots
     model_runtimes
   fi
    
