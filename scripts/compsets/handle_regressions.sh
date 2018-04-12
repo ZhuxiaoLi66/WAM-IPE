@@ -135,7 +135,7 @@ if [ "${HELP}" = "yes" ]; then
   echo '   (1) Run the coupled_20130316 test case for five cycles. This attempts'
   echo '       5 days of model forecasts through 1 day forecasts with restarts. '
   echo ' '
-  echo '         ./handle_regressions.sh -r coupled_20130316.config             '
+  echo '         ./handle_regressions.sh -r coupled_20130316.config -n 5        '
   echo ' '
   echo '   (2) Once the simulations are complete, you can generate the standard '
   echo '       set of plots for later inspection'
