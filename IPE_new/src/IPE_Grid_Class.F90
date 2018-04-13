@@ -284,31 +284,25 @@ CONTAINS
 !
   SUBROUTINE Write_IPE_Grid_NetCDF( grid, filename )
     IMPLICIT NONE
+    CLASS( IPE_Grid ), INTENT(in) :: grid
+    CHARACTER(*), INTENT(in)      :: filename
     ! Local
     INTEGER :: NF90_PREC
     INTEGER :: ncid
     INTEGER :: x_dimid, y_dimid, z_dimid
+    INTEGER :: altitude_varid, latitude_varid, longitude_varid
+    INTEGER :: fpd_varid, B_varid, colat_varid, r_varid, q_varid
+    INTEGER :: l11_varid, l21_varid, l31_varid
+    INTEGER :: l12_varid, l22_varid, l32_varid
+    INTEGER :: apexe11_varid, apexe21_varid, apexe31_varid
+    INTEGER :: apexe12_varid, apexe22_varid, apexe32_varid
+    INTEGER :: apexd11_varid, apexd21_varid, apexd31_varid
+    INTEGER :: apexd12_varid, apexd22_varid, apexd32_varid
+    INTEGER :: apexd13_varid, apexd23_varid, apexd33_varid
+    INTEGER :: be3_varid, midpoint_varid, max_varid, south_varid, north_varid
 
 
- !   REAL(prec), ALLOCATABLE :: altitude(:,:)
- !   REAL(prec), ALLOCATABLE :: latitude(:,:,:)
- !   REAL(prec), ALLOCATABLE :: longitude(:,:,:)
- !   REAL(prec), ALLOCATABLE :: foot_point_distance(:,:,:)     ! ISL
- !   REAL(prec), ALLOCATABLE :: magnetic_field_strength(:,:,:) ! IBM
- !   REAL(prec), ALLOCATABLE :: magnetic_colatitude(:,:) ! plasma_grid_GL
- !   REAL(prec), ALLOCATABLE :: r_meter(:,:) ! rmeter2D
-
- !   REAL(prec), ALLOCATABLE :: q_factor(:,:,:)
- !   REAL(prec), ALLOCATABLE :: l_magnitude(:,:,:,:,:)
- !   REAL(prec), ALLOCATABLE :: apex_d_vectors(:,:,:,:,:)
- !   REAL(prec), ALLOCATABLE :: apex_e_vectors(:,:,:,:,:)
- !   REAL(prec), ALLOCATABLE :: apex_be3(:,:)
-
- !   INTEGER, ALLOCATABLE :: flux_tube_midpoint(:,:)
- !   INTEGER, ALLOCATABLE :: flux_tube_max(:,:)
- !   INTEGER, ALLOCATABLE :: southern_top_index(:,:)
- !   INTEGER, ALLOCATABLE :: northern_top_index(:,:)
-
+      
       IF( prec == sp )THEN
         NF90_PREC = NF90_FLOAT
       ELSE      
@@ -460,7 +454,46 @@ CONTAINS
 
       CALL Check( nf90_enddef(ncid) )
       
-      CALL Check( nf90_put_var( ncid, z_varid, z ) )
+      CALL Check( nf90_put_var( ncid, altitude_varid, grid % altitude ) )
+      CALL Check( nf90_put_var( ncid, latitude_varid, grid % latitude ) )
+      CALL Check( nf90_put_var( ncid, longitude_varid, grid % longitude ) )
+      CALL Check( nf90_put_var( ncid, fpd_varid, grid % foot_point_distance ) )
+      CALL Check( nf90_put_var( ncid, B_varid, grid % magnetic_field_strength ) )
+      CALL Check( nf90_put_var( ncid, colat_varid, grid % magnetic_colatitude ) )
+      CALL Check( nf90_put_var( ncid, r_varid, grid % r_meter ) )
+      CALL Check( nf90_put_var( ncid, q_varid, grid % q_factor ) )
+
+      CALL Check( nf90_put_var( ncid, l11_varid, grid % l_magnitude(1,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, l21_varid, grid % l_magnitude(2,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, l31_varid, grid % l_magnitude(3,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, l12_varid, grid % l_magnitude(1,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, l22_varid, grid % l_magnitude(2,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, l32_varid, grid % l_magnitude(3,2,:,:,:) ) )
+
+      CALL Check( nf90_put_var( ncid, apexe11_varid, grid % apex_e_vectors(1,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexe21_varid, grid % apex_e_vectors(2,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexe31_varid, grid % apex_e_vectors(3,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexe12_varid, grid % apex_e_vectors(1,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexe22_varid, grid % apex_e_vectors(2,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexe32_varid, grid % apex_e_vectors(3,2,:,:,:) ) )
+
+      CALL Check( nf90_put_var( ncid, apexd11_varid, grid % apex_d_vectors(1,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd21_varid, grid % apex_d_vectors(2,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd31_varid, grid % apex_d_vectors(3,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd12_varid, grid % apex_d_vectors(1,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd22_varid, grid % apex_d_vectors(2,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd32_varid, grid % apex_d_vectors(3,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd13_varid, grid % apex_d_vectors(1,3,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd23_varid, grid % apex_d_vectors(2,3,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd33_varid, grid % apex_d_vectors(3,3,:,:,:) ) )
+
+      CALL Check( nf90_put_var( ncid, be3_varid, grid % apex_be3 ) )
+      CALL Check( nf90_put_var( ncid, midpoint_varid, grid % flux_tube_midpoint ) )
+      CALL Check( nf90_put_var( ncid, max_varid, grid % flux_tube_max ) ) 
+      CALL Check( nf90_put_var( ncid, south_varid, grid % southern_top_index ) ) 
+      CALL Check( nf90_put_var( ncid, north_varid, grid % northern_top_index ) ) 
+
+      CALL Check( nf90_close( ncid ) )
 
 
   END SUBROUTINE Write_IPE_Grid_NetCDF
