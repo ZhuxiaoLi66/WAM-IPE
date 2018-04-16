@@ -70,6 +70,7 @@ CONTAINS
 
         CLOSE( UNIT = fUnit )
 
+        PRINT*, ' '
         PRINT*, '  Module IPE_Model_Parameters_Class.F90 : S/R Build_IPE_Model_Parameters : '
         PRINT*, '    IPE.inp not found. A sample IPE.inp namelist file has been'
         PRINT*, '    generated for you in your current directory.'

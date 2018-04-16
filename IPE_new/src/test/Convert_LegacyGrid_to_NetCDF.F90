@@ -23,13 +23,15 @@ IMPLICIT NONE
 
         CALL grid % Build( params % nFluxTube, params % NLP, params % NMP, params % NPTS2D )
        
-        CALL grid % Read_IPE_Grid( TRIM(gridFile) )        
+        CALL grid % Read_IPE_Grid( gridFile )        
 
-        CALL grid % Write_IPE_Grid_NetCDF( TRIM(ncFile) )
+        CALL grid % Write_IPE_Grid_NetCDF( ncFile )
 
       ELSE
 
+        PRINT*, ' '
         PRINT*, '  Re-run Legacy2NetCDF with the generated IPE.inp file' 
+        PRINT*, ' '
 
       ENDIF
  
@@ -139,6 +141,9 @@ CONTAINS
          PRINT*, '  Setup Failed.'
          initSuccess = .FALSE.
        ELSE
+         PRINT*, ' '
+         PRINT*, ' Using Legacy File :', TRIM(gridFile)
+         PRINT*, ' '
          initSuccess = .TRUE.
        ENDIF
 

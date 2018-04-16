@@ -126,18 +126,29 @@ CONTAINS
     INTEGER    :: i, lp, mp
     INTEGER    :: fUnit, ii, NMP, NLP, NPTS2D, MaxFluxTube
     INTEGER    :: jmin(1:grid % NMP,1:grid % NLP)
-    REAL(prec) ::  dum0(1:grid % NPTS2D,1:grid % NMP) 
-    REAL(prec) ::  dum1(1:grid % NPTS2D,1:grid % NMP)
-    REAL(prec) ::  dum2(1:grid % NPTS2D,1:grid % NMP)
-    REAL(prec) ::  dum3(1:grid % NPTS2D,1:grid % NMP)
-    REAL(prec) ::  dum4(1:3,1:grid % NPTS2D,1:grid % NMP)
-    REAL(prec) ::  dum5(1:3,1:grid % NPTS2D,1:grid % NMP)
-    REAL(prec) ::  dum6(1:3,1:grid % NPTS2D,1:grid % NMP)
+    INTEGER    :: jmax(1:grid % NMP,1:grid % NLP)
     REAL(prec) ::  Be3_all1(1:grid % NMP, 1:grid % NLP)
     REAL(prec) ::  Be3_all2(1:grid % NMP, 1:grid % NLP)
+    REAL(prec), ALLOCATABLE ::  dum0(:,:) 
+    REAL(prec), ALLOCATABLE ::  dum1(:,:)
+    REAL(prec), ALLOCATABLE ::  dum2(:,:)
+    REAL(prec), ALLOCATABLE ::  dum3(:,:)
+    REAL(prec), ALLOCATABLE ::  dum4(:,:,:)
+    REAL(prec), ALLOCATABLE ::  dum5(:,:,:)
+    REAL(prec), ALLOCATABLE ::  dum6(:,:,:)
 
+ 
+      ! Place all of these dummies on the heap so that we don't wind up
+      ! with a stack overflow. For typical values of NPTS2D, NLP, NMP,
+      ! the "dum*" arrays will easily take up 100's of MB.
 
-
+      ALLOCATE( dum0(1:grid % NPTS2D,1:grid % NMP), & 
+                dum1(1:grid % NPTS2D,1:grid % NMP), &
+                dum2(1:grid % NPTS2D,1:grid % NMP), &
+                dum3(1:grid % NPTS2D,1:grid % NMP), &
+                dum4(1:3,1:grid % NPTS2D,1:grid % NMP), &
+                dum5(1:3,1:grid % NPTS2D,1:grid % NMP), &
+                dum6(1:3,1:grid % NPTS2D,1:grid % NMP) )
 
       OPEN( UNIT   = NewUnit(fUnit), &
             FILE   = TRIM(filename), &
@@ -145,9 +156,17 @@ CONTAINS
             FORM   = 'FORMATTED', &
             ACTION = 'READ' ) 
 
-      READ( fUnit, * ) jmin, grid % flux_tube_max
+      READ( fUnit, * ) jmin, jmax
 
-      MaxFluxTube = maxval(grid % flux_tube_max(1,:)-jmin(1,:))
+      DO mp = 1, grid % NMP
+        DO lp = 1, grid % NLP
+
+          grid % flux_tube_max(lp,mp) = jmax(mp,lp) - jmin(mp,lp) + 1
+           
+        ENDDO
+      ENDDO
+
+      MaxFluxTube = maxval(jmax(1,:)-jmin(1,:)) + 1
 
       ! Just in case we set up the grid initially with the improper number of
       ! flux tube points, we'll reset the grid here.
@@ -172,7 +191,7 @@ CONTAINS
       READ( fUnit, * ) dum0, dum1, dum2, dum3
 
       DO lp = 1, grid % NLP
-        DO i = 1, grid % flux_tube_max(1,lp)
+        DO i = 1, grid % flux_tube_max(lp,1)
 
           ii = jmin(1,lp) + (i-1)
           grid % r_meter(i,lp) =  dum0(ii,1)
@@ -182,9 +201,9 @@ CONTAINS
       ENDDO     
 
       DO mp = 1, grid % NMP
-        DO lp = 1, grid % NMP
+        DO lp = 1, grid % NLP
 
-          DO i = 1, grid % flux_tube_max(mp,lp)
+          DO i = 1, grid % flux_tube_max(lp,mp)
 
             ii = jmin(1,lp) + (i-1)
             grid % latitude(i,lp,mp)  = dum1(ii,mp)
@@ -200,7 +219,7 @@ CONTAINS
       READ( fUnit, * ) dum0
 
       DO lp = 1, grid % NLP
-        DO i = 1, grid % flux_tube_max(1,lp)
+        DO i = 1, grid % flux_tube_max(lp,1)
 
           ii = jmin(1,lp) + (i-1)
           grid % magnetic_colatitude(i,lp) = dum0(ii,1)
@@ -212,7 +231,7 @@ CONTAINS
       
       DO mp = 1, grid % NMP
         DO lp = 1, grid % NLP
-          DO i = 1, grid % flux_tube_max(1,lp)
+          DO i = 1, grid % flux_tube_max(lp,1)
           
             ii = jmin(1,lp) + (i-1)
             grid % foot_point_distance(i,lp,mp)     = dum0(ii,mp)
@@ -227,20 +246,20 @@ CONTAINS
 
       DO mp = 1, grid % NMP
         DO lp = 1, grid % NLP
-          DO i = 1, grid % flux_tube_max(1,lp)
+          DO i = 1, grid % flux_tube_max(lp,1)
           
             ii = jmin(1,lp) + (i-1)
-            grid % apex_d_vectors(i,lp,mp,1,1) = dum4(1,ii,mp)
-            grid % apex_d_vectors(i,lp,mp,2,1) = dum4(2,ii,mp)
-            grid % apex_d_vectors(i,lp,mp,3,1) = dum4(3,ii,mp)
+            grid % apex_d_vectors(1,1,i,lp,mp) = dum4(1,ii,mp)
+            grid % apex_d_vectors(2,1,i,lp,mp) = dum4(2,ii,mp)
+            grid % apex_d_vectors(3,1,i,lp,mp) = dum4(3,ii,mp)
 
-            grid % apex_d_vectors(i,lp,mp,1,2) = dum5(1,ii,mp)
-            grid % apex_d_vectors(i,lp,mp,2,2) = dum5(2,ii,mp)
-            grid % apex_d_vectors(i,lp,mp,3,2) = dum5(3,ii,mp)
+            grid % apex_d_vectors(1,2,i,lp,mp) = dum5(1,ii,mp)
+            grid % apex_d_vectors(2,2,i,lp,mp) = dum5(2,ii,mp)
+            grid % apex_d_vectors(3,2,i,lp,mp) = dum5(3,ii,mp)
 
-            grid % apex_d_vectors(i,lp,mp,3,3) = dum5(3,ii,mp)
-            grid % apex_d_vectors(i,lp,mp,2,3) = dum5(2,ii,mp)
-            grid % apex_d_vectors(i,lp,mp,3,3) = dum5(3,ii,mp)
+            grid % apex_d_vectors(1,3,i,lp,mp) = dum6(1,ii,mp)
+            grid % apex_d_vectors(2,3,i,lp,mp) = dum6(2,ii,mp)
+            grid % apex_d_vectors(3,3,i,lp,mp) = dum6(3,ii,mp)
 
           ENDDO
         ENDDO
@@ -251,20 +270,16 @@ CONTAINS
 
       DO mp = 1, grid % NMP
         DO lp = 1, grid % NLP
-          DO i = 1, grid % flux_tube_max(1,lp)
+          DO i = 1, grid % flux_tube_max(lp,1)
           
             ii = jmin(1,lp) + (i-1)
-            grid % apex_e_vectors(i,lp,mp,1,1) = dum4(1,ii,mp)
-            grid % apex_e_vectors(i,lp,mp,2,1) = dum4(2,ii,mp)
-            grid % apex_e_vectors(i,lp,mp,3,1) = dum4(3,ii,mp)
+            grid % apex_e_vectors(1,1,i,lp,mp) = dum4(1,ii,mp)
+            grid % apex_e_vectors(2,1,i,lp,mp) = dum4(2,ii,mp)
+            grid % apex_e_vectors(3,1,i,lp,mp) = dum4(3,ii,mp)
 
-            grid % apex_e_vectors(i,lp,mp,1,2) = dum5(1,ii,mp)
-            grid % apex_e_vectors(i,lp,mp,2,2) = dum5(2,ii,mp)
-            grid % apex_e_vectors(i,lp,mp,3,2) = dum5(3,ii,mp)
-
-            grid % apex_e_vectors(i,lp,mp,3,3) = dum5(3,ii,mp)
-            grid % apex_e_vectors(i,lp,mp,2,3) = dum5(2,ii,mp)
-            grid % apex_e_vectors(i,lp,mp,3,3) = dum5(3,ii,mp)
+            grid % apex_e_vectors(1,2,i,lp,mp) = dum5(1,ii,mp)
+            grid % apex_e_vectors(2,2,i,lp,mp) = dum5(2,ii,mp)
+            grid % apex_e_vectors(3,2,i,lp,mp) = dum5(3,ii,mp)
 
           ENDDO
         ENDDO
@@ -281,6 +296,14 @@ CONTAINS
       ENDDO
 
       CLOSE( fUnit )
+
+      DEALLOCATE( dum0,&
+                  dum1,&
+                  dum2,&
+                  dum3,&
+                  dum4,&
+                  dum5,&
+                  dum6 )
 
   END SUBROUTINE Read_IPE_Grid
 !
@@ -317,8 +340,7 @@ CONTAINS
       CALL Check( nf90_def_dim( ncid, "lp", grid % NLP, x_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "mp", grid % NMP, y_dimid ) ) 
 
-
-      CALL Check( nf90_def_var( ncid, "altitude", NF90_PREC, (/ z_dimid, y_dimid /) , altitude_varid ) )
+      CALL Check( nf90_def_var( ncid, "altitude", NF90_PREC, (/ z_dimid, x_dimid /) , altitude_varid ) )
       CALL Check( nf90_put_att( ncid, altitude_varid, "long_name", "Radial distance above spherical earth" ) )
       CALL Check( nf90_put_att( ncid, altitude_varid, "units", "m" ) )
 
@@ -338,11 +360,11 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, B_varid, "long_name", "Magnetic Field Strength" ) )
       CALL Check( nf90_put_att( ncid, B_varid, "units", "Micro-Tesla" ) )
 
-      CALL Check( nf90_def_var( ncid, "m_colat", NF90_PREC, (/ z_dimid, y_dimid /) , colat_varid ) )
+      CALL Check( nf90_def_var( ncid, "m_colat", NF90_PREC, (/ z_dimid, x_dimid /) , colat_varid ) )
       CALL Check( nf90_put_att( ncid, colat_varid, "long_name", "Magnetic Colatitude" ) )
       CALL Check( nf90_put_att( ncid, colat_varid, "units", "Radians" ) )
 
-      CALL Check( nf90_def_var( ncid, "r_meter", NF90_PREC, (/ z_dimid, y_dimid /) , r_varid ) )
+      CALL Check( nf90_def_var( ncid, "r_meter", NF90_PREC, (/ z_dimid, x_dimid /) , r_varid ) )
       CALL Check( nf90_put_att( ncid, r_varid, "long_name", "Radial distance from earth center" ) )
       CALL Check( nf90_put_att( ncid, r_varid, "units", "meters" ) )
 
@@ -438,19 +460,19 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, be3_varid, "long_name", "Unknown" ) )
       CALL Check( nf90_put_att( ncid, be3_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "tube_midpoint", NF90_PREC, (/ x_dimid, y_dimid /) , midpoint_varid ) )
+      CALL Check( nf90_def_var( ncid, "tube_midpoint", NF90_INT, (/ x_dimid, y_dimid /) , midpoint_varid ) )
       CALL Check( nf90_put_att( ncid, midpoint_varid, "long_name", "Flux Tube Midpoints" ) )
       CALL Check( nf90_put_att( ncid, midpoint_varid, "units", "Index" ) )
 
-      CALL Check( nf90_def_var( ncid, "tube_max", NF90_PREC, (/ x_dimid, y_dimid /) , max_varid ) )
+      CALL Check( nf90_def_var( ncid, "tube_max", NF90_INT, (/ x_dimid, y_dimid /) , max_varid ) )
       CALL Check( nf90_put_att( ncid, max_varid, "long_name", "Index of maximum flux tube height" ) )
       CALL Check( nf90_put_att( ncid, max_varid, "units", "Index" ) )
 
-      CALL Check( nf90_def_var( ncid, "southern_top", NF90_PREC, (/ x_dimid, y_dimid /) , south_varid ) )
+      CALL Check( nf90_def_var( ncid, "southern_top", NF90_INT, (/ x_dimid, y_dimid /) , south_varid ) )
       CALL Check( nf90_put_att( ncid, south_varid, "long_name", "Index of southern hemisphere top of flux tube" ) )
       CALL Check( nf90_put_att( ncid, south_varid, "units", "Index" ) )
 
-      CALL Check( nf90_def_var( ncid, "northern_top", NF90_PREC, (/ x_dimid, y_dimid /) , south_varid ) )
+      CALL Check( nf90_def_var( ncid, "northern_top", NF90_INT, (/ x_dimid, y_dimid /) , north_varid ) )
       CALL Check( nf90_put_att( ncid, north_varid, "long_name", "Index of southern hemisphere top of flux tube" ) )
       CALL Check( nf90_put_att( ncid, north_varid, "units", "Index" ) )
 
