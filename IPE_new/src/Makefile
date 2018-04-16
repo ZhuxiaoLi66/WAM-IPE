@@ -64,6 +64,20 @@ IPE_Neutrals_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class
 
 
 
+# Test Programs
+
+OBJ = IPE_Precision.o \
+      IPE_Common_Routines.o \
+      IPE_Constants_Dictionary.o \
+      IPE_Model_Parameters_Class.o \
+      IPE_Grid_Class.o \
+      Convert_LegacyGrid_to_NetCDF.o 
+
+legacy2netcdf : ${OBJ} 
+	${FC} ${OPT} ${OBJ} ${LIB} ${INC} -o $@
+
+Convert_LegacyGrid_to_NetCDF.o : IPE_Grid_Class.o IPE_Model_Parameters_Class.o test/Convert_LegacyGrid_to_NetCDF.F90
+	${FC} ${CPPFLAGS} ${OPT} -c test/Convert_LegacyGrid_to_NetCDF.F90 ${LIB} ${INC} -o $@ 
 
 .PHONY : clean
 

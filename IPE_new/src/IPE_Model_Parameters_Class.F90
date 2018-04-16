@@ -1,4 +1,4 @@
-MODULE IPE_ModelParameters_Class
+MODULE IPE_Model_Parameters_Class
 
 USE IPE_Precision
 USE IPE_Constants_Dictionary
@@ -7,21 +7,25 @@ USE IPE_Common_Routines
 
 IMPLICIT NONE
 
-  TYPE IPE_ModelParameters
+  TYPE IPE_Model_Parameters
 
     ! SpaceManagement
     INTEGER :: NLP
     INTEGER :: NMP
     INTEGER :: NPTS2D
 
-  END TYPE IPE_ModelParameters
+    CONTAINS
+
+      PROCEDURE :: Build => Build_IPE_Model_Parameters
+
+  END TYPE IPE_Model_Parameters
 
 
 CONTAINS
 
-  SUBROUTINE Build_IPE_ModelParameters( params, read_success )
+  SUBROUTINE Build_IPE_Model_Parameters( params, read_success )
     IMPLICIT NONE
-    CLASS( IPE_ModelParameters ), INTENT(out) :: params
+    CLASS( IPE_Model_Parameters ), INTENT(out) :: params
     LOGICAL, INTENT(out)                      :: read_success
     ! Local
     INTEGER :: fUnit
@@ -64,7 +68,7 @@ CONTAINS
 
         CLOSE( UNIT = fUnit )
 
-        PRINT*, '  Module IPE_ModelParameters_Class.F90 : S/R Build_IPE_ModelParameters : '
+        PRINT*, '  Module IPE_Model_Parameters_Class.F90 : S/R Build_IPE_Model_Parameters : '
         PRINT*, '    IPE.inp not found. A sample IPE.inp namelist file has been'
         PRINT*, '    generated for you in your current directory.'
 
@@ -76,10 +80,10 @@ CONTAINS
 
 
 
-  END SUBROUTINE Build_IPE_ModelParameters
+  END SUBROUTINE Build_IPE_Model_Parameters
 
 
-END MODULE IPE_ModelParameters_Class
+END MODULE IPE_Model_Parameters_Class
 !      MODULE module_input_parameters
 !      USE ipe_f107_kp_mod,ONLY: f107_kp_size,f107_kp_interval,f107_kp_skip_size,f107_kp_read_in_size,f107_kp_data_size ! namelist options
 !      USE module_precision
