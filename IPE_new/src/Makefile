@@ -75,6 +75,7 @@ OBJ = IPE_Precision.o \
 
 legacy2netcdf : ${OBJ} 
 	${FC} ${OPT} ${OBJ} ${LIB} ${INC} -o $@
+	mv $@ ../bin/
 
 Convert_LegacyGrid_to_NetCDF.o : IPE_Grid_Class.o IPE_Model_Parameters_Class.o test/Convert_LegacyGrid_to_NetCDF.F90
 	${FC} ${CPPFLAGS} ${OPT} -c test/Convert_LegacyGrid_to_NetCDF.F90 ${LIB} ${INC} -o $@ 

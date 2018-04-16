@@ -9,11 +9,11 @@ IMPLICIT NONE
   TYPE( IPE_Grid )             :: grid
   TYPE( IPE_Model_Parameters ) :: params 
   
-  CHARACTER(500) :: gridFile
+  CHARACTER(500) :: gridFile, ncFile
   LOGICAL :: initSuccess, readSuccess
 
 
-    CALL InitializeFromCommandLine( gridFile, initSuccess )
+    CALL InitializeFromCommandLine( gridFile, ncFile, initSuccess )
 
     IF( initSuccess )THEN
 
@@ -21,7 +21,11 @@ IMPLICIT NONE
 
       IF( readSuccess )THEN
 
-        
+        CALL grid % Build( params % nFluxTube, params % NLP, params % NMP, params % NPTS2D )
+       
+        CALL grid % Read_IPE_Grid( TRIM(gridFile) )        
+
+        CALL grid % Write_IPE_Grid_NetCDF( TRIM(ncFile) )
 
       ELSE
 
@@ -33,23 +37,27 @@ IMPLICIT NONE
 
 CONTAINS
 
- SUBROUTINE InitializeFromCommandLine( gridFile, initSuccess )
+ SUBROUTINE InitializeFromCommandLine( gridFile, outFile, initSuccess )
    IMPLICIT NONE
-   CHARACTER(*), INTENT(out) :: gridFile
+   CHARACTER(*), INTENT(out) :: gridFile, outFile
    LOGICAL, INTENT(out)      :: initSuccess
    ! Local
    INTEGER        :: nArg, argID
    CHARACTER(500) :: argname
    LOGICAL        :: fileExists
    LOGICAL        :: gridGiven, gridFileGiven, helpRequested
+   LOGICAL        :: outGiven, outFileGiven
 
      gridFileGiven = .FALSE.
      gridGiven     = .FALSE.
+     outGiven      = .FALSE.
+     outFileGiven  = .FALSE.
      helpRequested = .FALSE.
      initSuccess   = .FALSE.
 
      ! Default grid file
      gridFile      = './ipe_grid'
+     outFile       = './IPE_Grid.nc'
 
      nArg = command_argument_count( )
 
@@ -65,6 +73,10 @@ CONTAINS
 
              gridGiven = .TRUE.
 
+           CASE("--nc-file")
+
+             outGiven = .TRUE.
+
            CASE("--help")
 
              helpRequested = .TRUE.
@@ -75,6 +87,15 @@ CONTAINS
 
                gridFileGiven = .TRUE.
                gridFile  = TRIM(argName)
+               gridGiven = .FALSE.
+
+             ENDIF
+
+             IF( outGiven )THEN
+
+               outFileGiven = .TRUE.
+               outFile      = TRIM(argName)
+               outGiven     = .FALSE.
 
              ENDIF
 
@@ -98,7 +119,12 @@ CONTAINS
        PRINT*, '      --legacy-grid <grid-file>'
        PRINT*, '          Specifies to use <grid-file> as the legacy grid file '
        PRINT*, '          to be converted to NetCDF. If this option is not  '
-       PRINT*, '          provide, ./ipe_grid is assumed.  '
+       PRINT*, '          provided, ./ipe_grid is assumed.  '
+       PRINT*, ' '
+       PRINT*, '      --nc-file <output-nc-file>'
+       PRINT*, '          Specifies the name of the output netcdf file to use.'
+       PRINT*, '          If this option is not provided, IPE_Grid.nc is '
+       PRINT*, '          assumed. '
        PRINT*, ' '
 
      ENDIF

@@ -13,6 +13,7 @@ IMPLICIT NONE
     INTEGER :: NLP
     INTEGER :: NMP
     INTEGER :: NPTS2D
+    INTEGER :: nFluxTube
 
     CONTAINS
 
@@ -30,18 +31,19 @@ CONTAINS
     ! Local
     INTEGER :: fUnit
     LOGICAL :: fileExists
-    INTEGER :: NLP, NMP, NPTS2D
+    INTEGER :: NLP, NMP, NPTS2D, nFluxTube
    
       read_success = .FALSE.
 
       ! Default Parameters !
 
       ! SpaceManagement
-      NLP    = 170
-      NMP    = 80
-      NPTS2D = 44514
+      NLP       = 170
+      NMP       = 80
+      NPTS2D    = 44514
+      nFluxTube = 1115
 
-      NAMELIST/SpaceManagement/NLP,NMP,NPTS2D
+      NAMELIST/SpaceManagement/ NLP, NMP, NPTS2D, nFluxTube
 
       INQUIRE( FILE = 'IPE.inp', EXIST = fileExists )
   
@@ -55,10 +57,10 @@ CONTAINS
 
         read_success = .TRUE.
 
-        params % NLP    = NLP
-        params % NMP    = NMP
-        params % NPTS2D = NPTS2D
-
+        params % NLP       = NLP
+        params % NMP       = NMP
+        params % NPTS2D    = NPTS2D
+        params % nFluxTube = nFluxTube
 
       ELSE
 
@@ -73,12 +75,8 @@ CONTAINS
         PRINT*, '    generated for you in your current directory.'
 
         read_success = .FALSE.
- 
 
       ENDIF
- 
-
-
 
   END SUBROUTINE Build_IPE_Model_Parameters
 
