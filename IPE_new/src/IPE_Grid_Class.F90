@@ -346,11 +346,11 @@ CONTAINS
 
       CALL Check( nf90_def_var( ncid, "latitude", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , latitude_varid ) )
       CALL Check( nf90_put_att( ncid, latitude_varid, "long_name", "Geographic Latitude" ) )
-      CALL Check( nf90_put_att( ncid, latitude_varid, "units", "degrees" ) )
+      CALL Check( nf90_put_att( ncid, latitude_varid, "units", "radians" ) )
 
       CALL Check( nf90_def_var( ncid, "longitude", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , longitude_varid ) )
       CALL Check( nf90_put_att( ncid, longitude_varid, "long_name", "Geographic Longitude" ) )
-      CALL Check( nf90_put_att( ncid, longitude_varid, "units", "degrees" ) )
+      CALL Check( nf90_put_att( ncid, longitude_varid, "units", "radians" ) )
 
       CALL Check( nf90_def_var( ncid, "foot_point_distance", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , fpd_varid ) )
       CALL Check( nf90_put_att( ncid, fpd_varid, "long_name", "Distance along flux tube" ) )
