@@ -497,7 +497,223 @@ CONTAINS
 
 
   END SUBROUTINE Write_IPE_Grid_NetCDF
+!
+  SUBROUTINE Read_IPE_Grid_NetCDF( grid, filename )
+    IMPLICIT NONE
+    CLASS( IPE_Grid ), INTENT(inout) :: grid
+    CHARACTER(*), INTENT(in)         :: filename
+    ! Local
+    INTEGER :: NF90_PREC
+    INTEGER :: ncid
+    INTEGER :: dimid, varid
+    INTEGER :: nFluxtube, NLP, NMP
 
+
+      
+      IF( prec == sp )THEN
+        NF90_PREC = NF90_FLOAT
+      ELSE      
+        NF90_PREC = NF90_DOUBLE
+      ENDIF
+
+      CALL Check( nf90_open( TRIM(filename), NF90_NETCDF4, ncid))
+
+
+      ! Obtain the dimensions of the IPE_Grid
+      CALL Check( nf90_inq_dimid( ncid, "s", dimid ) )
+      CALL Check( nf90_inquire_dimension( ncid, dimid, nFluxTube ) )
+
+      CALL Check( nf90_inq_dimid( ncid, "lp", dimid ) )
+      CALL Check( nf90_inquire_dimension( ncid, dimid, NLP ) )
+
+      CALL Check( nf90_inq_dimid( ncid, "mp", dimid ) )
+      CALL Check( nf90_inquire_dimension( ncid, dimid, NMP ) )
+
+      ! Allocate space for the grid before proceeding
+      CALL grid % Build( nFluxTube, NLP, NMP, 1 )
+
+      CALL Check( nf90_inq_varid( ncid, "altitude", varid ) )
+      CALL Check( nf90_def_var( ncid, "altitude", NF90_PREC, (/ z_dimid, y_dimid /) , altitude_varid ) )
+      CALL Check( nf90_put_att( ncid, altitude_varid, "long_name", "Radial distance above spherical earth" ) )
+      CALL Check( nf90_put_att( ncid, altitude_varid, "units", "m" ) )
+
+      CALL Check( nf90_def_var( ncid, "latitude", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , latitude_varid ) )
+      CALL Check( nf90_put_att( ncid, latitude_varid, "long_name", "Geographic Latitude" ) )
+      CALL Check( nf90_put_att( ncid, latitude_varid, "units", "degrees" ) )
+
+      CALL Check( nf90_def_var( ncid, "longitude", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , longitude_varid ) )
+      CALL Check( nf90_put_att( ncid, longitude_varid, "long_name", "Geographic Longitude" ) )
+      CALL Check( nf90_put_att( ncid, longitude_varid, "units", "degrees" ) )
+
+      CALL Check( nf90_def_var( ncid, "foot_point_distance", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , fpd_varid ) )
+      CALL Check( nf90_put_att( ncid, fpd_varid, "long_name", "Distance along flux tube" ) )
+      CALL Check( nf90_put_att( ncid, fpd_varid, "units", "m" ) )
+
+      CALL Check( nf90_def_var( ncid, "B", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , B_varid ) )
+      CALL Check( nf90_put_att( ncid, B_varid, "long_name", "Magnetic Field Strength" ) )
+      CALL Check( nf90_put_att( ncid, B_varid, "units", "Micro-Tesla" ) )
+
+      CALL Check( nf90_def_var( ncid, "m_colat", NF90_PREC, (/ z_dimid, y_dimid /) , colat_varid ) )
+      CALL Check( nf90_put_att( ncid, colat_varid, "long_name", "Magnetic Colatitude" ) )
+      CALL Check( nf90_put_att( ncid, colat_varid, "units", "Radians" ) )
+
+      CALL Check( nf90_def_var( ncid, "r_meter", NF90_PREC, (/ z_dimid, y_dimid /) , r_varid ) )
+      CALL Check( nf90_put_att( ncid, r_varid, "long_name", "Radial distance from earth center" ) )
+      CALL Check( nf90_put_att( ncid, r_varid, "units", "meters" ) )
+
+      CALL Check( nf90_def_var( ncid, "q_factor", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , q_varid ) )
+      CALL Check( nf90_put_att( ncid, q_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, q_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "l_magnitude_11", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , l11_varid ) )
+      CALL Check( nf90_put_att( ncid, l11_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, l11_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "l_magnitude_21", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , l21_varid ) )
+      CALL Check( nf90_put_att( ncid, l21_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, l21_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "l_magnitude_31", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , l31_varid ) )
+      CALL Check( nf90_put_att( ncid, l31_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, l31_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "l_magnitude_12", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , l12_varid ) )
+      CALL Check( nf90_put_att( ncid, l12_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, l12_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "l_magnitude_22", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , l22_varid ) )
+      CALL Check( nf90_put_att( ncid, l22_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, l22_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "l_magnitude_32", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , l32_varid ) )
+      CALL Check( nf90_put_att( ncid, l32_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, l32_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_e_11", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexe11_varid ) )
+      CALL Check( nf90_put_att( ncid, apexe11_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexe11_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_e_21", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexe21_varid ) )
+      CALL Check( nf90_put_att( ncid, apexe21_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexe21_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_e_31", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexe31_varid ) )
+      CALL Check( nf90_put_att( ncid, apexe31_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexe31_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_e_12", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexe12_varid ) )
+      CALL Check( nf90_put_att( ncid, apexe12_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexe12_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_e_22", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexe22_varid ) )
+      CALL Check( nf90_put_att( ncid, apexe22_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexe22_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_e_32", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexe32_varid ) )
+      CALL Check( nf90_put_att( ncid, apexe32_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexe32_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_d_11", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexd11_varid ) )
+      CALL Check( nf90_put_att( ncid, apexd11_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexd11_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_d_21", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexd21_varid ) )
+      CALL Check( nf90_put_att( ncid, apexd21_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexd21_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_d_31", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexd31_varid ) )
+      CALL Check( nf90_put_att( ncid, apexd31_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexd31_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_d_12", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexd12_varid ) )
+      CALL Check( nf90_put_att( ncid, apexd12_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexd12_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_d_22", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexd22_varid ) )
+      CALL Check( nf90_put_att( ncid, apexd22_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexd22_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_d_32", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexd32_varid ) )
+      CALL Check( nf90_put_att( ncid, apexd32_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexd32_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_d_13", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexd13_varid ) )
+      CALL Check( nf90_put_att( ncid, apexd13_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexd13_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_d_23", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexd23_varid ) )
+      CALL Check( nf90_put_att( ncid, apexd23_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexd23_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_d_33", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , apexd33_varid ) )
+      CALL Check( nf90_put_att( ncid, apexd33_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, apexd33_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "apex_be3", NF90_PREC, (/ x_dimid, y_dimid /) , be3_varid ) )
+      CALL Check( nf90_put_att( ncid, be3_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, be3_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "tube_midpoint", NF90_PREC, (/ x_dimid, y_dimid /) , midpoint_varid ) )
+      CALL Check( nf90_put_att( ncid, midpoint_varid, "long_name", "Flux Tube Midpoints" ) )
+      CALL Check( nf90_put_att( ncid, midpoint_varid, "units", "Index" ) )
+
+      CALL Check( nf90_def_var( ncid, "tube_max", NF90_PREC, (/ x_dimid, y_dimid /) , max_varid ) )
+      CALL Check( nf90_put_att( ncid, max_varid, "long_name", "Index of maximum flux tube height" ) )
+      CALL Check( nf90_put_att( ncid, max_varid, "units", "Index" ) )
+
+      CALL Check( nf90_def_var( ncid, "southern_top", NF90_PREC, (/ x_dimid, y_dimid /) , south_varid ) )
+      CALL Check( nf90_put_att( ncid, south_varid, "long_name", "Index of southern hemisphere top of flux tube" ) )
+      CALL Check( nf90_put_att( ncid, south_varid, "units", "Index" ) )
+
+      CALL Check( nf90_def_var( ncid, "northern_top", NF90_PREC, (/ x_dimid, y_dimid /) , south_varid ) )
+      CALL Check( nf90_put_att( ncid, north_varid, "long_name", "Index of southern hemisphere top of flux tube" ) )
+      CALL Check( nf90_put_att( ncid, north_varid, "units", "Index" ) )
+
+      CALL Check( nf90_enddef(ncid) )
+      
+      CALL Check( nf90_put_var( ncid, altitude_varid, grid % altitude ) )
+      CALL Check( nf90_put_var( ncid, latitude_varid, grid % latitude ) )
+      CALL Check( nf90_put_var( ncid, longitude_varid, grid % longitude ) )
+      CALL Check( nf90_put_var( ncid, fpd_varid, grid % foot_point_distance ) )
+      CALL Check( nf90_put_var( ncid, B_varid, grid % magnetic_field_strength ) )
+      CALL Check( nf90_put_var( ncid, colat_varid, grid % magnetic_colatitude ) )
+      CALL Check( nf90_put_var( ncid, r_varid, grid % r_meter ) )
+      CALL Check( nf90_put_var( ncid, q_varid, grid % q_factor ) )
+
+      CALL Check( nf90_put_var( ncid, l11_varid, grid % l_magnitude(1,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, l21_varid, grid % l_magnitude(2,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, l31_varid, grid % l_magnitude(3,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, l12_varid, grid % l_magnitude(1,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, l22_varid, grid % l_magnitude(2,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, l32_varid, grid % l_magnitude(3,2,:,:,:) ) )
+
+      CALL Check( nf90_put_var( ncid, apexe11_varid, grid % apex_e_vectors(1,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexe21_varid, grid % apex_e_vectors(2,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexe31_varid, grid % apex_e_vectors(3,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexe12_varid, grid % apex_e_vectors(1,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexe22_varid, grid % apex_e_vectors(2,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexe32_varid, grid % apex_e_vectors(3,2,:,:,:) ) )
+
+      CALL Check( nf90_put_var( ncid, apexd11_varid, grid % apex_d_vectors(1,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd21_varid, grid % apex_d_vectors(2,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd31_varid, grid % apex_d_vectors(3,1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd12_varid, grid % apex_d_vectors(1,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd22_varid, grid % apex_d_vectors(2,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd32_varid, grid % apex_d_vectors(3,2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd13_varid, grid % apex_d_vectors(1,3,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd23_varid, grid % apex_d_vectors(2,3,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, apexd33_varid, grid % apex_d_vectors(3,3,:,:,:) ) )
+
+      CALL Check( nf90_put_var( ncid, be3_varid, grid % apex_be3 ) )
+      CALL Check( nf90_put_var( ncid, midpoint_varid, grid % flux_tube_midpoint ) )
+      CALL Check( nf90_put_var( ncid, max_varid, grid % flux_tube_max ) ) 
+      CALL Check( nf90_put_var( ncid, south_varid, grid % southern_top_index ) ) 
+      CALL Check( nf90_put_var( ncid, north_varid, grid % northern_top_index ) ) 
+
+      CALL Check( nf90_close( ncid ) )
+
+
+  END SUBROUTINE Write_IPE_Grid_NetCDF
 
 !        if( simulation_is_warm_start .or. utime_local > start_time )then
 !
