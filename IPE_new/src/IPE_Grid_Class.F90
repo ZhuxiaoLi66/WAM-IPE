@@ -25,10 +25,10 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: apex_e_vectors(:,:,:,:,:)
     REAL(prec), ALLOCATABLE :: apex_be3(:,:)
 
-    INTEGER, ALLOCATABLE :: flux_tube_midpoint(:,:)
-    INTEGER, ALLOCATABLE :: flux_tube_max(:,:)
-    INTEGER, ALLOCATABLE :: southern_top_index(:,:)
-    INTEGER, ALLOCATABLE :: northern_top_index(:,:)
+    INTEGER, ALLOCATABLE :: flux_tube_midpoint(:)
+    INTEGER, ALLOCATABLE :: flux_tube_max(:)
+    INTEGER, ALLOCATABLE :: southern_top_index(:)
+    INTEGER, ALLOCATABLE :: northern_top_index(:)
 
     CONTAINS
 
@@ -69,10 +69,10 @@ CONTAINS
                 grid % apex_e_vectors(1:3,1:2,1:nFluxTube,1:NLP,1:NMP), &
                 grid % apex_d_vectors(1:3,1:3,1:nFluxTube,1:NLP,1:NMP), &
                 grid % apex_be3(1:NLP,1:NMP), &
-                grid % flux_tube_midpoint(1:NLP,1:NMP), &
-                grid % flux_tube_max(1:NLP,1:NMP), &
-                grid % southern_top_index(1:NLP,1:NMP), &
-                grid % northern_top_index(1:NLP,1:NMP) )
+                grid % flux_tube_midpoint(1:NLP), &
+                grid % flux_tube_max(1:NLP), &
+                grid % southern_top_index(1:NLP), &
+                grid % northern_top_index(1:NLP) )
 
       grid % altitude                = 0.0_prec
       grid % latitude                = 0.0_prec
@@ -158,12 +158,10 @@ CONTAINS
 
       READ( fUnit, * ) jmin, jmax
 
-      DO mp = 1, grid % NMP
-        DO lp = 1, grid % NLP
+      DO lp = 1, grid % NLP
 
-          grid % flux_tube_max(lp,mp) = jmax(mp,lp) - jmin(mp,lp) + 1
-           
-        ENDDO
+        grid % flux_tube_max(lp) = jmax(1,lp) - jmin(1,lp) + 1
+         
       ENDDO
 
       MaxFluxTube = maxval(jmax(1,:)-jmin(1,:)) + 1
@@ -181,17 +179,17 @@ CONTAINS
    
       ENDIF
 
-      grid % flux_tube_max = grid % flux_tube_max - jmin + 1
-      DO mp = 1, grid % NMP
-        DO lp = 1, grid % NLP
-          grid % flux_tube_midpoint(lp,mp) = 1 + ( grid % flux_tube_max(lp,mp) - 1)/2
-        ENDDO
+     ! grid % flux_tube_max = grid % flux_tube_max - jmin(1,:) + 1
+      DO lp = 1, grid % NLP
+
+        grid % flux_tube_midpoint(lp) = 1 + ( grid % flux_tube_max(lp) - 1)/2
+
       ENDDO
 
       READ( fUnit, * ) dum0, dum1, dum2, dum3
 
       DO lp = 1, grid % NLP
-        DO i = 1, grid % flux_tube_max(lp,1)
+        DO i = 1, grid % flux_tube_max(lp)
 
           ii = jmin(1,lp) + (i-1)
           grid % r_meter(i,lp) =  dum0(ii,1)
@@ -203,7 +201,7 @@ CONTAINS
       DO mp = 1, grid % NMP
         DO lp = 1, grid % NLP
 
-          DO i = 1, grid % flux_tube_max(lp,mp)
+          DO i = 1, grid % flux_tube_max(lp)
 
             ii = jmin(1,lp) + (i-1)
             grid % latitude(i,lp,mp)  = dum1(ii,mp)
@@ -219,7 +217,7 @@ CONTAINS
       READ( fUnit, * ) dum0
 
       DO lp = 1, grid % NLP
-        DO i = 1, grid % flux_tube_max(lp,1)
+        DO i = 1, grid % flux_tube_max(lp)
 
           ii = jmin(1,lp) + (i-1)
           grid % magnetic_colatitude(i,lp) = dum0(ii,1)
@@ -231,7 +229,7 @@ CONTAINS
       
       DO mp = 1, grid % NMP
         DO lp = 1, grid % NLP
-          DO i = 1, grid % flux_tube_max(lp,1)
+          DO i = 1, grid % flux_tube_max(lp)
           
             ii = jmin(1,lp) + (i-1)
             grid % foot_point_distance(i,lp,mp)     = dum0(ii,mp)
@@ -246,7 +244,7 @@ CONTAINS
 
       DO mp = 1, grid % NMP
         DO lp = 1, grid % NLP
-          DO i = 1, grid % flux_tube_max(lp,1)
+          DO i = 1, grid % flux_tube_max(lp)
           
             ii = jmin(1,lp) + (i-1)
             grid % apex_d_vectors(1,1,i,lp,mp) = dum4(1,ii,mp)
@@ -270,7 +268,7 @@ CONTAINS
 
       DO mp = 1, grid % NMP
         DO lp = 1, grid % NLP
-          DO i = 1, grid % flux_tube_max(lp,1)
+          DO i = 1, grid % flux_tube_max(lp)
           
             ii = jmin(1,lp) + (i-1)
             grid % apex_e_vectors(1,1,i,lp,mp) = dum4(1,ii,mp)
@@ -460,19 +458,19 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, be3_varid, "long_name", "Unknown" ) )
       CALL Check( nf90_put_att( ncid, be3_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "tube_midpoint", NF90_INT, (/ x_dimid, y_dimid /) , midpoint_varid ) )
+      CALL Check( nf90_def_var( ncid, "tube_midpoint", NF90_INT, (/ x_dimid /) , midpoint_varid ) )
       CALL Check( nf90_put_att( ncid, midpoint_varid, "long_name", "Flux Tube Midpoints" ) )
       CALL Check( nf90_put_att( ncid, midpoint_varid, "units", "Index" ) )
 
-      CALL Check( nf90_def_var( ncid, "tube_max", NF90_INT, (/ x_dimid, y_dimid /) , max_varid ) )
+      CALL Check( nf90_def_var( ncid, "tube_max", NF90_INT, (/ x_dimid /) , max_varid ) )
       CALL Check( nf90_put_att( ncid, max_varid, "long_name", "Index of maximum flux tube height" ) )
       CALL Check( nf90_put_att( ncid, max_varid, "units", "Index" ) )
 
-      CALL Check( nf90_def_var( ncid, "southern_top", NF90_INT, (/ x_dimid, y_dimid /) , south_varid ) )
+      CALL Check( nf90_def_var( ncid, "southern_top", NF90_INT, (/ x_dimid /) , south_varid ) )
       CALL Check( nf90_put_att( ncid, south_varid, "long_name", "Index of southern hemisphere top of flux tube" ) )
       CALL Check( nf90_put_att( ncid, south_varid, "units", "Index" ) )
 
-      CALL Check( nf90_def_var( ncid, "northern_top", NF90_INT, (/ x_dimid, y_dimid /) , north_varid ) )
+      CALL Check( nf90_def_var( ncid, "northern_top", NF90_INT, (/ x_dimid /) , north_varid ) )
       CALL Check( nf90_put_att( ncid, north_varid, "long_name", "Index of southern hemisphere top of flux tube" ) )
       CALL Check( nf90_put_att( ncid, north_varid, "units", "Index" ) )
 
@@ -664,6 +662,11 @@ CONTAINS
 
   END SUBROUTINE Read_IPE_Grid_NetCDF
 
+!  SUBROUTINE Calculate_Grid_Attributes_From_Legacy_Input( grid )
+!    IMPLICIT NONE
+!    CLASS( IPE_Grid ) :: grid
+!    ! Local
+!    INTEGER :: 
 !        if( simulation_is_warm_start .or. utime_local > start_time )then
 !
 !          midpoint = IN + (IS-IN)/2
@@ -685,6 +688,8 @@ CONTAINS
 !            ! if midpoint < mesh_height_max[km]
 !            if ( ipts==midpoint) ihTopS = midpoint
 !         end do       
+!  END SUBROUTINE Calculate_Grid_Attributes_From_Legacy_Input
+
 
 END MODULE IPE_Grid_Class
 
