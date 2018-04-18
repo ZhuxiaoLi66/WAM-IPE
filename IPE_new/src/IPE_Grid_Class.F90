@@ -317,6 +317,8 @@ CONTAINS
                   dum5,&
                   dum6 )
 
+      CALL grid % Calculate_Grid_Attributes_From_Legacy_Input( )
+
   END SUBROUTINE Read_IPE_Grid
 !
   SUBROUTINE Write_IPE_Grid_NetCDF( grid, filename )
@@ -718,7 +720,7 @@ CONTAINS
 
           grid % southern_top_index(lp) = i
 
-          IF ( grid % altitude(i,lp) <= mesh_height_max .AND. grid % altitude(i+1,lp) > mesh_height_max )THEN
+          IF ( grid % altitude(i,lp) <= mesh_height_max .AND. grid % altitude(i-1,lp) > mesh_height_max )THEN
             EXIT
           ENDIF
 
@@ -781,9 +783,9 @@ CONTAINS
             ENDIF
       
             ! l_u = l_e x bhat
-            grid % l_magnitude(i,lp,mp,1,2) = grid % l_magnitude(2,1,i,lp,mp)*bhat(3) - grid % l_magnitude(3,1,i,lp,mp)*bhat(2)
-            grid % l_magnitude(i,lp,mp,2,2) = grid % l_magnitude(3,1,i,lp,mp)*bhat(1) - grid % l_magnitude(1,1,i,lp,mp)*bhat(3)
-            grid % l_magnitude(i,lp,mp,3,2) = grid % l_magnitude(1,1,i,lp,mp)*bhat(2) - grid % l_magnitude(2,1,i,lp,mp)*bhat(1)
+            grid % l_magnitude(1,2,i,lp,mp) = grid % l_magnitude(2,1,i,lp,mp)*bhat(3) - grid % l_magnitude(3,1,i,lp,mp)*bhat(2)
+            grid % l_magnitude(2,2,i,lp,mp) = grid % l_magnitude(3,1,i,lp,mp)*bhat(1) - grid % l_magnitude(1,1,i,lp,mp)*bhat(3)
+            grid % l_magnitude(3,2,i,lp,mp) = grid % l_magnitude(1,1,i,lp,mp)*bhat(2) - grid % l_magnitude(2,1,i,lp,mp)*bhat(1)
 
 
                                      
@@ -799,10 +801,24 @@ CONTAINS
     IMPLICIT NONE
     CLASS( IPE_Grid ) :: grid
     INTEGER           :: i, lp, mp
+    ! Local
+    REAL(prec) :: dotprod
 
-      SinI = grid % apex_d_vectors(3,3,i,lp,mp)/SQRT( grid % apex_d_vectors(1,3,i,lp,mp)**2 + &
-                                                      grid % apex_d_vectors(2,3,i,lp,mp)**2 + &
-                                                      grid % apex_d_vectors(3,3,i,lp,mp)**2  )
+      dotprod = SQRT( grid % apex_d_vectors(1,3,i,lp,mp)**2 + &
+                      grid % apex_d_vectors(2,3,i,lp,mp)**2 + &
+                      grid % apex_d_vectors(3,3,i,lp,mp)**2  )
+
+      IF( Almost_Equal( dotprod, 0.0_prec )) THEN 
+
+        SinI = 0.0_prec
+     
+      ELSE
+
+        SinI = grid % apex_d_vectors(3,3,i,lp,mp)/dotprod
+
+      ENDIF
+                                                
+                                                
 
   END FUNCTION SinI
 
