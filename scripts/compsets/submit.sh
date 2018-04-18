@@ -5,12 +5,13 @@ pwd=$(pwd)
 ## set restart
 cycle=${2:-1}
 if [[ $cycle == 1 ]] ; then
-	export RESTART=.false.
+  export RESTART=.false.
 else
-	export RESTART=.true.
+  export RESTART=.true.
 fi
 
 ## source config
+CONFIG=$( echo $1 | cut -d'.' -f 1 )
 . $pwd/config/workflow.sh $pwd/$1
 
 ## create job file
@@ -32,15 +33,39 @@ do
 done
 ## and now back to the regularly scheduled program
 cat >> $tmp << EOF
-set -ax
+do_plots(){
+  mkdir plot_\$1 && cd plot_\$1
+
+  cp $BASEDIR/IPELIB/scripts/Convert_mpi.batch .
+  sed -i '/IPE_RUNDIR=/c\IPE_RUNDIR="'${ROTDIR}/'"' ./Convert_mpi.batch
+  # Do the polar plots for IPE
+  sed -i '/PLOTDIR=/c\PLOTDIR="'${PLOT_DIR}/${JOBNAME}/${CONFIG}/ipe/\${1}_plots/'"' ./Convert_mpi.batch
+  if [[ \$1 = "polar" ]] ; then
+    sed -i '/PLOTTYPE=/c\PLOTTYPE="-p"' ./Convert_mpi.batch
+  elif [[ \$1 = "mercator" ]] ; then
+    sed -i '/PLOTTYPE=/c\PLOTTYPE=""' ./Convert_mpi.batch
+  fi
+
+  ./Convert_mpi.batch $BASEDIR
+
+  cd ..
+}
+
+submit_plots(){
+  cd $ROTDIR && ln -fs $RUNDIR/IPE.inp .
+  rm -rf make_plots && mkdir make_plots && cd make_plots
+
+  do_plots "polar"
+  do_plots "mercator"
+}
 
 cd $SCRIPTSDIR
 
 ## set restart
 if [[ $cycle == 1 ]] ; then
-	export RESTART=.false.
+  export RESTART=.false.
 else
-	export RESTART=.true.
+  export RESTART=.true.
 fi
 
 ##-------------------------------------------------------
@@ -63,12 +88,21 @@ export VERBOSE=YES
 if [ $? != 0 ]; then echo "forecast failed, exit"; exit; fi
 echo "fcst done"
 
-if [[ $((cycle+1)) -le $3 ]] ; then
-echo "resubmitting $1 for cycle $((cycle+1)) out of $3"
+if [[ ${REGRESSION:-"NO"} = "YES" ]] ; then
+  if [[ $1 == 1 ]] ; then rm -rf ${PLOT_DIR}/${JOBNAME}/${CONFIG}/timepet.out ; fi
+  python $SCRIPTSDIR/../timepet/timepet.py $RUNDIR/PET350.ESMF_LogFile >> ${PLOT_DIR}/${JOBNAME}/${CONFIG}/timepet.out
+fi
+
 cd $SCRIPTSDIR
-. $pwd/submit.sh $1 $((cycle+1)) $3
+if [[ $((cycle+1)) -le $3 ]] ; then
+  echo "resubmitting $1 for cycle $((cycle+1)) out of $3"
+  . $pwd/submit.sh $1 $((cycle+1)) $3
 else
-echo "cycle $((cycle+1)) > $3, done!"
+  echo "cycle $((cycle+1)) > $3, done!"
+  if [[ ${REGRESSION:-"NO"} = "YES" ]] ; then
+    echo "submitting plotting jobs!"
+    submit_plots
+  fi
 fi
 
 exit $status
