@@ -4,6 +4,5 @@
 # the ESMF 7.0.0 API.
 
 #
-  module use /scratch3/NCEPDEV/swpc/noscrub/Raffaele.Montuoro/dev/swmed/opt/modulefiles/
-  module load intel impi netcdf esmf/7.1.0dev
-
+  module use /scratch4/NCEPDEV/nems/noscrub/emc.nemspara/soft/modulefiles/
+  module load intel impi/5.1.1.109 netcdf esmf/7.1.0r
