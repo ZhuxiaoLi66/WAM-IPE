@@ -27,6 +27,8 @@ IMPLICIT NONE
 
         CALL grid % Write_IPE_Grid_NetCDF( ncFile )
 
+        CALL grid % Trash( )
+
       ELSE
 
         PRINT*, ' '
