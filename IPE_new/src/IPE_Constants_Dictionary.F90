@@ -14,4 +14,7 @@ MODULE IPE_Constants_Dictionary
   REAL(prec), PARAMETER :: AMU = 1.66_prec*10.0_prec**(-27)     ! Atomic Mass Unit [kg]  
   REAL(prec), PARAMETER :: GSCON = 8.314_prec*10.0_prec**3  ! universal gas constant, as in tucan/ctipe
 
+
+  REAL(prec), PARAMETER :: mesh_height_max = 782.0_prec*10.0_prec**(3)
+
 END MODULE IPE_Constants_Dictionary

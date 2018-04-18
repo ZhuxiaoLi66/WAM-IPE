@@ -14,6 +14,7 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: altitude(:,:)
     REAL(prec), ALLOCATABLE :: latitude(:,:,:)
     REAL(prec), ALLOCATABLE :: longitude(:,:,:)
+    REAL(prec), ALLOCATABLE :: grx(:,:,:)    ! GR index of plasma_grid_3d
     REAL(prec), ALLOCATABLE :: foot_point_distance(:,:,:)     ! ISL index of plasma_grid_3d
     REAL(prec), ALLOCATABLE :: magnetic_field_strength(:,:,:) ! IBM index of plasma_grid_3d
     REAL(prec), ALLOCATABLE :: magnetic_colatitude(:,:) ! plasma_grid_GL
@@ -22,6 +23,7 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: q_factor(:,:,:) ! Q index of plasma_grid_3d
     REAL(prec), ALLOCATABLE :: l_magnitude(:,:,:,:,:)
     REAL(prec), ALLOCATABLE :: apex_d_vectors(:,:,:,:,:)
+    REAL(prec), ALLOCATABLE :: d1xd2_magnitude(:,:,:)
     REAL(prec), ALLOCATABLE :: apex_e_vectors(:,:,:,:,:)
     REAL(prec), ALLOCATABLE :: apex_be3(:,:)
 
@@ -35,10 +37,16 @@ IMPLICIT NONE
       PROCEDURE :: Build => Build_IPE_Grid
       PROCEDURE :: Trash => Trash_IPE_Grid
 
+      ! -- Legacy I/O -- !
       PROCEDURE :: Read_IPE_Grid
-
+      PROCEDURE :: Calculate_Grid_Attributes_From_Legacy_Input
+      ! ---------------- !
+ 
       PROCEDURE :: Write_IPE_Grid_NetCDF
       PROCEDURE :: Read_IPE_Grid_NetCDF
+
+      ! Functions
+      PROCEDURE :: SinI
       
   END TYPE IPE_Grid 
 
@@ -60,6 +68,7 @@ CONTAINS
       ALLOCATE( grid % altitude(1:nFluxTube,1:NLP), &
                 grid % latitude(1:nFluxTube,1:NLP,1:NMP), &
                 grid % longitude(1:nFluxTube,1:NLP,1:NMP), &
+                grid % grx(1:nFluxTube,1:NLP,1:NMP), &
                 grid % foot_point_distance(1:nFluxTube,1:NLP,1:NMP), &
                 grid % magnetic_field_strength(1:nFluxTube,1:NLP,1:NMP), &
                 grid % magnetic_colatitude(1:nFluxTube,1:NLP), &
@@ -68,6 +77,7 @@ CONTAINS
                 grid % l_magnitude(1:3,1:2,1:nFluxTube,1:NLP,1:NMP), &
                 grid % apex_e_vectors(1:3,1:2,1:nFluxTube,1:NLP,1:NMP), &
                 grid % apex_d_vectors(1:3,1:3,1:nFluxTube,1:NLP,1:NMP), &
+                grid % d1xd2_magnitude(1:nFluxTube,1:NLP,1:NMP), &
                 grid % apex_be3(1:NLP,1:NMP), &
                 grid % flux_tube_midpoint(1:NLP), &
                 grid % flux_tube_max(1:NLP), &
@@ -77,6 +87,7 @@ CONTAINS
       grid % altitude                = 0.0_prec
       grid % latitude                = 0.0_prec
       grid % longitude               = 0.0_prec
+      grid % grx    = 0.0_prec
       grid % foot_point_distance     = 0.0_prec
       grid % magnetic_field_strength = 0.0_prec
       grid % magnetic_colatitude     = 0.0_prec
@@ -85,6 +96,7 @@ CONTAINS
       grid % l_magnitude             = 0.0_prec
       grid % apex_e_vectors          = 0.0_prec
       grid % apex_d_vectors          = 0.0_prec
+      grid % d1xd2_magnitude         = 0.0_prec
       grid % apex_be3                = 0.0_prec
 
       grid % flux_tube_midpoint = 0
@@ -102,6 +114,7 @@ CONTAINS
       DEALLOCATE( grid % altitude, &
                   grid % latitude, &
                   grid % longitude, &
+                  grid % grx, &
                   grid % foot_point_distance, &
                   grid % magnetic_field_strength, &
                   grid % magnetic_colatitude, &
@@ -110,6 +123,7 @@ CONTAINS
                   grid % l_magnitude, &
                   grid % apex_e_vectors, &
                   grid % apex_d_vectors, &
+                  grid % d1xd2_magnitude, &
                   grid % apex_be3, &
                   grid % flux_tube_midpoint, &
                   grid % flux_tube_max, &
@@ -313,7 +327,7 @@ CONTAINS
     INTEGER :: NF90_PREC
     INTEGER :: ncid
     INTEGER :: x_dimid, y_dimid, z_dimid
-    INTEGER :: altitude_varid, latitude_varid, longitude_varid
+    INTEGER :: altitude_varid, latitude_varid, longitude_varid, gravity_varid
     INTEGER :: fpd_varid, B_varid, colat_varid, r_varid, q_varid
     INTEGER :: l11_varid, l21_varid, l31_varid
     INTEGER :: l12_varid, l22_varid, l32_varid
@@ -321,7 +335,7 @@ CONTAINS
     INTEGER :: apexe12_varid, apexe22_varid, apexe32_varid
     INTEGER :: apexd11_varid, apexd21_varid, apexd31_varid
     INTEGER :: apexd12_varid, apexd22_varid, apexd32_varid
-    INTEGER :: apexd13_varid, apexd23_varid, apexd33_varid
+    INTEGER :: apexd13_varid, apexd23_varid, apexd33_varid, d1xd2_varid
     INTEGER :: be3_varid, midpoint_varid, max_varid, south_varid, north_varid
 
 
@@ -349,6 +363,10 @@ CONTAINS
       CALL Check( nf90_def_var( ncid, "longitude", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , longitude_varid ) )
       CALL Check( nf90_put_att( ncid, longitude_varid, "long_name", "Geographic Longitude" ) )
       CALL Check( nf90_put_att( ncid, longitude_varid, "units", "radians" ) )
+
+      CALL Check( nf90_def_var( ncid, "GRX", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , gravity_varid ) )
+      CALL Check( nf90_put_att( ncid, gravity_varid, "long_name", "Gravity (used in FLIP)" ) )
+      CALL Check( nf90_put_att( ncid, gravity_varid, "units", "m^{2} s^{-1}" ) )
 
       CALL Check( nf90_def_var( ncid, "foot_point_distance", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , fpd_varid ) )
       CALL Check( nf90_put_att( ncid, fpd_varid, "long_name", "Distance along flux tube" ) )
@@ -454,6 +472,10 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, apexd33_varid, "long_name", "Unknown" ) )
       CALL Check( nf90_put_att( ncid, apexd33_varid, "units", "[Unknown]" ) )
 
+      CALL Check( nf90_def_var( ncid, "d1xd2_mag", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , d1xd2_varid ) )
+      CALL Check( nf90_put_att( ncid, d1xd2_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, d1xd2_varid, "units", "[Unknown]" ) )
+
       CALL Check( nf90_def_var( ncid, "apex_be3", NF90_PREC, (/ x_dimid, y_dimid /) , be3_varid ) )
       CALL Check( nf90_put_att( ncid, be3_varid, "long_name", "Unknown" ) )
       CALL Check( nf90_put_att( ncid, be3_varid, "units", "[Unknown]" ) )
@@ -479,6 +501,7 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, altitude_varid, grid % altitude ) )
       CALL Check( nf90_put_var( ncid, latitude_varid, grid % latitude ) )
       CALL Check( nf90_put_var( ncid, longitude_varid, grid % longitude ) )
+      CALL Check( nf90_put_var( ncid, gravity_varid, grid % grx ) )
       CALL Check( nf90_put_var( ncid, fpd_varid, grid % foot_point_distance ) )
       CALL Check( nf90_put_var( ncid, B_varid, grid % magnetic_field_strength ) )
       CALL Check( nf90_put_var( ncid, colat_varid, grid % magnetic_colatitude ) )
@@ -508,6 +531,7 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, apexd13_varid, grid % apex_d_vectors(1,3,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, apexd23_varid, grid % apex_d_vectors(2,3,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, apexd33_varid, grid % apex_d_vectors(3,3,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, d1xd2_varid, grid % d1xd2_magnitude ) )
 
       CALL Check( nf90_put_var( ncid, be3_varid, grid % apex_be3 ) )
       CALL Check( nf90_put_var( ncid, midpoint_varid, grid % flux_tube_midpoint ) )
@@ -563,6 +587,9 @@ CONTAINS
 
       CALL Check( nf90_inq_varid( ncid, "longitude", varid ) )
       CALL Check( nf90_get_var( ncid, varid, grid % longitude ) )
+
+      CALL Check( nf90_inq_varid( ncid, "GRX", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % grx ) )
 
       CALL Check( nf90_inq_varid( ncid, "foot_point_distance", varid ) )
       CALL Check( nf90_get_var( ncid, varid, grid % foot_point_distance ) )
@@ -642,6 +669,9 @@ CONTAINS
       CALL Check( nf90_inq_varid( ncid, "apex_d_33", varid ) )
       CALL Check( nf90_get_var( ncid, varid, grid % apex_d_vectors(3,3,:,:,:) ) )
 
+      CALL Check( nf90_inq_varid( ncid, "d1xd2_mag", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % d1xd2_magnitude ) )
+
       CALL Check( nf90_inq_varid( ncid, "apex_be3", varid ) )
       CALL Check( nf90_get_var( ncid, varid, grid % apex_be3 ) )
 
@@ -662,122 +692,119 @@ CONTAINS
 
   END SUBROUTINE Read_IPE_Grid_NetCDF
 
-!  SUBROUTINE Calculate_Grid_Attributes_From_Legacy_Input( grid )
-!    IMPLICIT NONE
-!    CLASS( IPE_Grid ) :: grid
-!    ! Local
-!    INTEGER :: 
-!        if( simulation_is_warm_start .or. utime_local > start_time )then
-!
-!          midpoint = IN + (IS-IN)/2
-!
-!         do ipts=in,midpoint
-!            if ( plasma_grid_Z(ipts,lp)<=mesh_height_max .and. mesh_height_max<plasma_grid_Z(ipts+1,lp) ) then
-!               ihTopN=ipts
-!               exit
-!            endif
-!            ! if midpoint < mesh_height_max[km]
-!            if ( ipts==midpoint) ihTopN = midpoint
-!         end do 
-!         
-!         do ipts=is,midpoint, -1
-!            if ( plasma_grid_Z(ipts,lp)<=mesh_height_max .and. mesh_height_max<plasma_grid_Z(ipts-1,lp) ) then
-!               ihTopS=ipts
-!               exit
-!            endif
-!            ! if midpoint < mesh_height_max[km]
-!            if ( ipts==midpoint) ihTopS = midpoint
-!         end do       
-!  END SUBROUTINE Calculate_Grid_Attributes_From_Legacy_Input
+  SUBROUTINE Calculate_Grid_Attributes_From_Legacy_Input( grid )
+    IMPLICIT NONE
+    CLASS( IPE_Grid ) :: grid
+    ! Local
+    INTEGER    :: i, lp, mp, ii 
+    REAL(prec) :: a(1:3), b(1:3), c(1:3)
+    REAL(prec) :: bhat(1:3), ufac
 
+      DO lp = 1, grid % NLP
+
+        ! Calculate the northern top index
+        DO i= 1, grid % flux_tube_midpoint(lp)
+          
+          grid % northern_top_index(lp) = i
+
+          IF ( grid % altitude(i,lp) <= mesh_height_max .AND. grid % altitude(i+1,lp) > mesh_height_max )THEN
+            EXIT
+          ENDIF
+
+        ENDDO 
+         
+        ! Calculate the southern top index
+        DO i = grid % flux_tube_max(lp), grid % flux_tube_midpoint(lp), -1
+
+          grid % southern_top_index(lp) = i
+
+          IF ( grid % altitude(i,lp) <= mesh_height_max .AND. grid % altitude(i+1,lp) > mesh_height_max )THEN
+            EXIT
+          ENDIF
+
+        ENDDO
+
+      ENDDO
+
+      DO mp = 1, grid % NMP
+        DO lp = 1, grid % NLP
+          DO i = 1, grid % flux_tube_max(lp)
+
+            IF( Almost_Equal( grid % apex_d_vectors(1,1,i,lp,mp), 0.0_prec ) .AND. &
+                Almost_Equal( grid % apex_d_vectors(1,2,i,lp,mp), 0.0_prec ) )THEN
+
+               ii = i-1
+
+               IF( i /= grid % flux_tube_midpoint(lp) ) then
+
+                 PRINT*, ' '
+                 PRINT*, '  Module IPE_Grid_Class : S/R Calculate_Grid_Attributes_From_Legacy_Input'
+                 PRINT*, '    WARNING : Invalid apex_d_vectors'
+                 PRINT*, ' '
+
+               ENDIF
+
+            ELSE
+
+              ii = i
+
+            ENDIF
+
+            ! calculate D from eq 3.15: | d1 X d2 |
+            a(1) = grid % apex_d_vectors(1,1,ii,lp,mp)
+            a(2) = grid % apex_d_vectors(2,1,ii,lp,mp)
+            a(3) = grid % apex_d_vectors(3,1,ii,lp,mp)
+
+            b(1) = grid % apex_d_vectors(1,2,ii,lp,mp)
+            b(2) = grid % apex_d_vectors(2,2,ii,lp,mp)
+            b(3) = grid % apex_d_vectors(3,2,ii,lp,mp)
+
+          
+            c(1) = a(2)*b(3) - a(3)*b(2) 
+            c(2) = a(3)*b(1) - a(1)*b(3) 
+            c(3) = a(1)*b(2) - a(2)*b(1) 
+
+            grid % d1xd2_magnitude(i,lp,mp) = SQRT ( c(1)**2 + c(2)**2 + c(3)**2 )
+
+            bhat(1) = grid % apex_d_vectors(1,3,ii,lp,mp)*grid % d1xd2_magnitude(i,lp,mp)
+            bhat(2) = grid % apex_d_vectors(2,3,ii,lp,mp)*grid % d1xd2_magnitude(i,lp,mp)
+            bhat(3) = grid % apex_d_vectors(3,3,ii,lp,mp)*grid % d1xd2_magnitude(i,lp,mp)
+ 
+            ufac  = SQRT(bhat(1)**2 + bhat(2)**2)
+
+            !(1) magnetic eastward exactly horizontal
+            !    l_e = bhat x k /|bhat x k|
+            IF( ufac > 0.0_prec ) THEN
+              grid % l_magnitude(1,1,i,lp,mp) =  bhat(2)/ufac
+              grid % l_magnitude(2,1,i,lp,mp) = -bhat(1)/ufac
+              grid % l_magnitude(3,1,i,lp,mp) =  0.0_prec
+            ENDIF
+      
+            ! l_u = l_e x bhat
+            grid % l_magnitude(i,lp,mp,1,2) = grid % l_magnitude(2,1,i,lp,mp)*bhat(3) - grid % l_magnitude(3,1,i,lp,mp)*bhat(2)
+            grid % l_magnitude(i,lp,mp,2,2) = grid % l_magnitude(3,1,i,lp,mp)*bhat(1) - grid % l_magnitude(1,1,i,lp,mp)*bhat(3)
+            grid % l_magnitude(i,lp,mp,3,2) = grid % l_magnitude(1,1,i,lp,mp)*bhat(2) - grid % l_magnitude(2,1,i,lp,mp)*bhat(1)
+
+
+                                     
+            grid % grx(i,lp,mp) = -( G0*earth_radius**2 )/( grid % r_meter(i,lp)**2 )*grid % sinI(i,lp,mp)
+
+          ENDDO
+        ENDDO
+      ENDDO
+        
+  END SUBROUTINE Calculate_Grid_Attributes_From_Legacy_Input
+
+  REAL(prec) FUNCTION SinI( grid, i, lp, mp ) 
+    IMPLICIT NONE
+    CLASS( IPE_Grid ) :: grid
+    INTEGER           :: i, lp, mp
+
+      SinI = grid % apex_d_vectors(3,3,i,lp,mp)/SQRT( grid % apex_d_vectors(1,3,i,lp,mp)**2 + &
+                                                      grid % apex_d_vectors(2,3,i,lp,mp)**2 + &
+                                                      grid % apex_d_vectors(3,3,i,lp,mp)**2  )
+
+  END FUNCTION SinI
 
 END MODULE IPE_Grid_Class
 
-!Pvalue = zero
-!do lp=1,NLP
-!  IN = JMIN_IN(lp)
-!
-!  CALL Get_Pvalue_Dipole ( r_meter2D(IN,lp), plasma_grid_GL(IN,lp), Pvalue(lp) )
-!enddo
-!
-!apex_longitude_loop: DO mp = 1,NMP
-!
-!    apex_latitude_height_loop:   DO lp = 1,NLP
-!
-!
-!      midpoint = IN + ( IS - IN )/2
-!
-!
-!
-!IF ( sw_grid==0 ) THEN  !APEX
-!         flux_tube: DO i=IN,IS
-!
-!            if ( apexD(i,lp,mp,east,1)==0.0.AND.apexD(i,lp,mp,east,2)==0.0 ) then
-!
-!               if ( i==midpoint ) then
-!                  ii = i-1  !assign the northward neighboring value
-!               else
-!                  print *,'sub-init_plasma_grid: STOP! INVALID apexD!',i,lp,mp,apexD(i,lp,mp,:,1),apexD(i,lp,mp,:,2)
-!                  STOP 
-!               end if
-!
-!            else
-!              ii = i
-!           end if
-!
-!! calculate D from eq 3.15: | d1 X d2 |
-!           a(1) = apexD(ii,lp,mp,east,1)
-!           a(2) = apexD(ii,lp,mp,north,1)
-!           a(3) = apexD(ii,lp,mp,up,1)
-!           b(1) = apexD(ii,lp,mp,east,2)
-!           b(2) = apexD(ii,lp,mp,north,2)
-!           b(3) = apexD(ii,lp,mp,up,2)
-!
-!!      call cross_product (a,b,c)
-!!---
-!! calculate cross product   a X b 
-!
-!
-!           c(1) = a(2)*b(3) - a(3)*b(2) 
-!           c(2) = a(3)*b(1) - a(1)*b(3) 
-!           c(3) = a(1)*b(2) - a(2)*b(1) 
-!!---
-!
-!           apexDscalar(i,lp,mp) = &
-!                &     ABS ( &
-!                & c(1)*c(1) + c(2)*c(2) + c(3)*c(3) &
-!                & )
-!
-!           bhat(east)  = apexD(ii,lp,mp,east, 3) * apexDscalar(i,lp,mp)
-!           bhat(north) = apexD(ii,lp,mp,north,3) * apexDscalar(i,lp,mp)
-!           bhat(up)    = apexD(ii,lp,mp,up,   3) * apexDscalar(i,lp,mp)
-!
-!           sinI = -bhat(up) !output
-!
-!!dbg           print *,i,lp,mp,'bhat',bhat
-!           ufac  = SQRT(bhat(north)**2 + bhat(east)**2)
-!
-!!dbg           print *,'ufac',ufac
-!
-!! l_mag: unit vector
-!!(1) magnetic eastward exactly horizontal
-!!    l_e = bhat x k /|bhat x k|
-!           if ( ufac > 0 ) then
-!              l_mag(i,lp,mp,east ,1) =  bhat(north)/ufac
-!              l_mag(i,lp,mp,north,1) = -bhat(east) /ufac
-!              l_mag(i,lp,mp,up   ,1) =  zero
-!           else 
-!              print *,'sub-init_plasma_grid: STOP! INVALID ufac!',ufac
-!              STOP
-!           endif
-!      
-!! l_u = l_e x bhat
-!           l_mag(i,lp,mp,east, 2) = l_mag(i,lp,mp,north,1)*bhat(up)   - l_mag(i,lp,mp,up   ,1)*bhat(north)
-!           l_mag(i,lp,mp,north,2) = l_mag(i,lp,mp,up   ,1)*bhat(east) - l_mag(i,lp,mp,east ,1)*bhat(up)
-!           l_mag(i,lp,mp,up,   2) = l_mag(i,lp,mp,east ,1)*bhat(north)- l_mag(i,lp,mp,north,1)*bhat(east)
-!
-!
-!           CALL Get_sinI ( sw_sinI, sinI, plasma_grid_GL(i,lp) &
-!     &, apexD(i,lp,mp,east,3), apexD(i,lp,mp,north,3), apexD(i,lp,mp,up,3) ) 
-!           plasma_grid_3d(i,lp,mp,IGR)  =  G0 * ( earth_radius * earth_radius ) / ( r_meter2D(i,lp) * r_meter2D(i,lp) ) * sinI * (-1.0)
-!         END DO flux_tube

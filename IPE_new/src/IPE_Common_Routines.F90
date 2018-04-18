@@ -8,6 +8,39 @@ IMPLICIT NONE
 
 CONTAINS
 
+  LOGICAL FUNCTION Almost_Equal( a, b ) 
+    IMPLICIT NONE
+    REAL(prec) :: a, b
+
+
+      IF( a == 0.0_prec .OR. b == 0.0_prec )THEN
+   
+        IF( ABS(a-b) <= EPSILON(1.0_prec) )THEN
+
+          Almost_Equal = .TRUE.
+
+        ELSE
+
+          Almost_Equal = .FALSE.
+ 
+        ENDIF
+
+      ELSE
+
+        IF( (ABS(a-b) <= EPSILON(1.0_prec)*ABS(a)) .OR. (ABS(a-b) <= EPSILON(1.0_prec)*ABS(b)) )THEN
+          
+          Almost_Equal = .TRUE.
+
+        ELSE
+
+          Almost_Equal = .FALSE.
+
+        ENDIF
+
+      ENDIF
+    
+  END FUNCTION Almost_Equal
+
   INTEGER FUNCTION NewUnit(thisunit)
     IMPLICIT NONE
     INTEGER, INTENT(out), optional :: thisunit
