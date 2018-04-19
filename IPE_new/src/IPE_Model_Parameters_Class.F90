@@ -15,6 +15,12 @@ IMPLICIT NONE
     INTEGER :: NPTS2D
     INTEGER :: nFluxTube
 
+    ! Forcing
+    INTEGER :: f107_kp_size
+    INTEGER :: f107_kp_interval
+    INTEGER :: f107_kp_skip_size
+    INTEGER :: f107_kp_data_size
+
     CONTAINS
 
       PROCEDURE :: Build => Build_IPE_Model_Parameters
@@ -32,6 +38,10 @@ CONTAINS
     INTEGER :: fUnit
     LOGICAL :: fileExists
     INTEGER :: NLP, NMP, NPTS2D, nFluxTube
+    INTEGER :: f107_kp_size
+    INTEGER :: f107_kp_interval
+    INTEGER :: f107_kp_skip_size
+    INTEGER :: f107_kp_data_size
    
       read_success = .FALSE.
 
@@ -42,8 +52,14 @@ CONTAINS
       NMP       = 80
       NPTS2D    = 44514
       nFluxTube = 1115
+      ! Forcing !
+      f107_kp_size=1
+      f107_kp_interval=60
+      f107_kp_skip_size=0
+      f107_kp_data_size=1
 
       NAMELIST/SpaceManagement/ NLP, NMP, NPTS2D, nFluxTube
+      NAMELIST/Forcing/ f107_kp_size, f107_kp_interval, f107_kp_skip_size, f107_kp_data_size
 
       INQUIRE( FILE = 'IPE.inp', EXIST = fileExists )
   
@@ -52,6 +68,7 @@ CONTAINS
         OPEN( UNIT = NewUnit(fUnit), FILE = 'IPE.inp' )
 
         READ( UNIT = fUnit, NML = SpaceManagement )
+        READ( UNIT = fUnit, NML = Forcing )
 
         CLOSE( fUnit )
 
@@ -62,11 +79,17 @@ CONTAINS
         params % NPTS2D    = NPTS2D
         params % nFluxTube = nFluxTube
 
+        params % f107_kp_size      = f107_kp_size
+        params % f107_kp_interval  = f107_kp_interval
+        params % f107_kp_skip_size = f107_kp_skip_size
+        params % f107_kp_data_size = f107_kp_data_size
+
       ELSE
 
         OPEN( UNIT = NEWUNIT(fUnit), FILE = 'IPE.inp', ACTION = 'WRITE' )
 
         WRITE( UNIT = fUnit, NML = SpaceManagement )
+        WRITE( UNIT = fUnit, NML = Forcing )
 
         CLOSE( UNIT = fUnit )
 
