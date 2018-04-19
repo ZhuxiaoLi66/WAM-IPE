@@ -17,4 +17,10 @@ MODULE IPE_Constants_Dictionary
 
   REAL(prec), PARAMETER :: mesh_height_max = 782.0_prec*10.0_prec**(3)
 
+  ! Parameters for controlling the fixed height grid interpolation
+  INTEGER, PARAMETER    :: nheights_geo=183
+  INTEGER, PARAMETER    :: nlon_geo=90 
+  INTEGER, PARAMETER    :: nlat_geo=91
+  REAL(prec), PARAMETER :: fillValue_geo = -999999.9999_prec
+
 END MODULE IPE_Constants_Dictionary

@@ -32,6 +32,14 @@ IMPLICIT NONE
     INTEGER, ALLOCATABLE :: southern_top_index(:)
     INTEGER, ALLOCATABLE :: northern_top_index(:)
 
+    ! Geographic Interpolation attributes
+    REAL(prec), ALLOCATABLE :: facfac_interface(:,:,:,:) 
+    REAL(prec), ALLOCATABLE :: dd_interface(:,:,:,:) 
+    INTEGER, ALLOCATABLE    :: ii1_interface(:,:,:,:) 
+    INTEGER, ALLOCATABLE    :: ii2_interface(:,:,:,:) 
+    INTEGER, ALLOCATABLE    :: ii3_interface(:,:,:,:) 
+    INTEGER, ALLOCATABLE    :: ii4_interface(:,:,:,:) 
+
     CONTAINS
 
       PROCEDURE :: Build => Build_IPE_Grid
@@ -49,6 +57,7 @@ IMPLICIT NONE
       PROCEDURE :: SinI
       
   END TYPE IPE_Grid 
+
 
 CONTAINS
 
@@ -82,7 +91,13 @@ CONTAINS
                 grid % flux_tube_midpoint(1:NLP), &
                 grid % flux_tube_max(1:NLP), &
                 grid % southern_top_index(1:NLP), &
-                grid % northern_top_index(1:NLP) )
+                grid % northern_top_index(1:NLP), &
+                grid % facfac_interface(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) ,&
+                grid % dd_interface(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) ,&
+                grid % ii1_interface(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) ,&
+                grid % ii2_interface(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) ,&
+                grid % ii3_interface(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) ,&
+                grid % ii4_interface(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) )
 
       grid % altitude                = 0.0_prec
       grid % latitude                = 0.0_prec
@@ -128,7 +143,13 @@ CONTAINS
                   grid % flux_tube_midpoint, &
                   grid % flux_tube_max, &
                   grid % southern_top_index, &
-                  grid % northern_top_index )
+                  grid % northern_top_index, &
+                  grid % facfac_interface, &
+                  grid % dd_interface, &
+                  grid % ii1_interface, &
+                  grid % ii2_interface, &
+                  grid % ii3_interface, &
+                  grid % ii4_interface )
 
   END SUBROUTINE Trash_IPE_Grid
 !
@@ -321,6 +342,43 @@ CONTAINS
 
   END SUBROUTINE Read_IPE_Grid
 !
+  SUBROUTINE Read_Legacy_Geographic_Weights( grid, filename )
+    IMPLICIT NONE
+    CLASS( IPE_Grid ), INTENT(inout) :: grid
+    CHARACTER(*), INTENT(in)         :: filename
+    ! Local
+    INTEGER  :: fUnit
+    REAL(dp) :: facfac_interface(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) 
+    REAL(dp) :: dd_interface(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) 
+
+      OPEN( UNIT = NewUnit(fUnit), &
+            FILE = TRIM(filename), &
+            FORM = 'UNFORMATTED', &
+            STATUS = 'OLD', &
+            ACTION = 'READ', &
+            CONVERT = 'LITTLE_ENDIAN' )
+
+        READ(fUnit) facfac_interface
+        READ(fUnit) dd_interface
+        READ(fUnit) grid % ii1_interface
+        READ(fUnit) grid % ii2_interface
+        READ(fUnit) grid % ii3_interface
+        READ(fUnit) grid % ii4_interface
+
+      CLOSE(fUnit)
+
+      ! This file is assumed to be written in double precision with
+      ! little-endian byte ordering. Because IPE's precision can be 
+      ! different, we use a local double precision array to read in 
+      ! facfac_interface and dd_interface and copy them into the 
+      ! IPE_Grid data structure.
+      
+      grid % facfac_interface = facfac_interface
+      grid % dd_interface     = dd_interface
+    
+  END SUBROUTINE Read_Legacy_Geographic_Weights
+  
+!
   SUBROUTINE Write_IPE_Grid_NetCDF( grid, filename )
     IMPLICIT NONE
     CLASS( IPE_Grid ), INTENT(in) :: grid
@@ -329,6 +387,13 @@ CONTAINS
     INTEGER :: NF90_PREC
     INTEGER :: ncid
     INTEGER :: x_dimid, y_dimid, z_dimid
+    INTEGER :: geoh_dimid, geolon_dimid, geolat_dimid
+    INTEGER :: fac1_varid, fac2_varid, fac3_varid
+    INTEGER :: dd1_varid, dd2_varid, dd3_varid
+    INTEGER :: ii11_varid, ii12_varid, ii13_varid
+    INTEGER :: ii21_varid, ii22_varid, ii23_varid
+    INTEGER :: ii31_varid, ii32_varid, ii33_varid
+    INTEGER :: ii41_varid, ii42_varid, ii43_varid
     INTEGER :: altitude_varid, latitude_varid, longitude_varid, gravity_varid
     INTEGER :: fpd_varid, B_varid, colat_varid, r_varid, q_varid
     INTEGER :: l11_varid, l21_varid, l31_varid
@@ -353,6 +418,10 @@ CONTAINS
       CALL Check( nf90_def_dim( ncid, "s", grid % nFluxTube, z_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "lp", grid % NLP, x_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "mp", grid % NMP, y_dimid ) ) 
+
+      CALL Check( nf90_def_dim( ncid, "geo_height", nheights_geo, geoh_dimid ) ) 
+      CALL Check( nf90_def_dim( ncid, "geo_lat", nlat_geo, geolat_dimid ) ) 
+      CALL Check( nf90_def_dim( ncid, "geo_lon", nlon_geo, geolon_dimid ) ) 
 
       CALL Check( nf90_def_var( ncid, "altitude", NF90_PREC, (/ z_dimid, x_dimid /) , altitude_varid ) )
       CALL Check( nf90_put_att( ncid, altitude_varid, "long_name", "Radial distance above spherical earth" ) )
@@ -498,6 +567,66 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, north_varid, "long_name", "Index of southern hemisphere top of flux tube" ) )
       CALL Check( nf90_put_att( ncid, north_varid, "units", "Index" ) )
 
+      CALL Check( nf90_def_var( ncid, "fac_1", NF90_PREC, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , fac1_varid ) )
+      CALL Check( nf90_put_att( ncid, fac1_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, fac1_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "fac_2", NF90_PREC, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , fac2_varid ) )
+      CALL Check( nf90_put_att( ncid, fac2_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, fac2_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "fac_3", NF90_PREC, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , fac3_varid ) )
+      CALL Check( nf90_put_att( ncid, fac3_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, fac3_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "dd_1", NF90_PREC, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , dd1_varid ) )
+      CALL Check( nf90_put_att( ncid, dd1_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, dd1_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "dd_2", NF90_PREC, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , dd2_varid ) )
+      CALL Check( nf90_put_att( ncid, dd2_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, dd2_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "dd_3", NF90_PREC, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , dd3_varid ) )
+      CALL Check( nf90_put_att( ncid, dd3_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, dd3_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "ii1_1", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii11_varid ) )
+      CALL Check( nf90_put_att( ncid, ii11_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, ii11_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "ii1_2", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii12_varid ) )
+      CALL Check( nf90_put_att( ncid, ii12_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, ii12_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "ii1_3", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii13_varid ) )
+      CALL Check( nf90_put_att( ncid, ii13_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, ii13_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "ii2_1", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii21_varid ) )
+      CALL Check( nf90_put_att( ncid, ii21_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, ii21_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "ii2_2", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii22_varid ) )
+      CALL Check( nf90_put_att( ncid, ii22_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, ii22_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "ii2_3", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii23_varid ) )
+      CALL Check( nf90_put_att( ncid, ii23_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, ii23_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "ii3_1", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii31_varid ) )
+      CALL Check( nf90_put_att( ncid, ii31_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, ii31_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "ii3_2", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii32_varid ) )
+      CALL Check( nf90_put_att( ncid, ii32_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, ii32_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "ii3_3", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii33_varid ) )
+      CALL Check( nf90_put_att( ncid, ii33_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, ii33_varid, "units", "[Unknown]" ) )
+
       CALL Check( nf90_enddef(ncid) )
       
       CALL Check( nf90_put_var( ncid, altitude_varid, grid % altitude ) )
@@ -540,6 +669,30 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, max_varid, grid % flux_tube_max ) ) 
       CALL Check( nf90_put_var( ncid, south_varid, grid % southern_top_index ) ) 
       CALL Check( nf90_put_var( ncid, north_varid, grid % northern_top_index ) ) 
+
+      CALL Check( nf90_put_var( ncid, fac1_varid, grid % facfac_interface(1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, fac2_varid, grid % facfac_interface(2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, fac3_varid, grid % facfac_interface(3,:,:,:) ) )
+
+      CALL Check( nf90_put_var( ncid, dd1_varid, grid % dd_interface(1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, dd2_varid, grid % dd_interface(2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, dd3_varid, grid % dd_interface(3,:,:,:) ) )
+
+      CALL Check( nf90_put_var( ncid, ii11_varid, grid % ii1_interface(1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, ii12_varid, grid % ii1_interface(2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, ii13_varid, grid % ii1_interface(3,:,:,:) ) )
+
+      CALL Check( nf90_put_var( ncid, ii21_varid, grid % ii2_interface(1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, ii22_varid, grid % ii2_interface(2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, ii23_varid, grid % ii2_interface(3,:,:,:) ) )
+
+      CALL Check( nf90_put_var( ncid, ii31_varid, grid % ii3_interface(1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, ii32_varid, grid % ii3_interface(2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, ii33_varid, grid % ii3_interface(3,:,:,:) ) )
+
+      CALL Check( nf90_put_var( ncid, ii41_varid, grid % ii4_interface(1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, ii42_varid, grid % ii4_interface(2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, ii43_varid, grid % ii4_interface(3,:,:,:) ) )
 
       CALL Check( nf90_close( ncid ) )
 
@@ -689,6 +842,60 @@ CONTAINS
       CALL Check( nf90_inq_varid( ncid, "northern_top", varid ) )
       CALL Check( nf90_get_var( ncid, varid, grid % northern_top_index ) )
 
+      CALL Check( nf90_inq_varid( ncid, "fac_1", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % facfac_interface(1,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "fac_2", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % facfac_interface(2,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "fac_3", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % facfac_interface(3,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "dd_1", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % dd_interface(1,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "dd_2", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % dd_interface(2,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "dd_3", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % dd_interface(3,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ii1_1", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % ii1_interface(1,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ii1_2", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % ii1_interface(2,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ii1_3", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % ii1_interface(3,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ii2_1", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % ii2_interface(1,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ii2_2", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % ii2_interface(2,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ii2_3", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % ii2_interface(3,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ii3_1", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % ii3_interface(1,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ii3_2", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % ii3_interface(2,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ii3_3", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % ii3_interface(3,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ii4_1", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % ii4_interface(1,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ii4_2", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % ii4_interface(2,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ii4_3", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % ii4_interface(3,:,:,:) ) )
+
       CALL Check( nf90_close( ncid ) )
 
 
@@ -822,5 +1029,84 @@ CONTAINS
 
   END FUNCTION SinI
 
-END MODULE IPE_Grid_Class
+!  SUBROUTINE Interpolate_to_Geographic_Grid( grid, apex_data, geographic_data )
+!    IMPLICIT NONE
+!    CLASS( IPE_Grid ), INTENT(in) :: grid
+!    REAL(prec), INTENT(in)        :: apex_data(1:grid % nFluxTube,1:grid % NLP,1:grid % NMP)
+!    REAL(prec), INTENT(out)       :: geographic_data(1:nlon_geo,1:nlat_geo,1:nheights_geo)
+!    ! Local
+!    INTEGER    :: 
+!    INTEGER    :: i, iheight, ilat, ilon
+!    REAL(prec) :: a, b, c, x1, x2, x3, y1, y2, y3
+!    INTEGER    :: i1, i2, i3, i_max_location
+!
+!
+!!!! Some things to be aware of
+!!  REAL(dp)     facfac_interface(1:3,nheights,nlat,nlon), &
+!!  REAL(dp)     dd_interface(1:3,nheights,nlat,nlon), &
+!!  INTEGER,DIMENSION(3,nheights,nlat,nlon)  :: ii1, ii2, ii3, ii4
+!!  INTEGER,DIMENSION(3,nheights,nlat,nlon)  :: ii1_interface, ii2_interface,&
+!
+!
+! 
+!    npts = 0
+!    DO lp = 1, grid % NLP
+!      DO i = 1, grid % flux_tube_max(lp)
+!        npts = npts+1
+!      ENDDO
+!    ENDDO
+!
+!    ALLOCATE( ilp_map(1:2,1:npts) )
+!
+!    npts = 0
+!    DO lp = 1, grid % NLP
+!      DO i = 1, grid % flux_tube_max(lp)
+!        npts = npts+1
+!        ilp_map(1,npts) = i 
+!        ilp_map(2,npts) = lp 
+!      ENDDO
+!    ENDDO
+!
+!    DO iheight=1,nheights
+!      DO l=1,nlat
+!          DO m=1,nlon
+!
+!              geographic_data(m,l,iheight) = 0.0
+!              dtotinv = 0.0
+!
+!              DO i=1,3
+!
+!                  factor=facfac_interface(i,iheight,l,m)
+!                  mp=ii1_interface(i,iheight,l,m)
+!                 ! lp=ii2_interface(i,iheight,l,m)
+!                  in2=ii3_interface(i,iheight,l,m)
+!                  in1=ii4_interface(i,iheight,l,m)
+!
+!                  iFlux2 = ilp_map(1,in2)
+!                  lp2    = ilp_map(2,in2)
+!                  
+!                  iFlux1 = ilp_map(1,in1)
+!                  lp1    = ilp_map(2,in1)
+!
+!                  !oplus_interpolated(i) = ((oplus_ft(in2,mp)-oplus_ft(in1,mp))*factor) + oplus_ft(in1,mp)
+!                  data_interpolated(i) = ((apex_data(iFlux2,lp2,mp)-apex_data(iFlux1,lp1,mp))*factor) + apex_data(iFlux1,lp1,mp)
+!
+!                  d = dd_interface(i,iheight,l,m)
+!                  dtotinv = (1.0_prec/d) + dtotinv
+!
+!                  !oplus_fixed(m,l,iheight) = (oplus_interpolated(i)/d) + oplus_fixed(m,l,iheight)
+!                  geographic_data(m,l,iheight) = (data_interpolated(i)/d) + geographic_data(m,l,iheight)
+!
+!
+!              ENDDO
+!
+!              !oplus_fixed(m,l,iheight)   = oplus_fixed(m,l,iheight)/dtotinv
+!              geographic_data(m,l,iheight)   = geographic_data(m,l,iheight)/dtotinv
+!
+!          ENDDO
+!      ENDDO
+!  ENDDO
+!
+!  END SUBROUTINE Interpolate_to_Geographic_Grid
 
+END MODULE IPE_Grid_Class
