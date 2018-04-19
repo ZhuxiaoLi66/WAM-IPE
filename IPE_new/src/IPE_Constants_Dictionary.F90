@@ -23,4 +23,10 @@ MODULE IPE_Constants_Dictionary
   INTEGER, PARAMETER    :: nlat_geo=91
   REAL(prec), PARAMETER :: fillValue_geo = -999999.9999_prec
 
+
+  ! Parameters governing the size of the emaps, cmaps, and djspectra arrays
+  INTEGER, PARAMETER :: n_flux_ipe  = 15
+  INTEGER, PARAMETER :: n_bands_ipe = 21
+  INTEGER, PARAMETER :: maps_ipe_size(3) = (/ 21, 20, 7 /)
+
 END MODULE IPE_Constants_Dictionary

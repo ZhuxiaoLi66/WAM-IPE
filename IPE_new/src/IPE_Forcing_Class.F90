@@ -1,6 +1,7 @@
 MODULE IPE_Forcing_Class
 
 USE IPE_Precision
+USE IPE_Constants_Dictionary
 USE IPE_Common_Routines
 
 IMPLICIT NONE
@@ -29,10 +30,19 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: solarwind_velocity(:)
     REAL(prec), ALLOCATABLE :: solarwind_Bz(:)
 
+    ! Tiros
+    REAL(prec), ALLOCATABLE :: emaps(:,:,:)
+    REAL(prec), ALLOCATABLE :: cmaps(:,:,:)
+    REAL(prec), ALLOCATABLE :: djspectra(:,:)
+
     CONTAINS
 
       PROCEDURE :: Build => Build_IPE_Forcing
       PROCEDURE :: Trash => Trash_IPE_Forcing
+
+
+      PROCEDURE :: Read_F107KP_IPE_Forcing
+      PROCEDURE :: Read_Tiros_IPE_Forcing
 
   END TYPE IPE_Forcing
 
@@ -61,22 +71,30 @@ CONTAINS
                 forcing % solarwind_dBdt(1:n_time_levels), &
                 forcing % solarwind_angle(1:n_time_levels), &
                 forcing % solarwind_velocity(1:n_time_levels), &
-                forcing % solarwind_Bz(1:n_time_levels) )
+                forcing % solarwind_Bz(1:n_time_levels), &
+                forcing % emaps(1:maps_ipe_size(1),1:maps_ipe_size(2),1:maps_ipe_size(3)), &
+                forcing % cmaps(1:maps_ipe_size(1),1:maps_ipe_size(2),1:maps_ipe_size(3)), &
+                forcing % djspectra(1:n_flux_ipe,1:n_bands_ipe)  )
 
-      forcing % f107               = 0.0_prec
-      forcing % f107_flag          = 0
-      forcing % f107_81day_avg     = 0.0_prec
-      forcing % kp                 = 0.0_prec
-      forcing % kp_flag            = 0
-      forcing % kp_1day_avg        = 0.0_prec
-      forcing % nhemi_power        = 0.0_prec
-      forcing % nhemi_power_index  = 0
-      forcing % shemi_power        = 0.0_prec
-      forcing % shemi_power_index  = 0
+      forcing % f107              = 0.0_prec
+      forcing % f107_flag         = 0
+      forcing % f107_81day_avg    = 0.0_prec
+      forcing % kp                = 0.0_prec
+      forcing % kp_flag           = 0
+      forcing % kp_1day_avg       = 0.0_prec
+      forcing % nhemi_power       = 0.0_prec
+      forcing % nhemi_power_index = 0
+      forcing % shemi_power       = 0.0_prec
+      forcing % shemi_power_index = 0
+
       forcing % solarwind_dBdt     = 0.0_prec
       forcing % solarwind_angle    = 0.0_prec
       forcing % solarwind_velocity = 0.0_prec
       forcing % solarwind_Bz       = 0.0_prec
+
+      forcing % emaps     = 0.0_prec
+      forcing % cmaps     = 0.0_prec
+      forcing % djspectra = 0.0_prec
 
 
   END SUBROUTINE Build_IPE_Forcing
@@ -104,7 +122,7 @@ CONTAINS
 
   END SUBROUTINE Trash_IPE_Forcing
 !
-  SUBROUTINE Read_IPE_Forcing( forcing, skip_size, filename )
+  SUBROUTINE Read_F107KP_IPE_Forcing( forcing, skip_size, filename )
     IMPLICIT NONE
     CLASS( IPE_Forcing ), INTENT(inout) :: forcing
     INTEGER, INTENT(in)                 :: skip_size 
@@ -178,6 +196,48 @@ CONTAINS
       END DO
 
  
-  END SUBROUTINE Read_IPE_Forcing
+  END SUBROUTINE Read_F107KP_IPE_Forcing
+!
+  SUBROUTINE Read_Tiros_IPE_Forcing( forcing )
+    IMPLICIT NONE
+    CLASS( IPE_Forcing ), INTENT(inout) :: forcing
+    ! Local
+    INTEGER :: fUnit, iBand
+
+      OPEN( UNIT = NewUnit(fUnit), &
+            FILE = './ionprof', &
+            FORM = 'FORMATTED', &
+            STATUS = 'OLD', &
+            ACTION = 'READ' )
+
+      READ (fUnit,'(1x,6E13.6)') forcing % emaps
+      READ (fUnit,'(1x,6E13.6)') forcing % cmaps
+
+      CLOSE(fUnit)
+
+      OPEN( UNIT = NewUnit(fUnit), &
+            FILE = './tiros_spectra', &
+            FORM = 'FORMATTED', &
+            STATUS = 'OLD', &
+            ACTION = 'READ' )
+
+      READ(fUnit,*)
+      READ(fUnit,*)
+      READ(fUnit,*)
+
+      DO iBand = 1, n_bands_ipe
+
+         READ(fUnit,*)
+         READ(fUnit,*)
+         READ(fUnit,'(1X,5E11.4)') forcing % djspectra(1:n_flux_ipe,iBand)
+         READ(fUnit,*)
+
+      ENDDO
+
+      CLOSE(fUnit)
+
+  END SUBROUTINE Read_Tiros_IPE_Forcing
 
 END MODULE IPE_Forcing_Class
+       
+       
