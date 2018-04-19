@@ -47,11 +47,15 @@ IMPLICIT NONE
 
       ! -- Legacy I/O -- !
       PROCEDURE :: Read_IPE_Grid
+      PROCEDURE :: Read_Legacy_Geographic_Weights
       PROCEDURE :: Calculate_Grid_Attributes_From_Legacy_Input
       ! ---------------- !
  
       PROCEDURE :: Write_IPE_Grid_NetCDF
       PROCEDURE :: Read_IPE_Grid_NetCDF
+
+
+      PROCEDURE :: Interpolate_to_Geographic_Grid
 
       ! Functions
       PROCEDURE :: SinI
@@ -567,65 +571,79 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, north_varid, "long_name", "Index of southern hemisphere top of flux tube" ) )
       CALL Check( nf90_put_att( ncid, north_varid, "units", "Index" ) )
 
-      CALL Check( nf90_def_var( ncid, "fac_1", NF90_PREC, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , fac1_varid ) )
+      CALL Check( nf90_def_var( ncid, "fac_1", NF90_PREC, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , fac1_varid ) )
       CALL Check( nf90_put_att( ncid, fac1_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, fac1_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "fac_2", NF90_PREC, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , fac2_varid ) )
+      CALL Check( nf90_def_var( ncid, "fac_2", NF90_PREC, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , fac2_varid ) )
       CALL Check( nf90_put_att( ncid, fac2_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, fac2_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "fac_3", NF90_PREC, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , fac3_varid ) )
+      CALL Check( nf90_def_var( ncid, "fac_3", NF90_PREC, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , fac3_varid ) )
       CALL Check( nf90_put_att( ncid, fac3_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, fac3_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "dd_1", NF90_PREC, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , dd1_varid ) )
+      CALL Check( nf90_def_var( ncid, "dd_1", NF90_PREC, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , dd1_varid ) )
       CALL Check( nf90_put_att( ncid, dd1_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, dd1_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "dd_2", NF90_PREC, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , dd2_varid ) )
+      CALL Check( nf90_def_var( ncid, "dd_2", NF90_PREC, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , dd2_varid ) )
       CALL Check( nf90_put_att( ncid, dd2_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, dd2_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "dd_3", NF90_PREC, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , dd3_varid ) )
+      CALL Check( nf90_def_var( ncid, "dd_3", NF90_PREC, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , dd3_varid ) )
       CALL Check( nf90_put_att( ncid, dd3_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, dd3_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "ii1_1", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii11_varid ) )
+      CALL Check( nf90_def_var( ncid, "ii1_1", NF90_INT, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , ii11_varid ) )
       CALL Check( nf90_put_att( ncid, ii11_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, ii11_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "ii1_2", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii12_varid ) )
+      CALL Check( nf90_def_var( ncid, "ii1_2", NF90_INT, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , ii12_varid ) )
       CALL Check( nf90_put_att( ncid, ii12_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, ii12_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "ii1_3", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii13_varid ) )
+      CALL Check( nf90_def_var( ncid, "ii1_3", NF90_INT, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , ii13_varid ) )
       CALL Check( nf90_put_att( ncid, ii13_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, ii13_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "ii2_1", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii21_varid ) )
+      CALL Check( nf90_def_var( ncid, "ii2_1", NF90_INT, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , ii21_varid ) )
       CALL Check( nf90_put_att( ncid, ii21_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, ii21_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "ii2_2", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii22_varid ) )
+      CALL Check( nf90_def_var( ncid, "ii2_2", NF90_INT, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , ii22_varid ) )
       CALL Check( nf90_put_att( ncid, ii22_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, ii22_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "ii2_3", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii23_varid ) )
+      CALL Check( nf90_def_var( ncid, "ii2_3", NF90_INT, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , ii23_varid ) )
       CALL Check( nf90_put_att( ncid, ii23_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, ii23_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "ii3_1", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii31_varid ) )
+      CALL Check( nf90_def_var( ncid, "ii3_1", NF90_INT, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , ii31_varid ) )
       CALL Check( nf90_put_att( ncid, ii31_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, ii31_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "ii3_2", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii32_varid ) )
+      CALL Check( nf90_def_var( ncid, "ii3_2", NF90_INT, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , ii32_varid ) )
       CALL Check( nf90_put_att( ncid, ii32_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, ii32_varid, "units", "[Unknown]" ) )
 
-      CALL Check( nf90_def_var( ncid, "ii3_3", NF90_INT, (/ geoh_dimid, geolon_dimid, geolat_dimid /) , ii33_varid ) )
+      CALL Check( nf90_def_var( ncid, "ii3_3", NF90_INT, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , ii33_varid ) )
       CALL Check( nf90_put_att( ncid, ii33_varid, "long_name", "Geographic Interpolation Weight" ) )
       CALL Check( nf90_put_att( ncid, ii33_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "ii4_1", NF90_INT, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , ii41_varid ) )
+      CALL Check( nf90_put_att( ncid, ii41_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, ii41_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "ii4_2", NF90_INT, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , ii42_varid ) )
+      CALL Check( nf90_put_att( ncid, ii42_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, ii42_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "ii4_3", NF90_INT, (/ geoh_dimid, geolat_dimid, geolon_dimid /) , ii43_varid ) )
+      CALL Check( nf90_put_att( ncid, ii43_varid, "long_name", "Geographic Interpolation Weight" ) )
+      CALL Check( nf90_put_att( ncid, ii43_varid, "units", "[Unknown]" ) )
+
+
 
       CALL Check( nf90_enddef(ncid) )
       
