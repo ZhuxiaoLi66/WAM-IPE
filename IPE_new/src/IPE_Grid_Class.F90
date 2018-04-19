@@ -123,6 +123,13 @@ CONTAINS
       grid % southern_top_index = 0
       grid % northern_top_index = 0
 
+      grid % facfac_interface = 0.0_prec
+      grid % dd_interface     = 0.0_prec
+      grid % ii1_interface    = 0
+      grid % ii2_interface    = 0
+      grid % ii3_interface    = 0
+      grid % ii4_interface    = 0
+
 
   END SUBROUTINE Build_IPE_Grid
 !
