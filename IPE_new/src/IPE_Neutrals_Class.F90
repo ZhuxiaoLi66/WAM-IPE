@@ -23,6 +23,17 @@ IMPLICIT NONE
 #ifdef COUPLED
     REAL(prec), ALLOCATABLE :: neutral_to_ipe_fields(:,:,:,:)
 #endif
+    
+    ! Interpolated fields
+    REAL(prec), ALLOCATABLE :: geo_helium(:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_oxygen(:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_molecular_oxygen(:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_molecular_nitrogen(:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_nitrogen(:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_hydrogen(:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_temperature(:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_velocity(:,:,:,:)
+
 
     CONTAINS
 
@@ -83,6 +94,24 @@ CONTAINS
      neutrals % velocity_geographic = 0.0_prec
      neutrals % velocity_apex       = 0.0_prec
 
+      ALLOCATE( neutrals % geo_helium(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
+                neutrals % geo_oxygen(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
+                neutrals % geo_molecular_oxygen(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
+                neutrals % geo_molecular_nitrogen(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
+                neutrals % geo_nitrogen(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
+                neutrals % geo_hydrogen(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
+                neutrals % geo_temperature(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
+                neutrals % geo_velocity(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) )
+
+     neutrals % geo_helium             = 0.0_prec
+     neutrals % geo_oxygen             = 0.0_prec
+     neutrals % geo_molecular_oxygen   = 0.0_prec
+     neutrals % geo_molecular_nitrogen = 0.0_prec
+     neutrals % geo_nitrogen           = 0.0_prec
+     neutrals % geo_hydrogen           = 0.0_prec
+     neutrals % geo_temperature        = 0.0_prec
+     neutrals % geo_velocity           = 0.0_prec
+
 #ifdef COUPLED
      ALLOCATE( neutrals % couplingFields(1:nFluxTube,1:NLP,1:NMP,1:nCouplingFields) )
      neutrals % couplingFields = 0.0_prec
@@ -106,6 +135,16 @@ CONTAINS
                   neutrals % temperature_inf, &
                   neutrals % velocity_geographic, &
                   neutrals % velocity_apex )
+
+      DEALLOCATE( neutrals % geo_helium, &
+                  neutrals % geo_oxygen, &
+                  neutrals % geo_molecular_oxygen, &
+                  neutrals % geo_molecular_nitrogen, &
+                  neutrals % geo_nitrogen, &
+                  neutrals % geo_hydrogen, &
+                  neutrals % geo_temperature, &
+                  neutrals % geo_velocity )
+
 #ifdef COUPLED
      DEALLOCATE( neutrals % couplingFields )
 #endif
@@ -383,7 +422,7 @@ CONTAINS
              ! dbg20110131 : the midpoint values become NaN otherwise because
              ! of inappropriate D1/3 values...
              IF ( lp >= 1 .AND. lp <= 6 )THEN
-               IF( i == grid % flux_tube_midpoint(lp,mp) )THEN
+               IF( i == grid % flux_tube_midpoint(lp) )THEN
                  neutrals % velocity_apex(1:3,i,lp,mp) = neutrals % velocity_apex(1:3,i-1,lp,mp) 
                ENDIF
              ENDIF
