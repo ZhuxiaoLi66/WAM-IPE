@@ -98,7 +98,7 @@ python $WAMIPEDIR/IPELIB/scripts/plot.py --input_directory $OUTDIR --output_dire
 #tar -cvzf ${PLOTDIR::-1}.tar.gz ${PLOTDIR}
 
 # Clean up this directory
-rm ipe_grid IPE.inp fort.* tmp* *log
+rm -rf ipe_grid IPE.inp fort.* tmp* *log
 
 exit 0
 EOF

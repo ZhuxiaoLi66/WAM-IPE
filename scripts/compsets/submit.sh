@@ -59,7 +59,7 @@ submit_plots(){
   do_plots "mercator"
 }
 
-cd $SCRIPTSDIR
+cd $COMPSETDIR
 
 ## set restart
 if [[ $cycle == 1 ]] ; then
@@ -89,11 +89,12 @@ if [ $? != 0 ]; then echo "forecast failed, exit"; exit; fi
 echo "fcst done"
 
 if [[ ${REGRESSION:-"NO"} = "YES" ]] ; then
-  if [[ $1 == 1 ]] ; then rm -rf ${PLOT_DIR}/${JOBNAME}/${CONFIG}/timepet.out ; fi
-  python $SCRIPTSDIR/../timepet/timepet.py $RUNDIR/PET350.ESMF_LogFile >> ${PLOT_DIR}/${JOBNAME}/${CONFIG}/timepet.out
+  mkdir -p ${PLOT_DIR}/${JOBNAME}/${CONFIG}
+  if [[ $cycle == 1 ]] ; then rm -rf ${PLOT_DIR}/${JOBNAME}/${CONFIG}/timepet.out ; fi
+  python $SCRIPTSDIR/timepet/timepet.py $RUNDIR/PET350.ESMF_LogFile >> ${PLOT_DIR}/${JOBNAME}/${CONFIG}/timepet.out
 fi
 
-cd $SCRIPTSDIR
+cd $COMPSETDIR
 if [[ $((cycle+1)) -le $3 ]] ; then
   echo "resubmitting $1 for cycle $((cycle+1)) out of $3"
   . $pwd/submit.sh $1 $((cycle+1)) $3
@@ -101,6 +102,7 @@ else
   echo "cycle $((cycle+1)) > $3, done!"
   if [[ ${REGRESSION:-"NO"} = "YES" ]] ; then
     echo "submitting plotting jobs!"
+    python $SCRIPTSDIR/plot/timepet_plot.py -i ${PLOT_DIR}/${JOBNAME}/${CONFIG} -d ${CDATE} -t $DELTIM
     submit_plots
   fi
 fi

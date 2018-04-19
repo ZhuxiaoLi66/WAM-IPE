@@ -6,10 +6,12 @@ import sys
 # will print out the length of time between each `sub-update_IPE finished` call
 
 d1 = ""
+flag = True
 
 for line in open(sys.argv[1]):
-	if "sub-update_IPE finished" in line:
-		d2 = datetime.strptime(line[:15], "%Y%m%d %H%M%S")
+	if "sub-update_IPE finished" in line or flag and ">>>IPM" in line:
+		d2 = datetime.strptime(line[:19], "%Y%m%d %H%M%S.%f")
 		if d1 is not "":
-			print round(float(abs((d2 - d1).total_seconds()))/60,2)
+			print round(float(abs((d2 - d1).total_seconds()))/60,4)
 		d1 = d2
+		flag = False
