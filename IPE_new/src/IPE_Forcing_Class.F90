@@ -76,21 +76,22 @@ CONTAINS
                 forcing % cmaps(1:maps_ipe_size(1),1:maps_ipe_size(2),1:maps_ipe_size(3)), &
                 forcing % djspectra(1:n_flux_ipe,1:n_bands_ipe)  )
 
-      forcing % f107              = 0.0_prec
-      forcing % f107_flag         = 0
-      forcing % f107_81day_avg    = 0.0_prec
-      forcing % kp                = 0.0_prec
-      forcing % kp_flag           = 0
-      forcing % kp_1day_avg       = 0.0_prec
-      forcing % nhemi_power       = 0.0_prec
-      forcing % nhemi_power_index = 0
-      forcing % shemi_power       = 0.0_prec
-      forcing % shemi_power_index = 0
+      ! Default settings
+      forcing % f107              = 120.0_prec
+      forcing % f107_flag         = 1
+      forcing % f107_81day_avg    = 120.0_prec
+      forcing % kp                = 3.0_prec
+      forcing % kp_flag           = 3
+      forcing % kp_1day_avg       = 3.0_prec
+      forcing % nhemi_power       = 2.0_prec
+      forcing % nhemi_power_index = 2
+      forcing % shemi_power       = 2.0_prec
+      forcing % shemi_power_index = 2
 
-      forcing % solarwind_dBdt     = 0.0_prec
+      forcing % solarwind_dBdt     = 1.0_prec
       forcing % solarwind_angle    = 0.0_prec
-      forcing % solarwind_velocity = 0.0_prec
-      forcing % solarwind_Bz       = 0.0_prec
+      forcing % solarwind_velocity = 400.0_prec
+      forcing % solarwind_Bz       = 1.0_prec
 
       forcing % emaps     = 0.0_prec
       forcing % cmaps     = 0.0_prec
