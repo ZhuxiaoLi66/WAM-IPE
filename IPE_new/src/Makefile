@@ -62,6 +62,9 @@ IPE_Grid_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Common_Routine
 IPE_Neutrals_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class.o IPE_Neutrals_Class.F90
 	${FC} ${CPPFLAGS} ${OPT} -c IPE_Neutrals_Class.F90 -o $@
 
+IPE_Forcing_Class.o : IPE_Precision.o IPE_Common_Routines.o IPE_Forcing_Class.F90
+	${FC} ${CPPFLAGS} ${OPT} -c IPE_Forcing_Class.F90 ${LIB} ${INC} -o $@
+
 
 
 # Test Programs
