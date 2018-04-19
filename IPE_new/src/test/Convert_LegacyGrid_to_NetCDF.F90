@@ -9,11 +9,11 @@ IMPLICIT NONE
   TYPE( IPE_Grid )             :: grid
   TYPE( IPE_Model_Parameters ) :: params 
   
-  CHARACTER(500) :: gridFile, ncFile
+  CHARACTER(500) :: gridFile, interpFile, ncFile
   LOGICAL :: initSuccess, readSuccess
 
 
-    CALL InitializeFromCommandLine( gridFile, ncFile, initSuccess )
+    CALL InitializeFromCommandLine( gridFile, interpFile, ncFile, initSuccess )
 
     IF( initSuccess )THEN
 
@@ -24,6 +24,12 @@ IMPLICIT NONE
         CALL grid % Build( params % nFluxTube, params % NLP, params % NMP, params % NPTS2D )
        
         CALL grid % Read_IPE_Grid( gridFile )        
+
+        IF( TRIM(interpFile) /= '' )THEN
+      
+          CALL grid % Read_Legacy_Geographic_Weights( interpFile )
+
+        ENDIF
 
         CALL grid % Write_IPE_Grid_NetCDF( ncFile )
 
@@ -41,27 +47,32 @@ IMPLICIT NONE
 
 CONTAINS
 
- SUBROUTINE InitializeFromCommandLine( gridFile, outFile, initSuccess )
+ SUBROUTINE InitializeFromCommandLine( gridFile, weightFile, outFile, initSuccess )
    IMPLICIT NONE
-   CHARACTER(*), INTENT(out) :: gridFile, outFile
+   CHARACTER(*), INTENT(out) :: gridFile, weightFile, outFile
    LOGICAL, INTENT(out)      :: initSuccess
    ! Local
+   LOGICAL        :: interpSuccess, gridSuccess
    INTEGER        :: nArg, argID
    CHARACTER(500) :: argname
    LOGICAL        :: fileExists
    LOGICAL        :: gridGiven, gridFileGiven, helpRequested
+   LOGICAL        :: weightsGiven, weightFileGiven
    LOGICAL        :: outGiven, outFileGiven
 
-     gridFileGiven = .FALSE.
-     gridGiven     = .FALSE.
-     outGiven      = .FALSE.
-     outFileGiven  = .FALSE.
-     helpRequested = .FALSE.
-     initSuccess   = .FALSE.
+     gridFileGiven   = .FALSE.
+     gridGiven       = .FALSE.
+     weightsGiven    = .FALSE.
+     weightFileGiven = .FALSE.
+     outGiven        = .FALSE.
+     outFileGiven    = .FALSE.
+     helpRequested   = .FALSE.
+     initSuccess     = .FALSE.
 
      ! Default grid file
      gridFile      = './ipe_grid'
      outFile       = './IPE_Grid.nc'
+     weightFile    = ''
 
      nArg = command_argument_count( )
 
@@ -76,6 +87,10 @@ CONTAINS
            CASE("--legacy-grid")
 
              gridGiven = .TRUE.
+
+           CASE("--interp-file")
+
+             weightsGiven = .TRUE.
 
            CASE("--nc-file")
 
@@ -92,6 +107,14 @@ CONTAINS
                gridFileGiven = .TRUE.
                gridFile  = TRIM(argName)
                gridGiven = .FALSE.
+
+             ENDIF
+
+             IF( weightsGiven )THEN
+
+               weightFileGiven = .TRUE.
+               weightFile      = TRIM(argName)
+               weightsGiven    = .FALSE.
 
              ENDIF
 
@@ -125,6 +148,11 @@ CONTAINS
        PRINT*, '          to be converted to NetCDF. If this option is not  '
        PRINT*, '          provided, ./ipe_grid is assumed.  '
        PRINT*, ' '
+       PRINT*, '      --interp-file <interpolation-weights-file>'
+       PRINT*, '          Specifies to use <interpolation-weights-file> as the '
+       PRINT*, '          legacy file containing weights to map from apex grid '
+       PRINT*, '          to the geographic grid. '
+       PRINT*, ' '
        PRINT*, '      --nc-file <output-nc-file>'
        PRINT*, '          Specifies the name of the output netcdf file to use.'
        PRINT*, '          If this option is not provided, IPE_Grid.nc is '
@@ -141,13 +169,37 @@ CONTAINS
        IF( .NOT.(fileExists) )THEN
          PRINT*, '  Grid file :'//TRIM(gridFile)//': not found.'
          PRINT*, '  Setup Failed.'
-         initSuccess = .FALSE.
+         gridSuccess = .FALSE.
        ELSE
          PRINT*, ' '
          PRINT*, ' Using Legacy File :', TRIM(gridFile)
          PRINT*, ' '
-         initSuccess = .TRUE.
+         gridSuccess = .TRUE.
        ENDIF
+
+       IF( weightFileGiven )THEN
+
+         INQUIRE( FILE = TRIM(weightFile), &
+                  EXIST = fileExists )
+  
+         IF( .NOT.(fileExists) )THEN
+           PRINT*, '  Interp file :'//TRIM(weightFile)//': not found.'
+           PRINT*, '  Setup Failed.'
+           interpSuccess = .FALSE.
+         ELSE
+           PRINT*, ' '
+           PRINT*, ' Using Legacy File :', TRIM(gridFile)
+           PRINT*, ' '
+           interpSuccess = .TRUE.
+         ENDIF
+
+       ELSE
+       
+         interpSuccess = .TRUE.
+
+       ENDIF
+
+       initSuccess = gridSuccess*interpSuccess
 
      ENDIF
 
