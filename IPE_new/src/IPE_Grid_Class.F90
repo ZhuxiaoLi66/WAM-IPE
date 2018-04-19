@@ -1029,84 +1029,77 @@ CONTAINS
 
   END FUNCTION SinI
 
-!  SUBROUTINE Interpolate_to_Geographic_Grid( grid, apex_data, geographic_data )
-!    IMPLICIT NONE
-!    CLASS( IPE_Grid ), INTENT(in) :: grid
-!    REAL(prec), INTENT(in)        :: apex_data(1:grid % nFluxTube,1:grid % NLP,1:grid % NMP)
-!    REAL(prec), INTENT(out)       :: geographic_data(1:nlon_geo,1:nlat_geo,1:nheights_geo)
-!    ! Local
-!    INTEGER    :: 
-!    INTEGER    :: i, iheight, ilat, ilon
-!    REAL(prec) :: a, b, c, x1, x2, x3, y1, y2, y3
-!    INTEGER    :: i1, i2, i3, i_max_location
-!
-!
-!!!! Some things to be aware of
-!!  REAL(dp)     facfac_interface(1:3,nheights,nlat,nlon), &
-!!  REAL(dp)     dd_interface(1:3,nheights,nlat,nlon), &
-!!  INTEGER,DIMENSION(3,nheights,nlat,nlon)  :: ii1, ii2, ii3, ii4
-!!  INTEGER,DIMENSION(3,nheights,nlat,nlon)  :: ii1_interface, ii2_interface,&
-!
-!
-! 
-!    npts = 0
-!    DO lp = 1, grid % NLP
-!      DO i = 1, grid % flux_tube_max(lp)
-!        npts = npts+1
-!      ENDDO
-!    ENDDO
-!
-!    ALLOCATE( ilp_map(1:2,1:npts) )
-!
-!    npts = 0
-!    DO lp = 1, grid % NLP
-!      DO i = 1, grid % flux_tube_max(lp)
-!        npts = npts+1
-!        ilp_map(1,npts) = i 
-!        ilp_map(2,npts) = lp 
-!      ENDDO
-!    ENDDO
-!
-!    DO iheight=1,nheights
-!      DO l=1,nlat
-!          DO m=1,nlon
-!
-!              geographic_data(m,l,iheight) = 0.0
-!              dtotinv = 0.0
-!
-!              DO i=1,3
-!
-!                  factor=facfac_interface(i,iheight,l,m)
-!                  mp=ii1_interface(i,iheight,l,m)
-!                 ! lp=ii2_interface(i,iheight,l,m)
-!                  in2=ii3_interface(i,iheight,l,m)
-!                  in1=ii4_interface(i,iheight,l,m)
-!
-!                  iFlux2 = ilp_map(1,in2)
-!                  lp2    = ilp_map(2,in2)
-!                  
-!                  iFlux1 = ilp_map(1,in1)
-!                  lp1    = ilp_map(2,in1)
-!
-!                  !oplus_interpolated(i) = ((oplus_ft(in2,mp)-oplus_ft(in1,mp))*factor) + oplus_ft(in1,mp)
-!                  data_interpolated(i) = ((apex_data(iFlux2,lp2,mp)-apex_data(iFlux1,lp1,mp))*factor) + apex_data(iFlux1,lp1,mp)
-!
-!                  d = dd_interface(i,iheight,l,m)
-!                  dtotinv = (1.0_prec/d) + dtotinv
-!
-!                  !oplus_fixed(m,l,iheight) = (oplus_interpolated(i)/d) + oplus_fixed(m,l,iheight)
-!                  geographic_data(m,l,iheight) = (data_interpolated(i)/d) + geographic_data(m,l,iheight)
-!
-!
-!              ENDDO
-!
-!              !oplus_fixed(m,l,iheight)   = oplus_fixed(m,l,iheight)/dtotinv
-!              geographic_data(m,l,iheight)   = geographic_data(m,l,iheight)/dtotinv
-!
-!          ENDDO
-!      ENDDO
-!  ENDDO
-!
-!  END SUBROUTINE Interpolate_to_Geographic_Grid
+  SUBROUTINE Interpolate_to_Geographic_Grid( grid, apex_data, geographic_data )
+    IMPLICIT NONE
+    CLASS( IPE_Grid ), INTENT(in) :: grid
+    REAL(prec), INTENT(in)        :: apex_data(1:grid % nFluxTube,1:grid % NLP,1:grid % NMP)
+    REAL(prec), INTENT(out)       :: geographic_data(1:nlon_geo,1:nlat_geo,1:nheights_geo)
+    ! Local
+    INTEGER    :: l, m, lp, mp 
+    INTEGER    :: i, iheight, npts
+    INTEGER    :: in1, in2, lp1, lp2, iFlux1, iFlux2
+    REAL(prec) :: factor, dtotinv, data_interpolated
+    INTEGER, ALLOCATABLE :: ilp_map(:,:)
+
+ 
+      npts = 0
+      DO lp = 1, grid % NLP
+        DO i = 1, grid % flux_tube_max(lp)
+          npts = npts+1
+        ENDDO
+      ENDDO
+
+      ALLOCATE( ilp_map(1:2,1:npts) )
+
+      npts = 0
+      DO lp = 1, grid % NLP
+        DO i = 1, grid % flux_tube_max(lp)
+          npts = npts+1
+          ilp_map(1,npts) = i 
+          ilp_map(2,npts) = lp 
+        ENDDO
+      ENDDO
+
+      DO iheight = 1, nheights_geo
+        DO l = 1, nlat_geo
+          DO m = 1, nlon_geo
+
+            geographic_data(m,l,iheight) = 0.0_prec
+            dtotinv = 0.0_prec
+
+            DO i=1,3
+
+              factor = grid % facfac_interface(i,iheight,l,m)
+              mp     = grid % ii1_interface(i,iheight,l,m)
+              lp     = grid % ii2_interface(i,iheight,l,m)
+              in2    = grid % ii3_interface(i,iheight,l,m)
+              in1    = grid % ii4_interface(i,iheight,l,m)
+
+              iFlux2 = ilp_map(1,in2)
+              lp2    = ilp_map(2,in2)
+              
+              iFlux1 = ilp_map(1,in1)
+              lp1    = ilp_map(2,in1)
+
+              !oplus_interpolated(i) = ((oplus_ft(in2,mp)-oplus_ft(in1,mp))*factor) + oplus_ft(in1,mp)
+              data_interpolated = ((apex_data(iFlux2,lp2,mp)-apex_data(iFlux1,lp1,mp))*factor) + apex_data(iFlux1,lp1,mp)
+
+              dtotinv = (1.0_prec/grid % dd_interface(i,iheight,l,m)) + dtotinv
+
+              !oplus_fixed(m,l,iheight) = (oplus_interpolated(i)/d) + oplus_fixed(m,l,iheight)
+              geographic_data(m,l,iheight) = (data_interpolated/grid % dd_interface(i,iheight,l,m)) + geographic_data(m,l,iheight)
+
+            ENDDO
+
+            !oplus_fixed(m,l,iheight)   = oplus_fixed(m,l,iheight)/dtotinv
+            geographic_data(m,l,iheight)   = geographic_data(m,l,iheight)/dtotinv
+
+          ENDDO
+        ENDDO
+      ENDDO
+
+      DEALLOCATE( ilp_map )
+
+  END SUBROUTINE Interpolate_to_Geographic_Grid
 
 END MODULE IPE_Grid_Class
