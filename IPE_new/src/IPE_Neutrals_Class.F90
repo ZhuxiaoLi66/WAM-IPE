@@ -48,6 +48,8 @@ IMPLICIT NONE
 
       PROCEDURE :: Geographic_to_Apex_Velocity
 
+      PROCEDURE :: Interpolate_to_GeographicGrid => Interpolate_to_GeographicGrid_IPE_Neutrals
+
   END TYPE IPE_Neutrals
 
 
@@ -432,6 +434,24 @@ CONTAINS
       END DO   
 
   END SUBROUTINE Geographic_to_Apex_Velocity
+!
+  SUBROUTINE Interpolate_to_GeographicGrid_IPE_Neutrals( neutrals, grid )
+    IMPLICIT NONE
+    CLASS( IPE_Neutrals ), INTENT(inout) :: neutrals
+    TYPE( IPE_Grid ), INTENT(in)         :: grid
+
+      CALL grid % Interpolate_to_Geographic_Grid( neutrals % helium, neutrals % geo_helium )
+      CALL grid % Interpolate_to_Geographic_Grid( neutrals % oxygen, neutrals % geo_oxygen )
+      CALL grid % Interpolate_to_Geographic_Grid( neutrals % molecular_oxygen, neutrals % geo_molecular_oxygen )
+      CALL grid % Interpolate_to_Geographic_Grid( neutrals % molecular_nitrogen, neutrals % geo_molecular_nitrogen )
+      CALL grid % Interpolate_to_Geographic_Grid( neutrals % nitrogen, neutrals % geo_nitrogen )
+      CALL grid % Interpolate_to_Geographic_Grid( neutrals % hydrogen, neutrals % geo_hydrogen )
+      CALL grid % Interpolate_to_Geographic_Grid( neutrals % temperature, neutrals % geo_temperature )
+      CALL grid % Interpolate_to_Geographic_Grid( neutrals % velocity_geographic(1,:,:,:), neutrals % geo_velocity(1,:,:,:) )
+      CALL grid % Interpolate_to_Geographic_Grid( neutrals % velocity_geographic(2,:,:,:), neutrals % geo_velocity(2,:,:,:) )
+      CALL grid % Interpolate_to_Geographic_Grid( neutrals % velocity_geographic(3,:,:,:), neutrals % geo_velocity(3,:,:,:) )
+
+  END SUBROUTINE Interpolate_to_GeographicGrid_IPE_Neutrals
 
 
 END MODULE IPE_Neutrals_Class
