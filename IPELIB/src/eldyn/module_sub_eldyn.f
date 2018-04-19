@@ -108,7 +108,7 @@
 !-------------------------------------------------------------------
 ! find latitudinal shift
 !-------------------------------------------------------------------
-      if ( sw_bnd_wei==1 ) then 
+      if ( sw_bnd_wei ) then 
          bnd_wei = bnd_wei_eld
          lat_sft = lat_sft_eld
          do j = 0,nmlat
