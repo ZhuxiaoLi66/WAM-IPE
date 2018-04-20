@@ -338,9 +338,9 @@ CONTAINS
             DO ipts=ihTop+iStep, midPoints, iStep 
                      
               ! At altitudes higher than 800 km, neutral velocity components are extrapolated through prolongation 
-              neutrals % velocity_geographic(1,ipts,lp,mp) =  neutrals % neutral_top_ipe_coupling_field(ihTop,lp,mp,2) 
-              neutrals % velocity_geographic(2,ipts,lp,mp) =  neutrals % neutral_top_ipe_coupling_field(ihTop,lp,mp,3) 
-              neutrals % velocity_geographic(3,ipts,lp,mp) =  neutrals % neutral_top_ipe_coupling_field(ihTop,lp,mp,4) 
+              neutrals % velocity_geographic(1,ipts,lp,mp) =  neutrals % neutral_to_ipe_coupling_field(ihTop,lp,mp,2) 
+              neutrals % velocity_geographic(2,ipts,lp,mp) =  neutrals % neutral_to_ipe_coupling_field(ihTop,lp,mp,3) 
+              neutrals % velocity_geographic(3,ipts,lp,mp) =  neutrals % neutral_to_ipe_coupling_field(ihTop,lp,mp,4) 
 
               !---------------------------------------------------------------------------
               ! O, O2, and N2 densities above 800km decrease exponentially with height
