@@ -33,6 +33,9 @@ IMPLICIT NONE
     INTEGER, ALLOCATABLE :: northern_top_index(:)
 
     ! Geographic Interpolation attributes
+    REAL(prec), ALLOCATABLE :: latitude_geo(:)
+    REAL(prec), ALLOCATABLE :: longitude_geo(:)
+    REAL(prec), ALLOCATABLE :: altitude_geo(:)
     REAL(prec), ALLOCATABLE :: facfac_interface(:,:,:,:) 
     REAL(prec), ALLOCATABLE :: dd_interface(:,:,:,:) 
     INTEGER, ALLOCATABLE    :: ii1_interface(:,:,:,:) 
@@ -72,6 +75,8 @@ CONTAINS
     INTEGER, INTENT(in)            :: NLP
     INTEGER, INTENT(in)            :: NMP
     INTEGER, INTENT(in)            :: NPTS2D
+    ! Local
+    INTEGER :: i
 
       grid % nFluxTube = nFluxTube
       grid % NLP       = NLP
@@ -101,7 +106,10 @@ CONTAINS
                 grid % ii1_interface(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) ,&
                 grid % ii2_interface(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) ,&
                 grid % ii3_interface(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) ,&
-                grid % ii4_interface(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) )
+                grid % ii4_interface(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo), &
+                grid % latitude_geo(1:nlat_geo), &
+                grid % longitude_geo(1:nlon_geo), &
+                grid % altitude_geo(1:nheights_geo) )
 
       grid % altitude                = 0.0_prec
       grid % latitude                = 0.0_prec
@@ -129,6 +137,19 @@ CONTAINS
       grid % ii2_interface    = 0
       grid % ii3_interface    = 0
       grid % ii4_interface    = 0
+
+
+      DO i = 1, nlat_geo
+        grid % latitude_geo(i) = -90.0_prec + REAL(i-1,prec)*180.0_prec/REAL( nlat_geo-1,prec ) 
+      ENDDO
+
+      DO i= 1, nlon_geo
+        grid % longitude_geo(i) = REAL(i-1,prec)*360.0_prec/REAL( nlon_geo,prec ) 
+      ENDDO
+      
+      DO i = 1, nheights_geo
+        grid % altitude_geo(i) = REAL( (i-1)*5, prec ) + 90.0_prec
+      ENDDO
 
 
   END SUBROUTINE Build_IPE_Grid
@@ -160,7 +181,11 @@ CONTAINS
                   grid % ii1_interface, &
                   grid % ii2_interface, &
                   grid % ii3_interface, &
-                  grid % ii4_interface )
+                  grid % ii4_interface, &
+                  grid % longitude_geo, &
+                  grid % latitude_geo, &
+                  grid % altitude_geo )
+
 
   END SUBROUTINE Trash_IPE_Grid
 !
