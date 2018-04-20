@@ -10,10 +10,11 @@ IMPLICIT NONE
   TYPE IPE_Model_Parameters
 
     ! SpaceManagement
-    INTEGER :: NLP
-    INTEGER :: NMP
-    INTEGER :: NPTS2D
-    INTEGER :: nFluxTube
+    CHARACTER(200) :: netcdf_grid_file
+    INTEGER        :: NLP
+    INTEGER        :: NMP
+    INTEGER        :: NPTS2D
+    INTEGER        :: nFluxTube
 
     ! Forcing
     INTEGER :: f107_kp_size
@@ -48,17 +49,18 @@ CONTAINS
       ! Default Parameters !
 
       ! SpaceManagement
-      NLP       = 170
-      NMP       = 80
-      NPTS2D    = 44514
-      nFluxTube = 1115
+      netcdf_grid_file = './IPE_Grid.nc'
+      NLP              = 170
+      NMP              = 80
+      NPTS2D           = 44514
+      nFluxTube        = 1115
       ! Forcing !
       f107_kp_size=1
       f107_kp_interval=60
       f107_kp_skip_size=0
       f107_kp_data_size=1
 
-      NAMELIST/SpaceManagement/ NLP, NMP, NPTS2D, nFluxTube
+      NAMELIST/SpaceManagement/ netcdf_grid_file, NLP, NMP, NPTS2D, nFluxTube
       NAMELIST/Forcing/ f107_kp_size, f107_kp_interval, f107_kp_skip_size, f107_kp_data_size
 
       INQUIRE( FILE = 'IPE.inp', EXIST = fileExists )
@@ -74,10 +76,11 @@ CONTAINS
 
         read_success = .TRUE.
 
-        params % NLP       = NLP
-        params % NMP       = NMP
-        params % NPTS2D    = NPTS2D
-        params % nFluxTube = nFluxTube
+        params % netcdf_grid_file = netcdf_grid_file
+        params % NLP              = NLP
+        params % NMP              = NMP
+        params % NPTS2D           = NPTS2D
+        params % nFluxTube        = nFluxTube
 
         params % f107_kp_size      = f107_kp_size
         params % f107_kp_interval  = f107_kp_interval
