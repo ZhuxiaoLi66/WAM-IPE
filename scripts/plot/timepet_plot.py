@@ -30,11 +30,17 @@ def make_plot(data):
 	#plt.show()
 	plt.close()
 
+def output_statistics(data):
+	with open(path.join(args.output_directory,'timepet.stat'),'w') as f:
+		f.write(str(data.mean())+","+str(data.std()))
+
 def read_timepet(file):
 	return np.genfromtxt(file)
 	
 def main():
-	make_plot(read_timepet(path.join(args.input_directory,'timepet.out')))
+	data = read_timepet(path.join(args.input_directory,'timepet.out'))
+	output_statistics(data)
+	make_plot(data)
 
 ## parsing options
 parser = ArgumentParser(description='Make simple line-plot of input file', formatter_class=ArgumentDefaultsHelpFormatter)
