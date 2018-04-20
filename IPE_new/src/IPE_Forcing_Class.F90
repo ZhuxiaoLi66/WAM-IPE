@@ -20,6 +20,8 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: kp(:)
     INTEGER, ALLOCATABLE    :: kp_flag(:)
     REAL(prec), ALLOCATABLE :: kp_1day_avg(:)
+    REAL(prec), ALLOCATABLE :: ap(:)
+    REAL(prec), ALLOCATABLE :: ap_1day_avg(:)
     REAL(prec), ALLOCATABLE :: nhemi_power(:)
     INTEGER, ALLOCATABLE    :: nhemi_power_index(:)
     REAL(prec), ALLOCATABLE :: shemi_power(:)
@@ -43,6 +45,8 @@ IMPLICIT NONE
 
       PROCEDURE :: Read_F107KP_IPE_Forcing
       PROCEDURE :: Read_Tiros_IPE_Forcing
+ 
+      PROCEDURE :: Estimate_AP_from_KP
 
   END TYPE IPE_Forcing
 
@@ -64,6 +68,8 @@ CONTAINS
                 forcing % kp(1:n_time_levels), &
                 forcing % kp_flag(1:n_time_levels), &
                 forcing % kp_1day_avg(1:n_time_levels), &
+                forcing % ap(1:n_time_levels), &
+                forcing % ap_1day_avg(1:n_time_levels), &
                 forcing % nhemi_power(1:n_time_levels), &
                 forcing % nhemi_power_index(1:n_time_levels), &
                 forcing % shemi_power(1:n_time_levels), &
@@ -83,6 +89,8 @@ CONTAINS
       forcing % kp                = 3.0_prec
       forcing % kp_flag           = 3
       forcing % kp_1day_avg       = 3.0_prec
+      forcing % ap                = 0.0_prec
+      forcing % ap_1day_avg       = 0.0_prec
       forcing % nhemi_power       = 2.0_prec
       forcing % nhemi_power_index = 2
       forcing % shemi_power       = 2.0_prec
@@ -97,6 +105,7 @@ CONTAINS
       forcing % cmaps     = 0.0_prec
       forcing % djspectra = 0.0_prec
 
+      CALL forcing % Estimate_AP_from_KP( )
 
   END SUBROUTINE Build_IPE_Forcing
 !
@@ -111,6 +120,8 @@ CONTAINS
                 forcing % kp, &
                 forcing % kp_flag, &
                 forcing % kp_1day_avg, &
+                forcing % ap, &
+                forcing % ap_1day_avg, &
                 forcing % nhemi_power, &
                 forcing % nhemi_power_index, &
                 forcing % shemi_power, &
@@ -196,6 +207,7 @@ CONTAINS
 
       END DO
 
+      CALL forcing % Estimate_AP_from_KP( )
  
   END SUBROUTINE Read_F107KP_IPE_Forcing
 !
@@ -238,6 +250,38 @@ CONTAINS
       CLOSE(fUnit)
 
   END SUBROUTINE Read_Tiros_IPE_Forcing
+!
+
+  SUBROUTINE Estimate_AP_from_KP( forcing )
+    IMPLICIT NONE
+    CLASS( IPE_Forcing ), INTENT(inout) :: forcing
+    ! Local
+    REAL(prec) :: lookup, remainder
+    INTEGER    :: i
+    INTEGER, PARAMETER  :: table(1:29) = (/  0,   2,   3, & ! 0-0.67
+                                             4,   5,   6, & ! 1-1.67
+                                             7,   9,  12, & ! 2-2.67
+                                             15,  18,  22, & ! 3-3.67
+                                             27,  32,  39, & ! 4-4.67
+                                             48,  56,  67, & ! 5-5.67
+                                             80,  94, 111, & ! 6-6.67
+                                             132, 154, 179, & ! 7-7.67
+                                             207, 236, 300, & ! 8-8.67
+                                             400, 999/)       ! 9-dumm
+        DO i=1, forcing % n_time_levels
+
+          lookup    = forcing % kp(i)*3.0_prec + 1.0_prec
+          remainder = lookup - INT(lookup)
+          forcing % ap(i) = (1.0_prec - remainder) * table(INT(lookup)) + remainder *table(INT(lookup)+1)
+
+          lookup    = forcing % kp_1day_avg(i)*3.0_prec + 1.0_prec
+          remainder = lookup - INT(lookup)
+          forcing % ap_1day_avg(i) = (1.0_prec - remainder) * table(INT(lookup)) + remainder *table(INT(lookup)+1)
+
+        END DO
+
+  END SUBROUTINE Estimate_AP_from_KP
+
 
 END MODULE IPE_Forcing_Class
        
