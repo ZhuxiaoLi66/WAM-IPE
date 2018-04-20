@@ -22,6 +22,10 @@ IMPLICIT NONE
     INTEGER :: f107_kp_skip_size
     INTEGER :: f107_kp_data_size
 
+    !FileIO
+    LOGICAL :: write_apex_neutrals 
+    LOGICAL :: write_geographic_neutrals 
+
     CONTAINS
 
       PROCEDURE :: Build => Build_IPE_Model_Parameters
@@ -44,6 +48,8 @@ CONTAINS
     INTEGER :: f107_kp_interval
     INTEGER :: f107_kp_skip_size
     INTEGER :: f107_kp_data_size
+    LOGICAL :: write_apex_neutrals 
+    LOGICAL :: write_geographic_neutrals 
    
       read_success = .FALSE.
 
@@ -60,9 +66,14 @@ CONTAINS
       f107_kp_interval=60
       f107_kp_skip_size=0
       f107_kp_data_size=1
+      ! FileIO !
+      write_apex_neutrals       = .TRUE.
+      write_geographic_neutrals = .TRUE.
+
 
       NAMELIST/SpaceManagement/ netcdf_grid_file, NLP, NMP, NPTS2D, nFluxTube
       NAMELIST/Forcing/ f107_kp_size, f107_kp_interval, f107_kp_skip_size, f107_kp_data_size
+      NAMELIST/FileIO/ write_apex_neutrals, write_geographic_neutrals
 
       INQUIRE( FILE = 'IPE.inp', EXIST = fileExists )
   
@@ -72,6 +83,7 @@ CONTAINS
 
         READ( UNIT = fUnit, NML = SpaceManagement )
         READ( UNIT = fUnit, NML = Forcing )
+        READ( UNIT = fUnit, NML = FileIO )
 
         CLOSE( fUnit )
 
@@ -88,12 +100,16 @@ CONTAINS
         params % f107_kp_skip_size = f107_kp_skip_size
         params % f107_kp_data_size = f107_kp_data_size
 
+        params % write_apex_neutrals       = write_apex_neutrals
+        params % write_geographic_neutrals = write_geographic_neutrals
+
       ELSE
 
         OPEN( UNIT = NEWUNIT(fUnit), FILE = 'IPE.inp', ACTION = 'WRITE' )
 
         WRITE( UNIT = fUnit, NML = SpaceManagement )
         WRITE( UNIT = fUnit, NML = Forcing )
+        WRITE( UNIT = fUnit, NML = FileIO )
 
         CLOSE( UNIT = fUnit )
 

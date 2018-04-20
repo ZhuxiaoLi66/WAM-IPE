@@ -8,6 +8,7 @@ USE IPE_Neutrals_Class
 !USE IPE_Plasma_Class
 !USE IPE_Electrodynamics_Class
 
+USE netcdf
 
 IMPLICIT NONE
 
@@ -80,6 +81,98 @@ CONTAINS
       CALL ipe % neutrals % Trash( )
 
   END SUBROUTINE Trash_IPE_Model
+!
+  SUBROUTINE Write_NetCDF_IPE( ipe, filename )
+    IMPLICIT NONE
+    CLASS( IPE_Model ), INTENT(in) :: ipe
+    CHARACTER(*), INTENT(in)       :: filename
+    ! Local
+    INTEGER :: NF90_PREC
+    INTEGER :: ncid
+    INTEGER :: x_dimid, y_dimid, z_dimid
+    INTEGER :: helium_varid, oxygen_varid, molecular_oxygen_varid
+    INTEGER :: molecular_nitrogen_varid, nitrogen_varid, hydrogen_varid
+    INTEGER :: temperature_varid, u_varid, v_varid, w_varid
+
+
+      IF( prec == sp )THEN
+        NF90_PREC = NF90_FLOAT
+      ELSE      
+        NF90_PREC = NF90_DOUBLE
+      ENDIF
+
+      CALL Check( nf90_create( TRIM(filename), NF90_NETCDF4, ncid))
+
+      CALL Check( nf90_def_dim( ncid, "s", ipe % grid % nFluxTube, z_dimid ) ) 
+      CALL Check( nf90_def_dim( ncid, "lp", ipe % grid % NLP, x_dimid ) ) 
+      CALL Check( nf90_def_dim( ncid, "mp", ipe % grid % NMP, y_dimid ) ) 
+
+      IF( ipe % parameters % write_apex_neutrals )THEN
+
+        CALL Check( nf90_def_var( ncid, "helium", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , helium_varid ) )
+        CALL Check( nf90_put_att( ncid, helium_varid, "long_name", "Neutral Helium Density" ) )
+        CALL Check( nf90_put_att( ncid, helium_varid, "units", "kg m^{-3}" ) )
+
+        CALL Check( nf90_def_var( ncid, "oxygen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , oxygen_varid ) )
+        CALL Check( nf90_put_att( ncid, oxygen_varid, "long_name", "Neutral Oxygen Density" ) )
+        CALL Check( nf90_put_att( ncid, oxygen_varid, "units", "kg m^{-3}" ) )
+
+        CALL Check( nf90_def_var( ncid, "molecular_oxygen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , molecular_oxygen_varid ) )
+        CALL Check( nf90_put_att( ncid, molecular_oxygen_varid, "long_name", "Neutral Molecular Oxygen Density" ) )
+        CALL Check( nf90_put_att( ncid, molecular_oxygen_varid, "units", "kg m^{-3}" ) )
+
+        CALL Check( nf90_def_var( ncid, "molecular_nitrogen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , molecular_nitrogen_varid ) )
+        CALL Check( nf90_put_att( ncid, molecular_nitrogen_varid, "long_name", "Neutral Molecular Nitrogen Density" ) )
+        CALL Check( nf90_put_att( ncid, molecular_nitrogen_varid, "units", "kg m^{-3}" ) )
+
+        CALL Check( nf90_def_var( ncid, "nitrogen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , nitrogen_varid ) )
+        CALL Check( nf90_put_att( ncid, nitrogen_varid, "long_name", "Neutral Nitrogen Density" ) )
+        CALL Check( nf90_put_att( ncid, nitrogen_varid, "units", "kg m^{-3}" ) )
+
+        CALL Check( nf90_def_var( ncid, "hydrogen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , hydrogen_varid ) )
+        CALL Check( nf90_put_att( ncid, hydrogen_varid, "long_name", "Neutral Hydrogen Density" ) )
+        CALL Check( nf90_put_att( ncid, hydrogen_varid, "units", "kg m^{-3}" ) )
+
+        CALL Check( nf90_def_var( ncid, "temperature", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , temperature_varid ) )
+        CALL Check( nf90_put_att( ncid, temperature_varid, "long_name", "Thermosphere Temperature" ) )
+        CALL Check( nf90_put_att( ncid, temperature_varid, "units", "K" ) )
+
+        CALL Check( nf90_def_var( ncid, "u", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , u_varid ) )
+        CALL Check( nf90_put_att( ncid, u_varid, "long_name", "Zonal Velocity" ) )
+        CALL Check( nf90_put_att( ncid, u_varid, "units", "m s^{-1}" ) )
+
+        CALL Check( nf90_def_var( ncid, "v", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , v_varid ) )
+        CALL Check( nf90_put_att( ncid, v_varid, "long_name", "Meridional Velocity" ) )
+        CALL Check( nf90_put_att( ncid, v_varid, "units", "m s^{-1}" ) )
+
+        CALL Check( nf90_def_var( ncid, "w", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , w_varid ) )
+        CALL Check( nf90_put_att( ncid, w_varid, "long_name", "Radial Velocity" ) )
+        CALL Check( nf90_put_att( ncid, w_varid, "units", "m s^{-1}" ) )
+
+      ENDIF
+
+      CALL Check( nf90_enddef(ncid) )
+      
+      IF( ipe % parameters % write_apex_neutrals )THEN
+
+        CALL Check( nf90_put_var( ncid, helium_varid, ipe % neutrals % helium ) )
+        CALL Check( nf90_put_var( ncid, oxygen_varid, ipe % neutrals % oxygen ) )
+        CALL Check( nf90_put_var( ncid, molecular_oxygen_varid, ipe % neutrals % molecular_oxygen ) )
+        CALL Check( nf90_put_var( ncid, molecular_nitrogen_varid, ipe % neutrals % molecular_nitrogen ) )
+        CALL Check( nf90_put_var( ncid, nitrogen_varid, ipe % neutrals % nitrogen ) )
+        CALL Check( nf90_put_var( ncid, hydrogen_varid, ipe % neutrals % hydrogen ) )
+        CALL Check( nf90_put_var( ncid, temperature_varid, ipe % neutrals % temperature ) )
+        CALL Check( nf90_put_var( ncid, u_varid, ipe % neutrals % velocity_geographic(1,:,:,:) ) )
+        CALL Check( nf90_put_var( ncid, v_varid, ipe % neutrals % velocity_geographic(2,:,:,:) ) )
+        CALL Check( nf90_put_var( ncid, w_varid, ipe % neutrals % velocity_geographic(3,:,:,:) ) )
+
+      ENDIF
+
+
+
+      CALL Check( nf90_close( ncid ) )
+
+  END SUBROUTINE Write_NetCDF_IPE
 
 
 END MODULE IPE_Model_Class
