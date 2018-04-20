@@ -4,7 +4,7 @@ USE IPE_Precision
 USE IPE_Model_Parameters_Class
 USE IPE_Grid_Class
 USE IPE_Neutrals_Class
-!USE IPE_Forcing_Class
+USE IPE_Forcing_Class
 !USE IPE_Plasma_Class
 !USE IPE_Electrodynamics_Class
 
@@ -20,9 +20,10 @@ IMPLICIT NONE
 
   TYPE IPE_Model
 
+    REAL(prec)                   :: simulation_time
     TYPE( IPE_Model_Parameters ) :: parameters
     TYPE( IPE_Grid )             :: grid
-    !TYPE( IPE_Forcing )          :: forcing
+    TYPE( IPE_Forcing )          :: forcing
     TYPE( IPE_Neutrals )         :: neutrals
     !TYPE( IPE_Plasma )           :: plasma
     !TYPE( IPE_Eldyn )            :: eldyn
@@ -32,10 +33,11 @@ IMPLICIT NONE
       PROCEDURE :: Build => Build_IPE_Model
       PROCEDURE :: Trash => Trash_IPE_Model
 
-!      PROCEDURE :: Write_NetCDF_IPE
+      PROCEDURE :: Geographic_Interpolation
+      PROCEDURE :: Write_NetCDF_IPE
 !      PROCEDURE :: Read_NetCDF_IPE
 
-!      PROCEDURE :: Write_Geographic_NetCDF_IPE
+      PROCEDURE :: Write_Geographic_NetCDF_IPE
    
   END TYPE IPE_Model
 
@@ -44,16 +46,19 @@ IMPLICIT NONE
 
 CONTAINS
 
-  SUBROUTINE Build_IPE_Model( ipe )
+  SUBROUTINE Build_IPE_Model( ipe, init_success )
     IMPLICIT NONE
     CLASS( IPE_Model ), INTENT(out) :: ipe
+    LOGICAL, INTENT(out)            :: init_success
     ! Local 
-    LOGICAL :: init_success
 
       CALL ipe % parameters % Build( init_success )
 
       IF( init_success )THEN
 
+        CALL ipe % forcing % Build( ipe % parameters % solar_forcing_time_step, &
+                                    ipe % parameters % f107_kp_size )
+                                    
         CALL ipe % grid % Read_IPE_Grid_NetCDF( ipe % parameters % netcdf_grid_file  )
 
 #ifdef COUPLED_TO_WAM
@@ -69,7 +74,8 @@ CONTAINS
                                       
       ELSE
 
-        STOP
+        init_success = .FALSE.
+        RETURN
         
       ENDIF
 
@@ -79,12 +85,67 @@ CONTAINS
     IMPLICIT NONE
     CLASS( IPE_Model ), INTENT(inout) :: ipe
 
-
+      CALL ipe % forcing % Trash( )
       CALL ipe % grid % Trash( )
       CALL ipe % neutrals % Trash( )
 
   END SUBROUTINE Trash_IPE_Model
 !
+  SUBROUTINE Update_IPE_Model( ipe, t0, t1 )
+    IMPLICIT NONE
+    CLASS( IPE_Model ), INTENT(inout) :: ipe
+    REAL(prec), INTENT(in)            :: t0, t1
+    ! Local
+    INTEGER    :: i, im3hr, im6hr, im9hr, im12hr, im36hr
+    REAL(prec) :: AP(1:7)
+
+    
+      ! This call to update the neutrals is "diagnostic" and returns neutral
+      ! parameter at the time t0
+      i       = ipe % forcing % current_index
+      im3hr   = MAX( 1, ipe % forcing % current_index-INT(3.0_prec*3600.0_prec/ipe % forcing % dt ) )
+      im6hr   = MAX( 1, ipe % forcing % current_index-INT(6.0_prec*3600.0_prec/ipe % forcing % dt ) )
+      im9hr   = MAX( 1, ipe % forcing % current_index-INT(9.0_prec*3600.0_prec/ipe % forcing % dt ) )
+      im12hr  = MAX( 1, ipe % forcing % current_index-INT(12.0_prec*3600.0_prec/ipe % forcing % dt ) )
+      im36hr  = MAX( 1, ipe % forcing % current_index-INT(36.0_prec*3600.0_prec/ipe % forcing % dt ) )
+
+      !AP(1) = apa_eld(lpi)
+      !AP(2) =  ap_eld(lpi)
+      !AP(3) =  ap_eld(lpi-INT( 3.*60*60/input_params_interval))
+      !AP(4) =  ap_eld(lpi-INT( 6.*60*60/input_params_interval))
+      !AP(5) =  ap_eld(lpi-INT( 9.*60*60/input_params_interval))
+      !AP(6) = apa_eld(lpi-INT(12.*60*60/input_params_interval))
+      !AP(7) = apa_eld(lpi-INT(36.*60*60/input_params_interval))
+
+      AP(1) = ipe % forcing % ap_1day_avg(i)
+      AP(2) = ipe % forcing % ap(i)
+      AP(3) = ipe % forcing % ap(im3hr)
+      AP(4) = ipe % forcing % ap(im6hr)
+      AP(5) = ipe % forcing % ap(im9hr)
+      AP(6) = ipe % forcing % ap_1day_avg(im12hr)
+      AP(7) = ipe % forcing % ap_1day_avg(im36hr)
+
+      CALL ipe % neutrals % Update( ipe % grid, &
+                                    ipe % simulation_time, &
+                                    2000, 76,  & ! Hard code year 2000 and day 76 for now
+                                    ipe % forcing % f107(i) , &
+                                    ipe % forcing % f107_81day_avg(i), &
+                                    AP )
+
+
+  END SUBROUTINE Update_IPE_Model
+!
+  SUBROUTINE Geographic_Interpolation( ipe )
+    IMPLICIT NONE
+    CLASS( IPE_Model ), INTENT(inout) :: ipe
+
+
+     IF( ipe % parameters % write_geographic_neutrals )THEN
+       CALL ipe % neutrals % Interpolate_to_GeographicGrid( ipe % grid )
+     ENDIF
+
+  END SUBROUTINE Geographic_Interpolation
+
   SUBROUTINE Write_NetCDF_IPE( ipe, filename )
     IMPLICIT NONE
     CLASS( IPE_Model ), INTENT(in) :: ipe
@@ -176,7 +237,29 @@ CONTAINS
       CALL Check( nf90_close( ncid ) )
 
   END SUBROUTINE Write_NetCDF_IPE
-
+!
+!  SUBROUTINE Read_IPE_Model_NetCDF( grid, filename )
+!    IMPLICIT NONE
+!    CLASS( IPE_Grid ), INTENT(inout) :: grid
+!    CHARACTER(*), INTENT(in)         :: filename
+!    ! Local
+!    INTEGER :: NF90_PREC
+!    INTEGER :: ncid
+!    INTEGER :: dimid, varid
+!    INTEGER :: nFluxtube, NLP, NMP
+!    CHARACTER(NF90_MAX_NAME) :: nameHolder
+!
+!
+!      
+!      IF( prec == sp )THEN
+!        NF90_PREC = NF90_FLOAT
+!      ELSE      
+!        NF90_PREC = NF90_DOUBLE
+!      ENDIF
+!
+!      CALL Check( nf90_open( TRIM(filename), NF90_NETCDF4, ncid))
+!  END SUBROUTINE Read_IPE_Model_NetCDF
+!
   SUBROUTINE Write_Geographic_NetCDF_IPE( ipe, filename )
     IMPLICIT NONE
     CLASS( IPE_Model ), INTENT(in) :: ipe
@@ -231,7 +314,7 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, time_varid, "missing_value", fillValue) )
 
 
-      IF( ipe % parameters % write_apex_neutrals )THEN
+      IF( ipe % parameters % write_geographic_neutrals )THEN
 
         CALL Check( nf90_def_var( ncid, "helium", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , helium_varid ) )
         CALL Check( nf90_put_att( ncid, helium_varid, "long_name", "Neutral Helium Density" ) )
@@ -277,7 +360,7 @@ CONTAINS
 
       CALL Check( nf90_enddef(ncid) )
       
-      IF( ipe % parameters % write_apex_neutrals )THEN
+      IF( ipe % parameters % write_geographic_neutrals )THEN
 
         CALL Check( nf90_put_var( ncid, helium_varid, ipe % neutrals % geo_helium ) )
         CALL Check( nf90_put_var( ncid, oxygen_varid, ipe % neutrals % geo_oxygen ) )
@@ -291,8 +374,6 @@ CONTAINS
         CALL Check( nf90_put_var( ncid, w_varid, ipe % neutrals % geo_velocity(3,:,:,:) ) )
 
       ENDIF
-
-
 
       CALL Check( nf90_close( ncid ) )
 

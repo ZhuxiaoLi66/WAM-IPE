@@ -17,10 +17,11 @@ IMPLICIT NONE
     INTEGER        :: nFluxTube
 
     ! Forcing
-    INTEGER :: f107_kp_size
-    INTEGER :: f107_kp_interval
-    INTEGER :: f107_kp_skip_size
-    INTEGER :: f107_kp_data_size
+    REAL(prec) :: solar_forcing_time_step
+    INTEGER    :: f107_kp_size
+    INTEGER    :: f107_kp_interval
+    INTEGER    :: f107_kp_skip_size
+    INTEGER    :: f107_kp_data_size
 
     !FileIO
     LOGICAL :: write_apex_neutrals 
@@ -44,6 +45,7 @@ CONTAINS
     INTEGER :: fUnit
     LOGICAL :: fileExists
     INTEGER :: NLP, NMP, NPTS2D, nFluxTube
+    REAL(prec) :: solar_forcing_time_step
     INTEGER :: f107_kp_size
     INTEGER :: f107_kp_interval
     INTEGER :: f107_kp_skip_size
@@ -62,6 +64,7 @@ CONTAINS
       NPTS2D           = 44514
       nFluxTube        = 1115
       ! Forcing !
+      solar_forcing_time_step = 60.0_prec
       f107_kp_size=1
       f107_kp_interval=60
       f107_kp_skip_size=0
@@ -72,7 +75,7 @@ CONTAINS
 
 
       NAMELIST/SpaceManagement/ netcdf_grid_file, NLP, NMP, NPTS2D, nFluxTube
-      NAMELIST/Forcing/ f107_kp_size, f107_kp_interval, f107_kp_skip_size, f107_kp_data_size
+      NAMELIST/Forcing/ solar_forcing_time_step, f107_kp_size, f107_kp_interval, f107_kp_skip_size, f107_kp_data_size
       NAMELIST/FileIO/ write_apex_neutrals, write_geographic_neutrals
 
       INQUIRE( FILE = 'IPE.inp', EXIST = fileExists )
@@ -95,10 +98,11 @@ CONTAINS
         params % NPTS2D           = NPTS2D
         params % nFluxTube        = nFluxTube
 
-        params % f107_kp_size      = f107_kp_size
-        params % f107_kp_interval  = f107_kp_interval
-        params % f107_kp_skip_size = f107_kp_skip_size
-        params % f107_kp_data_size = f107_kp_data_size
+        params % solar_forcing_time_step = solar_forcing_time_step
+        params % f107_kp_size            = f107_kp_size
+        params % f107_kp_interval        = f107_kp_interval
+        params % f107_kp_skip_size       = f107_kp_skip_size
+        params % f107_kp_data_size       = f107_kp_data_size
 
         params % write_apex_neutrals       = write_apex_neutrals
         params % write_geographic_neutrals = write_geographic_neutrals

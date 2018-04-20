@@ -9,7 +9,8 @@ IMPLICIT NONE
   TYPE IPE_Forcing
 
     ! forcing % n_time_levels = f107_kp_data_size    = f107_kp_size
-    INTEGER :: n_time_levels
+    INTEGER                 :: n_time_levels
+    REAL(prec)              :: dt
     REAL(prec), ALLOCATABLE :: time(:)
     REAL(prec)              :: current_time
     INTEGER                 :: current_index
@@ -52,13 +53,15 @@ IMPLICIT NONE
 
 CONTAINS
 
-  SUBROUTINE Build_IPE_Forcing( forcing, n_time_levels )
+  SUBROUTINE Build_IPE_Forcing( forcing, dt, n_time_levels )
     IMPLICIT NONE
     CLASS( IPE_Forcing ), INTENT(out) :: forcing
+    REAL(prec)                        :: dt
     INTEGER, INTENT(in)               :: n_time_levels
     
 
       forcing % n_time_levels = n_time_levels 
+      forcing % dt            = dt
       forcing % current_time  = 0.0_prec
       forcing % current_index = 0
 
