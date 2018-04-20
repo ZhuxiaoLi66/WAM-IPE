@@ -36,6 +36,7 @@ CONTAINS
     CLASS( IPE_Model_Parameters ), INTENT(out) :: params
     LOGICAL, INTENT(out)                      :: read_success
     ! Local
+    CHARACTER(200) :: netcdf_grid_file
     INTEGER :: fUnit
     LOGICAL :: fileExists
     INTEGER :: NLP, NMP, NPTS2D, nFluxTube
