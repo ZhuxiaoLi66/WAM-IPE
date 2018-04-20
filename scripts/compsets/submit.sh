@@ -20,6 +20,11 @@ rm -rf $tmp
 touch $tmp
 chmod +x $tmp
 
+## cp config to $ROTDIR if $cycle == 1
+if [[ $cycle == 1 ]] ; then
+	cp $pwd/$1 $ROTDIR/.
+fi
+
 ## set up PBS/LSF/whatever
 echo "#!/bin/bash" > $tmp
 # the below is a little hacky but it sure works
@@ -72,7 +77,7 @@ fi
 ## source config file
 ##-------------------------------------------------------
 
-. $pwd/config/workflow.sh $pwd/$1
+. $pwd/config/workflow.sh $ROTDIR/`basename $1`
 
 ##-------------------------------------------------------
 ## execute forecast
@@ -97,7 +102,7 @@ fi
 cd $COMPSETDIR
 if [[ $((cycle+1)) -le $3 ]] ; then
   echo "resubmitting $1 for cycle $((cycle+1)) out of $3"
-  . $pwd/submit.sh $1 $((cycle+1)) $3
+  . $pwd/submit.sh $ROTDIR/`basename $1` $((cycle+1)) $3
 else
   echo "cycle $((cycle+1)) > $3, done!"
   if [[ ${REGRESSION:-"NO"} = "YES" ]] ; then
@@ -111,4 +116,4 @@ exit $status
 EOF
 
 $SCHEDULER_SUB < $tmp
-rm -rf $tmp
+mv $tmp $ROTDIR/jobcard_$cycle

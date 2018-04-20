@@ -26,8 +26,8 @@ def make_plot(data):
 	plt.ylabel('Time (minutes)',  fontsize=16, fontname=fontfam)
 	plt.title('IPE Integration Length from '+datetimes[0].strftime("%Y/%m/%d %HZ"), fontsize=18, fontname=fontfam)
 	# output
-	#plt.savefig(path.join(args.output_directory,'timepet.eps'))
-	plt.show()
+	plt.savefig(path.join(args.output_directory,'timepet.eps'))
+	#plt.show()
 	plt.close()
 
 def read_timepet(file):

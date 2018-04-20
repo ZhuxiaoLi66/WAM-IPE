@@ -10,7 +10,8 @@ setup(){
 }
 
 run_model(){
-
+  cp ${CONFIG_FILE} regression_${CONFIG_FILE}
+  export CONFIG_FILE=regression_${CONFIG_FILE}
   # Modify the config file so that the JOBNAME corresponds to the hash id
   sed -i '/JOBNAME/c\export JOBNAME='${HASHID} ${CONFIG_FILE}
   if [[ `grep REGRESSION ${CONFIG_FILE} | wc -l` == "0" ]] ; then
@@ -18,6 +19,7 @@ run_model(){
   fi
   # Submit the job and pipe the output to a temporary file
   ./submit.sh ${CONFIG_FILE} 1 ${NCYCLES}
+  rm -rf ${CONFIG_FILE}
 }
 
 # ----- Parse through command line options ----- #
