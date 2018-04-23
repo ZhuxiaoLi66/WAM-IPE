@@ -1,6 +1,7 @@
 #!/bin/bash
 
 pwd=$(pwd)
+bn=$(basename $1)
 
 ## set restart
 cycle=${2:-1}
@@ -11,8 +12,8 @@ else
 fi
 
 ## source config
-CONFIG=$( echo $1 | cut -d'.' -f 1 )
-. $pwd/config/workflow.sh $pwd/$1
+CONFIG=$( echo $bn | cut -d'.' -f 1 )
+. $pwd/config/workflow.sh $1
 
 ## create job file
 tmp=temp_job.sh
@@ -22,7 +23,7 @@ chmod +x $tmp
 
 ## cp config to $ROTDIR if $cycle == 1
 if [[ $cycle == 1 ]] ; then
-	cp $pwd/$1 $ROTDIR/.
+	cp $1 $ROTDIR/.
 fi
 
 ## set up PBS/LSF/whatever
@@ -77,7 +78,7 @@ fi
 ## source config file
 ##-------------------------------------------------------
 
-. $pwd/config/workflow.sh $ROTDIR/`basename $1`
+. $pwd/config/workflow.sh $ROTDIR/$bn
 
 ##-------------------------------------------------------
 ## execute forecast
@@ -89,7 +90,7 @@ cd $RUNDIR
 
 export VERBOSE=YES
 
-. $EXGLOBALFCSTSH
+ . $EXGLOBALFCSTSH
 if [ $? != 0 ]; then echo "forecast failed, exit"; exit; fi
 echo "fcst done"
 
