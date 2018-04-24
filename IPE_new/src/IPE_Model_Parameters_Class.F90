@@ -16,6 +16,13 @@ IMPLICIT NONE
     INTEGER        :: NPTS2D
     INTEGER        :: nFluxTube
 
+    ! TimeStepping
+    REAL(prec) :: time_step
+    REAL(prec) :: start_time
+    REAL(prec) :: end_time
+    INTEGER    :: year
+    INTEGER    :: day
+
     ! Forcing
     REAL(prec) :: solar_forcing_time_step
     INTEGER    :: f107_kp_size
@@ -26,6 +33,10 @@ IMPLICIT NONE
     !FileIO
     LOGICAL :: write_apex_neutrals 
     LOGICAL :: write_geographic_neutrals 
+    REAL(prec) :: file_output_frequency
+
+
+    INTEGER :: n_model_updates
 
     CONTAINS
 
@@ -46,12 +57,15 @@ CONTAINS
     LOGICAL :: fileExists
     INTEGER :: NLP, NMP, NPTS2D, nFluxTube
     REAL(prec) :: solar_forcing_time_step
+    REAL(prec) :: time_step, start_time, end_time
+    INTEGER    :: year, day
     INTEGER :: f107_kp_size
     INTEGER :: f107_kp_interval
     INTEGER :: f107_kp_skip_size
     INTEGER :: f107_kp_data_size
     LOGICAL :: write_apex_neutrals 
     LOGICAL :: write_geographic_neutrals 
+    REAL(prec) :: file_output_frequency
    
       read_success = .FALSE.
 
@@ -63,6 +77,12 @@ CONTAINS
       NMP              = 80
       NPTS2D           = 44514
       nFluxTube        = 1115
+      ! TimeStepping !
+      time_step  = 180.0_prec
+      start_time = 0.0_prec
+      end_time   = 360.0_prec
+      year       = 200
+      day        = 76
       ! Forcing !
       solar_forcing_time_step = 60.0_prec
       f107_kp_size=1
@@ -72,11 +92,13 @@ CONTAINS
       ! FileIO !
       write_apex_neutrals       = .TRUE.
       write_geographic_neutrals = .TRUE.
+      file_output_frequency     = 180.0_prec
 
 
       NAMELIST/SpaceManagement/ netcdf_grid_file, NLP, NMP, NPTS2D, nFluxTube
+      NAMELIST/TimeStepping/ time_step, start_time, end_time, year, day
       NAMELIST/Forcing/ solar_forcing_time_step, f107_kp_size, f107_kp_interval, f107_kp_skip_size, f107_kp_data_size
-      NAMELIST/FileIO/ write_apex_neutrals, write_geographic_neutrals
+      NAMELIST/FileIO/ write_apex_neutrals, write_geographic_neutrals, file_output_frequency
 
       INQUIRE( FILE = 'IPE.inp', EXIST = fileExists )
   
@@ -85,6 +107,7 @@ CONTAINS
         OPEN( UNIT = NewUnit(fUnit), FILE = 'IPE.inp' )
 
         READ( UNIT = fUnit, NML = SpaceManagement )
+        READ( UNIT = fUnit, NML = TimeStepping )
         READ( UNIT = fUnit, NML = Forcing )
         READ( UNIT = fUnit, NML = FileIO )
 
@@ -98,6 +121,12 @@ CONTAINS
         params % NPTS2D           = NPTS2D
         params % nFluxTube        = nFluxTube
 
+        params % time_step  = time_step
+        params % start_time = start_time
+        params % end_time   = end_time
+        params % year       = year
+        params % day        = day
+
         params % solar_forcing_time_step = solar_forcing_time_step
         params % f107_kp_size            = f107_kp_size
         params % f107_kp_interval        = f107_kp_interval
@@ -106,12 +135,16 @@ CONTAINS
 
         params % write_apex_neutrals       = write_apex_neutrals
         params % write_geographic_neutrals = write_geographic_neutrals
+        params % file_output_frequency     = file_output_frequency
+        
+        params % n_model_updates = INT( ( end_time - start_time )/file_output_frequency )
 
       ELSE
 
         OPEN( UNIT = NEWUNIT(fUnit), FILE = 'IPE.inp', ACTION = 'WRITE' )
 
         WRITE( UNIT = fUnit, NML = SpaceManagement )
+        WRITE( UNIT = fUnit, NML = TimeStepping )
         WRITE( UNIT = fUnit, NML = Forcing )
         WRITE( UNIT = fUnit, NML = FileIO )
 

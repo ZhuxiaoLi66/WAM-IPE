@@ -63,7 +63,7 @@ CONTAINS
       forcing % n_time_levels = n_time_levels 
       forcing % dt            = dt
       forcing % current_time  = 0.0_prec
-      forcing % current_index = 0
+      forcing % current_index = 1
 
       ALLOCATE( forcing % f107(1:n_time_levels), &
                 forcing % f107_flag(1:n_time_levels), &
@@ -254,7 +254,6 @@ CONTAINS
 
   END SUBROUTINE Read_Tiros_IPE_Forcing
 !
-
   SUBROUTINE Estimate_AP_from_KP( forcing )
     IMPLICIT NONE
     CLASS( IPE_Forcing ), INTENT(inout) :: forcing
@@ -284,6 +283,8 @@ CONTAINS
         END DO
 
   END SUBROUTINE Estimate_AP_from_KP
+!
+  
 
 
 END MODULE IPE_Forcing_Class

@@ -53,6 +53,9 @@ IPE_Common_Routines.o : IPE_Precision.o IPE_Common_Routines.F90
 IPE_Constants_Dictionary.o : IPE_Precision.o IPE_Constants_Dictionary.F90 
 	${FC} ${CPPFLAGS} -c IPE_Constants_Dictionary.F90 -o $@
 
+IPE_Time_Class.o : IPE_Precision.o IPE_Time_Class.F90
+	${FC} ${CPPFLAGS} -c IPE_Time_Class.F90 -o $@
+
 IPE_Model_Parameters_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Common_Routines.o IPE_Model_Parameters_Class.F90
 	${FC} ${CPPFLAGS} -c IPE_Model_Parameters_Class.F90 ${LIB} ${INC} -o $@
 
@@ -67,7 +70,7 @@ IPE_Forcing_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Common_Rout
 
 
 IPE_Model_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class.o IPE_Neutrals_Class.o \
-                    IPE_Model_Parameters_Class.o IPE_Forcing_Class.o IPE_Model_Class.F90
+                    IPE_Time_Class.o IPE_Model_Parameters_Class.o IPE_Forcing_Class.o IPE_Model_Class.F90
 	${FC} ${CPPFLAGS} ${OPT} -c IPE_Model_Class.F90 ${LIB} ${INC} -o $@
 
 

@@ -2,6 +2,7 @@ MODULE IPE_Model_Class
 
 USE IPE_Precision
 USE IPE_Model_Parameters_Class
+USE IPE_Time_Class
 USE IPE_Grid_Class
 USE IPE_Neutrals_Class
 USE IPE_Forcing_Class
@@ -20,7 +21,7 @@ IMPLICIT NONE
 
   TYPE IPE_Model
 
-    REAL(prec)                   :: simulation_time
+    TYPE( IPE_Time )             :: time_tracker
     TYPE( IPE_Model_Parameters ) :: parameters
     TYPE( IPE_Grid )             :: grid
     TYPE( IPE_Forcing )          :: forcing
@@ -100,6 +101,9 @@ CONTAINS
     REAL(prec) :: AP(1:7)
 
     
+
+      ipe % time_tracker % utime = t0
+      
       ! This call to update the neutrals is "diagnostic" and returns neutral
       ! parameter at the time t0
       i       = ipe % forcing % current_index
@@ -108,14 +112,6 @@ CONTAINS
       im9hr   = MAX( 1, ipe % forcing % current_index-INT(9.0_prec*3600.0_prec/ipe % forcing % dt ) )
       im12hr  = MAX( 1, ipe % forcing % current_index-INT(12.0_prec*3600.0_prec/ipe % forcing % dt ) )
       im36hr  = MAX( 1, ipe % forcing % current_index-INT(36.0_prec*3600.0_prec/ipe % forcing % dt ) )
-
-      !AP(1) = apa_eld(lpi)
-      !AP(2) =  ap_eld(lpi)
-      !AP(3) =  ap_eld(lpi-INT( 3.*60*60/input_params_interval))
-      !AP(4) =  ap_eld(lpi-INT( 6.*60*60/input_params_interval))
-      !AP(5) =  ap_eld(lpi-INT( 9.*60*60/input_params_interval))
-      !AP(6) = apa_eld(lpi-INT(12.*60*60/input_params_interval))
-      !AP(7) = apa_eld(lpi-INT(36.*60*60/input_params_interval))
 
       AP(1) = ipe % forcing % ap_1day_avg(i)
       AP(2) = ipe % forcing % ap(i)
@@ -126,8 +122,9 @@ CONTAINS
       AP(7) = ipe % forcing % ap_1day_avg(im36hr)
 
       CALL ipe % neutrals % Update( ipe % grid, &
-                                    ipe % simulation_time, &
-                                    2000, 76,  & ! Hard code year 2000 and day 76 for now
+                                    ipe % time_tracker % utime, &
+                                    ipe % time_tracker % year, &
+                                    ipe % time_tracker % day,  & 
                                     ipe % forcing % f107(i) , &
                                     ipe % forcing % f107_81day_avg(i), &
                                     AP )
