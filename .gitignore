@@ -22,6 +22,8 @@ ipe_grid*
 logfile*
 ut_rec
 
+#Python run-time compilation files
+*.pyc
 
 #PBS/Slurm/...
 *.err

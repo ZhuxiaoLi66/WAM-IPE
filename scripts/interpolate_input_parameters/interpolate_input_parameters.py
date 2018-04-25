@@ -5,6 +5,8 @@ from os import path
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import datetime
 from itertools import chain
+import math
+from sw_from_f107_kp import *
 
 ## takes 3hr-avg Kp, daily F10.7, and minute-binned hemispheric power and 24hr-avg Kp
 ## and translates them all to the same cadence (hard-coded 1 minute)
@@ -150,6 +152,19 @@ def get_solar_data(dates):
   
   return swbt, swangle, swvel, bz, hemi_pow, hemi_pow_idx
 
+def start_fixed_data(mduration):
+  # read f107, kp
+  with open(args.fixed,'r') as f:
+    lines = f.read().splitlines()
+    return [float(lines[0])]*mduration, [float(lines[1])]*mduration
+
+def finish_fixed_data(mduration):
+  # read swbt, swang, swvel, swbz, gwatts, HPI
+  with open(args.fixed,'r') as f:
+    lines = f.read().splitlines()
+    return [float(lines[2])]*mduration, [float(lines[3])]*mduration, [float(lines[4])]*mduration, \
+           [float(lines[5])]*mduration, [float(lines[6])]*mduration, [float(lines[7])]*mduration,
+
 def parse(start_date, end_date, hduration):
   ## start_date: YYYYMMDDHH string
   ## end_date:   YYYYMMDDHH string
@@ -170,17 +185,32 @@ def parse(start_date, end_date, hduration):
     max_f107 = new_timestamp(end_date,    24)
   else:                                                                    # end interpolation at current day
     max_f107 = end_date
-  # now get data for the days described
-  kp, f107, f107d = get_kp_f107(get_dates(min_f107, max_f107))
-  kp_avg          = get_24hr_kp_avg(get_dates(start_date,end_date))
-  swbt, swangle, swvel, swbz, hemi_pow, hemi_pow_idx = get_solar_data(get_dates(start_date,end_date))
 
-  # and select the right ones
-  kp_offset     = time_diff(start_date+'00', hourless(min_f107) + kp_midpoint_string)
-  f107_offset   = time_diff(start_date+'00', hourless(min_f107) + f107_midpoint_string)
-  kp_avg_offset = time_diff(start_date+'00', hourless(start_date) + '0000')
-  hemi_offset   = kp_avg_offset
-  # return our subarray
+  # KP/F107
+  if args.mode[:4] == 'time':
+    kp_offset     = time_diff(start_date+'00', hourless(min_f107) + kp_midpoint_string)
+    f107_offset   = time_diff(start_date+'00', hourless(min_f107) + f107_midpoint_string)
+    kp_avg_offset = time_diff(start_date+'00', hourless(start_date) + '0000')
+    kp, f107, f107d = get_kp_f107(get_dates(min_f107, max_f107))
+    kp_avg          = get_24hr_kp_avg(get_dates(start_date,end_date))
+  else: # fixed kp/f107
+    kp_offset     = 0
+    f107_offset   = 0
+    kp_avg_offset = 0
+    f107, kp = start_fixed_data(mduration)
+    kp_avg = kp ; f107d = f107 # 24hr avg kp = kp, f10.7 daily = f10.7
+  # SOLAR WIND DATA
+  if args.mode[-6:] != 'derive': # either timeobs (equation) or fixall (0)
+    hemi_offset = kp_avg_offset
+    if args.mode[-3:] == 'obs': # get solar data from obs
+      swbt, swangle, swvel, swbz, hemi_pow, hemi_pow_idx = get_solar_data(get_dates(start_date,end_date))
+    else: # values are fixed from input
+      swbt, swangle, swvel, swbz, hemi_pow, hemi_pow_idx = finish_fixed_data(mduration)
+  else: # use Tim's algorithms: https://github.com/SWPC-IPE/WAM-IPE/issues/126#issuecomment-374304207
+    hemi_offset = 0
+    swbt, swangle, swvel, swbz, hemi_pow, hemi_pow_idx = calc_solar_data(kp[kp_offset:kp_offset+mduration], f107[f107_offset:f107_offset+mduration])
+
+  # return our subarrays
   return kp[kp_offset:kp_offset+mduration], f107[f107_offset:f107_offset+mduration], f107d[f107_offset:f107_offset+mduration], \
          kp_avg[kp_avg_offset:kp_avg_offset+mduration], swbt[hemi_offset:hemi_offset+mduration], \
          swangle[hemi_offset:hemi_offset+mduration], swvel[hemi_offset:hemi_offset+mduration], swbz[hemi_offset:hemi_offset+mduration], \
@@ -234,6 +264,9 @@ parser.add_argument('-d', '--duration',   help='duration of run (hours) (default
 parser.add_argument('-s', '--start_date', help='starting date of run (YYYYMMDDhh)',     type=str, required=True)
 parser.add_argument('-p', '--path',       help='path to database files',                type=str, required=True)
 parser.add_argument('-o', '--output',     help='path to output file',                   type=str, default='wam_input_f107_kp.txt')
+parser.add_argument('-m', '--mode', help='timeobs (time-varying from obs), timederive (time-varying kp/f10.7, derived solar wind drivers), '+\
+                                         'fixderive (fixed kp/f10.7, derived solar wind drivers), or fixall (everything fixed)', type=str, default='timeobs')
+parser.add_argument('-f', '--fixed', help='full path to file containing fixed data for run', type=str, default='')
 
 ## global variables
 args = parser.parse_args()
