@@ -1275,8 +1275,8 @@ if [ $IDEA = .true. ]; then
   export F107_KP_SIZE=$((LEN_F107-5))
   export F107_KP_DATA_SIZE=$F107_KP_SIZE
   export F107_KP_INTERVAL=60
-  export F107_KP_SKIP_SIZE=$((36*60))
-  export F107_KP_READ_IN_START=$((FHINI*60))
+  export F107_KP_SKIP_SIZE=$((36*$F107_KP_INTERVAL))
+  export F107_KP_READ_IN_START=$((FHINI*$F107_KP_INTERVAL))
   # global_idea fix files
   ${NLN} $FIX_IDEA/global_idea* .
 
@@ -1900,7 +1900,7 @@ cat  > atm_namelist <<EOF
   jcap=$JCAP, levs=$LEVS, levr=$LEVR, reduced_grid=$REDUCED_GRID,
   ntrac=$NTRAC, ntoz=$NTOZ, ntcw=$NTCW, ncld=$NCLD,
   lsoil=$LSOIL, nmtvr=$NMTVR, lsidea=$IDEA,
-  f107_kp_size=$((F107_KP_SIZE+$FHINI*60)),
+  f107_kp_size=$((F107_KP_SIZE+$FHINI*$F107_KP_INTERVAL)),
   f107_kp_interval=$F107_KP_INTERVAL,
   f107_kp_skip_size=$F107_KP_SKIP_SIZE,
   f107_kp_data_size=$F107_KP_DATA_SIZE,
