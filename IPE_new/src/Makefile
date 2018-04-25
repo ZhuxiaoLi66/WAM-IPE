@@ -33,8 +33,8 @@ ifeq (${COUPLED},yes)
 endif
 
 
-LIB=${NCLIB}
-INC=${NCINC}
+LIB=${NCLIB} -L$(shell pwd)/msise00 -lnrlmsis
+INC=${NCINC} -I$(shell pwd)/msise00
 
 # MSISE00 Library
 libnrlmsis.a:
@@ -77,6 +77,10 @@ IPE_Model_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class.o 
 
 # Test Programs
 
+# ====================================================================================== #
+# Legacy to NetCDF IPE Grid Converter
+#
+
 OBJ = IPE_Precision.o \
       IPE_Common_Routines.o \
       IPE_Constants_Dictionary.o \
@@ -90,6 +94,28 @@ legacy2netcdf : ${OBJ}
 
 Convert_LegacyGrid_to_NetCDF.o : IPE_Grid_Class.o IPE_Model_Parameters_Class.o test/Convert_LegacyGrid_to_NetCDF.F90
 	${FC} ${CPPFLAGS} ${OPT} -c test/Convert_LegacyGrid_to_NetCDF.F90 ${LIB} ${INC} -o $@ 
+
+# ====================================================================================== #
+# IPE Testing
+#
+OBJ = IPE_Precision.o \
+      IPE_Common_Routines.o \
+      IPE_Constants_Dictionary.o \
+      IPE_Model_Parameters_Class.o \
+      IPE_Time_Class.o \
+      IPE_Forcing_Class.o \
+      IPE_Grid_Class.o \
+      IPE_Neutrals_Class.o \
+      IPE_Model_Class.o \
+      Test_IPE.o 
+
+ipe_test : ${OBJ} 
+	make libnrlmsis.a
+	${FC} ${OPT} ${OBJ} ${LIB} ${INC} -o $@
+	mv $@ ../bin/
+
+Test_IPE.o : IPE_Precision.o IPE_Model_Class.o test/Test_IPE.F90
+	${FC} ${CPPFLAGS} ${OPT} -c test/Test_IPE.F90 ${LIB} ${INC} -o $@ 
 
 .PHONY : clean
 

@@ -34,6 +34,8 @@ IMPLICIT NONE
       PROCEDURE :: Build => Build_IPE_Model
       PROCEDURE :: Trash => Trash_IPE_Model
 
+      PROCEDURE :: Update => Update_IPE_Model
+
       PROCEDURE :: Geographic_Interpolation
       PROCEDURE :: Write_NetCDF_IPE
 !      PROCEDURE :: Read_NetCDF_IPE
@@ -54,6 +56,14 @@ CONTAINS
     ! Local 
 
       CALL ipe % parameters % Build( init_success )
+
+      ! Initialize the clock
+      CALL ipe % time_tracker % Build( ipe % parameters % year, ipe % parameters % day, ipe % parameters % start_time )
+!      CALL ipe % time_tracker % utime = ipe % parameters % start_time 
+!      CALL ipe % time_tracker % Set_Date( ipe % parameters % year, ipe % parameters % month, ipe % parameters % day )
+!      CALL ipe % time_trackers % Calculate_Hour_and_Minute( )
+
+
 
       IF( init_success )THEN
 
@@ -358,7 +368,9 @@ CONTAINS
       CALL Check( nf90_enddef(ncid) )
       
       IF( ipe % parameters % write_geographic_neutrals )THEN
-
+        CALL Check( nf90_put_var( ncid, x_varid, ipe % grid % longitude_geo ) )
+        CALL Check( nf90_put_var( ncid, y_varid, ipe % grid % latitude_geo ) )
+        CALL Check( nf90_put_var( ncid, z_varid, ipe % grid % altitude_geo ) )
         CALL Check( nf90_put_var( ncid, helium_varid, ipe % neutrals % geo_helium ) )
         CALL Check( nf90_put_var( ncid, oxygen_varid, ipe % neutrals % geo_oxygen ) )
         CALL Check( nf90_put_var( ncid, molecular_oxygen_varid, ipe % neutrals % geo_molecular_oxygen ) )

@@ -4,6 +4,10 @@ USE IPE_Precision
 USE IPE_Constants_Dictionary
 USE IPE_Grid_Class
 
+! MSIS
+USE physics_msis
+
+
 IMPLICIT NONE
 
   TYPE IPE_Neutrals
@@ -96,14 +100,14 @@ CONTAINS
      neutrals % velocity_geographic = 0.0_prec
      neutrals % velocity_apex       = 0.0_prec
 
-      ALLOCATE( neutrals % geo_helium(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
-                neutrals % geo_oxygen(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
-                neutrals % geo_molecular_oxygen(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
-                neutrals % geo_molecular_nitrogen(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
-                neutrals % geo_nitrogen(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
-                neutrals % geo_hydrogen(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
-                neutrals % geo_temperature(1:nheights_geo,1:nlat_geo,1:nlon_geo), &
-                neutrals % geo_velocity(1:3,1:nheights_geo,1:nlat_geo,1:nlon_geo) )
+      ALLOCATE( neutrals % geo_helium(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                neutrals % geo_oxygen(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                neutrals % geo_molecular_oxygen(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                neutrals % geo_molecular_nitrogen(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                neutrals % geo_nitrogen(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                neutrals % geo_hydrogen(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                neutrals % geo_temperature(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                neutrals % geo_velocity(1:3,1:nlon_geo,1:nlat_geo,1:nheights_geo) )
 
      neutrals % geo_helium             = 0.0_prec
      neutrals % geo_oxygen             = 0.0_prec
@@ -171,7 +175,7 @@ CONTAINS
     ! Local
     INTEGER    :: i, lp, mp
     INTEGER    :: iyd
-    REAL(prec) :: stl 
+    REAL(prec) :: stl, lat, lon, alt 
     REAL(prec) :: densities(1:8), temperatures(1:2)
 
       iyd = year*1000 + day
@@ -181,37 +185,39 @@ CONTAINS
           DO i = 1, neutrals % nFluxTube
 
             stl  = utime/3600.0_prec + grid % longitude(i,lp,mp)/15.0_prec
-
+            lat = grid % latitude(i,lp,mp)*180.0_prec/pi
+            lon = grid % longitude(i,lp,mp)*180.0_prec/pi
+            alt = grid % altitude(i,lp)*0.001_prec
             ! If the model is not coupled to an external neutral wind model that fills the
             ! neutral wind velocity, then the neutral wind velocity is obtained via the gsw5
             ! routine, defined in src/msis/hwm93.f90
 
-            call gws5( iyd, &                             ! Input, year and day as yyyyddd
-                       utime, &                           ! Input, universal time ( sec )
-                       grid % altitude(i,lp), &           ! Input, altitude ( km )
-                       grid % latitude(i,lp,mp), &        ! Input, geodetic latitude ( degrees )
-                       grid % longitude(i,lp,mp), &       ! Input, geodetic longitude ( degrees )
-                       stl, &                             ! Input, local apparent solar time ( hrs )
-                       f107a, &                           ! Input, 3 month average of f10.7 flux
-                       f107d, &                           ! Input, daily average of f10.7 flux for the previous day
-                       ap(1:2), &                         ! Input, magnetic index ( daily ), current 3hr ap index 
-                       neutrals % velocity_geographic(1:2,i,lp,mp) ) ! Ouput, neutral wind velocity zonal and meridional components
+    !        call gws5( iyd, &                             ! Input, year and day as yyyyddd
+    !                   utime, &                           ! Input, universal time ( sec )
+    !                   grid % altitude(i,lp), &           ! Input, altitude ( km )
+    !                   grid % latitude(i,lp,mp), &        ! Input, geodetic latitude ( degrees )
+    !                   grid % longitude(i,lp,mp), &       ! Input, geodetic longitude ( degrees )
+    !                   stl, &                             ! Input, local apparent solar time ( hrs )
+    !                   f107a, &                           ! Input, 3 month average of f10.7 flux
+    !                   f107d, &                           ! Input, daily average of f10.7 flux for the previous day
+    !                   ap(1:2), &                         ! Input, magnetic index ( daily ), current 3hr ap index 
+    !                   neutrals % velocity_geographic(1:2,i,lp,mp) ) ! Ouput, neutral wind velocity zonal and meridional components
 
             ! Neutral densities are calculated from the gtd7 routine, even if coupling is present
             ! We do this because we don't anticipate models of the thermosphere to output all of the
             ! necessary neutral parameters
-
+  
             call gtd7( iyd, &                       ! Input, year and day as yyyyddd
                        utime, &                     ! Input, universal time ( sec )
-                       grid % altitude(i,lp), &     ! Input, altitude ( km )
-                       grid % latitude(i,lp,mp), &  ! Input, geodetic latitude ( degrees )
-                       grid % longitude(i,lp,mp), & ! Input, geodetic longitude ( degrees )
+                       alt, &                       ! Input, altitude ( km )
+                       lat, &                       ! Input, geodetic latitude ( degrees )
+                       lon, &                       ! Input, geodetic longitude ( degrees )
                        stl, &                       ! Input, local apparent solar time ( hrs )
                        f107a, &                     ! Input, 3 month average of f10.7 flux
                        f107d, &                     ! Input, daily average of f10.7 flux for the previous day
                        ap(1:7), &                   ! Input, magnetic index ( daily ), current, 3,6,9hrs prior 3hr ap index, 12-33 hr prior ap average, 36-57 hr prior ap average
                        48, &                        ! Mass number ( see src/msis/nrlmsis00.f90 for more details )
-                       densities(1:8), &            ! Ouput, neutral densities in cubic meters
+                       densities(1:9), &            ! Ouput, neutral densities in cubic meters
                        temperatures(1:2) )          ! Output, exospheric temperature and temperature at altitude
 
             ! We multiply my 10^6 to convert from cubic meters to cubic centimeters
