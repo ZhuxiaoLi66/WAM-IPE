@@ -121,7 +121,8 @@
 !cmy mpi_def holds liope
       use mpi_def, only : liope
       use wam_f107_kp_mod, ONLY: f107_kp_size, f107_kp_interval,
-     &                           f107_kp_skip_size, f107_kp_data_size
+     &                           f107_kp_skip_size, f107_kp_data_size,
+     &                           f107_kp_read_in_start
 !
 !VAY NEMGSM-vwersion  "f107_kp_data_size"  check with SWPC-fst-datafiles
 !
@@ -157,7 +158,7 @@
      & isol, ico2, ialb, iems, iaer, iovr_sw, iovr_lw,ictm,
      & isubc_lw, isubc_sw, fdaer, lsidea, 
      & f107_kp_size, f107_kp_interval,f107_kp_skip_size,
-     & f107_kp_data_size, ipe_to_wam_coupling,
+     & f107_kp_data_size, f107_kp_read_in_start, ipe_to_wam_coupling,
      & ncw, crtrh,old_monin,flgmin,cnvgwd,cgwf,prslrd0,ral_ts,fixtrc,
 !    & ncw, crtrh,old_monin,flgmin,gfsio_in,gfsio_out,cnvgwd,
      & ccwf,shal_cnv,imfshalcnv,imfdeepcnv,
@@ -247,6 +248,7 @@
       lsidea           = .false.
       f107_kp_size     = 56
       f107_kp_skip_size= 0
+      f107_kp_read_in_start=0
       f107_kp_data_size= 56
       f107_kp_interval = 10800
 
