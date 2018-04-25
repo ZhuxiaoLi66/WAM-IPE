@@ -657,6 +657,9 @@ if [ $gfsio_in = .true. ] ; then export GB=1 ; fi
 export IDEA=${IDEA:-.false.}
 export WAM_IPE_COUPLING=${WAM_IPE_COUPLING:-.false.}
 export HEIGHT_DEPENDENT_G=${HEIGHT_DEPENDENT_G:-.false.}
+export INPUT_PARAMETERS=${INPUT_PARAMETERS:-fixderive}
+export FIX_F107=${FIX_F107:-120.0}
+export FIX_KP=${FIX_KP:-3.0}
 export F107_KP_SIZE=${F107_KP_SIZE:-$((60*37+1))}
 export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-$((60*37+1))}
 export F107_KP_SKIP_SIZE=${F107_KP_SKIP_SIZE:-0}
@@ -1234,13 +1237,16 @@ fi
 if [ $IDEA = .true. ]; then
   START_UT_SEC=$((10#$INI_HOUR*3600))
 
-  if [ ${REALTIME:-NO} = YES ] ; then
+  if [ $INPUT_PARAMETERS = realtime ] ; then
     # copy in xml kp/f107
-    if [ -e $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${INI_HOUR}15.xml ] ; then
-      ${NCP} $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${INI_HOUR}15.xml ./wam_input2.xsd
-      # convert to ascii
-      $BASE_NEMS/../scripts/parse_f107_xml/parse.py
-      # now f107
+    XML_HOUR=`printf %02d $(($INI_HOUR / 3 * 3))` # 00 > 00, 01 > 00, 02 > 00, 03 > 03, etc.
+    if [ -e $WAMINDIR/wam_input_new-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ] ; then # try new format
+      ${NLN} $WAMINDIR/wam_input_new-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ./wam_input2.xsd
+      $BASE_NEMS/../scripts/parse_f107_xml/parse.py -s `$NDATE -36 $CDATE`
+      ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
+    elif [ -e $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ] ; then # then go old format
+      ${NLN} $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ./wam_input2.xsd
+      $BASE_NEMS/../scripts/parse_f107_xml/parse.py -s `$NDATE -36 $CDATE`
       ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
     else
       if [ -e $COMOUT/wam_input_f107_kp.txt ] ; then
@@ -1251,16 +1257,25 @@ if [ $IDEA = .true. ]; then
     fi
   else
     # work from the database
-    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((36+ 10#$FHMAX)) -s `$NDATE -36 $CDATE` -p $PARAMETER_PATH
+    echo "$FIX_F107"   >> temp_fix
+    echo "$FIX_KP"     >> temp_fix
+    echo "$FIX_SWBT"   >> temp_fix
+    echo "$FIX_SWANG"  >> temp_fix
+    echo "$FIX_SWVEL"  >> temp_fix
+    echo "$FIX_SWBZ"   >> temp_fix
+    echo "$FIX_GWATTS" >> temp_fix
+    echo "$FIX_HPI"    >> temp_fix
+    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((36+ 10#$FHMAX)) -s `$NDATE -36 $CDATE` -p $PARAMETER_PATH -m $INPUT_PARAMETERS -f temp_fix
+    rm -rf temp_fix
     if [ ! -e wam_input_f107_kp.txt ] ; then
        echo "failed, no f107 file" ; exit 1
-    else
-       LEN_F107=`wc -l wam_input_f107_kp.txt | cut -d' ' -f 1`
-       export F107_KP_SIZE=$((LEN_F107-5))
-       export F107_KP_SKIP_SIZE=$((36*60))
-       export F107_KP_INTERVAL=60
     fi
   fi
+  LEN_F107=`wc -l wam_input_f107_kp.txt | cut -d' ' -f 1`
+  export F107_KP_SIZE=$((LEN_F107-5))
+  export F107_KP_DATA_SIZE=$F107_KP_SIZE
+  export F107_KP_INTERVAL=60
+  export F107_KP_SKIP_SIZE=$((36*60))
 
   # global_idea fix files
   ${NLN} $FIX_IDEA/global_idea* .
@@ -1285,35 +1300,6 @@ if [ $IDEA = .true. ]; then
    export DOY=`date -d ${INI_MONTH}/${INI_DAY}/${INI_YEAR} +%j`
    F107AVG=`grep 'F10 81 Day Avg' $DATA/wam_input_f107_kp.txt | awk '{print $5}'`
    F107DAY=`grep ${INI_YEAR}-${INI_MONTH}-${INI_DAY}T${INI_HOUR} wam_input_f107_kp.txt | awk '{print $2}'`
-   KP3HR=`grep ${INI_YEAR}-${INI_MONTH}-${INI_DAY}T${INI_HOUR} wam_input_f107_kp.txt | awk '{print $3}'`
-
-   #convert from kp to ap
-   KPX=(0 1 2  3  4  5  6   7   8   9)
-   APX=(0 4 7 15 27 48 80 132 207 400)
-
-   for i in "${!KPX[@]}"; do
-      if [[ "${KPX[$i]}" = "${KP3HR}" ]]; then
-          echo "${i}";
-          echo "${APX[$i]}";
-          echo "${KPX[$i]}";
-          AP3HR=${APX[$i]};
-          echo ' AP3HR = ' $AP3HR;
-      fi
-   done
-   echo 'F107AVG, F107DAY, KP3HR, AP3HR = ' ${F107AVG}, ${F107DAY}, ${KP3HR}, ${AP3HR}
-
-   # Fallback variables in case the above hase failed.
-   F107AVG=${F107AVG:-$F107AVGFB}
-   F107DAY=${F107DAY:-$F107DAYFB}
-   KP3HR=${KP3HR:-$KP3HRFB}
-   AP3HR=${AP3HR:-$AP3HRFB}
-
-   #To avoid storm for now - storm may crash the model
-   if [ ${KP3HR} -ge 3 ]; then
-      KP3HR=3
-      AP3HR=12
-      echo 'KP3HR change to ' ${KP3HR}
-   fi
 
 
 cat > SMSnamelist <<EOF

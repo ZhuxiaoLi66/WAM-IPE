@@ -94,6 +94,8 @@ export VERBOSE=YES
 if [ $? != 0 ]; then echo "forecast failed, exit"; exit; fi
 echo "fcst done"
 
+
+
 if [[ ${REGRESSION:-"NO"} = "YES" ]] ; then
   mkdir -p ${PLOT_DIR}/${JOBNAME}/${CONFIG}
   if [[ $cycle == 1 ]] ; then rm -rf ${PLOT_DIR}/${JOBNAME}/${CONFIG}/timepet.out ; fi
@@ -104,6 +106,7 @@ cd $COMPSETDIR
 if [[ $((cycle+1)) -le $3 ]] ; then
   echo "resubmitting $1 for cycle $((cycle+1)) out of $3"
   . $pwd/submit.sh $ROTDIR/`basename $1` $((cycle+1)) $3
+
 else
   echo "cycle $((cycle+1)) > $3, done!"
   if [[ ${REGRESSION:-"NO"} = "YES" ]] ; then
