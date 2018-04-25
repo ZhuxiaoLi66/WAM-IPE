@@ -367,24 +367,46 @@ module module_MEDSpaceWeather
       ! PETs (PetCnt), not need to redistribute.  Otherwise, redistribute
       ! the elementDistgrid to use PetCnt processors
       if (PetCnt /= decount) then
+         
+         ! create a new distgrid evenly distribute the nodes over all the PEs.
+         ipedistgrid = ESMF_DistGridCreate((/minIndices(1,1)/), (/maxIndices(1,1)/), &
+           rc=rc)
+         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+           line=__LINE__, &
+           file=__FILE__)) &
+           return  ! bail out
+
+         call ESMF_MeshGet(ipemesh, elementDistgrid=meddistgrid, rc=rc)
+         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+           line=__LINE__, &
+           file=__FILE__)) &
+           return  ! bail out
+         call ESMF_DistGridGet(meddistgrid, &
+           minIndexPTile=minIndices, maxIndexPTile=maxIndices, rc=rc) 
+         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+           line=__LINE__, &
+           file=__FILE__)) &
+           return  ! bail out
+
          ! create a new distgrid evenly distribute the nodes over all the PEs.
          meddistgrid = ESMF_DistGridCreate((/minIndices(1,1)/), (/maxIndices(1,1)/), &
-	 	       rc=rc)
+           rc=rc)
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            	line=__LINE__, &
-            	file=__FILE__)) &
-            	return  ! bail out
-         medmesh = ESMF_MeshCreate(meddistgrid, meddistgrid, &
-             	  rc=rc)
+           line=__LINE__, &
+           file=__FILE__)) &
+           return  ! bail out
+
+         medmesh = ESMF_MeshCreate(ipemesh, nodalDistgrid=ipedistgrid, &
+           elementDistgrid=meddistgrid, rc=rc)
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            	line=__LINE__, &
-        	file=__FILE__)) &
-        	return  ! bail out
+           line=__LINE__, &
+           file=__FILE__)) &
+           return  ! bail out
          call ESMF_MeshDestroy(ipemesh, rc=rc)
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            	line=__LINE__, &
-        	file=__FILE__)) &
-        	return  ! bail out
+           line=__LINE__, &
+           file=__FILE__)) &
+           return  ! bail out
         ! replace the field with new mesh     
         k=1 ! initialize
         do i=1, itemCount
@@ -424,8 +446,10 @@ module module_MEDSpaceWeather
     real(ESMF_KIND_R8)   :: starttime, endtime, timesend(1), timereport(1)
     type(InternalState)  :: is
     real(ESMF_KIND_R8), pointer :: fptr(:)
+#ifdef BFB_REGRID
+    integer              :: srcTermProcessing
+#endif
 
-    
 
     rc = ESMF_SUCCESS
 
@@ -612,11 +636,20 @@ module module_MEDSpaceWeather
       call ESMF_VMBarrier(vm)
       call ESMF_VMWTime(starttime)
 #endif
+#ifdef BFB_REGRID
+      srcTermProcessing = 0
+      if (is%wrap%PetNo==0) then
+         print *, 'Computing RegridStore WAM->IPE with srcTermProcessing = ',srcTermProcessing
+      endif
+#endif
       call ESMF_FieldRegridStore(wamField, ipeField, &
        	 unmappedaction =ESMF_UNMAPPEDACTION_IGNORE, &
 	 regridmethod = ESMF_REGRIDMETHOD_BILINEAR, &
 	 polemethod = ESMF_POLEMETHOD_NONE, &
          lineType = ESMF_LINETYPE_GREAT_CIRCLE, &
+#ifdef BFB_REGRID
+         srcTermProcessing = srcTermProcessing, &
+#endif
 	 routehandle = is%wrap%routehandle, &
 	 rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -1709,7 +1742,7 @@ subroutine RunRegrid(model, importState, exportState, rc)
            do i=1,localnodes
               kk = 1  ! source ind
               do k=startlevel, wamdims(3)
-                 do while (kk<=inlevels .and. hgtbuf(i,kk)<wamhgt(k))
+                 do while (kk<inlevels .and. hgtbuf(i,kk)<wamhgt(k))
 	            kk=kk+1
                  enddo
                  if (kk>extrap_start_level) then
@@ -1768,7 +1801,7 @@ subroutine RunRegrid(model, importState, exportState, rc)
   	    do i=1,localnodes
               kk = 1  ! source ind
               do k=startlevel, wamdims(3)
-                 do while (kk<=inlevels .and. hgtbuf(i,kk)<wamhgt(k))
+                 do while (kk<inlevels .and. hgtbuf(i,kk)<wamhgt(k))
 	            kk=kk+1
                  enddo
 	         if (kk>extrap_start_level) then
@@ -1858,6 +1891,9 @@ subroutine RunRegrid(model, importState, exportState, rc)
 
         ! Regrid!!
         call ESMF_FieldRegrid(wamfield, ipefield, is%wrap%routehandle, &
+#ifdef BFB_REGRID
+               termorderflag=ESMF_TERMORDER_SRCSEQ, &
+#endif
 	       zeroregion=ESMF_REGION_SELECT, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
@@ -1914,6 +1950,9 @@ subroutine RunRegrid(model, importState, exportState, rc)
    call ESMF_FieldRegrid(is%wrap%wam_wind_3Dcart_vec, &
                          is%wrap%ipe_wind_3Dcart_vec, &
                          is%wrap%routehandle, &
+#ifdef BFB_REGRID
+                         termorderflag=ESMF_TERMORDER_SRCSEQ, &
+#endif
                          zeroregion=ESMF_REGION_SELECT, rc=rc)
    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
@@ -1936,6 +1975,9 @@ subroutine RunRegrid(model, importState, exportState, rc)
    call ESMF_FieldRegrid(is%wrap%wam_north, &
                          ipe_north, &
                          is%wrap%routehandle, &
+#ifdef BFB_REGRID
+                         termorderflag=ESMF_TERMORDER_SRCSEQ, &
+#endif
                          zeroregion=ESMF_REGION_SELECT, rc=rc)
    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
@@ -1946,6 +1988,9 @@ subroutine RunRegrid(model, importState, exportState, rc)
    call ESMF_FieldRegrid(is%wrap%wam_east, &
                          ipe_east, &
                          is%wrap%routehandle, &
+#ifdef BFB_REGRID
+                         termorderflag=ESMF_TERMORDER_SRCSEQ, &
+#endif
                          zeroregion=ESMF_REGION_SELECT, rc=rc)
    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
