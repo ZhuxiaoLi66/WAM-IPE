@@ -5,8 +5,7 @@ USE IPE_Constants_Dictionary
 USE IPE_Grid_Class
 
 ! MSIS
-USE physics_msis
-
+USE physics_msis ! gtd7
 
 IMPLICIT NONE
 
@@ -57,7 +56,8 @@ IMPLICIT NONE
   END TYPE IPE_Neutrals
 
 
-REAL(prec), PARAMETER :: min_density = 10.0_prec**(-12)
+REAL(prec), PARAMETER, PRIVATE :: min_density = 10.0_prec**(-12)
+CHARACTER(250), PARAMETER :: hwm_path ='./'
 
 CONTAINS
 
@@ -173,10 +173,11 @@ CONTAINS
     REAL(prec), INTENT(in)               :: f107a
     REAL(prec), INTENT(in)               :: ap(1:7)
     ! Local
-    INTEGER    :: i, lp, mp
-    INTEGER    :: iyd
-    REAL(prec) :: stl, lat, lon, alt 
-    REAL(prec) :: densities(1:8), temperatures(1:2)
+    INTEGER        :: i, lp, mp
+    INTEGER        :: iyd
+    REAL(prec)     :: stl, lat, lon, alt
+    REAL(prec)     :: densities(1:8), temperatures(1:2)
+    REAL(4)        :: w(1:2), ap_msis(1:2)
 
       iyd = year*1000 + day
 
@@ -188,20 +189,24 @@ CONTAINS
             lat = grid % latitude(i,lp,mp)*180.0_prec/pi
             lon = grid % longitude(i,lp,mp)*180.0_prec/pi
             alt = grid % altitude(i,lp)*0.001_prec
+            ap_msis(1:2) = ap(1:2) 
             ! If the model is not coupled to an external neutral wind model that fills the
             ! neutral wind velocity, then the neutral wind velocity is obtained via the gsw5
-            ! routine, defined in src/msis/hwm93.f90
+            ! routine, defined in src/msis/hwm14.f90
 
-    !        call gws5( iyd, &                             ! Input, year and day as yyyyddd
-    !                   utime, &                           ! Input, universal time ( sec )
-    !                   grid % altitude(i,lp), &           ! Input, altitude ( km )
-    !                   grid % latitude(i,lp,mp), &        ! Input, geodetic latitude ( degrees )
-    !                   grid % longitude(i,lp,mp), &       ! Input, geodetic longitude ( degrees )
-    !                   stl, &                             ! Input, local apparent solar time ( hrs )
-    !                   f107a, &                           ! Input, 3 month average of f10.7 flux
-    !                   f107d, &                           ! Input, daily average of f10.7 flux for the previous day
-    !                   ap(1:2), &                         ! Input, magnetic index ( daily ), current 3hr ap index 
-    !                   neutrals % velocity_geographic(1:2,i,lp,mp) ) ! Ouput, neutral wind velocity zonal and meridional components
+            call hwm14( iyd, &           ! Input, year and day as yyyyddd
+                        REAL(utime,4), &         ! Input, universal time ( sec )
+                        REAL(alt,4), &           ! Input, altitude ( km )
+                        REAL(lat,4), &           ! Input, geodetic latitude ( degrees )
+                        REAL(lon,4), &           ! Input, geodetic longitude ( degrees )
+                        REAL(stl,4), &           ! Input, local apparent solar time ( hrs )[ not used ]
+                        REAL(f107a,4), &         ! Input, 3 month average of f10.7 flux [ not used ]
+                        REAL(f107d,4), &         ! Input, daily average of f10.7 flux for the previous day [ not used ]
+                        ap_msis, &           ! Input, magnetic index ( daily ), current 3hr ap index 
+                        hwm_path, &      
+                        w(1:2) )         ! Ouput, neutral wind velocity zonal and meridional components
+            
+            neutrals % velocity_geographic(1:2,i,lp,mp) = w(1:2) 
 
             ! Neutral densities are calculated from the gtd7 routine, even if coupling is present
             ! We do this because we don't anticipate models of the thermosphere to output all of the

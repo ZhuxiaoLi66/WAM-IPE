@@ -109,8 +109,7 @@ OBJ = IPE_Precision.o \
       IPE_Model_Class.o \
       Test_IPE.o 
 
-ipe_test : ${OBJ} 
-	make libnrlmsis.a
+ipe_test : libnrlmsis.a ${OBJ} 
 	${FC} ${OPT} ${OBJ} ${LIB} ${INC} -o $@
 	mv $@ ../bin/
 

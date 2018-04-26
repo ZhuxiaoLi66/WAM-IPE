@@ -1,7 +1,7 @@
 clean:
 	$(RM) libnrlmsis.a $(LIBOBJS)
 
-LIBOBJS = physics_constants.o utils_spline.o physics_msis.o utils_constants.o hwm93.o
+LIBOBJS = physics_constants.o utils_spline.o physics_msis.o utils_constants.o hwm14.o
 
 %.o: %.f90
 	$(FC) $(OPT) -c $<
@@ -16,4 +16,4 @@ utils_constants.o: utils_constants.f90
 physics_constants.o: physics_constants.f90 utils_constants.o
 utils_spline.o: utils_spline.f90 utils_constants.o
 physics_msis.o: physics_msis.f90 physics_constants.o utils_constants.o
-hwm93.o: hwm93.f90
+hwm14.o: hwm14.f90
