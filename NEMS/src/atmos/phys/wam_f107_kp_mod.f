@@ -6,6 +6,7 @@
 
       INTEGER                     :: f107_kp_size, f107_kp_interval
       INTEGER                     :: f107_kp_skip_size
+      INTEGER                     :: f107_kp_read_in_start
       INTEGER                     :: f107_kp_read_in_size
       INTEGER                     :: kdt_interval
 !
@@ -61,7 +62,7 @@
       f107_kp_read_in_size = f107_kp_data_size - f107_kp_skip_size
 !
 !      write(6,*) 'read_in_size',MIN(f107_kp_read_in_size,f107_kp_size)
-      DO i = 1, MIN(f107_kp_read_in_size, f107_kp_size)
+      DO i = f107_kp_read_in_start + 1, f107_kp_read_in_start + MIN(f107_kp_read_in_size, f107_kp_size)
 !
         READ(79, *) realdate(i), f107_wy(i), kp_wy(i),             &
              f107_flag(i), kp_flag(i), f107d_wy(i), kpa_wy(i),     &
@@ -74,7 +75,7 @@
 ! If run time longer than the f107 data, use the latest data to run
 ! continuously
 !
-      DO i = f107_kp_read_in_size + 1, f107_kp_size
+      DO i = f107_kp_read_in_start + f107_kp_read_in_size + 1, f107_kp_size
           f107_wy (i) = f107_wy (f107_kp_read_in_size)
           kp_wy   (i) = kp_wy   (f107_kp_read_in_size)
           nhp_wy  (i) = nhp_wy  (f107_kp_read_in_size)

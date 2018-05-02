@@ -1242,11 +1242,11 @@ if [ $IDEA = .true. ]; then
     XML_HOUR=`printf %02d $(($INI_HOUR / 3 * 3))` # 00 > 00, 01 > 00, 02 > 00, 03 > 03, etc.
     if [ -e $WAMINDIR/wam_input_new-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ] ; then # try new format
       ${NLN} $WAMINDIR/wam_input_new-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ./wam_input2.xsd
-      $BASE_NEMS/../scripts/parse_f107_xml/parse.py -s `$NDATE -36 $CDATE`
+      $BASE_NEMS/../scripts/parse_f107_xml/parse.py -s `$NDATE -36 $FDATE`
       ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
     elif [ -e $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ] ; then # then go old format
       ${NLN} $WAMINDIR/wam_input-${INI_YEAR}${INI_MONTH}${INI_DAY}T${XML_HOUR}15.xml ./wam_input2.xsd
-      $BASE_NEMS/../scripts/parse_f107_xml/parse.py -s `$NDATE -36 $CDATE`
+      $BASE_NEMS/../scripts/parse_f107_xml/parse.py -s `$NDATE -36 $FDATE`
       ${NLN} $DATA/wam_input.asc $DATA/wam_input_f107_kp.txt
     else
       if [ -e $COMOUT/wam_input_f107_kp.txt ] ; then
@@ -1265,7 +1265,7 @@ if [ $IDEA = .true. ]; then
     echo "$FIX_SWBZ"   >> temp_fix
     echo "$FIX_GWATTS" >> temp_fix
     echo "$FIX_HPI"    >> temp_fix
-    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((36+ 10#$FHMAX)) -s `$NDATE -36 $CDATE` -p $PARAMETER_PATH -m $INPUT_PARAMETERS -f temp_fix
+    $BASE_NEMS/../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((36+ 10#$FHMAX - 10#$FHINI)) -s `$NDATE -36 $FDATE` -p $PARAMETER_PATH -m $INPUT_PARAMETERS -f temp_fix
     rm -rf temp_fix
     if [ ! -e wam_input_f107_kp.txt ] ; then
        echo "failed, no f107 file" ; exit 1
@@ -1275,8 +1275,8 @@ if [ $IDEA = .true. ]; then
   export F107_KP_SIZE=$((LEN_F107-5))
   export F107_KP_DATA_SIZE=$F107_KP_SIZE
   export F107_KP_INTERVAL=60
-  export F107_KP_SKIP_SIZE=$((36*60))
-
+  export F107_KP_SKIP_SIZE=$((36*60*60/$F107_KP_INTERVAL))
+  export F107_KP_READ_IN_START=$((FHINI*60*60/$F107_KP_INTERVAL))
   # global_idea fix files
   ${NLN} $FIX_IDEA/global_idea* .
 
@@ -1441,7 +1441,7 @@ cat  > IPE.inp <<EOF
   sw_record_number=1
   sw_th_or_r=0
   ut_start_perp_trans=${START_UT_SEC}
-  utime0LPI=0
+  utime0LPI=${START_UT_SEC}
   barriersOn=f
 /
 &ipecap
@@ -1900,10 +1900,11 @@ cat  > atm_namelist <<EOF
   jcap=$JCAP, levs=$LEVS, levr=$LEVR, reduced_grid=$REDUCED_GRID,
   ntrac=$NTRAC, ntoz=$NTOZ, ntcw=$NTCW, ncld=$NCLD,
   lsoil=$LSOIL, nmtvr=$NMTVR, lsidea=$IDEA,
-  f107_kp_size=$F107_KP_SIZE,
+  f107_kp_size=$((F107_KP_SIZE+$FHINI*60*60/$F107_KP_INTERVAL)),
   f107_kp_interval=$F107_KP_INTERVAL,
   f107_kp_skip_size=$F107_KP_SKIP_SIZE,
   f107_kp_data_size=$F107_KP_DATA_SIZE,
+  f107_kp_read_in_start=$F107_KP_READ_IN_START,
   ngptc=$NGPTC, hybrid=$HYBRID, tfiltc=$TFILTC,
   gen_coord_hybrid=$GEN_COORD_HYBRID,
   thermodyn_id=$THERMODYN_ID, sfcpress_id=$SFCPRESS_ID,

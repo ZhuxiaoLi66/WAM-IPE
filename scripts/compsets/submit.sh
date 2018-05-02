@@ -103,7 +103,7 @@ if [[ ${REGRESSION:-"NO"} = "YES" ]] ; then
 fi
 
 cd $COMPSETDIR
-if [[ $((cycle+1)) -le $3 ]] ; then
+if [[ $((cycle+1)) -le ${3:-1} ]] ; then
   echo "resubmitting $1 for cycle $((cycle+1)) out of $3"
   . $pwd/submit.sh $ROTDIR/`basename $1` $((cycle+1)) $3
 
