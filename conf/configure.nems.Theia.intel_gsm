@@ -76,8 +76,9 @@ FIXED        = -fixed
 R8           = -r8
 
 FINCS        = $(ESMF_INC) $(NEMSIO_INC) $(NETCDF_INC)
+#  the first one is the default one
    TRAPS        = -g -traceback
-#1 TRAPS        = -g -fno-inline -no-ip -traceback -ftrapuv -fpe0 -ftz -check all -check noarg_temp_created -fp-stack-check
+#1 TRAPS        = -g -fno-inline -no-ip -traceback -ftrapuv -fpe0 -ftz -check all -debug all -check noarg_temp_created -fp-stack-check
 #2 TRAPS        = -g -fno-inline -no-ip -traceback -ftrapuv -fpe0 -ftz -check all
 #3 TRAPS        = -g -traceback -ftrapuv -fpe0 -ftz -check all
 #5 TRAPS        = -g -fno-inline -no-ip -traceback
