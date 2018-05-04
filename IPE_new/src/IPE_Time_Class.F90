@@ -6,7 +6,7 @@ IMPLICIT NONE
 
   TYPE IPE_Time
     REAL(prec) :: utime
-    INTEGER    :: year, month, day, hour, minute
+    INTEGER    :: year, month, day, day_of_year, hour, minute
 
     CONTAINS
 
@@ -29,7 +29,12 @@ CONTAINS
 
       time_tracker % utime = start_time 
 
-      CALL time_tracker % Set_Date(  year, 0, day_of_year )
+      time_tracker % year = year
+      time_tracker % day_of_year = day_of_year
+      time_tracker % month = 0
+      time_tracker % day   = 0
+
+!      CALL time_tracker % Calculate_Month_and_Day( )
 
       CALL time_tracker % Calculate_Hour_and_Minute( )
 
@@ -43,7 +48,6 @@ CONTAINS
       time_tracker % year  = year
       time_tracker % month = month
       time_tracker % day   = day
-
 
   END SUBROUTINE Set_Date_IPE_Time
 

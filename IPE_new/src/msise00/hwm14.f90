@@ -317,7 +317,6 @@ subroutine inithwm()
     swbar = 0
 
     hwminit = .false.
-    print*, 'hwminit!'
 
     return
 

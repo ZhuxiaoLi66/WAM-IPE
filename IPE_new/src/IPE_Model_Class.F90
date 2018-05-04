@@ -59,11 +59,6 @@ CONTAINS
 
       ! Initialize the clock
       CALL ipe % time_tracker % Build( ipe % parameters % year, ipe % parameters % day, ipe % parameters % start_time )
-!      CALL ipe % time_tracker % utime = ipe % parameters % start_time 
-!      CALL ipe % time_tracker % Set_Date( ipe % parameters % year, ipe % parameters % month, ipe % parameters % day )
-!      CALL ipe % time_trackers % Calculate_Hour_and_Minute( )
-
-
 
       IF( init_success )THEN
 
@@ -109,9 +104,10 @@ CONTAINS
     ! Local
     INTEGER    :: i, im3hr, im6hr, im9hr, im12hr, im36hr
     REAL(prec) :: AP(1:7)
-
+    REAL(preC) :: wall_time0, wall_time1
     
 
+      ! CALL ipe % time_tracker % Update( t0 )
       ipe % time_tracker % utime = t0
       
       ! This call to update the neutrals is "diagnostic" and returns neutral
@@ -131,14 +127,21 @@ CONTAINS
       AP(6) = ipe % forcing % ap_1day_avg(im12hr)
       AP(7) = ipe % forcing % ap_1day_avg(im36hr)
 
+      CALL CPU_TIME( wall_time0 )
       CALL ipe % neutrals % Update( ipe % grid, &
                                     ipe % time_tracker % utime, &
                                     ipe % time_tracker % year, &
-                                    ipe % time_tracker % day,  & 
+                                    ipe % time_tracker % day_of_year,  & 
                                     ipe % forcing % f107(i) , &
                                     ipe % forcing % f107_81day_avg(i), &
                                     AP )
+      CALL CPU_TIME( wall_time1 )
+      PRINT*, 'Neutral Update Wall Time :', wall_time1-wall_time0
 
+      ! Update the timer
+      ! CALL ipe % time_tracker % Update( t1 )
+      ipe % time_tracker % utime = t1
+      CALL ipe % time_tracker % Calculate_Hour_and_Minute( )
 
   END SUBROUTINE Update_IPE_Model
 !

@@ -235,7 +235,7 @@ CONTAINS
          
       ENDDO
 
-      MaxFluxTube = maxval(jmax(1,:)-jmin(1,:)) + 1
+      MaxFluxTube = maxval(grid % flux_tube_max)
 
       ! Just in case we set up the grid initially with the improper number of
       ! flux tube points, we'll reset the grid here.

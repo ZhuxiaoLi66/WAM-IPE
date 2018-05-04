@@ -175,53 +175,55 @@ CONTAINS
     ! Local
     INTEGER        :: i, lp, mp
     INTEGER        :: iyd
-    REAL(prec)     :: stl, lat, lon, alt
+    REAL(prec)     :: slt, lat, lon, alt
     REAL(prec)     :: densities(1:8), temperatures(1:2)
     REAL(4)        :: w(1:2), ap_msis(1:2)
 
-      iyd = year*1000 + day
+      iyd = 99000 + day
 
       DO mp = 1, neutrals % NMP    
         DO lp = 1, neutrals % NLP    
-          DO i = 1, neutrals % nFluxTube
+          DO i = 1, grid % flux_tube_max(lp)
 
-            stl  = utime/3600.0_prec + grid % longitude(i,lp,mp)/15.0_prec
-            lat = grid % latitude(i,lp,mp)*180.0_prec/pi
+            lat = 90.0_prec-grid % latitude(i,lp,mp)*180.0_prec/pi
             lon = grid % longitude(i,lp,mp)*180.0_prec/pi
             alt = grid % altitude(i,lp)*0.001_prec
+            slt = utime/3600.0_prec + lon/15.0_prec
+
             ap_msis(1:2) = ap(1:2) 
+
             ! If the model is not coupled to an external neutral wind model that fills the
             ! neutral wind velocity, then the neutral wind velocity is obtained via the gsw5
             ! routine, defined in src/msis/hwm14.f90
 
-            call hwm14( iyd, &           ! Input, year and day as yyyyddd
+            call hwm14( iyd, &           ! Input, year and day as yyddd
                         REAL(utime,4), &         ! Input, universal time ( sec )
                         REAL(alt,4), &           ! Input, altitude ( km )
                         REAL(lat,4), &           ! Input, geodetic latitude ( degrees )
                         REAL(lon,4), &           ! Input, geodetic longitude ( degrees )
-                        REAL(stl,4), &           ! Input, local apparent solar time ( hrs )[ not used ]
+                        REAL(slt,4), &           ! Input, local apparent solar time ( hrs )[ not used ]
                         REAL(f107a,4), &         ! Input, 3 month average of f10.7 flux [ not used ]
                         REAL(f107d,4), &         ! Input, daily average of f10.7 flux for the previous day [ not used ]
                         ap_msis, &           ! Input, magnetic index ( daily ), current 3hr ap index 
                         hwm_path, &      
                         w(1:2) )         ! Ouput, neutral wind velocity zonal and meridional components
             
-            neutrals % velocity_geographic(1:2,i,lp,mp) = w(1:2) 
+            neutrals % velocity_geographic(1,i,lp,mp) = w(2) ! zonal velocity 
+            neutrals % velocity_geographic(2,i,lp,mp) = w(1) ! meridional velocity 
 
             ! Neutral densities are calculated from the gtd7 routine, even if coupling is present
             ! We do this because we don't anticipate models of the thermosphere to output all of the
             ! necessary neutral parameters
-  
-            call gtd7( iyd, &                       ! Input, year and day as yyyyddd
+            call gtd7( iyd, &                       ! Input, year and day as yyddd
                        utime, &                     ! Input, universal time ( sec )
                        alt, &                       ! Input, altitude ( km )
                        lat, &                       ! Input, geodetic latitude ( degrees )
                        lon, &                       ! Input, geodetic longitude ( degrees )
-                       stl, &                       ! Input, local apparent solar time ( hrs )
+                       slt, &                       ! Input, local apparent solar time ( hrs )
                        f107a, &                     ! Input, 3 month average of f10.7 flux
                        f107d, &                     ! Input, daily average of f10.7 flux for the previous day
                        ap(1:7), &                   ! Input, magnetic index ( daily ), current, 3,6,9hrs prior 3hr ap index, 12-33 hr prior ap average, 36-57 hr prior ap average
-                       48, &                        ! Mass number ( see src/msis/nrlmsis00.f90 for more details )
+                       48, &                        ! Mass number ( see src/msis/physics_msis.f90 for more details )
                        densities(1:9), &            ! Ouput, neutral densities in cubic meters
                        temperatures(1:2) )          ! Output, exospheric temperature and temperature at altitude
 

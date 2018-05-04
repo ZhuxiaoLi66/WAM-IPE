@@ -119,4 +119,4 @@ Test_IPE.o : IPE_Precision.o IPE_Model_Class.o test/Test_IPE.F90
 .PHONY : clean
 
 clean :
-	rm *.o *.mod
+	rm *.o *.mod msise00/libnrlmsis.a
