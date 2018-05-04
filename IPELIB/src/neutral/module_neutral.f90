@@ -122,7 +122,7 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
                  , n4s_m3(IN:IS,lp,mp) &
                  , tn_k_dummy(IN:IS) &
                  , tinf_k_dummy(IN:IS) &
-                 , Vn_ms1_dummy(1:3,1:NPTS))
+                 , Vn_ms1(1:3,1:NPTS))
 
         if( utime_local == start_time )then
         
@@ -313,6 +313,33 @@ call get_thermosphere (npts, nyear, nday, ut_hour, f107D_dum, f107A_dum, AP_dum 
                  , tn_k(IN:IS,lp,mp) &
                  , tinf_k(IN:IS,lp,mp) &
                  , Vn_ms1(1:3,1:NPTS))
+
+          do jth=1,3
+            do i=IN,IS
+              Vn_ms1_4output(i-IN+1,lp,mp,jth)=Vn_ms1(jth,i-IN+1)
+            end do
+          end do
+
+          DO i=IN,IS
+            ipts = i-IN+1 !1:NPTS
+
+               dotprod = apexD(i,lp,mp,east ,3)*apexD(i,lp,mp,east ,3)  &
+                    &  + apexD(i,lp,mp,north,3)*apexD(i,lp,mp,north,3) &
+                    &  + apexD(i,lp,mp,up   ,3)*apexD(i,lp,mp,up   ,3)
+
+               IF ( dotprod > 0.0 ) THEN
+                  Un_ms1(i,lp,mp,3) = & 
+                       &     ( apexD(i,lp,mp,east ,3)*Vn_ms1(1,ipts)     &
+                       &     + apexD(i,lp,mp,north,3)*Vn_ms1(2,ipts)     &
+                       &     + apexD(i,lp,mp,up   ,3)*Vn_ms1(3,ipts) ) / &
+                       &     SQRT(  dotprod   )
+               ELSE
+                  Un_ms1(i,lp,mp,3) = 0.0
+               END IF
+
+               IF ( lp>=1 .AND. lp<=6 .AND. i==midpoint )   Un_ms1(i,lp,mp,:) = Un_ms1(i-1,lp,mp,:) 
+
+          END DO  !: DO i=IN,IS
 
         END DO  apex_latitude_height_loop2
       END DO  apex_longitude_loop2
