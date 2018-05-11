@@ -3419,6 +3419,7 @@ contains
     if (present(rt)) then
       mass = 1._ESMF_KIND_R8
       if (present(ms)) mass = ms
+#if 0
       if (rt <= 0._ESMF_KIND_R8) then
         call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
           msg="Optional rt argument (T/m) must be > 0", &
@@ -3427,6 +3428,7 @@ contains
           rcToReturn=rc)
         return ! bail out
       end if
+#endif
 
       select case (localMethod)
         case(0)
