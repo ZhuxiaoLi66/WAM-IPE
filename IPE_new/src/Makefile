@@ -33,14 +33,16 @@ ifeq (${COUPLED},yes)
 endif
 
 
-LIB=${NCLIB} -L$(shell pwd)/msise00 -lnrlmsis
-INC=${NCINC} -I$(shell pwd)/msise00
+LIB=${NCLIB} -L$(shell pwd)/msise00 -lnrlmsis -L$(shell pwd)/flip
+INC=${NCINC} -I$(shell pwd)/msise00 -I$(shell pwd)/flip
 
 # MSISE00 Library
 libnrlmsis.a:
 	make --directory=./msise00/ libnrlmsis.a
 
 # FLIP Library
+libflip.a:
+	make --directory=./flip/ libflip.a
 
 
 # IPE Objects
@@ -68,6 +70,8 @@ IPE_Neutrals_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class
 IPE_Forcing_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Common_Routines.o IPE_Forcing_Class.F90
 	${FC} ${CPPFLAGS} ${OPT} -c IPE_Forcing_Class.F90 ${LIB} ${INC} -o $@
 
+IPE_Plasma_Class.o : IPE_Precision.o IPE_Plasma_Class.F90
+	${FC} ${CPPFLAGS} ${OPT} -c IPE_Plasma_Class.F90 ${LIB} ${INC} -o $@ 
 
 IPE_Model_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class.o IPE_Neutrals_Class.o \
                     IPE_Time_Class.o IPE_Model_Parameters_Class.o IPE_Forcing_Class.o IPE_Model_Class.F90

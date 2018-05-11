@@ -1,6 +1,6 @@
 MODULE IPE_Plasma_Class
 
-USE IPE_Model_Precision
+USE IPE_Precision
 
 IMPLICIT NONE
 
@@ -11,7 +11,7 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: ion_velocities(:,:,:,:,:)
     REAL(prec), ALLOCATABLE :: ion_temperatures(:,:,:,:)
 
-    REAL(prec), ALLOCATABLE :: electron_densitiy(:,:,:)
+    REAL(prec), ALLOCATABLE :: electron_density(:,:,:)
     REAL(prec), ALLOCATABLE :: electron_velocity(:,:,:,:)
     REAL(prec), ALLOCATABLE :: electron_temperature(:,:,:)
 
@@ -36,20 +36,20 @@ CONTAINS
 
   SUBROUTINE Build_IPE_Plasma( plasma, nFluxTube, NLP, NMP )
     IMPLICIT NONE
-    CLASS( IPE_Plasma ), INTENT(in) :: plasma
-    INTEGER, INTENT(in)             :: nFluxTube
-    INTEGER, INTENT(in)             :: NLP
-    INTEGER, INTENT(in)             :: NMP
+    CLASS( IPE_Plasma ), INTENT(out) :: plasma
+    INTEGER, INTENT(in)              :: nFluxTube
+    INTEGER, INTENT(in)              :: NLP
+    INTEGER, INTENT(in)              :: NMP
 
       plasma % nFluxTube = nFluxTube
       plasma % NLP       = NLP
       plasma % NMP       = NMP
 
       ALLOCATE( plasma % ion_densities(1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
-                plasma % ion_velocities(1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
+                plasma % ion_velocities(1:3,1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
                 plasma % ion_temperatures(1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_density(1:nFluxTube,1:NLP,1:NMP), &
-                plasma % electron_velocity(1:nFluxTube,1:NLP,1:NMP), &
+                plasma % electron_velocity(1:3,1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_temperature(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % hall_conductivity(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % pedersen_conductivity(1:nFluxTube,1:NLP,1:NMP), &
@@ -73,17 +73,25 @@ CONTAINS
     CLASS( IPE_Plasma ), INTENT(inout) :: plasma
 
     
-    DEALLOCATE( ion_densities, &
-                ion_velocities, &
-                ion_temperatures, &
-                electron_densitiy, &
-                electron_velocity, &
-                electron_temperature, &
-                hall_conductivity, & 
-                pedersen_conductivity, & 
-                b_parallel_conductivity )
+    DEALLOCATE( plasma % ion_densities, &
+                plasma % ion_velocities, &
+                plasma % ion_temperatures, &
+                plasma % electron_density, &
+                plasma % electron_velocity, &
+                plasma % electron_temperature, &
+                plasma % hall_conductivity, & 
+                plasma % pedersen_conductivity, & 
+                plasma % b_parallel_conductivity )
 
   END SUBROUTINE Trash_IPE_Plasma
+!
+  SUBROUTINE Update_IPE_Plasma( plasma, utime )
+    IMPLICIT NONE
+    CLASS( IPE_Plasma ), INTENT(inout) :: plasma
+    REAL(prec), INTENT(in)             :: utime
+
+  
+  END SUBROUTINE Update_IPE_Plasma
 
 
 
