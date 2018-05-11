@@ -3010,7 +3010,10 @@ contains
 #endif
           call LogInterpolate(srcCoord(i,:), srcfarray(i,:), &
                               dstCoord(i,:), dstfarray(i,:), &
-                              el=extrap_start_level, rt=rt, ms=auxNorm, rc=rc)
+#ifdef LEGACY
+                              el=extrap_start_level,         &
+#endif
+                              rt=rt, ms=auxNorm, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
@@ -3113,7 +3116,10 @@ contains
             rt = auxfarray(i,j,ubound(auxfarray, dim=3)) / auxNorm
             call LogInterpolate(srcCoord(i,j,:), srcfarray(i,j,:), &
                                 dstCoord(i,j,:), dstfarray(i,j,:), &
-                                el=extrap_start_level, rt=rt, rc=rc)
+#ifdef LEGACY
+                                el=extrap_start_level,             &
+#endif
+                                rt=rt, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
