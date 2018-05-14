@@ -18,6 +18,7 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: foot_point_distance(:,:,:)     ! ISL index of plasma_grid_3d
     REAL(prec), ALLOCATABLE :: magnetic_field_strength(:,:,:) ! IBM index of plasma_grid_3d
     REAL(prec), ALLOCATABLE :: magnetic_colatitude(:,:) ! plasma_grid_GL
+    REAL(prec), ALLOCATABLE :: magnetic_longitude(:)
     REAL(prec), ALLOCATABLE :: r_meter(:,:) ! rmeter2D
 
     REAL(prec), ALLOCATABLE :: p_value(:) ! Pvalue
@@ -66,6 +67,7 @@ IMPLICIT NONE
       
   END TYPE IPE_Grid 
 
+REAL(prec), PARAMETER, PRIVATE :: dlonm90km = 4.5_prec
 
 CONTAINS
 
@@ -91,6 +93,7 @@ CONTAINS
                 grid % foot_point_distance(1:nFluxTube,1:NLP,1:NMP), &
                 grid % magnetic_field_strength(1:nFluxTube,1:NLP,1:NMP), &
                 grid % magnetic_colatitude(1:nFluxTube,1:NLP), &
+                grid % magnetic_longitude(1:NMP), &
                 grid % r_meter(1:nFluxTube,1:NLP), &
                 grid % p_value(1:NLP), &
                 grid % q_factor(1:nFluxTube,1:NLP,1:NMP), &
@@ -116,12 +119,13 @@ CONTAINS
       grid % altitude                = 0.0_prec
       grid % latitude                = 0.0_prec
       grid % longitude               = 0.0_prec
-      grid % grx    = 0.0_prec
+      grid % grx                     = 0.0_prec
       grid % foot_point_distance     = 0.0_prec
       grid % magnetic_field_strength = 0.0_prec
       grid % magnetic_colatitude     = 0.0_prec
+      grid % magnetic_longitude      = 0.0_prec
       grid % r_meter                 = 0.0_prec
-      grid % p_value              = 0.0_prec
+      grid % p_value                 = 0.0_prec
       grid % q_factor                = 0.0_prec
       grid % l_magnitude             = 0.0_prec
       grid % apex_e_vectors          = 0.0_prec
@@ -141,6 +145,10 @@ CONTAINS
       grid % ii3_interface    = 0
       grid % ii4_interface    = 0
 
+
+      DO i = 1, NMP
+        grid % magnetic_longitude(i) = REAL( (i-1),prec )*dlonm90km*pi/180.0_prec
+      ENDDO
 
       DO i = 1, nlat_geo
         grid % latitude_geo(i) = -90.0_prec + REAL(i-1,prec)*180.0_prec/REAL( nlat_geo-1,prec ) 
@@ -168,6 +176,7 @@ CONTAINS
                   grid % foot_point_distance, &
                   grid % magnetic_field_strength, &
                   grid % magnetic_colatitude, &
+                  grid % magnetic_longitude, &
                   grid % r_meter, &
                   grid % p_value, &
                   grid % q_factor, &
@@ -1001,6 +1010,8 @@ CONTAINS
       ENDDO
 
       DO mp = 1, grid % NMP
+
+
         DO lp = 1, grid % NLP
           DO i = 1, grid % flux_tube_max(lp)
 
