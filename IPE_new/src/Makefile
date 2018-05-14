@@ -70,7 +70,7 @@ IPE_Neutrals_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class
 IPE_Forcing_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Common_Routines.o IPE_Forcing_Class.F90
 	${FC} ${CPPFLAGS} ${OPT} -c IPE_Forcing_Class.F90 ${LIB} ${INC} -o $@
 
-IPE_Plasma_Class.o : IPE_Precision.o IPE_Plasma_Class.F90
+IPE_Plasma_Class.o : IPE_Precision.o IPE_Grid_Class.o IPE_Neutrals_Class.o IPE_Plasma_Class.F90
 	${FC} ${CPPFLAGS} ${OPT} -c IPE_Plasma_Class.F90 ${LIB} ${INC} -o $@ 
 
 IPE_Model_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class.o IPE_Neutrals_Class.o \
@@ -85,15 +85,15 @@ IPE_Model_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class.o 
 # Legacy to NetCDF IPE Grid Converter
 #
 
-OBJ = IPE_Precision.o \
+LOBJ = IPE_Precision.o \
       IPE_Common_Routines.o \
       IPE_Constants_Dictionary.o \
       IPE_Model_Parameters_Class.o \
       IPE_Grid_Class.o \
       Convert_LegacyGrid_to_NetCDF.o 
 
-legacy2netcdf : ${OBJ} 
-	${FC} ${OPT} ${OBJ} ${LIB} ${INC} -o $@
+legacy2netcdf : ${LOBJ} libnrlmsis.a 
+	${FC} ${OPT} ${LOBJ} ${LIB} ${INC} -o $@
 	mv $@ ../bin/
 
 Convert_LegacyGrid_to_NetCDF.o : IPE_Grid_Class.o IPE_Model_Parameters_Class.o test/Convert_LegacyGrid_to_NetCDF.F90

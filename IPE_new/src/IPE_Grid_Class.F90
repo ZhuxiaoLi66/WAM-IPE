@@ -20,6 +20,7 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: magnetic_colatitude(:,:) ! plasma_grid_GL
     REAL(prec), ALLOCATABLE :: r_meter(:,:) ! rmeter2D
 
+    REAL(prec), ALLOCATABLE :: p_value(:) ! Pvalue
     REAL(prec), ALLOCATABLE :: q_factor(:,:,:) ! Q index of plasma_grid_3d
     REAL(prec), ALLOCATABLE :: l_magnitude(:,:,:,:,:)
     REAL(prec), ALLOCATABLE :: apex_d_vectors(:,:,:,:,:)
@@ -91,6 +92,7 @@ CONTAINS
                 grid % magnetic_field_strength(1:nFluxTube,1:NLP,1:NMP), &
                 grid % magnetic_colatitude(1:nFluxTube,1:NLP), &
                 grid % r_meter(1:nFluxTube,1:NLP), &
+                grid % p_value(1:NLP), &
                 grid % q_factor(1:nFluxTube,1:NLP,1:NMP), &
                 grid % l_magnitude(1:3,1:2,1:nFluxTube,1:NLP,1:NMP), &
                 grid % apex_e_vectors(1:3,1:2,1:nFluxTube,1:NLP,1:NMP), &
@@ -119,6 +121,7 @@ CONTAINS
       grid % magnetic_field_strength = 0.0_prec
       grid % magnetic_colatitude     = 0.0_prec
       grid % r_meter                 = 0.0_prec
+      grid % p_value              = 0.0_prec
       grid % q_factor                = 0.0_prec
       grid % l_magnitude             = 0.0_prec
       grid % apex_e_vectors          = 0.0_prec
@@ -166,6 +169,7 @@ CONTAINS
                   grid % magnetic_field_strength, &
                   grid % magnetic_colatitude, &
                   grid % r_meter, &
+                  grid % p_value, &
                   grid % q_factor, &
                   grid % l_magnitude, &
                   grid % apex_e_vectors, &
@@ -431,7 +435,7 @@ CONTAINS
     INTEGER :: ii31_varid, ii32_varid, ii33_varid
     INTEGER :: ii41_varid, ii42_varid, ii43_varid
     INTEGER :: altitude_varid, latitude_varid, longitude_varid, gravity_varid
-    INTEGER :: fpd_varid, B_varid, colat_varid, r_varid, q_varid
+    INTEGER :: fpd_varid, B_varid, colat_varid, r_varid, q_varid, p_varid
     INTEGER :: l11_varid, l21_varid, l31_varid
     INTEGER :: l12_varid, l22_varid, l32_varid
     INTEGER :: apexe11_varid, apexe21_varid, apexe31_varid
@@ -490,6 +494,10 @@ CONTAINS
       CALL Check( nf90_def_var( ncid, "r_meter", NF90_PREC, (/ z_dimid, x_dimid /) , r_varid ) )
       CALL Check( nf90_put_att( ncid, r_varid, "long_name", "Radial distance from earth center" ) )
       CALL Check( nf90_put_att( ncid, r_varid, "units", "meters" ) )
+
+      CALL Check( nf90_def_var( ncid, "p_value", NF90_PREC, (/ x_dimid /) , p_varid ) )
+      CALL Check( nf90_put_att( ncid, p_varid, "long_name", "Unknown" ) )
+      CALL Check( nf90_put_att( ncid, p_varid, "units", "[Unknown]" ) )
 
       CALL Check( nf90_def_var( ncid, "q_factor", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , q_varid ) )
       CALL Check( nf90_put_att( ncid, q_varid, "long_name", "Unknown" ) )
@@ -688,6 +696,7 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, colat_varid, grid % magnetic_colatitude ) )
       CALL Check( nf90_put_var( ncid, r_varid, grid % r_meter ) )
       CALL Check( nf90_put_var( ncid, q_varid, grid % q_factor ) )
+      CALL Check( nf90_put_var( ncid, p_varid, grid % p_value ) )
 
       CALL Check( nf90_put_var( ncid, l11_varid, grid % l_magnitude(1,1,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, l21_varid, grid % l_magnitude(2,1,:,:,:) ) )
@@ -807,6 +816,9 @@ CONTAINS
 
       CALL Check( nf90_inq_varid( ncid, "r_meter", varid ) )
       CALL Check( nf90_get_var( ncid, varid, grid % r_meter ) )
+
+      CALL Check( nf90_inq_varid( ncid, "p_value", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, grid % p_value ) )
 
       CALL Check( nf90_inq_varid( ncid, "q_factor", varid ) )
       CALL Check( nf90_get_var( ncid, varid, grid % q_factor ) )
@@ -960,6 +972,9 @@ CONTAINS
     REAL(prec) :: bhat(1:3), ufac
 
       DO lp = 1, grid % NLP
+
+        ! "PValue" calculation
+        grid % p_value(lp) = grid % r_meter(1,lp)/( earth_radius*(SIN(grid % magnetic_colatitude(1,lp) ))**2 )
 
         ! Calculate the northern top index
         DO i= 1, grid % flux_tube_midpoint(lp)
