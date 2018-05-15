@@ -1,6 +1,7 @@
 MODULE IPE_Plasma_Class
 
 USE IPE_Precision
+USE IPE_Constants_Dictionary
 USE IPE_Grid_Class
 USE IPE_Neutrals_Class
 
@@ -21,6 +22,18 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: pedersen_conductivity(:,:,:) 
     REAL(prec), ALLOCATABLE :: b_parallel_conductivity(:,:,:) 
 
+    ! Interpolated Fields
+    REAL(prec), ALLOCATABLE :: geo_ion_densities(:,:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_ion_velocities(:,:,:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_ion_temperatures(:,:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_electron_density(:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_electron_velocity(:,:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_electron_temperature(:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_hall_conductivity(:,:,:) 
+    REAL(prec), ALLOCATABLE :: geo_pedersen_conductivity(:,:,:) 
+    REAL(prec), ALLOCATABLE :: geo_b_parallel_conductivity(:,:,:) 
+    
+
     CONTAINS
 
       PROCEDURE :: Build => Build_IPE_Plasma
@@ -28,6 +41,8 @@ IMPLICIT NONE
 
       PROCEDURE :: Update => Update_IPE_Plasma
       PROCEDURE :: FLIP_Wrapper     
+
+      PROCEDURE :: Interpolate_to_GeographicGrid => Interpolate_to_GeographicGrid_IPE_Plasma
 
   END TYPE IPE_Plasma
 
@@ -80,6 +95,25 @@ CONTAINS
       plasma % pedersen_conductivity   = 0.0_prec
       plasma % b_parallel_conductivity = 0.0_prec
 
+      ALLOCATE( plasma % geo_ion_densities(1:n_ion_species,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                plasma % geo_ion_velocities(1:3,1:n_ion_species,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                plasma % geo_ion_temperatures(1:n_ion_species,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                plasma % geo_electron_density(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                plasma % geo_electron_velocity(1:3,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                plasma % geo_electron_temperature(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                plasma % geo_hall_conductivity(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                plasma % geo_pedersen_conductivity(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                plasma % geo_b_parallel_conductivity(1:nlon_geo,1:nlat_geo,1:nheights_geo)  )
+
+      plasma % geo_ion_densities           = 0.0_prec
+      plasma % geo_ion_velocities          = 0.0_prec
+      plasma % geo_ion_temperatures        = 0.0_prec
+      plasma % geo_electron_density        = 0.0_prec
+      plasma % geo_electron_temperature    = 0.0_prec
+      plasma % geo_electron_velocity       = 0.0_prec
+      plasma % geo_hall_conductivity       = 0.0_prec
+      plasma % geo_pedersen_conductivity   = 0.0_prec
+      plasma % geo_b_parallel_conductivity = 0.0_prec
 
   END SUBROUTINE Build_IPE_Plasma
 !
@@ -96,7 +130,15 @@ CONTAINS
                 plasma % electron_temperature, &
                 plasma % hall_conductivity, & 
                 plasma % pedersen_conductivity, & 
-                plasma % b_parallel_conductivity )
+                plasma % b_parallel_conductivity, &
+                plasma % geo_ion_velocities, &
+                plasma % geo_ion_temperatures, &
+                plasma % geo_electron_density, &
+                plasma % geo_electron_velocity, &
+                plasma % geo_electron_temperature, &
+                plasma % geo_hall_conductivity, & 
+                plasma % geo_pedersen_conductivity, & 
+                plasma % geo_b_parallel_conductivity )
 
   END SUBROUTINE Trash_IPE_Plasma
 !
@@ -329,5 +371,33 @@ CONTAINS
 
   END FUNCTION Solar_Zenith_Angle
 
+  SUBROUTINE Interpolate_to_GeographicGrid_IPE_Plasma( plasma, grid )
+    IMPLICIT NONE
+    CLASS( IPE_Plasma ), INTENT(inout) :: plasma
+    TYPE( IPE_Grid ), INTENT(in)         :: grid
+    ! Local
+    INTEGER :: i
+
+      DO i = 1, n_ion_species
+
+        CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_densities(i,:,:,:), plasma % geo_ion_densities(i,:,:,:) )
+        CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_temperatures(i,:,:,:), plasma % geo_ion_temperatures(i,:,:,:) )
+        CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_velocities(1,i,:,:,:), plasma % geo_ion_velocities(1,i,:,:,:) )
+        CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_velocities(2,i,:,:,:), plasma % geo_ion_velocities(2,i,:,:,:) )
+        CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_velocities(3,i,:,:,:), plasma % geo_ion_velocities(3,i,:,:,:) )
+
+     ENDDO
+
+     CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_density, plasma % geo_electron_density )
+     CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_temperature, plasma % geo_electron_temperature )
+     CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_velocity(1,:,:,:), plasma % geo_electron_velocity(1,:,:,:) )
+     CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_velocity(2,:,:,:), plasma % geo_electron_velocity(2,:,:,:) )
+     CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_velocity(3,:,:,:), plasma % geo_electron_velocity(3,:,:,:) )
+
+     CALL grid % Interpolate_to_Geographic_Grid( plasma % hall_conductivity, plasma % geo_hall_conductivity )
+     CALL grid % Interpolate_to_Geographic_Grid( plasma % pedersen_conductivity, plasma % geo_pedersen_conductivity )
+     CALL grid % Interpolate_to_Geographic_Grid( plasma % b_parallel_conductivity, plasma % geo_b_parallel_conductivity )
+
+  END SUBROUTINE Interpolate_to_GeographicGrid_IPE_Plasma
 
 END MODULE IPE_Plasma_Class
