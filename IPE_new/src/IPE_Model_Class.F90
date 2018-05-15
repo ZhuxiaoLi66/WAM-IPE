@@ -6,7 +6,7 @@ USE IPE_Time_Class
 USE IPE_Grid_Class
 USE IPE_Neutrals_Class
 USE IPE_Forcing_Class
-!USE IPE_Plasma_Class
+USE IPE_Plasma_Class
 !USE IPE_Electrodynamics_Class
 
 USE netcdf
@@ -26,7 +26,7 @@ IMPLICIT NONE
     TYPE( IPE_Grid )             :: grid
     TYPE( IPE_Forcing )          :: forcing
     TYPE( IPE_Neutrals )         :: neutrals
-    !TYPE( IPE_Plasma )           :: plasma
+    TYPE( IPE_Plasma )           :: plasma
     !TYPE( IPE_Eldyn )            :: eldyn
 
     CONTAINS
@@ -77,6 +77,11 @@ CONTAINS
                                      NLP             = ipe % grid % NLP, &
                                      NMP             = ipe % grid % NMP )
 #endif
+
+
+        CALL ipe % plasma % Build( nFluxTube = ipe % grid % nFluxTube, &
+                                   NLP       = ipe % grid % NLP, &
+                                   NMP       = ipe % grid % NMP )
                                       
       ELSE
 
@@ -94,6 +99,7 @@ CONTAINS
       CALL ipe % forcing % Trash( )
       CALL ipe % grid % Trash( )
       CALL ipe % neutrals % Trash( )
+      CALL ipe % plasma % Trash( )
 
   END SUBROUTINE Trash_IPE_Model
 !
@@ -104,10 +110,8 @@ CONTAINS
     ! Local
     INTEGER    :: i, im3hr, im6hr, im9hr, im12hr, im36hr
     REAL(prec) :: AP(1:7)
-    REAL(preC) :: wall_time0, wall_time1
-    
 
-      ! CALL ipe % time_tracker % Update( t0 )
+
       ipe % time_tracker % utime = t0
       
       ! This call to update the neutrals is "diagnostic" and returns neutral
@@ -127,7 +131,6 @@ CONTAINS
       AP(6) = ipe % forcing % ap_1day_avg(im12hr)
       AP(7) = ipe % forcing % ap_1day_avg(im36hr)
 
-      CALL CPU_TIME( wall_time0 )
       CALL ipe % neutrals % Update( ipe % grid, &
                                     ipe % time_tracker % utime, &
                                     ipe % time_tracker % year, &
@@ -135,11 +138,10 @@ CONTAINS
                                     ipe % forcing % f107(i) , &
                                     ipe % forcing % f107_81day_avg(i), &
                                     AP )
-      CALL CPU_TIME( wall_time1 )
-      PRINT*, 'Neutral Update Wall Time :', wall_time1-wall_time0
+
+
 
       ! Update the timer
-      ! CALL ipe % time_tracker % Update( t1 )
       ipe % time_tracker % utime = t1
       CALL ipe % time_tracker % Calculate_Hour_and_Minute( )
 

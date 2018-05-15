@@ -114,14 +114,15 @@ CONTAINS
     REAL(prec), INTENT(in)             :: sun_longitude
     ! Local
 
-     
-
-    CALL plasma % FLIP_Wrapper( grid, & 
-                                neutrals, &
-                                utime, year, day, &
-                                flip_time_step, &
-                                f107d, f107a, &
-                                sun_longitude )
+         
+      !CALL plasma % Cross_Flux_Tube_Transport( )
+ 
+      CALL plasma % FLIP_Wrapper( grid, & 
+                                  neutrals, &
+                                  utime, year, day, &
+                                  flip_time_step, &
+                                  f107d, f107a, &
+                                  sun_longitude )
 
 
   END SUBROUTINE Update_IPE_Plasma

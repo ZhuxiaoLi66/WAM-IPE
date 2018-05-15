@@ -33,7 +33,7 @@ ifeq (${COUPLED},yes)
 endif
 
 
-LIB=${NCLIB} -L$(shell pwd)/msise00 -lnrlmsis -L$(shell pwd)/flip
+LIB=${NCLIB} -L$(shell pwd)/msise00 -lnrlmsis -L$(shell pwd)/flip -lflip
 INC=${NCINC} -I$(shell pwd)/msise00 -I$(shell pwd)/flip
 
 # MSISE00 Library
@@ -110,10 +110,11 @@ OBJ = IPE_Precision.o \
       IPE_Forcing_Class.o \
       IPE_Grid_Class.o \
       IPE_Neutrals_Class.o \
+      IPE_Plasma_Class.o \
       IPE_Model_Class.o \
       Test_IPE.o 
 
-ipe_test : libnrlmsis.a ${OBJ} 
+ipe_test : libnrlmsis.a libflip.a ${OBJ} 
 	${FC} ${OPT} ${OBJ} ${LIB} ${INC} -o $@
 	mv $@ ../bin/
 
@@ -123,4 +124,4 @@ Test_IPE.o : IPE_Precision.o IPE_Model_Class.o test/Test_IPE.F90
 .PHONY : clean
 
 clean :
-	rm *.o *.mod msise00/libnrlmsis.a
+	rm *.o *.mod msise00/libnrlmsis.a flip/libflip.a
