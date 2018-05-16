@@ -12,7 +12,7 @@ IMPLICIT NONE
 
     REAL(prec), ALLOCATABLE :: ion_densities(:,:,:,:)
     REAL(prec), ALLOCATABLE :: ion_velocities(:,:,:,:,:)
-    REAL(prec), ALLOCATABLE :: ion_temperatures(:,:,:,:)
+    REAL(prec), ALLOCATABLE :: ion_temperature(:,:,:)
 
     REAL(prec), ALLOCATABLE :: electron_density(:,:,:)
     REAL(prec), ALLOCATABLE :: electron_velocity(:,:,:,:)
@@ -25,7 +25,7 @@ IMPLICIT NONE
     ! Interpolated Fields
     REAL(prec), ALLOCATABLE :: geo_ion_densities(:,:,:,:)
     REAL(prec), ALLOCATABLE :: geo_ion_velocities(:,:,:,:,:)
-    REAL(prec), ALLOCATABLE :: geo_ion_temperatures(:,:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_ion_temperature(:,:,:)
     REAL(prec), ALLOCATABLE :: geo_electron_density(:,:,:)
     REAL(prec), ALLOCATABLE :: geo_electron_velocity(:,:,:,:)
     REAL(prec), ALLOCATABLE :: geo_electron_temperature(:,:,:)
@@ -77,7 +77,7 @@ CONTAINS
 
       ALLOCATE( plasma % ion_densities(1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
                 plasma % ion_velocities(1:3,1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
-                plasma % ion_temperatures(1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
+                plasma % ion_temperature(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_density(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_velocity(1:3,1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_temperature(1:nFluxTube,1:NLP,1:NMP), &
@@ -87,7 +87,7 @@ CONTAINS
              
       plasma % ion_densities           = safe_density_minimum 
       plasma % ion_velocities          = 0.0_prec
-      plasma % ion_temperatures        = safe_temperature_minimum
+      plasma % ion_temperature         = safe_temperature_minimum
       plasma % electron_density        = safe_density_minimum
       plasma % electron_velocity       = 0.0_prec
       plasma % electron_temperature    = safe_temperature_minimum
@@ -97,7 +97,7 @@ CONTAINS
 
       ALLOCATE( plasma % geo_ion_densities(1:n_ion_species,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_ion_velocities(1:3,1:n_ion_species,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
-                plasma % geo_ion_temperatures(1:n_ion_species,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                plasma % geo_ion_temperature(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_electron_density(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_electron_velocity(1:3,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_electron_temperature(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
@@ -107,7 +107,7 @@ CONTAINS
 
       plasma % geo_ion_densities           = 0.0_prec
       plasma % geo_ion_velocities          = 0.0_prec
-      plasma % geo_ion_temperatures        = 0.0_prec
+      plasma % geo_ion_temperature         = 0.0_prec
       plasma % geo_electron_density        = 0.0_prec
       plasma % geo_electron_temperature    = 0.0_prec
       plasma % geo_electron_velocity       = 0.0_prec
@@ -124,7 +124,7 @@ CONTAINS
     
     DEALLOCATE( plasma % ion_densities, &
                 plasma % ion_velocities, &
-                plasma % ion_temperatures, &
+                plasma % ion_temperature, &
                 plasma % electron_density, &
                 plasma % electron_velocity, &
                 plasma % electron_temperature, &
@@ -132,7 +132,7 @@ CONTAINS
                 plasma % pedersen_conductivity, & 
                 plasma % b_parallel_conductivity, &
                 plasma % geo_ion_velocities, &
-                plasma % geo_ion_temperatures, &
+                plasma % geo_ion_temperature, &
                 plasma % geo_electron_density, &
                 plasma % geo_electron_velocity, &
                 plasma % geo_electron_temperature, &
@@ -246,8 +246,8 @@ CONTAINS
             XIONVX(1:9,i) = plasma % ion_velocities(3,1:9,i,lp,mp)
 
             ! Ion Temperatures
-            TE_TIX(1,i) = plasma % ion_temperatures(1,i,lp,mp)
-            TE_TIX(2,i) = plasma % ion_temperatures(2,i,lp,mp)
+            TE_TIX(1,i) = plasma % ion_temperature(i,lp,mp)
+            TE_TIX(2,i) = plasma % ion_temperature(i,lp,mp)
             ! Electron Temperature
             TE_TIX(3,i) = plasma % electron_temperature(i,lp,mp)
 
@@ -314,8 +314,8 @@ CONTAINS
             plasma % ion_velocities(3,1:9,i,lp,mp) = XIONVX(1:9,i)
 
             ! Ion Temperatures
-            plasma % ion_temperatures(1,i,lp,mp) = TE_TIX(1,i)
-            plasma % ion_temperatures(2,i,lp,mp) = TE_TIX(2,i)
+            plasma % ion_temperature(i,lp,mp) = TE_TIX(1,i)
+           ! plasma % ion_temperature(i,lp,mp) = TE_TIX(2,i)
             ! Electron Temperature
             plasma % electron_temperature(i,lp,mp) = TE_TIX(3,i) 
 
@@ -381,13 +381,13 @@ CONTAINS
       DO i = 1, n_ion_species
 
         CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_densities(i,:,:,:), plasma % geo_ion_densities(i,:,:,:) )
-        CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_temperatures(i,:,:,:), plasma % geo_ion_temperatures(i,:,:,:) )
         CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_velocities(1,i,:,:,:), plasma % geo_ion_velocities(1,i,:,:,:) )
         CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_velocities(2,i,:,:,:), plasma % geo_ion_velocities(2,i,:,:,:) )
         CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_velocities(3,i,:,:,:), plasma % geo_ion_velocities(3,i,:,:,:) )
 
      ENDDO
 
+     CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_temperature, plasma % geo_ion_temperature )
      CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_density, plasma % geo_electron_density )
      CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_temperature, plasma % geo_electron_temperature )
      CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_velocity(1,:,:,:), plasma % geo_electron_velocity(1,:,:,:) )

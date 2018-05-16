@@ -169,6 +169,8 @@ CONTAINS
     INTEGER :: helium_varid, oxygen_varid, molecular_oxygen_varid
     INTEGER :: molecular_nitrogen_varid, nitrogen_varid, hydrogen_varid
     INTEGER :: temperature_varid, u_varid, v_varid, w_varid
+    INTEGER :: op_varid, hp_varid, hep_varid, np_varid, n2p_varid, o2p_varid, nop_varid
+    INTEGER :: ion_temp_varid
 
 
       IF( prec == sp )THEN
@@ -185,6 +187,7 @@ CONTAINS
 
       IF( ipe % parameters % write_apex_neutrals )THEN
 
+        ! Neutrals
         CALL Check( nf90_def_var( ncid, "helium", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , helium_varid ) )
         CALL Check( nf90_put_att( ncid, helium_varid, "long_name", "Neutral Helium Density" ) )
         CALL Check( nf90_put_att( ncid, helium_varid, "units", "kg m^{-3}" ) )
@@ -227,6 +230,39 @@ CONTAINS
 
       ENDIF
 
+      ! Plasma
+      CALL Check( nf90_def_var( ncid, "O+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , op_varid ) )
+      CALL Check( nf90_put_att( ncid, op_varid, "long_name", "Oxygen ion number density" ) )
+      CALL Check( nf90_put_att( ncid, op_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "H+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , hp_varid ) )
+      CALL Check( nf90_put_att( ncid, hp_varid, "long_name", "Hydrogen ion number density" ) )
+      CALL Check( nf90_put_att( ncid, hp_varid, "units", " m^{-3}" ) )
+      
+      CALL Check( nf90_def_var( ncid, "He+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , hep_varid ) )
+      CALL Check( nf90_put_att( ncid, hep_varid, "long_name", "Helium ion number density" ) )
+      CALL Check( nf90_put_att( ncid, hep_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "N+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , np_varid ) )
+      CALL Check( nf90_put_att( ncid, np_varid, "long_name", "Nitrogen ion number density" ) )
+      CALL Check( nf90_put_att( ncid, np_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "NO+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , nop_varid ) )
+      CALL Check( nf90_put_att( ncid, nop_varid, "long_name", "Nitrosonium ion number density" ) )
+      CALL Check( nf90_put_att( ncid, nop_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "O2+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , o2p_varid ) )
+      CALL Check( nf90_put_att( ncid, o2p_varid, "long_name", "Molecular Oxygen ion number density" ) )
+      CALL Check( nf90_put_att( ncid, o2p_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "N2+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , n2p_varid ) )
+      CALL Check( nf90_put_att( ncid, n2p_varid, "long_name", "Molecular Nitrogen ion number density" ) )
+      CALL Check( nf90_put_att( ncid, n2p_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "ion_temp", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , ion_temp_varid ) )
+      CALL Check( nf90_put_att( ncid, ion_temp_varid, "long_name", "Ion temperature" ) )
+      CALL Check( nf90_put_att( ncid, ion_temp_varid, "units", "K" ) )
+
       CALL Check( nf90_enddef(ncid) )
       
       IF( ipe % parameters % write_apex_neutrals )THEN
@@ -244,7 +280,14 @@ CONTAINS
 
       ENDIF
 
-
+      CALL Check( nf90_put_var( ncid, op_varid, ipe % plasma % ion_densities(1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, hp_varid, ipe % plasma % ion_densities(2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, hep_varid, ipe % plasma % ion_densities(3,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, np_varid, ipe % plasma % ion_densities(4,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, nop_varid, ipe % plasma % ion_densities(5,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, o2p_varid, ipe % plasma % ion_densities(6,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % ion_densities(7,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % ion_temperature ) )
 
       CALL Check( nf90_close( ncid ) )
 
@@ -284,6 +327,8 @@ CONTAINS
     INTEGER :: helium_varid, oxygen_varid, molecular_oxygen_varid
     INTEGER :: molecular_nitrogen_varid, nitrogen_varid, hydrogen_varid
     INTEGER :: temperature_varid, u_varid, v_varid, w_varid
+    INTEGER :: op_varid, hp_varid, hep_varid, np_varid, n2p_varid, o2p_varid, nop_varid
+    INTEGER :: ion_temp_varid, e_varid, hc_varid, pc_varid, bc_varid
 
 
       IF( prec == sp )THEN
@@ -370,6 +415,55 @@ CONTAINS
 
       ENDIF
 
+      ! Plasma
+      CALL Check( nf90_def_var( ncid, "O+", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , op_varid ) )
+      CALL Check( nf90_put_att( ncid, op_varid, "long_name", "Oxygen ion number density" ) )
+      CALL Check( nf90_put_att( ncid, op_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "H+", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , hp_varid ) )
+      CALL Check( nf90_put_att( ncid, hp_varid, "long_name", "Hydrogen ion number density" ) )
+      CALL Check( nf90_put_att( ncid, hp_varid, "units", " m^{-3}" ) )
+      
+      CALL Check( nf90_def_var( ncid, "He+", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , hep_varid ) )
+      CALL Check( nf90_put_att( ncid, hep_varid, "long_name", "Helium ion number density" ) )
+      CALL Check( nf90_put_att( ncid, hep_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "N+", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , np_varid ) )
+      CALL Check( nf90_put_att( ncid, np_varid, "long_name", "Nitrogen ion number density" ) )
+      CALL Check( nf90_put_att( ncid, np_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "NO+", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , nop_varid ) )
+      CALL Check( nf90_put_att( ncid, nop_varid, "long_name", "Nitrosonium ion number density" ) )
+      CALL Check( nf90_put_att( ncid, nop_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "O2+", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , o2p_varid ) )
+      CALL Check( nf90_put_att( ncid, o2p_varid, "long_name", "Molecular Oxygen ion number density" ) )
+      CALL Check( nf90_put_att( ncid, o2p_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "N2+", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , n2p_varid ) )
+      CALL Check( nf90_put_att( ncid, n2p_varid, "long_name", "Molecular Nitrogen ion number density" ) )
+      CALL Check( nf90_put_att( ncid, n2p_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "ion_temp", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , ion_temp_varid ) )
+      CALL Check( nf90_put_att( ncid, ion_temp_varid, "long_name", "Ion temperature" ) )
+      CALL Check( nf90_put_att( ncid, ion_temp_varid, "units", "K" ) )
+
+      CALL Check( nf90_def_var( ncid, "e", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , e_varid ) )
+      CALL Check( nf90_put_att( ncid, e_varid, "long_name", "Electron number density" ) )
+      CALL Check( nf90_put_att( ncid, e_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "hc", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , hc_varid ) )
+      CALL Check( nf90_put_att( ncid, hc_varid, "long_name", "Hall Conductivity" ) )
+      CALL Check( nf90_put_att( ncid, hc_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "pc", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , pc_varid ) )
+      CALL Check( nf90_put_att( ncid, pc_varid, "long_name", "Pedersen Conductivity" ) )
+      CALL Check( nf90_put_att( ncid, pc_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "bc", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , bc_varid ) )
+      CALL Check( nf90_put_att( ncid, bc_varid, "long_name", "Magnetic Field Alligned Conductivity" ) )
+      CALL Check( nf90_put_att( ncid, bc_varid, "units", "[Unknown]" ) )
+
       CALL Check( nf90_enddef(ncid) )
       
       IF( ipe % parameters % write_geographic_neutrals )THEN
@@ -388,6 +482,19 @@ CONTAINS
         CALL Check( nf90_put_var( ncid, w_varid, ipe % neutrals % geo_velocity(3,:,:,:) ) )
 
       ENDIF
+
+      CALL Check( nf90_put_var( ncid, op_varid,  ipe % plasma % geo_ion_densities(1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, hp_varid,  ipe % plasma % geo_ion_densities(2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, hep_varid, ipe % plasma % geo_ion_densities(3,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, np_varid,  ipe % plasma % geo_ion_densities(4,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, nop_varid, ipe % plasma % geo_ion_densities(5,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, o2p_varid, ipe % plasma % geo_ion_densities(6,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % geo_ion_densities(7,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % geo_ion_temperature ) )
+      CALL Check( nf90_put_var( ncid, e_varid, ipe % plasma % geo_electron_density ) )
+      CALL Check( nf90_put_var( ncid, hc_varid, ipe % plasma % geo_hall_conductivity ) )
+      CALL Check( nf90_put_var( ncid, pc_varid, ipe % plasma % geo_pedersen_conductivity ) )
+      CALL Check( nf90_put_var( ncid, bc_varid, ipe % plasma % geo_b_parallel_conductivity ) )
 
       CALL Check( nf90_close( ncid ) )
 
