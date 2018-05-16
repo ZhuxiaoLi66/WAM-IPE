@@ -64,8 +64,19 @@ CONTAINS
 
         CALL ipe % forcing % Build( ipe % parameters % solar_forcing_time_step, &
                                     ipe % parameters % f107_kp_size )
-                                    
+
+        IF( ipe % parameters % use_f107_kp_file )THEN
+          
+          CALL ipe % forcing % Read_F107KP_IPE_Forcing( ipe % parameters % f107_kp_skip_size, &
+                                                        ipe % parameters % f107_kp_file )
+
+        ENDIF
+
+        CALL ipe % forcing % Read_Tiros_IPE_Forcing( )
+
+
         CALL ipe % grid % Read_IPE_Grid_NetCDF( ipe % parameters % netcdf_grid_file  )
+
 
 #ifdef COUPLED_TO_WAM
         CALL ipe % neutrals % Build( nFluxtube       = ipe % grid % nFluxTube, &
@@ -77,6 +88,7 @@ CONTAINS
                                      NLP             = ipe % grid % NLP, &
                                      NMP             = ipe % grid % NMP )
 #endif
+
 
 
         CALL ipe % plasma % Build( nFluxTube = ipe % grid % nFluxTube, &
