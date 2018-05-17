@@ -284,9 +284,4 @@ CONTAINS
 
   END SUBROUTINE Estimate_AP_from_KP
 !
-  
-
-
 END MODULE IPE_Forcing_Class
-       
-       

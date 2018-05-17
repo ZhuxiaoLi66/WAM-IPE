@@ -70,7 +70,8 @@ IPE_Neutrals_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class
 IPE_Forcing_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Common_Routines.o IPE_Forcing_Class.F90
 	${FC} ${CPPFLAGS} ${OPT} -c IPE_Forcing_Class.F90 ${LIB} ${INC} -o $@
 
-IPE_Plasma_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class.o IPE_Neutrals_Class.o IPE_Plasma_Class.F90
+IPE_Plasma_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class.o IPE_Neutrals_Class.o \
+                     IPE_Time_Class.o IPE_Forcing_Class.o IPE_Plasma_Class.F90
 	${FC} ${CPPFLAGS} ${OPT} -c IPE_Plasma_Class.F90 ${LIB} ${INC} -o $@ 
 
 IPE_Model_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class.o IPE_Neutrals_Class.o \

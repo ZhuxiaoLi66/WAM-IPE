@@ -4,6 +4,8 @@ USE IPE_Precision
 USE IPE_Constants_Dictionary
 USE IPE_Grid_Class
 USE IPE_Neutrals_Class
+USE IPE_Forcing_Class
+USE IPE_Time_Class
 
 IMPLICIT NONE
 
@@ -18,6 +20,8 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: electron_velocity(:,:,:,:)
     REAL(prec), ALLOCATABLE :: electron_temperature(:,:,:)
 
+    REAL(prec), ALLOCATABLE :: ionization_rates(:,:,:,:)
+
     REAL(prec), ALLOCATABLE :: hall_conductivity(:,:,:) 
     REAL(prec), ALLOCATABLE :: pedersen_conductivity(:,:,:) 
     REAL(prec), ALLOCATABLE :: b_parallel_conductivity(:,:,:) 
@@ -29,6 +33,7 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: geo_electron_density(:,:,:)
     REAL(prec), ALLOCATABLE :: geo_electron_velocity(:,:,:,:)
     REAL(prec), ALLOCATABLE :: geo_electron_temperature(:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_ionization_rates(:,:,:,:) 
     REAL(prec), ALLOCATABLE :: geo_hall_conductivity(:,:,:) 
     REAL(prec), ALLOCATABLE :: geo_pedersen_conductivity(:,:,:) 
     REAL(prec), ALLOCATABLE :: geo_b_parallel_conductivity(:,:,:) 
@@ -81,6 +86,7 @@ CONTAINS
                 plasma % electron_density(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_velocity(1:3,1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_temperature(1:nFluxTube,1:NLP,1:NMP), &
+                plasma % ionization_rates(1:4,1:nFluxTube,1:NLP,1:NMP), &
                 plasma % hall_conductivity(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % pedersen_conductivity(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % b_parallel_conductivity(1:nFluxTube,1:NLP,1:NMP) )
@@ -91,6 +97,7 @@ CONTAINS
       plasma % electron_density        = safe_density_minimum
       plasma % electron_velocity       = 0.0_prec
       plasma % electron_temperature    = safe_temperature_minimum
+      plasma % ionization_rates        = 0.0_prec
       plasma % hall_conductivity       = 0.0_prec
       plasma % pedersen_conductivity   = 0.0_prec
       plasma % b_parallel_conductivity = 0.0_prec
@@ -101,6 +108,7 @@ CONTAINS
                 plasma % geo_electron_density(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_electron_velocity(1:3,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_electron_temperature(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                plasma % geo_ionization_rates(1:4,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_hall_conductivity(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_pedersen_conductivity(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_b_parallel_conductivity(1:nlon_geo,1:nlat_geo,1:nheights_geo)  )
@@ -111,6 +119,7 @@ CONTAINS
       plasma % geo_electron_density        = 0.0_prec
       plasma % geo_electron_temperature    = 0.0_prec
       plasma % geo_electron_velocity       = 0.0_prec
+      plasma % geo_ionization_rates        = 0.0_prec
       plasma % geo_hall_conductivity       = 0.0_prec
       plasma % geo_pedersen_conductivity   = 0.0_prec
       plasma % geo_b_parallel_conductivity = 0.0_prec
@@ -128,6 +137,7 @@ CONTAINS
                 plasma % electron_density, &
                 plasma % electron_velocity, &
                 plasma % electron_temperature, &
+                plasma % ionization_rates, &
                 plasma % hall_conductivity, & 
                 plasma % pedersen_conductivity, & 
                 plasma % b_parallel_conductivity, &
@@ -136,23 +146,21 @@ CONTAINS
                 plasma % geo_electron_density, &
                 plasma % geo_electron_velocity, &
                 plasma % geo_electron_temperature, &
+                plasma % geo_ionization_rates, &
                 plasma % geo_hall_conductivity, & 
                 plasma % geo_pedersen_conductivity, & 
                 plasma % geo_b_parallel_conductivity )
 
   END SUBROUTINE Trash_IPE_Plasma
 !
-  SUBROUTINE Update_IPE_Plasma( plasma, grid, neutrals, utime, year, day, flip_time_step, f107d, f107a, sun_longitude )
+  SUBROUTINE Update_IPE_Plasma( plasma, grid, neutrals, forcing, time_tracker, flip_time_step, sun_longitude )
     IMPLICIT NONE
     CLASS( IPE_Plasma ), INTENT(inout) :: plasma
     TYPE( IPE_Grid ), INTENT(in)       :: grid
     TYPE( IPE_Neutrals ), INTENT(in)   :: neutrals
-    REAL(prec), INTENT(in)             :: utime
-    INTEGER, INTENT(in)                :: year
-    INTEGER, INTENT(in)                :: day
+    TYPE( IPE_Forcing ), INTENT(in)    :: forcing
+    TYPE( IPE_Time ), INTENT(in)       :: time_tracker
     REAL(prec), INTENT(in)             :: flip_time_step
-    REAL(prec), INTENT(in)             :: f107d
-    REAL(prec), INTENT(in)             :: f107a
     REAL(prec), INTENT(in)             :: sun_longitude
     ! Local
 
@@ -161,14 +169,280 @@ CONTAINS
  
       CALL plasma % FLIP_Wrapper( grid, & 
                                   neutrals, &
-                                  utime, year, day, &
+                                  time_tracker % utime, &
+                                  time_tracker % year, &
+                                  time_tracker % day_of_year, &
                                   flip_time_step, &
-                                  f107d, f107a, &
+                                  forcing % f107( forcing % current_index ), & 
+                                  forcing % f107_81day_avg( forcing % current_index ), &
                                   sun_longitude )
 
 
   END SUBROUTINE Update_IPE_Plasma
 !
+  SUBROUTINE Auroral_Precipitation_IPE_Plasma( plasma, grid, neutrals, forcing, sun_longitude )
+  ! Previously : tiros_ionize_ipe 
+    IMPLICIT NONE
+    CLASS( IPE_Plasma ), INTENT(inout) :: plasma
+    TYPE( IPE_Grid ), INTENT(in)       :: grid
+    TYPE( IPE_Neutrals ), INTENT(in)   :: neutrals
+    TYPE( IPE_Forcing ), INTENT(in)    :: forcing
+    REAL(prec), INTENT(in)             :: sun_longitude
+    ! Local
+    INTEGER, PARAMETER :: jmaxwell = 6
+    INTEGER    :: i, lp, mp, m, j, iband, l
+    INTEGER    :: i1, i2, j1, j2, k, kk, ld, n, nn
+    INTEGER    :: tiros_activity_level 
+    REAL(prec) :: ratio(1:21), QT(plasma % nFluxTube)
+    REAL(prec) :: bz, gscon, amu, e0, mlt
+    REAL(prec) :: ch, chi, dfac, diff, dprof, ed, mo, mo2, mn2, alpha 
+    REAL(prec) :: eflux, essa, qdmsp, dl_lower,dl_upper,qiont_lower,qiont_upper 
+    REAL(prec) :: ri, rj, th, swbz, offset, THMagd
+    REAL(prec) :: pres(plasma % nFluxTube)
+    REAL(prec) :: den(plasma % nFluxTube), grav(plasma % nFluxTube)
+    REAL(prec) :: ntot(plasma % nFluxTube), meanmass(plasma % nFluxTube)
+    REAL(prec) :: rno, rang, pr, ratioz, rlamz, mh, mhe, q
+    REAL(prec) :: TE11(21),TE15(21),width_maxwell
+    REAL(prec) :: ratio_ch,en_maxwell(jmaxwell),dl(jmaxwell)
+    REAL(prec) :: qion_maxwell(plasma % nFluxTube)
+    REAL(prec) :: en(1:15), width(1:15), RLAM(1:21), ionchr(1:21)
+
+       en(1:15) = (/ 0.37_prec, 0.6_prec, 0.92_prec, 1.37_prec, 2.01_prec, &
+                     2.91_prec, 4.19_prec, 6.0_prec, 8.56_prec, 12.18_prec, &
+                     17.3_prec, 24.49_prec, 36.66_prec, 54.77_prec, 81.82_prec /)
+
+       width(1:15) = (/ 0.158_prec, 0.315_prec, 0.315_prec, 0.63_prec, 0.631_prec, &
+                        1.261_prec, 1.26_prec, 2.522_prec, 2.522_prec, 5.043_prec, &
+                        5.043_prec, 10.0_prec, 14.81_prec, 22.13_prec, 33.06_prec /)
+
+       RLAM(1:21) = (/ 1.49_prec, 1.52_prec, 1.51_prec, 1.48_prec, 1.43_prec, &
+                                  1.37_prec, 1.30_prec, 1.22_prec, 1.12_prec, 1.01_prec, &
+                                  0.895_prec, 0.785_prec, 0.650_prec, 0.540_prec, 0.415_prec, &
+                                  0.320_prec, 0.225_prec, 0.14_prec, 0.08_prec, 0.04_prec, 0.0_prec /)
+
+       ionchr(1:21) = (/ 0.378_prec, 0.458_prec, 0.616_prec, 0.773_prec, 0.913_prec, &
+                                     1.088_prec, 1.403_prec, 1.718_prec, 2.033_prec, 2.349_prec, &
+                                     2.979_prec, 3.610_prec, 4.250_prec, 4.780_prec, 6.130_prec, &
+                                     7.392_prec, 8.653_prec, 9.914_prec, 12.436_prec, 14.957_prec, 17.479_prec /)
+
+      tiros_activity_level = forcing % nhemi_power_index( forcing % current_index )
+      bz    = 1.38_prec*10.0_prec**(-23)
+      gscon = 8.314e3_prec
+      mo    = 16.0_prec
+      mo2   = 32.0_prec
+      mn2   = 28.0_prec
+      mh    = 1.0_prec
+      mhe   = 4.0_prec
+      amu   = 1.661_prec*10.0_prec**(-27)
+      E0    = 0.035_prec
+      WIDTH_maxwell = 0.050_prec
+
+      DO m = 1, 21
+        ratio(m) = REAL( (m-1), prec )*0.05_prec
+      ENDDO
+
+      DO iband=1,21
+
+        te15(iband)=0.0_prec
+        te11(iband)=0.0_prec
+
+        DO m = 1, 15
+          te15(iband) = te15(iband) + forcing % djspectra(m,iband)*en(m)*width(m)*1.6_prec*10.0_prec**(-6)
+        ENDDO
+        DO m = 1,11
+          te11(iband) = te15(iband) + forcing % djspectra(m,iband)*en(m)*width(m)*1.6_prec*10.0_prec**(-6)
+        ENDDO
+       
+      ENDDO
+
+      DO j = 1, jmaxwell
+        en_maxwell(j) = REAL( j, prec )*0.05_prec - 0.025_prec
+      ENDDO
+
+      DO mp = 1, grid % NMP
+        DO lp = 1, grid % NLP
+
+          DO i=1,grid % flux_tube_max(lp)
+            plasma % ionization_rates(1,i,lp,mp) = 0.0_prec
+            plasma % ionization_rates(1,i,lp,mp) = 0.0_prec
+            plasma % ionization_rates(1,i,lp,mp) = 0.0_prec
+            plasma % ionization_rates(1,i,lp,mp) = 0.0_prec
+            qion_maxwell(i)                      = 0.0_prec
+          ENDDO
+
+          ! convert magnetic latitude from radians to degrees
+          thmagd = grid % magnetic_colatitude(i,lp)*180.0_prec/pi
+          th = abs(thmagd) - 50.0_prec
+
+          IF ( abs(thmagd) > 50.0_prec )  THEN
+
+            mlt = grid % magnetic_longitude(mp)*180.0_prec/pi/15.0_prec - &
+                  sun_longitude*12.0_prec/pi+12.0_prec 
+
+            essa = (mlt + 12.0_prec)*15.0_prec
+
+            IF ( essa >= 360.0_prec ) THEN
+              essa = essa - 360.0_prec
+            ELSEIF ( essa < 0.0_prec ) THEN
+              essa = essa + 360._prec
+            ENDIF
+
+            l = tiros_activity_level - 2
+            IF ( l < 1 ) THEN
+              l = 1
+            ELSEIF ( l > 7 ) THEN
+              l = 7
+            ENDIF
+
+            ri = essa/18.0_prec + 11.0_prec
+            i1 = ri
+            ri = ri - i1
+            IF ( i1 > 20 ) THEN
+              i1 = i1 - 20
+            ENDIF
+
+            i2 = i1 + 1
+            IF ( i2 > 20 ) THEN
+              i2 = i2 - 20
+            ENDIF
+
+            rj = th/2.0_prec + 1.0_prec
+            j1 = rj
+            rj = rj - j1
+            j2 = j1 + 1
+
+            eflux = rj*ri*forcing % emaps(j2,i2,l) + &
+                    (1.0_prec-rj)*ri*forcing % emaps(j1,i2,l) + &
+                    rj*(1.0_prec-ri)*forcing % emaps(j2,i1,l) + &
+                    (1.0_prec-rj)*(1.0_prec-ri)*forcing % emaps(j1,i1,l)
+            eflux = 10.0_prec**(eflux)/1000.0_prec
+
+            ch = rj*ri*forcing % cmaps(j2,i2,l) + &
+                 (1.0_prec-rj)*ri*forcing % cmaps(j1,i2,l) + &
+                 rj*(1.0_prec-ri)*forcing % cmaps(j2,i1,l) + &
+                 (1.0_prec-rj)*(1.0_prec-ri)*forcing % cmaps(j1,i1,l)
+
+
+            IF ( ch < 0.378_prec ) THEN
+              ch = 0.379_prec
+            ENDIF
+
+            DO kk = 2 , 21
+              IF ( ch <= ionchr(kk) ) THEN
+                k = kk - 1
+                EXIT
+              ENDIF
+            ENDDO
+
+            chi = ch - ionchr(k)
+            diff = ionchr(kk) - ionchr(k)
+            ratio_ch = chi/diff
+
+            DO i = 1 , grid % flux_tube_max(lp)
+
+              IF ( grid % altitude(i,lp) <= 1000.0_prec )THEN
+
+                grav(i) = -grid % grx(i,lp,mp)/100.0_prec
+
+                ntot(i) = ( neutrals % oxygen(i,lp,mp)  +&
+                            neutrals % molecular_oxygen(i,lp,mp) +&
+                            neutrals % molecular_nitrogen(i,lp,mp) +&
+                            neutrals % hydrogen(i,lp,mp)  +&
+                            neutrals % helium(i,lp,mp) )*10.0_prec**6
+
+                pres(i) = ntot(i)*bz*neutrals % temperature(i,lp,mp)
+
+                meanmass(i) = ( neutrals % oxygen(i,lp,mp)*mo   +&
+                                neutrals % molecular_oxygen(i,lp,mp)*mo2 +&
+                                neutrals % molecular_nitrogen(i,lp,mp)*mn2 +&
+                                neutrals % hydrogen(i,lp,mp)*mh   +&
+                                neutrals % helium(i,lp,mp)*mhe )*10.0_prec**6/ntot(i)
+
+                den(i) = pres(i)*meanmass(i)/(gscon*neutrals % temperature(i,lp,mp))
+
+                DO l = 1 , 15
+
+                  dl_lower = forcing % djspectra(l,k)
+                  dl_upper = forcing % djspectra(l,kk)
+                  rang = 4.57_prec*10.0_prec**(-5)*en(l)**1.75_prec
+                  pr = rang*grav(i)
+                  ratioz = pres(i)/pr
+
+                  IF ( ratioz > 1.0_prec ) THEN
+
+                    rlamz = 0.0_prec
+
+                  ELSE
+
+                    DO m = 1 , 21
+                      IF ( ratioz.LE.ratio(m) ) THEN
+                        rlamz = rlam(m-1) + (ratioz-ratio(m-1))*&
+                                (rlam(m)-rlam(m-1))/(ratio(m)-ratio(m-1))
+                        EXIT
+                      ENDIF
+                    ENDDO
+
+                  ENDIF
+
+                  qiont_lower = den(i)*en(l)*rlamz*dl_lower*width(l)*1.0_prec*10.0_prec**7/rang/e0
+                  qiont_upper = den(i)*en(l)*rlamz*dl_upper*width(l)*1.0_prec*10.0_prec**7/rang/e0
+
+                  plasma % ionization_rates(1,i,lp,mp) = plasma % ionization_rates(1,i,lp,mp) + &
+                                                         (ratio_ch*qiont_upper+(1.0_prec-ratio_ch)*qiont_lower)*&
+                                                         eflux/(ratio_ch*te11(kk)+(1.0_prec-ratio_ch)*te11(k))
+
+                ENDDO
+
+                alpha = ch/2.0_prec
+                rno = eflux*6.24_prec*10.0_prec**(12)/2.0_prec/alpha**3
+
+                DO l = 1 , JMAXWELL
+
+                  dl(l) = rno*en_maxwell(l)*EXP(-en_maxwell(l)/alpha)
+                  rang = 4.57_prec*10.0_prec**(-5)*en_maxwell(l)**1.75_prec
+                  pr = rang*grav(i)
+                  ratioz = pres(i)/pr
+
+                  IF ( ratioz > 1.0_prec ) THEN
+                    rlamz = 0.0_prec
+                  ELSE
+
+                    DO m = 1 , 21
+                      IF ( ratioz.LE.ratio(m) ) THEN
+                        rlamz = rlam(m-1) + (ratioz-ratio(m-1))*(rlam(m)-rlam(m-1))/(ratio(m)-ratio(m-1))
+                        EXIT
+                      ENDIF
+                    ENDDO
+
+                  ENDIF
+
+                  qion_maxwell(i) = qion_maxwell(i) + den(i)*en_maxwell(l)*rlamz*dl(l)*width_maxwell/rang/e0
+
+                ENDDO
+
+                plasma % ionization_rates(1,i,lp,mp) = plasma % ionization_rates(1,i,lp,mp) + qion_maxwell(i)
+
+                q = plasma % ionization_rates(1,i,lp,mp)/( 0.92_prec*neutrals % molecular_nitrogen(i,lp,mp) +&
+                                                           1.50_prec*neutrals % molecular_oxygen(i,lp,mp)  +&
+                                                           0.56_prec*neutrals % oxygen(i,lp,mp))
+
+                plasma % ionization_rates(2,i,lp,mp) = ( 0.50_prec*neutrals % molecular_oxygen(i,lp,mp) +&
+                                                         0.56_prec*neutrals % oxygen(i,lp,mp) )*q
+
+                plasma % ionization_rates(3,i,lp,mp) = neutrals % molecular_oxygen(i,lp,mp)*q
+
+                plasma % ionization_rates(4,i,lp,mp) = 0.92_prec*neutrals % molecular_nitrogen(i,lp,mp)*q
+
+              ENDIF
+
+            ENDDO
+          ENDIF
+
+        ENDDO
+      ENDDO
+
+  END SUBROUTINE Auroral_Precipitation_IPE_Plasma
+
   SUBROUTINE FLIP_Wrapper( plasma, grid, neutrals, utime, year, day, flip_time_step, f107d, f107a, sun_longitude )
     IMPLICIT NONE
     CLASS( IPE_Plasma ), INTENT(inout) :: plasma
@@ -401,3 +675,4 @@ CONTAINS
   END SUBROUTINE Interpolate_to_GeographicGrid_IPE_Plasma
 
 END MODULE IPE_Plasma_Class
+
