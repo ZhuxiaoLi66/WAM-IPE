@@ -38,6 +38,9 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: cmaps(:,:,:)
     REAL(prec), ALLOCATABLE :: djspectra(:,:)
 
+    !
+    REAL(prec) :: sun_longitude
+
     CONTAINS
 
       PROCEDURE :: Build => Build_IPE_Forcing

@@ -154,7 +154,7 @@ CONTAINS
 
   END SUBROUTINE Trash_IPE_Plasma
 !
-  SUBROUTINE Update_IPE_Plasma( plasma, grid, neutrals, forcing, time_tracker, flip_time_step, sun_longitude )
+  SUBROUTINE Update_IPE_Plasma( plasma, grid, neutrals, forcing, time_tracker, flip_time_step )
     IMPLICIT NONE
     CLASS( IPE_Plasma ), INTENT(inout) :: plasma
     TYPE( IPE_Grid ), INTENT(in)       :: grid
@@ -162,7 +162,6 @@ CONTAINS
     TYPE( IPE_Forcing ), INTENT(in)    :: forcing
     TYPE( IPE_Time ), INTENT(in)       :: time_tracker
     REAL(prec), INTENT(in)             :: flip_time_step
-    REAL(prec), INTENT(in)             :: sun_longitude
     ! Local
 
          
@@ -170,30 +169,24 @@ CONTAINS
  
       CALL plasma % Auroral_Precipitation( grid, &
                                            neutrals, &
-                                           forcing, &
-                                           sun_longitude )
+                                           forcing )
 
       CALL plasma % FLIP_Wrapper( grid, & 
                                   neutrals, &
-                                  time_tracker % utime, &
-                                  time_tracker % year, &
-                                  time_tracker % day_of_year, &
-                                  flip_time_step, &
-                                  forcing % f107( forcing % current_index ), & 
-                                  forcing % f107_81day_avg( forcing % current_index ), &
-                                  sun_longitude )
+                                  forcing, &
+                                  time_tracker, &
+                                  flip_time_step )
 
 
   END SUBROUTINE Update_IPE_Plasma
 !
-  SUBROUTINE Auroral_Precipitation_IPE_Plasma( plasma, grid, neutrals, forcing, sun_longitude )
+  SUBROUTINE Auroral_Precipitation_IPE_Plasma( plasma, grid, neutrals, forcing )
   ! Previously : tiros_ionize_ipe 
     IMPLICIT NONE
     CLASS( IPE_Plasma ), INTENT(inout) :: plasma
     TYPE( IPE_Grid ), INTENT(in)       :: grid
     TYPE( IPE_Neutrals ), INTENT(in)   :: neutrals
     TYPE( IPE_Forcing ), INTENT(in)    :: forcing
-    REAL(prec), INTENT(in)             :: sun_longitude
     ! Local
     INTEGER, PARAMETER :: jmaxwell = 6
     INTEGER    :: i, lp, mp, m, j, iband, l
@@ -283,7 +276,7 @@ CONTAINS
           IF ( abs(thmagd) > 50.0_prec )  THEN
 
             mlt = grid % magnetic_longitude(mp)*180.0_prec/pi/15.0_prec - &
-                  sun_longitude*12.0_prec/pi+12.0_prec 
+                  forcing % sun_longitude*12.0_prec/pi+12.0_prec 
 
             essa = (mlt + 12.0_prec)*15.0_prec
 
@@ -449,18 +442,14 @@ CONTAINS
 
   END SUBROUTINE Auroral_Precipitation_IPE_Plasma
 
-  SUBROUTINE FLIP_Wrapper( plasma, grid, neutrals, utime, year, day, flip_time_step, f107d, f107a, sun_longitude )
+  SUBROUTINE FLIP_Wrapper( plasma, grid, neutrals, forcing, time_tracker, flip_time_step )
     IMPLICIT NONE
     CLASS( IPE_Plasma ), INTENT(inout) :: plasma
     TYPE( IPE_Grid ), INTENT(in)       :: grid
     TYPE( IPE_Neutrals ), INTENT(in)   :: neutrals
-    REAL(prec), INTENT(in)             :: utime
-    INTEGER, INTENT(in)                :: year
-    INTEGER, INTENT(in)                :: day
+    TYPE( IPE_Forcing ), INTENT(in)    :: forcing
+    TYPE( IPE_Time ), INTENT(in)       :: time_tracker
     REAL(prec), INTENT(in)             :: flip_time_step
-    REAL(prec), INTENT(in)             :: f107d
-    REAL(prec), INTENT(in)             :: f107a
-    REAL(prec), INTENT(in)             :: sun_longitude
     ! Local
     INTEGER  :: i, lp, mp
     INTEGER  :: JMINX, JMAXX
@@ -487,7 +476,10 @@ CONTAINS
     REAL(dp) :: NNOX(1:grid % nFluxTube) 
     REAL(dp) :: NHEAT(1:grid % nFluxTube) 
     REAL(dp) :: SZA(1:grid % nFluxTube) 
-    
+    REAL(dp) :: F107D, F107A
+
+      F107D = forcing % f107( forcing % current_index )   
+      F107A = forcing % f107_81day_avg( forcing % current_index )   
       DO mp = 1, plasma % NMP    
         DO lp = 1, plasma % NLP    
 
@@ -510,8 +502,8 @@ CONTAINS
           TINFX(1:grid % flux_tube_max(lp)) = neutrals % temperature_inf(1:grid % flux_tube_max(lp),lp,mp)
           UNX(1:grid % flux_tube_max(lp))   = -neutrals % velocity_apex(3,1:grid % flux_tube_max(lp),lp,mp)
 
-          SZA(1:grid % flux_tube_max(lp)) = Solar_Zenith_Angle( utime, &
-                                                                day, &
+          SZA(1:grid % flux_tube_max(lp)) = Solar_Zenith_Angle( time_tracker % utime, &
+                                                                time_tracker % day_of_year, &
                                                                 grid % magnetic_colatitude(1:grid % flux_tube_max(lp),lp), &
                                                                 grid % longitude(1:grid % flux_tube_max(lp),lp,mp), &
                                                                 grid % flux_tube_max(lp) )
@@ -537,17 +529,17 @@ CONTAINS
        
           ENDDO
 
-          ltime = utime/3600.0_prec + grid % longitude(i,lp,mp)*180.0_prec/pi/15.0_prec
+          ltime = time_tracker % utime/3600.0_prec + grid % longitude(i,lp,mp)*180.0_prec/pi/15.0_prec
           IF ( ltime > 24.0_prec ) THEN
             ltime = MOD(ltime, 24.0_prec)
           ENDIF
 
           mlt = grid % magnetic_longitude(mp)*180.0_prec/pi/15.0_prec - &
-                sun_longitude*12.0_prec/pi+12.0_prec 
+                forcing % sun_longitude*12.0_prec/pi+12.0_prec 
 
           JMINX = 1
           JMAXX = grid % flux_tube_max(lp)
-
+ 
           CALL CTIPINT( JMINX, & !.. index of the first point on the field line
                         JMAXX, & !.. index of the last point on the field line
                         grid % flux_tube_max(lp), & !.. CTIPe array dimension, must equal to FLDIM
