@@ -45,6 +45,7 @@ IMPLICIT NONE
       PROCEDURE :: Trash => Trash_IPE_Plasma
 
       PROCEDURE :: Update => Update_IPE_Plasma
+      PROCEDURE :: Auroral_Precipitation => Auroral_Precipitation_IPE_Plasma
       PROCEDURE :: FLIP_Wrapper     
 
       PROCEDURE :: Interpolate_to_GeographicGrid => Interpolate_to_GeographicGrid_IPE_Plasma
@@ -167,6 +168,11 @@ CONTAINS
          
       !CALL plasma % Cross_Flux_Tube_Transport( )
  
+      CALL plasma % Auroral_Precipitation( grid, &
+                                           neutrals, &
+                                           forcing, &
+                                           sun_longitude )
+
       CALL plasma % FLIP_Wrapper( grid, & 
                                   neutrals, &
                                   time_tracker % utime, &
@@ -191,13 +197,13 @@ CONTAINS
     ! Local
     INTEGER, PARAMETER :: jmaxwell = 6
     INTEGER    :: i, lp, mp, m, j, iband, l
-    INTEGER    :: i1, i2, j1, j2, k, kk, ld, n, nn
+    INTEGER    :: i1, i2, j1, j2, k, kk
     INTEGER    :: tiros_activity_level 
-    REAL(prec) :: ratio(1:21), QT(plasma % nFluxTube)
+    REAL(prec) :: ratio(1:21)
     REAL(prec) :: bz, gscon, amu, e0, mlt
-    REAL(prec) :: ch, chi, dfac, diff, dprof, ed, mo, mo2, mn2, alpha 
-    REAL(prec) :: eflux, essa, qdmsp, dl_lower,dl_upper,qiont_lower,qiont_upper 
-    REAL(prec) :: ri, rj, th, swbz, offset, THMagd
+    REAL(prec) :: ch, chi, diff, mo, mo2, mn2, alpha 
+    REAL(prec) :: eflux, essa, dl_lower,dl_upper,qiont_lower,qiont_upper 
+    REAL(prec) :: ri, rj, th, THMagd
     REAL(prec) :: pres(plasma % nFluxTube)
     REAL(prec) :: den(plasma % nFluxTube), grav(plasma % nFluxTube)
     REAL(prec) :: ntot(plasma % nFluxTube), meanmass(plasma % nFluxTube)
@@ -426,12 +432,12 @@ CONTAINS
                                                            1.50_prec*neutrals % molecular_oxygen(i,lp,mp)  +&
                                                            0.56_prec*neutrals % oxygen(i,lp,mp))
 
-                plasma % ionization_rates(2,i,lp,mp) = ( 0.50_prec*neutrals % molecular_oxygen(i,lp,mp) +&
+                plasma % ionization_rates(2,i,lp,mp) = ( 0.50_prec*neutrals % molecular_oxygen(i,lp,mp) +& ! O+ Rate
                                                          0.56_prec*neutrals % oxygen(i,lp,mp) )*q
 
-                plasma % ionization_rates(3,i,lp,mp) = neutrals % molecular_oxygen(i,lp,mp)*q
+                plasma % ionization_rates(3,i,lp,mp) = neutrals % molecular_oxygen(i,lp,mp)*q             ! O2+ Rate
 
-                plasma % ionization_rates(4,i,lp,mp) = 0.92_prec*neutrals % molecular_nitrogen(i,lp,mp)*q
+                plasma % ionization_rates(4,i,lp,mp) = 0.92_prec*neutrals % molecular_nitrogen(i,lp,mp)*q ! N2+ Rate
 
               ENDIF
 
@@ -671,6 +677,12 @@ CONTAINS
      CALL grid % Interpolate_to_Geographic_Grid( plasma % hall_conductivity, plasma % geo_hall_conductivity )
      CALL grid % Interpolate_to_Geographic_Grid( plasma % pedersen_conductivity, plasma % geo_pedersen_conductivity )
      CALL grid % Interpolate_to_Geographic_Grid( plasma % b_parallel_conductivity, plasma % geo_b_parallel_conductivity )
+
+     CALL grid % Interpolate_to_Geographic_Grid( plasma % ionization_rates(1,:,:,:), plasma % geo_ionization_rates(1,:,:,:) )
+     CALL grid % Interpolate_to_Geographic_Grid( plasma % ionization_rates(2,:,:,:), plasma % geo_ionization_rates(2,:,:,:) )
+     CALL grid % Interpolate_to_Geographic_Grid( plasma % ionization_rates(3,:,:,:), plasma % geo_ionization_rates(3,:,:,:) )
+     CALL grid % Interpolate_to_Geographic_Grid( plasma % ionization_rates(4,:,:,:), plasma % geo_ionization_rates(4,:,:,:) )
+
 
   END SUBROUTINE Interpolate_to_GeographicGrid_IPE_Plasma
 
