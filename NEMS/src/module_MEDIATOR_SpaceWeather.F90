@@ -823,6 +823,11 @@ module module_MEDSpaceWeather
   wamfilename = 'WAMFixedHgtGrid_20180312.nc'
   !wamfilename = 'wam3dgridnew_20160427.nc' ! The last version
 
+  ! Write fixed height grid file name
+  if (PetNo .eq. 0) then
+     write(*,*) "Fixed height grid filename = ",wamfilename
+  endif
+
   filename = 'wam2dmesh.nc'
 
 !  Make min height a little lower to deal with small differences 
@@ -1493,7 +1498,9 @@ end subroutine InitGrids
 ! Log function which handles negative numbers
 function log_hneg(in)
   real(ESMF_KIND_R8) :: in, log_hneg
-  real(ESMF_KIND_R8), parameter :: log_min=1.0E-10
+ ! Use a fairly high min value. Values close to 0.0 cause problems in IPE
+ ! real(ESMF_KIND_R8), parameter :: log_min=1.0E-10
+  real(ESMF_KIND_R8), parameter :: log_min=1.0E+3
 
   if (in >= log_min) then
      log_hneg=log(in)
