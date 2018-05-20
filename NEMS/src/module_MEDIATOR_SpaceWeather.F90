@@ -32,6 +32,11 @@ module module_MEDSpaceWeather
 
   integer, parameter :: MAXNAMELEN = 128
 
+  ! Earth Radius
+  ! The same value used by IPE, but in km. 
+  real(ESMF_KIND_R8), parameter :: earthradius=6371.2_ESMF_KIND_R8
+
+
   ! private internal state to keep instance data
   type InternalStateStruct
     integer :: wamdims(3)
@@ -778,7 +783,6 @@ module module_MEDSpaceWeather
   real, parameter :: PI=3.1415927
   integer :: j1
   integer :: localrc, status
-  real, parameter :: earthradius=6371.0  !in kilometers
 
   ! For output
   real(ESMF_KIND_R8), pointer :: lontbl(:), lattbl(:), hgttbl(:)
@@ -2135,11 +2139,10 @@ subroutine convert2Cart (lon, lat, hgt, coords, rc)
    real(ESMF_KIND_R8):: coords(3)
    integer, optional :: rc
 
-   real(ESMF_KIND_R8) :: earthradius, nhgt
+   real(ESMF_KIND_R8) ::nhgt
    integer :: localrc
 
    if (present(rc)) rc=ESMF_FAILURE
-   earthradius = 6371.0
    nhgt = 1+hgt/earthradius
 
    call c_esmc_sphdeg_to_cart(lon, lat, &
@@ -2160,11 +2163,10 @@ subroutine convert2Cart (lon, lat, hgt, coords, rc)
    real(ESMF_KIND_R8):: coords(3)
    integer, optional :: rc
 
-   real(ESMF_KIND_R8) :: earthradius, nhgt
+   real(ESMF_KIND_R8) :: nhgt
    integer :: localrc
 
    if (present(rc)) rc=ESMF_FAILURE
-   earthradius = 6371.0
    nhgt = 1+hgt/earthradius
 
    coords(1)=lon
@@ -2181,11 +2183,10 @@ subroutine convert2Sphdeg (coord1, coord2, coord3, lon, lat, hgt)
    real(ESMF_KIND_R8):: coord1, coord2, coord3
    real(ESMF_KIND_R8):: lon, lat, hgt
 
-   real(ESMF_KIND_R8) :: earthradius, nhgt, rad2deg
+   real(ESMF_KIND_R8) :: nhgt, rad2deg
    real, parameter :: PI=3.1415927
    integer :: localrc
 
-   earthradius = 6371.0
    rad2deg = 180.0/PI
    nhgt = sqrt(coord1*coord1+coord2*coord2+coord3*coord3)
    hgt = (nhgt-1)*earthradius
