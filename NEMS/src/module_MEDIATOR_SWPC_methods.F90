@@ -3043,7 +3043,7 @@ contains
     real(ESMF_KIND_R8), parameter :: Rgas = 8.3141_ESMF_KIND_R8
     real(ESMF_KIND_R8), parameter :: earthRadius = 6371.2_ESMF_KIND_R8
     real(ESMF_KIND_R8), parameter :: const = 2 * g0 * earthRadius / Rgas
- 
+
     ! -- begin
     rc = ESMF_SUCCESS
 
@@ -4440,7 +4440,11 @@ contains
   real, parameter :: PI=3.1415927
   integer :: j1
   integer :: localrc, status
-  real, parameter :: earthradius=6371.0  !in kilometers
+
+   ! Earth Radius
+  ! Use the same value used by IPE, but in km. 
+  real(ESMF_KIND_R8), parameter :: earthradius=6371.2_ESMF_KIND_R8
+  !real, parameter :: earthradius=6371.0  !in kilometers
 
   ! For output
   real(ESMF_KIND_R8), pointer :: lontbl(:), lattbl(:), hgttbl(:)
@@ -5235,7 +5239,12 @@ contains
     integer :: localrc
 
     if (present(rc)) rc=ESMF_FAILURE
-    earthradius = 6371.0
+
+    ! Earth Radius
+    ! Use the same value used by IPE, but in km. 
+    earthradius=6371.2_ESMF_KIND_R8
+    !earthradius = 6371.0
+
     nhgt = 1+hgt/earthradius
 
     coords(1)=lon

@@ -265,7 +265,11 @@ module module_MED_SWPC
       560., 570., 580., 590., 600., 610., 620., 630., 640., 650., 660., 670., 680., 690., &
       700., 710., 720., 730., 740., 750., 760., 770., 780., 790., 800. /)
 
-    real(ESMF_KIND_R8),    parameter :: earthRadius = 6371.0088_ESMF_KIND_R8 !  IUGG Earth Mean Radius (Moritz, 2000)
+
+  ! Earth Radius
+  ! Use the same value used by IPE, but in km. 
+  real(ESMF_KIND_R8), parameter :: earthRadius=6371.2_ESMF_KIND_R8
+  !  real(ESMF_KIND_R8),    parameter :: earthRadius = 6371.0088_ESMF_KIND_R8 !  IUGG Earth Mean Radius (Moritz, 2000)
 
     ! -- begin
     rc = ESMF_SUCCESS
@@ -400,7 +404,10 @@ module module_MED_SWPC
 
     integer, save :: timeSlice = 1
 
-    real(ESMF_KIND_R8),    parameter :: earthRadius = 6371008.8_ESMF_KIND_R8 !  IUGG Earth Mean Radius (Moritz, 2000)
+  ! Earth Radius
+  ! Use the same value used by IPE, but in km. 
+  real(ESMF_KIND_R8), parameter :: earthRadius=6371.2_ESMF_KIND_R8
+  !real(ESMF_KIND_R8),    parameter :: earthRadius = 6371008.8_ESMF_KIND_R8 !  IUGG Earth Mean Radius (Moritz, 2000)
 
     ! -- begin
     rc = ESMF_SUCCESS
