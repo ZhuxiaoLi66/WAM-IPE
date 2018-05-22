@@ -3036,7 +3036,9 @@ contains
     integer :: i, itop, j, k, np, nd
     real(ESMF_KIND_R8) :: fact, x, x1, y, y1, dy, ylog(n)
 
-    real(ESMF_KIND_R8), parameter :: log_min = 1.e-10_ESMF_KIND_R8
+    ! Use a fairly high min value. Values close to 0.0 cause problems in IPE
+    !real(ESMF_KIND_R8), parameter :: log_min = 1.e-10_ESMF_KIND_R8
+    real(ESMF_KIND_R8), parameter :: log_min = 1.e+3_ESMF_KIND_R8
     real(ESMF_KIND_R8), parameter :: g0 = 9.80665_ESMF_KIND_R8
     real(ESMF_KIND_R8), parameter :: Rgas = 8.3141_ESMF_KIND_R8
     real(ESMF_KIND_R8), parameter :: earthRadius = 6371.2_ESMF_KIND_R8
@@ -3110,6 +3112,11 @@ contains
     real(ESMF_KIND_R8) :: R, g0, re
 
     integer,            parameter :: extrap_start_level = 149
+
+    ! Use a fairly high min value. Values close to 0.0 cause problems in IPE
+    !real(ESMF_KIND_R8), parameter :: log_min = 1.e+3_ESMF_KIND_R8
+
+    ! Keep this log_min for now because this is the legacy version??
     real(ESMF_KIND_R8), parameter :: log_min = 1.0E-10
 !   real(ESMF_KIND_R8), parameter :: log_min = 1.e-10_ESMF_KIND_R8
 !   real(ESMF_KIND_R8), parameter :: re = 6371.2_ESMF_KIND_R8
