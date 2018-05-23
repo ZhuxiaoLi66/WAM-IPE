@@ -1408,7 +1408,7 @@ cat  > IPE.inp <<EOF
   iout(2)=60
   lpFort167=11
   lpmax_perp_trans=151
-  lpmin_perp_trans=1
+  lpmin_perp_trans=15
   mpFort167=1
   mpstop=80
   record_number_plasma_start=0
@@ -1439,7 +1439,7 @@ cat  > IPE.inp <<EOF
   sw_pcp=0
   sw_perp_transport=2
   sw_record_number=1
-  sw_th_or_r=0
+  sw_th_or_r=1
   ut_start_perp_trans=${START_UT_SEC}
   utime0LPI=${START_UT_SEC}
   barriersOn=f

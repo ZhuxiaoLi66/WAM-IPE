@@ -94,9 +94,9 @@
           IN = JMIN_IN(lp)
           coslam_m(1,lp)=COS(pi*0.5-plasma_grid_GL(IN,lp))
 
-!SMS$IGNORE begin
-       print*,'coslam=',coslam_m(1,lp),' lp=',lp,' IN=',IN,' mype',mype &
-     &,plasma_grid_GL(IN,lp),(pi*0.5-plasma_grid_GL(IN,lp))
+!!SMS$IGNORE begin
+!       print*,'coslam=',coslam_m(1,lp),' lp=',lp,' IN=',IN,' mype',mype &
+!     &,plasma_grid_GL(IN,lp),(pi*0.5-plasma_grid_GL(IN,lp))
 !SMS$IGNORE end
 
           if(coslam_m(1,lp)<=0.0 .or. coslam_m(1,lp)>=1.0 )then
@@ -276,9 +276,9 @@
           pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50 
           pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
 
-!SMS$IGNORE begin
-       print*,'coslam=',coslam_m(1,lp),' lp=',lp,' mype',mype
-!SMS$IGNORE end
+!!SMS$IGNORE begin
+!       print*,'coslam=',coslam_m(1,lp),' lp=',lp,' mype',mype
+!!SMS$IGNORE end
 
           if (r<=0..or.coslam_m(1,lp)==0..or.d_phi_m==0.)then
 !SMS$IGNORE BEGIN
@@ -376,10 +376,11 @@
      &                          ,v_e(2),apexE(midpoint,lp,mp,up,2)
             endif
 ! EXB  magnetic exact upward at APEX (midpoint) 
-            VEXBup(lp,mp) = v_e(2) * (-1.0) !convert from down to UPward
+!           VEXBup(lp,mp) = v_e(2) * (-1.0) !convert from down to UPward
+            VEXBup(lp,mp) = vexbgeo(up)
 
 !nm20140528: VEXBth at 90km required for th method, sinI_m for NH
-            if ( sw_th_or_R==0 ) then !th method(ctipe/shawn)
+!           if ( sw_th_or_R==0 ) then !th method(ctipe/shawn)
                ipts = JMIN_IN(lp) ! if ihem=1 NH
 !               ipts = JMAX_IS(lp) ! if ihem=2 SH
       if(sw_debug)                                                      &
@@ -394,11 +395,16 @@
 ! vperp at 90km NH +poleward
 !VEXBth: horizontal component, positive EQUATORward: is calculated only for th-method
 !dbg20150319: it might be better to estimate sinI at JMIN_IN
-               VEXBth(lp,mp) = v_e(2) * sinI_m(1) !if ihem=1 NH
+!              VEXBth(lp,mp) = v_e(2) * sinI_m(1) !if ihem=1 NH
+               VEXBth(lp,mp) = v_e(2) / sinI_m(1) !if ihem=1 NH
+
+!!SMS$ignore begin
+!      PRINT *,'TWFANG getefield, mp,lp',mp,lp,'VEXBup',VEXBup(lp,mp),'VEXBth',VEXBth(lp,mp)
+!!SMS$ignore end
 
 !            else if ( sw_th_or_R==1 ) then !R method(gip)
 !               ipts = midpoint
-            end if !( sw_th_or_R==1
+!           end if !( sw_th_or_R==1
 ! exact magnetic eastward  
 ! R method: at APEX
 ! th method: at 90km JMIN_IN

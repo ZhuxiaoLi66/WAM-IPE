@@ -21,7 +21,7 @@ CONTAINS
   SUBROUTINE stepback_mag_R (utime,mp,lp,phi_t0,theta_t0,r0_apex)
     USE module_precision
     USE module_IPE_dimension,ONLY: NLP
-    USE module_FIELD_LINE_GRID_MKS,ONLY: mlon_rad,plasma_grid_Z,JMIN_IN,JMAX_IS,ht90,plasma_grid_GL,plasma_grid_3d,east,north,up,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,VEXBup,minAltitude,maxAltitude, VEXBe
+    USE module_FIELD_LINE_GRID_MKS,ONLY: mlon_rad,plasma_grid_Z,JMIN_IN,JMAX_IS,ht90,plasma_grid_GL,plasma_grid_3d,east,north,up,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,VEXBup,minAltitude,maxAltitude, VEXBe,VEXBth
     USE module_physical_constants,ONLY: earth_radius,rtd,pi
     USE module_input_parameters,ONLY: time_step,sw_exb_up,sw_debug,start_time,lpmin_perp_trans, perp_transport_time_step
     IMPLICIT NONE
@@ -38,8 +38,11 @@ CONTAINS
     REAL   (KIND=REAL_prec) :: theta_t1(2)!magnetic latitude,theta at T1
     INTEGER(KIND=int_prec ) :: midpoint
     REAL   (KIND=REAL_prec) :: r,r_apex,sin2theta,sintheta,theta !meter
+    REAL   (KIND=REAL_prec) :: coslambda_m
     INTEGER(KIND=int_prec ) :: ihem                              !1:NH; 2:SH
     REAL   (KIND=REAL_prec) :: GLON_deg, LT_SEC
+    REAL(KIND=REAL_prec8) :: theta_t0_test
+    REAL(KIND=REAL_prec8) :: r0_apex_test
 
     IF ( sw_debug ) PRINT*,'starting sub-stepback_mag_R:utime',utime,mp,lp
     phi_t1 = mlon_rad(mp)
@@ -92,27 +95,75 @@ CONTAINS
 ! PRINT *,'sub-StR:',ihem,lp,mp,'v_exb_apex[m/s]',VEXBup(lp,mp)  ,utime
 
       r0_apex = r_apex - VEXBup(lp,mp) * perp_transport_time_step
+      r0_apex_test=r0_apex
 
-      IF(sw_debug)PRINT *,'sub-StepbackR:',r_apex,' r0 apex[m/s]',r0_apex
-
-      IF ( r0_apex<(minAltitude+earth_radius) ) THEN
-        PRINT *,'sub-StepbackR:!r0_apex too small!',r0_apex,VEXBup(lp,mp),lp,mp, (minAltitude+earth_radius)
-        r0_apex = minAltitude+earth_radius
-      else IF ( r0_apex>(maxAltitude+earth_radius) ) THEN
-        PRINT *,'sub-StepbackR:!r0_apex too big!',r0_apex, VEXBup(lp,mp),lp,mp, (maxAltitude+earth_radius)
-        r0_apex = maxAltitude+earth_radius
-      ENDIF
-!dbg20120301:
       sin2theta = r/r0_apex
       sintheta = SQRT( sin2theta )
       theta    = ASIN ( sintheta )
-      IF(sw_debug) PRINT *,'SIN',sin2theta,sintheta,theta,' mlat R0[deg]', (90.-  theta*180./pi)
 
       IF ( ihem==1 ) THEN
         theta_t0(ihem) = pi*0.50 - ACOS ( sintheta )
       else IF ( ihem==2 ) THEN
         theta_t0(ihem) = pi*0.50 + ACOS ( sintheta )
       ENDIF
+ 
+       theta_t0_test=theta_t0(ihem)
+
+       theta_t0(ihem) = theta_t1(ihem) - ( VEXBth(lp,mp) * REAL(perp_transport_time_step) ) / r
+
+!       IF (abs(theta_t0_test-theta_t0(1)).gt.0.002) THEN 
+!!SMS$ignore begin
+!        PRINT *,'TWFANG Step_back_R,mp',mp,'lp',lp
+!        PRINT *,'theta_t0',theta_t0(1)*180./pi,'theta_t0_test',theta_t0_test*180./pi
+!!SMS$ignore end
+!       ELSE
+!!SMS$ignore begin
+!        PRINT *,'TWFANG Step_back_R,not finding anything'
+!!SMS$ignore end
+!
+!       ENDIF
+
+!rph will be needed for zonal transport (sw_th_or_R=0)
+!       rph = r90
+
+        coslambda_m  = COS ( pi*0.50 - theta_t0(ihem) )
+        r0_apex = ( earth_radius + ht90 ) /  coslambda_m /  coslambda_m
+
+!!SMS$ignore begin
+!        PRINT *,'TWFANG Step_back_R,mp',mp,'lp',lp,'r0_apex',r0_apex-earth_radius
+!        PRINT *,'theta_t0_test',theta_t0_test*180./pi,'theta_t0',theta_t0(1)*180./pi
+!!SMS$ignore end
+
+
+      IF(sw_debug)PRINT *,'sub-StepbackR:',r_apex,' r0 apex[m/s]',r0_apex
+
+      IF ( r0_apex<(minAltitude+earth_radius) ) THEN
+!SMS$ignore begin
+        PRINT *,'sub-StepbackR1:!r0_apex too small!',r0_apex,VEXBup(lp,mp),lp,mp, (minAltitude+earth_radius)
+!SMS$ignore end
+        r0_apex = minAltitude+earth_radius
+      else IF ( r0_apex>(maxAltitude+earth_radius) ) THEN
+!SMS$ignore begin
+        PRINT *,'sub-StepbackR1:!r0_apex too big!',r0_apex, VEXBup(lp,mp),lp,mp, (maxAltitude+earth_radius)
+!SMS$ignore end
+        r0_apex = maxAltitude+earth_radius
+      ENDIF
+
+      sin2theta = r/r0_apex
+      sintheta = SQRT( sin2theta )
+      theta    = ASIN ( sintheta )
+
+      IF ( ihem==1 ) THEN
+        theta_t0(ihem) = pi*0.50 - ACOS ( sintheta )
+      else IF ( ihem==2 ) THEN
+        theta_t0(ihem) = pi*0.50 + ACOS ( sintheta )
+      ENDIF
+
+!!SMS$ignore begin
+!      PRINT *,'TWFANG mp,lp',mp,lp,'VEXBup',VEXBup(lp,mp),'VEXBth',VEXBth(lp,mp)
+!      PRINT*,'r0_apex',r0_apex,'r0_apex_test',r0_apex_test,r0_apex-r0_apex_test
+!!SMS$ignore end
+!dbg20120301:
 
 !temporary solution...
 !        phi_t0(ihem)   = phi_t1

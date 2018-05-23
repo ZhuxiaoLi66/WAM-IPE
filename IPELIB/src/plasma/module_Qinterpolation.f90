@@ -133,11 +133,11 @@ CONTAINS
           IF ( jth==4.and.sw_inpls<=0 ) CYCLE jth_loop0
 
           !nm20160421 DOUBLE log interpolation
-          IF(jth<=TSP)THEN      !for densities
-            Qint_dum(jth, ip1d) = 10**( factor2*(ALOG10(plasma_3d_old(iNorth,lp0,mp0,jth)) - ALOG10(plasma_3d_old(iSouth,lp0,mp0,jth))) + ALOG10(plasma_3d_old(iSouth,lp0,mp0,jth)) )
-          else
+!         IF(jth<=TSP)THEN      !for densities
+!           Qint_dum(jth, ip1d) = 10**( factor2*(ALOG10(plasma_3d_old(iNorth,lp0,mp0,jth)) - ALOG10(plasma_3d_old(iSouth,lp0,mp0,jth))) + ALOG10(plasma_3d_old(iSouth,lp0,mp0,jth)) )
+!         else
             Qint_dum(jth, ip1d) = (factor2*(plasma_3d_old(inorth,lp0,mp0,jth) - plasma_3d_old(isouth,lp0,mp0,jth))) + plasma_3d_old(isouth,lp0,mp0,jth)
-          ENDIF
+!         ENDIF
 
 !dbg20160417 error STOP
           IF ( Qint_dum(jth, ip1d)<=zero ) THEN
@@ -148,7 +148,7 @@ CONTAINS
             &,lp,mp,lp0,mp0,ip1d,inorth,isouth,factor2,jth
             IF(jth<=TSP) PRINT*,jth,'after LOG!',( factor2*(ALOG10(plasma_3d_old(iNorth,lp0,mp0,jth)) - ALOG10(plasma_3d_old(iSouth,lp0,mp0,jth))) + ALOG10(plasma_3d_old(iSouth,lp0,mp0,jth)) )
 !SMS$IGNORE end
-            STOP
+!           STOP
           ENDIF !( jth==1.and.Qint_dum(jth, ip1d)<=0. ) THEN
 
         ENDDO jth_loop0 !jth=1,iT !=TSP+3

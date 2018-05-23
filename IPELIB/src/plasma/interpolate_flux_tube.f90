@@ -317,7 +317,8 @@ SUBROUTINE interpolate_flux_tube (mp,lp &
 
             IF ( x(1)/=x(2) ) THEN
               IF(jth<=TSP)THEN      !for densities
-                plasma_2d(jth,i1d,imp) = (10**(( (x(1)-x(0))*DLOG10(Qint(jth,i1d,imp,2)) + (x(0)-x(2))*DLOG10(Qint(jth,i1d,imp,1)) ) / ( x(1)-x(2) )))*(ksi_fac*ksi_fac)
+!               plasma_2d(jth,i1d,imp) = (10**(( (x(1)-x(0))*DLOG10(Qint(jth,i1d,imp,2)) + (x(0)-x(2))*DLOG10(Qint(jth,i1d,imp,1)) ) / ( x(1)-x(2) )))*(ksi_fac*ksi_fac)
+                plasma_2d(jth,i1d,imp) = ( (x(1)-x(0))*Qint(jth,i1d,imp,2) + (x(0)-x(2))*Qint(jth,i1d,imp,1) ) / ( x(1)-x(2) )*(ksi_fac*ksi_fac)
               else  !for temperatures
                 plasma_2d(jth,i1d,imp) = ( (x(1)-x(0))*Qint(jth,i1d,imp,2) + (x(0)-x(2))*Qint(jth,i1d,imp,1) )*(ksi_fac**(4./3.)) / ( x(1)-x(2) )
               ENDIF
@@ -336,7 +337,7 @@ SUBROUTINE interpolate_flux_tube (mp,lp &
                 PRINT"('!check X!=',3E16.8)",x(1),x(0),x(2)
                 PRINT"('!check B!=',3E12.4)",B0(1),B0(0),B0(2)
 !SMS$ignore end
-                STOP
+!               STOP
               ENDIF !IF (plasma_2d(jth,i1d,imp)<=zero) THEN
 
             ELSE !IF ( x(1)/=x(2) ) THEN
@@ -448,7 +449,7 @@ SUBROUTINE interpolate_flux_tube (mp,lp &
       ENDDO flux_tube_loopT1_fac1
 
 
-    ELSE IF ( lp_t0(ihem,1)==-999 ) THEN !missing_value in module_find_nei...
+    ELSE IF ( lp_t0(ihem,1)==-9999 ) THEN !missing_value in module_find_nei...
 
 !SMS$IGNORE begin
       IF(sw_debug)PRINT"('mype=',i3,'subInt:specialPole:mp=',i3,'lp=',i3,'mpt0=',2i3,'lpt0=',i4,i2)",mype,mp,lp,mp_t0(ihem,1:2),lp_t0(ihem,1:2)
