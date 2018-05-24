@@ -40,12 +40,12 @@
 !SMS$IGNORE BEGIN
 #ifdef HAVE_MPI
       USE module_input_parameters,ONLY:NYEAR,NDAY,start_time,mype       &
-     &,ip_freq_output,sw_debug,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld        &
+     &,ip_freq_output,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld        &
      &,lat_sft_eld,sw_ctip_input,utime0LPI,f107_new,f107d_new           &
      &,input_params_begin,input_params_interval
 #else
       USE module_input_parameters,ONLY:NYEAR,NDAY,start_time,mype,      &
-     & ip_freq_output,sw_debug,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld,       &
+     & ip_freq_output,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld,       &
      & lat_sft_eld,sw_ctip_input,utime0LPI,f107_new,f107d_new,          &
      & input_params_begin,input_params_interval
 #endif
@@ -80,10 +80,6 @@
       if ( sw_ctip_input ) then
         LPI = INT( ( utime - utime0LPI ) / real(input_params_interval) ) &
      &+ 1 + input_params_begin
-!t        if(sw_debug)
-        print*,'sub-eld: LPI=',lpi
-!t        if(sw_debug)
-        print*,'sub-eld: utime',utime,'dt_m=',((utime-utime0LPI)/60.)
       else
         LPI=1
       end if
@@ -138,7 +134,6 @@
         j0=-999 !missing_value in module_find_nei...
       endif
       CALL GET_EFIELD90km ( utime )
-      if ( sw_debug )  print *,'GET_EFIELD90km finished'
       IF ( utime==start_time ) THEN 
         write(unit=2007,FMT='(20f10.4)') (90.-theta90_rad*rtd)    
       ENDIF

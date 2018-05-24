@@ -33,7 +33,7 @@
       USE module_GET_TILT ,ONLY: GET_TILT
       USE module_ADJUST ,ONLY: ADJUST
       use module_input_parameters,only:sw_ctip_input,lpi,swbt,swangle   &
-     &,swvel,sw_debug,mype
+     &,swvel,mype
 !-----------------------------------------------------------------
 !  local variables
 !-----------------------------------------------------------------

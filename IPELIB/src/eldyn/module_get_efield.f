@@ -80,7 +80,6 @@
       USE module_DerivPotential ,ONLY: DerivPotential
       USE module_GlobalElPotential ,ONLY:GlobalElPotential
       USE module_adj_S_a ,ONLY:adj_S_a
-      USE module_input_parameters,ONLY:sw_debug
 
       integer :: idum1, idum2, tod ! time of day [s] 
       real kp
@@ -116,13 +115,6 @@
 !    &f107d*(0.0079373-0.00219316*kp)
 !     print*,kp,bz
 !     bz=-2.5
-      if ( sw_debug ) 
-     & print*,'By=',by,' Bz=',bz,' F107d=',f107d,' UT[hr]',ut
-!#ifdef EFIELD_DIAGS
-!      if( masterproc ) then
-!         write(iulog,*) 'get_efield: f107d,by,bz = ', f107d,by,bz 
-!      end if
-!#endif
 !-----------------------------------------------------------------------
 ! ajust S_a
 !-----------------------------------------------------------------------
