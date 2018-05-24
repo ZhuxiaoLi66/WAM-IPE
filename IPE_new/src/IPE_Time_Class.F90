@@ -11,8 +11,12 @@ IMPLICIT NONE
     CONTAINS
 
     PROCEDURE :: Build => Build_IPE_Time
+
     PROCEDURE :: Set_Date => Set_Date_IPE_Time
+    PROCEDURE :: Get_Date => Get_Date_IPE_Time
+
     PROCEDURE :: Calculate_Hour_and_Minute => Calculate_Hour_and_Minute_IPE_Time
+
     PROCEDURE :: DateStamp => DateStamp_IPE_Time
 
   END TYPE IPE_Time
@@ -51,11 +55,22 @@ CONTAINS
 
   END SUBROUTINE Set_Date_IPE_Time
 
+  SUBROUTINE Get_Date_IPE_Time( time_tracker, year, month, day )
+    IMPLICIT NONE
+    CLASS( IPE_Time ), INTENT(in) :: time_tracker
+    INTEGER, INTENT(out)          :: year, month, day
+
+      year  = time_tracker % year  
+      month = time_tracker % month 
+      day   = time_tracker % day   
+
+  END SUBROUTINE Get_Date_IPE_Time
+
   SUBROUTINE Calculate_Hour_and_Minute_IPE_Time( time_tracker )
     IMPLICIT NONE
     CLASS( IPE_Time ), INTENT(inout) :: time_tracker
 
-      time_tracker % hour = INT( time_tracker % utime/3600.0_prec )
+      time_tracker % hour   = INT( time_tracker % utime/3600.0_prec )
       time_tracker % minute = INT( (time_tracker % utime - REAL(time_tracker % hour,prec)*3600.0_prec)/60.0_prec )
 
   END SUBROUTINE Calculate_Hour_and_Minute_IPE_Time
