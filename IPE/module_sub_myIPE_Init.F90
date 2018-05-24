@@ -158,12 +158,9 @@ module module_sub_myIPE_Init
       INTEGER :: ret
 !---
 
-  call ESMF_LogWrite("sub-init_IPE STARTING:", ESMF_LOGMSG_INFO, rc=rc)
+! call ESMF_LogWrite("sub-init_IPE STARTING:", ESMF_LOGMSG_INFO, rc=rc)
 
-!t  if (IAM_ROOT()) then
-    print *,"sub-init_IPE: ESMF_ClockPrint"
-!t  endif
-  CALL ESMF_LogWrite("sub-init_IPE: ESMF_ClockPrint", ESMF_LOGMSG_INFO, rc=rc)
+! CALL ESMF_LogWrite("sub-init_IPE: ESMF_ClockPrint", ESMF_LOGMSG_INFO, rc=rc)
   call ESMF_ClockPrint(clock, options="currTime name startTime stopTime timeStep", rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
@@ -172,9 +169,6 @@ module module_sub_myIPE_Init
   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 
-!t  if (IAM_ROOT()) then
-    print *,"sub-init_IPE: ESMF_ClockGet"
-!t  endif
   CALL ESMF_LogWrite("sub-init_IPE: ESMF_ClockGet", ESMF_LOGMSG_INFO, rc=rc)
   call ESMF_ClockGet(clock, &
          timeStep=timeStep, &
@@ -187,11 +181,7 @@ module module_sub_myIPE_Init
       	  file=__FILE__)) &
           return  ! bail out
 
-!t  if (IAM_ROOT()) then
-    print *,"sub-init_IPE: ESMF_TimePrint"
-!t  endif
-
-  CALL ESMF_LogWrite("sub-init_IPE: ESMF_TimePrint", ESMF_LOGMSG_INFO, rc=rc)
+! CALL ESMF_LogWrite("sub-init_IPE: ESMF_TimePrint", ESMF_LOGMSG_INFO, rc=rc)
   call ESMF_TimePrint(currTime, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
@@ -199,10 +189,7 @@ module module_sub_myIPE_Init
           return  ! bail out
 
 
-!t  if (IAM_ROOT()) then
-    print *,"sub-init_IPE: ESMF_TimeGet"
-!t  endif
-  CALL ESMF_LogWrite("sub-init_IPE: ESMF_TimeGet", ESMF_LOGMSG_INFO, rc=rc)
+! CALL ESMF_LogWrite("sub-init_IPE: ESMF_TimeGet", ESMF_LOGMSG_INFO, rc=rc)
 
 call ESMF_TimeGet(currtime, yy=NYEAR,mm=mm,dd=dd,d_i8=d_i8,h=h,m=m,s=s,rc=rc)
 
@@ -214,7 +201,6 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
      print *,'NYEAR=', NYEAR,' d_i8=',d_i8
      print *, "The clock's final current time is NYEAR=", NYEAR, "/MM=", MM, "/DD=", DD, &
                " H=", H, ":M=", M, ":S=", S
-     print *, "GHGM START DATETIME ", NYEAR, MM, DD, H, M, S
      fmt = '(i2.2)'
      fmt1 = '(i4.4)'
      write (yy_str,fmt1) NYEAR
@@ -246,22 +232,15 @@ call ESMF_TimeGet(stoptime, yy=yystop,mm=mmstop,dd=ddstop,h=hstop,m=mstop,s=ssto
 
 !input to IPE (values in IPE.inp will no longer be used!)
   ! get NDAY
-!t     if (IAM_ROOT()) then
-       print *,"sub-init_IPE: ESMF_CalendarGet"
-!t     endif
-     CALL ESMF_LogWrite("sub-init_IPE: CalendarGet", ESMF_LOGMSG_INFO, rc=rc)
+!    CALL ESMF_LogWrite("sub-init_IPE: CalendarGet", ESMF_LOGMSG_INFO, rc=rc)
      call ESMF_CalendarGet(calendar, daysPerMonth=daysPerMonth, rc=rc)
 if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
       	  file=__FILE__)) &
           return  ! bail out
 
-     print *,"Days Per Month ",daysPerMonth
      NDAY = dd + SUM ( daysPerMonth(1:mm-1) )
-     print *,'GHGM IPE INIT : NDAY = ', NDAY
      start_time = H*3600 + M*60 + S  !UT in seconds
-     print *,'GHGM IPE INIT : start_time = ', start_time
- 
 
 ! i would need to get corresponding kp & ap here...  
 
@@ -274,7 +253,7 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
   ! Scientific content of initialize routine goes here.
 
 !--- obtain global vm information
-      CALL ESMF_LogWrite("sub-init_IPE: ESMF_VMGetCurrent", ESMF_LOGMSG_INFO, rc=rc)
+!     CALL ESMF_LogWrite("sub-init_IPE: ESMF_VMGetCurrent", ESMF_LOGMSG_INFO, rc=rc)
       call ESMF_VMGetCurrent(vm=vm_IPE, rc=rc)
 
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -283,7 +262,7 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
           return  ! bail out
 
 !--- obtain MPI communicator:
-      CALL ESMF_LogWrite("sub-init_IPE: ESMF_VMGet", ESMF_LOGMSG_INFO, rc=rc)
+!     CALL ESMF_LogWrite("sub-init_IPE: ESMF_VMGet", ESMF_LOGMSG_INFO, rc=rc)
       call ESMF_VMGet(vm=vm_IPE, mpiCommunicator=MPI_COMM_IPE, rc=rc)
 
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -292,15 +271,9 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
      	 return  ! bail out
 
       call MPI_Barrier(MPI_COMM_IPE, ierr)
-!t if (IAM_ROOT()) then
-      print *,'NUOPC MPI communicator=',MPI_COMM_IPE
-!t endif
 
 ! after obtaining comm from ESMF
       call MPI_Comm_size(MPI_COMM_IPE, size, ierr)
-!t if (IAM_ROOT()) then
-      print *, "Number of PETs in communicator: ", size 
-!t endif
 
 !nm20160315---start copy driver_ipe_sms.f90
   call sms_start(ppp__status)
@@ -317,7 +290,7 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
  parallelBuild=.true.
 ! set up input parameters
 !g      ret = gptlstart ('read_input')
-      CALL ESMF_LogWrite("sub-initialize_IPE: read_input_parameters", ESMF_LOGMSG_INFO, rc=rc)
+!     CALL ESMF_LogWrite("sub-initialize_IPE: read_input_parameters", ESMF_LOGMSG_INFO, rc=rc)
       CALL read_input_parameters ( )
       !ut_start_perp_trans = 0
       ut_start_perp_trans = start_time 
@@ -329,21 +302,14 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !--- unit=8
 !filename ='FLIP_ERROR_FLAG_'//TRIM(string_tmp)//'.log'
       CALL open_file ( 'FLIP_ERR', PRUNIT,'formatted','unknown') !open by all processors
-!!SMS$SERIAL BEGIN
-
-!t      if (IAM_ROOT()) then
-      CALL ESMF_LogWrite("sub-initialize_IPE: open_output_files", ESMF_LOGMSG_INFO, rc=rc)	
+!     CALL ESMF_LogWrite("sub-initialize_IPE: open_output_files", ESMF_LOGMSG_INFO, rc=rc)	
       CALL open_output_files ( )
-PRINT*, 'JAS : Finished open_output_files'
-!t      endif
-!!SMS$SERIAL END
 !g      ret = gptlstop  ('open_output_files')
 
 ! set up plasma grids by reading file
 !g      ret = gptlstart ('init_plasma_grid')
-      CALL ESMF_LogWrite("sub-initialize_IPE: init_plasma_grid", ESMF_LOGMSG_INFO, rc=rc)
+!     CALL ESMF_LogWrite("sub-initialize_IPE: init_plasma_grid", ESMF_LOGMSG_INFO, rc=rc)
       CALL init_plasma_grid ( )
-PRINT*, 'JAS : Finished init_plasma_grid'
 !g      ret = gptlstop  ('init_plasma_grid')
 
 !!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-1")
@@ -388,10 +354,7 @@ PRINT*, 'JAS : Finished init_plasma_grid'
 IF ( sw_output_plasma_grid ) THEN
 !g  ret = gptlstart ('output_plasma_grid')
 
-      if (IAM_ROOT()) then
-  print *, 'sub-init_p: output plasma_grid'
-      endif
-  CALL ESMF_LogWrite("sub-initialize_IPE: output_plasma_grid", ESMF_LOGMSG_INFO, rc=rc)
+! CALL ESMF_LogWrite("sub-initialize_IPE: output_plasma_grid", ESMF_LOGMSG_INFO, rc=rc)
   CALL output_plasma_grid ( )
 !g  ret = gptlstop  ('output_plasma_grid')
 END IF
@@ -438,16 +401,10 @@ END IF
 ! initialise the flux tubes from previous runs
       IF ( HPEQ_flip==0.0 ) THEN
 
-        if (IAM_ROOT()) then
-      	  print *,'before CALL io_plasma_bin finished! READ: start_time=', start_time,stop_time
-        endif
 !g        ret = gptlstart ('io_plasma_bin')
-        CALL ESMF_LogWrite("sub-initialize_IPE: io_plasma_bin", ESMF_LOGMSG_INFO, rc=rc)
+!       CALL ESMF_LogWrite("sub-initialize_IPE: io_plasma_bin", ESMF_LOGMSG_INFO, rc=rc)
         CALL io_plasma_bin ( 2, start_time, model_start_time )
 !g        ret = gptlstop  ('io_plasma_bin')
-        if (IAM_ROOT()) then
-          print *,'after CALL io_plasma_bin finished! READ: start_time=', start_time,' stop_time=',stop_time
-        endif
 
       END IF
 !nm20160608: IPE internal time management
@@ -498,7 +455,7 @@ END IF
 ! read in E-field
 !g      ret = gptlstart ('init_eldyn')
       IF ( sw_perp_transport>=1 ) THEN
-        CALL ESMF_LogWrite("sub-initialize_IPE: init_eldyn", ESMF_LOGMSG_INFO, rc=rc)
+!       CALL ESMF_LogWrite("sub-initialize_IPE: init_eldyn", ESMF_LOGMSG_INFO, rc=rc)
         CALL init_eldyn ( )
       ENDIF
 !g      ret = gptlstop  ('init_eldyn')
@@ -546,7 +503,7 @@ END IF
 
       call tiros_init_ipe()
 
-  call ESMF_LogWrite("sub-initialize_IPE finished:", ESMF_LOGMSG_INFO, rc=rc)
+! call ESMF_LogWrite("sub-initialize_IPE finished:", ESMF_LOGMSG_INFO, rc=rc)
 
   rc = ESMF_SUCCESS
 
