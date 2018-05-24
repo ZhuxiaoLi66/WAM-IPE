@@ -106,18 +106,6 @@ CONTAINS
 
        theta_t0(ihem) = theta_t1(ihem) - ( VEXBth(lp,mp) * REAL(perp_transport_time_step) ) / r
 
-!       IF (abs(theta_t0_test-theta_t0(1)).gt.0.002) THEN 
-!!SMS$ignore begin
-!        PRINT *,'TWFANG Step_back_R,mp',mp,'lp',lp
-!        PRINT *,'theta_t0',theta_t0(1)*180./pi,'theta_t0_test',theta_t0_test*180./pi
-!!SMS$ignore end
-!       ELSE
-!!SMS$ignore begin
-!        PRINT *,'TWFANG Step_back_R,not finding anything'
-!!SMS$ignore end
-!
-!       ENDIF
-
 !rph will be needed for zonal transport (sw_convection_footpoint_0_or_apex_1=0)
 !       rph = r90
 
@@ -125,14 +113,8 @@ CONTAINS
         r0_apex = ( earth_radius + ht90 ) /  coslambda_m /  coslambda_m
 
       IF ( r0_apex<(minAltitude+earth_radius) ) THEN
-!SMS$ignore begin
-        PRINT *,'sub-StepbackR1:!r0_apex too small!',r0_apex,VEXBup(lp,mp),lp,mp, (minAltitude+earth_radius)
-!SMS$ignore end
         r0_apex = minAltitude+earth_radius
       else IF ( r0_apex>(maxAltitude+earth_radius) ) THEN
-!SMS$ignore begin
-        PRINT *,'sub-StepbackR1:!r0_apex too big!',r0_apex, VEXBup(lp,mp),lp,mp, (maxAltitude+earth_radius)
-!SMS$ignore end
         r0_apex = maxAltitude+earth_radius
       ENDIF
 

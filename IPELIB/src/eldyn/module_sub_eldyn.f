@@ -60,22 +60,9 @@
 !---local
       real :: kp ! 
       integer :: j
-!c initiate
-!c calculate efield only if diff time step
-!      if(utsec.ne.utsec_last) then
-!        utsec_last=utsec
       iday = NDAY !254 ! dayno                   ! day of year
-!c       imo=idate(2)
-!c       iday_m=idate(3) 
-!!!need to create a routine to calculate month/day from NDAY!!!
-!      imo=3                     !month
       iyear = NYEAR 
-!nm20121127: calculate month/day from iyear and iday
-!dbg20170916
-      print*,'sub-eld:iyear',iyear,iday,utime
       call cal_monthday ( iyear,iday, imo,iday_m )
-!nm20130402: temporarily hard-code the iday to get b4bconfirmed.
-!      iday_m=15                 !day of month 
 
       if ( sw_ctip_input ) then
         LPI = INT( ( utime - utime0LPI ) / real(input_params_interval) ) &
@@ -92,15 +79,6 @@
 !      bz = .433726 - kp*(.0849999*kp + .0810363)                        &
 !     &        + f107d*(.00793738 - .00219316*kp)
  
-!dbg20170916
-      print*,'sub-eld: utime=', utime,' start_time=', start_time
-      if ( utime==start_time ) then
-        print *,'iday',iday, 'imo',imo,' iday_m',iday_m,' iyear',iyear
-        print *,' kp',kp
-      end if
-
-!nm20151104
-!nm20151105
 !-------------------------------------------------------------------
 ! find latitudinal shift
 !-------------------------------------------------------------------
@@ -113,20 +91,10 @@
                exit
             end if
          end do 
-         print *,'bnd_wei=',bnd_wei,' lat_sft=',lat_sft                 &
-     &        ,' ilat_sft=',ilat_sft,' ef_max=',ef_max
       end if                    !( sw_bnd_wei==1 ) then 
 !------------------------------------------------------------------
 
       call get_efield
-!dbg        print*,'www'
-!        ed11=ed1
-!        ed22=ed2
-      IF ( utime==start_time ) THEN
-          write(unit=2003,FMT='(20f10.4)')ylatm
-          write(unit=2004,FMT='(20f10.4)')ylonm
-      END IF
-!      endif !if(utsec.ne.utsec_last) then
 
 
 ! get ED1/2(nmp=80 X nlp=170) at 90km from potent(181x91)at 130km
@@ -134,27 +102,8 @@
         j0=-999 !missing_value in module_find_nei...
       endif
       CALL GET_EFIELD90km ( utime )
-      IF ( utime==start_time ) THEN 
-        write(unit=2007,FMT='(20f10.4)') (90.-theta90_rad*rtd)    
-      ENDIF
 
-      write(unit=1002,FMT='(i8,3F8.2)')utime,(maxval(potent)*1.0E-03)   & !vmax [kV]
-     &,(minval(potent)*1.0E-03)                                         & !vmin
-     &,(( maxval(potent)-minval(potent) )*1.0E-03)  !cpcp
-      IF ( MOD( (utime-start_time),ip_freq_output)==0 ) THEN
-!SMS$SERIAL(<ed1_90,ed2_90,IN>:default=ignore) BEGIN
-        write(unit=2000,FMT='(20E12.4)')potent !V
-        write(unit=2001,FMT='(20E12.4)')ed1 *1.0E+03 !V/m-->mV/m
-        write(unit=2002,FMT='(20E12.4)')ed2 *1.0E+03 !V/m-->mV/m
-        write(unit=2008,FMT='(20E12.4)')ed1_90 *1.0E+03 !V/m-->mV/m
-        write(unit=2009,FMT='(20E12.4)')ed2_90 *1.0E+03 !V/m-->mV/m
-        write(unit=2010,FMT='(I12)')utime !sec
-!SMS$SERIAL END
-      END IF ! ( mod( (utime
-!c
       return
-!      end
-!      end program ts_efield
 !
       END SUBROUTINE eldyn
       END MODULE module_sub_eldyn

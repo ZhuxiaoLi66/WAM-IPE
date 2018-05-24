@@ -139,18 +139,6 @@ CONTAINS
             Qint_dum(jth, ip1d) = (factor2*(plasma_3d_old(inorth,lp0,mp0,jth) - plasma_3d_old(isouth,lp0,mp0,jth))) + plasma_3d_old(isouth,lp0,mp0,jth)
 !         ENDIF
 
-!dbg20160417 error STOP
-          IF ( Qint_dum(jth, ip1d)<=zero ) THEN
-!SMS$IGNORE begin
-            PRINT*,mype,utime_save,'subQint(0):INVALID Qint !STOP!',Qint_dum(jth, ip1d) &
-            &,plasma_3d_old(inorth,lp0,mp0,jth) &
-            &,plasma_3d_old(isouth,lp0,mp0,jth) &
-            &,lp,mp,lp0,mp0,ip1d,inorth,isouth,factor2,jth
-            IF(jth<=TSP) PRINT*,jth,'after LOG!',( factor2*(ALOG10(plasma_3d_old(iNorth,lp0,mp0,jth)) - ALOG10(plasma_3d_old(iSouth,lp0,mp0,jth))) + ALOG10(plasma_3d_old(iSouth,lp0,mp0,jth)) )
-!SMS$IGNORE end
-!           STOP
-          ENDIF !( jth==1.and.Qint_dum(jth, ip1d)<=0. ) THEN
-
         ENDDO jth_loop0 !jth=1,iT !=TSP+3
 
 !B iT+1=iB: B magnetic field intensity
@@ -172,18 +160,6 @@ CONTAINS
           IF ( jth==4.and.sw_inpls<=0 ) CYCLE jth_loop1
           Qint_dum(jth   ,ip1d) = plasma_3d_old(isouth,lp0,mp0,jth)
 
-
-!dbg20160417
-          IF ( jth==1.and.Qint_dum(jth, ip1d)<=zero ) THEN
-!SMS$IGNORE begin
-            PRINT *,mype,'sub-Qint(1)',lp,mp,lp0,mp0,jth,isouth, plasma_3d_old(isouth,lp0,mp0,jth)
-!SMS$IGNORE end
-            STOP
-          ENDIF
-
-
-
-
         ENDDO jth_loop1 !jth
         !B:
         Qint_dum(iB      ,ip1d) = plasma_grid_3d(isouth,lp0,mp0,IBM)
@@ -199,13 +175,6 @@ CONTAINS
           !nm20170328: n+ inpls<=0
           IF ( jth==4.and.sw_inpls<=0 ) CYCLE jth_loop2
           Qint_dum(jth   ,ip1d) = plasma_3d_old(inorth,lp0,mp0,jth)
-          !dbg20160417
-          IF ( jth==1.and.Qint_dum(jth, ip1d)<=zero ) THEN
-!SMS$IGNORE begin
-            PRINT *,mype,'sub-Qint(2)',lp,mp,lp0,mp0,jth,inorth, plasma_3d_old(inorth,lp0,mp0,jth)
-!SMS$IGNORE end
-            STOP
-          ENDIF
         ENDDO jth_loop2!jth
         !B
         Qint_dum(iB      ,ip1d) = plasma_grid_3d(inorth,lp0,mp0,IBM)

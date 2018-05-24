@@ -62,14 +62,6 @@ CONTAINS
 !!!dbg20120125:  mp_t0(ihem,1) = INT( (mlon_deg/dlonm90km) , int_prec )+1
 !!!dbg20120125:  mp_t0(ihem,2) = mp_t0(ihem,1)+1
       mpx_loop: DO mpx=0,NMP
-        IF(mpx+1 > mpHaloSize) THEN
-!SMS$ignore begin
-          PRINT*,'mpx+1 > mpHaloSize in find_neighbor_grid_R: mpx=',mpx,' mpHaloSize=',mpHaloSize,' mp=',mp,' lp=',lp
-          PRINT*,'Increase the halo size or take smaller time steps.'
-          PRINT*,'STOPping in find_neighbor_grid_R:mype=',mype
-!SMS$ignore end
-          STOP
-        ENDIF
         MaxMpHaloUSEd = max(MaxMpHaloUSEd,mpx+1)
         mpp=mp+mpx
         mpm=mp-mpx
@@ -82,9 +74,6 @@ CONTAINS
           mp_t0(ihem,2) =mpp+1
 
 !dbg20140205 debug zonal transport
-          IF( mpp==nmp ) THEN
-            PRINT *,'!dbg20140205(1) mp=',mp, mp_t0(ihem,1), mp_t0(ihem,2), phi_t0(ihem)*rtd,mpp,ihem
-          ENDIF
           EXIT mpx_loop
         ENDIF
         IF(mpm>1.and.mlon_rad(mpm)<=phi_t0(ihem).AND.phi_t0(ihem)<mlon_rad(mpm-1)) THEN
@@ -96,9 +85,7 @@ CONTAINS
 
 !dbg20140205: correction IF mp>nmp
       IF (mp==nmp.and.mp_t0(ihem,2)>nmp ) THEN
-        PRINT *,'!dbg20140205! mp_t0',mp_t0(ihem,2),mp
         mp_t0(ihem,2)=mp_t0(ihem,2)-nmp
-        PRINT *,'!dbg20140205! corrected mp_t0',mp_t0(ihem,2)
       ENDIF
 
 
@@ -110,8 +97,6 @@ CONTAINS
         IF ( theta_t0(ihem) < minTheta ) THEN
           lp_t0(ihem,1)=missing_value !-999
           lp_t0(ihem,2)=1
-          PRINT *,'sub-Fi_R: mp',mp,' lp',lp,'needs special pole interpolation'
-          RETURN
         ELSE IF ( theta_t0(ihem) > maxTheta ) THEN
           PRINT *,'sub-Fi_R: !STOP! invalid theta_t0',mp,lp,theta_t0(ihem),maxTheta
           STOP
@@ -123,14 +108,6 @@ CONTAINS
 !d PRINT *,JMIN_IN(l),JMAX_IS(l), midpnt(l),z_t0
 
           lpx_loop: DO lpx=0,NLP-1  !nearest point-->EQ
-            IF(lpx+1 > lpHaloSize) THEN
-!SMS$ignore begin
-              PRINT'("Searching for inner,outer flux tube: lpx+1>lpHaloSize: lpx=",i4,"lpHaloSize=",i2,"lp=",i4)',lpx,lpHaloSize,lp
-              PRINT*,'Increase the halo size or take smaller time steps.'
-              PRINT*,'STOPping in find_neighbor_grid_R: mype=',mype
-!SMS$ignore end
-              STOP
-            ENDIF
             MaxLpHaloUSEd = max(MaxLpHaloUSEd,lpx+1)
             lpp=lp+lpx
             IF(lpp > NLP-1) lpp= lpp-NLP+1
@@ -145,12 +122,6 @@ CONTAINS
               lp_t0(ihem,1)=lpm-1 !1=outer flux tube
               lp_t0(ihem,2)=lpm   !2=inner flux tube
               EXIT lpx_loop
-            ENDIF
-            IF (lpx==NLP-1) THEN
-              PRINT*,'Could not find inner,outer flux tube',lpp,lpm,midpnt(lpp),midpnt(lpp+1),midpnt(lpm),midpnt(lpm+1)
-              PRINT*,Z_t0,plasma_grid_Z(midpnt(lpp+1),lpp+1),plasma_grid_Z(midpnt(lpp),lpp),plasma_grid_Z(midpnt(lpm+1),lpm+1),plasma_grid_Z(midpnt(lpm),lpm)
-              PRINT*,'STOPping in find_neighbor_grid_R'
-              STOP
             ENDIF
           ENDDO lpx_loop !: DO lpx=0,NLP-1
 
