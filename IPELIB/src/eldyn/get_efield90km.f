@@ -72,12 +72,6 @@
           theta130_rad = ( 90.0 - (ylatm(j)-90.0) ) * dtr
           CALL get_theta1_at_ht1(ht130,theta130_rad,ht90,theta90_rad(j))
         END DO mlat_loop130km0
-!SMS$SERIAL BEGIN
-      OPEN( UNIT=6000, FILE='plasma_grid_mag_colat.check' )
-      WRITE( 6000, * ) plasma_grid_mag_colat
-      CLOSE( 6000 )
-!SMS$SERIAL END
-
 
 !dbg20160408 sms debug: original parallel begin location
 !SMS$PARALLEL(dh, lp, mp) BEGIN

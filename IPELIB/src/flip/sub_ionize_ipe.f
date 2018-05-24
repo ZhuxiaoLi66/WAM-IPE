@@ -1,4 +1,3 @@
-!      program IONIZE_IPE
       subroutine IONIZE_IPE ( 
      & flipdim,z,gr,on,o2n,n2n,hn,hen,tn
      &,gm_lat,mlt
@@ -34,52 +33,6 @@
          imax1 = 4
       end if
 
-!nm      do i=1,imax1
-!nm         READ(UNIT=UNIT1,FMT=*) string_dum
-!         print *, i, string_dum
-!nm      end do
-!2)
-!nm      do i=1,FLIPDIM
-!nm        READ(UNIT=UNIT1,FMT='(F10.2,1P,E14.7,21E9.2)') Z(i),SL
-!nm     &,GL(i),BM,GR(i),SZA,ON(i),HN(i),N2N(i),
-!nm     &O2N(i),HEN(i),N4S
-!        print *, i, Z(i),GR(i),ON(i),HN(i),
-!     &N2N(i),O2N(i),HEN(i)
-!nm      end do
-!
-!nm      CLOSE(UNIT=UNIT1)
-!      print *,'reading ', filename1, ' finished!'
-
-!
-!
-!      print *,'(2) start reading ', filename2
-!nm      OPEN(UNIT=UNIT2,FILE=TRIM(filename2),STATUS='old',
-!nm     &FORM='formatted',IOSTAT=istat)
-!1)
-!nm      do i=1,imax2
-!nm         READ(UNIT=UNIT2,FMT=*) string_dum
-!         print *, i, string_dum
-!nm      end do
-!2)
-!nm      do i=1,FLIPDIM
-!nm         READ(UNIT=UNIT2,FMT='(3F10.2,1P,22E9.2)') 
-!nm      &Z(i),TN(i)
-!nm      &,UN,NNO 
-!nm      &,EHT,TI,TE,OP,HP,MINP,HEP
-!nm      &,PHION,PRODOP,NP,EQN2D,NPLSPRD
-
-!         print *, i, Z(i),TN(i)
-
-!nm       end do
-!
-!nm       CLOSE(UNIT=UNIT2)
-!      print *,'reading ', filename2, ' finished!'
-!
-! before the call to tiros_ionize read in the TIROS energy influx EMAPS
-! characteristic energy CMAPS, and TIROS spectra DJSPECTRA
-! read in emaps and cmaps and spectra
-!
-       call tiros_init_ipe()
 !
 ! tiros_ionize returns ionization rates for O, O2, and N2 for a given 
 ! geomagnetic latitude GL and magnetic local time MLT based on 
@@ -115,6 +68,4 @@
 !
       return 
       end subroutine IONIZE_IPE
-!      STOP
-!      end program IONIZE_IPE
 

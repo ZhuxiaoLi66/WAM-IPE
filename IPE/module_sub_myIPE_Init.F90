@@ -544,6 +544,8 @@ END IF
 
 !nm20160315---end copy driver_ipe_sms.f90
 
+      call tiros_init_ipe()
+
   call ESMF_LogWrite("sub-initialize_IPE finished:", ESMF_LOGMSG_INFO, rc=rc)
 
   rc = ESMF_SUCCESS
