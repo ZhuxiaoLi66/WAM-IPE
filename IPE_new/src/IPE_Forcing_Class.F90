@@ -97,10 +97,10 @@ CONTAINS
       forcing % kp_1day_avg       = 3.0_prec
       forcing % ap                = 0.0_prec
       forcing % ap_1day_avg       = 0.0_prec
-      forcing % nhemi_power       = 2.0_prec
-      forcing % nhemi_power_index = 2
-      forcing % shemi_power       = 2.0_prec
-      forcing % shemi_power_index = 2
+      forcing % nhemi_power       = 21.0_prec
+      forcing % nhemi_power_index = 6
+      forcing % shemi_power       = 21.0_prec
+      forcing % shemi_power_index = 6
 
       forcing % solarwind_dBdt     = 1.0_prec
       forcing % solarwind_angle    = 0.0_prec
@@ -248,7 +248,7 @@ CONTAINS
 
          READ(fUnit,*)
          READ(fUnit,*)
-         READ(fUnit,'(1X,5E11.4)') forcing % djspectra(1:n_flux_ipe,iBand)
+         READ(fUnit,'(1X,5E10.4)') forcing % djspectra(1:n_flux_ipe,iBand)
          READ(fUnit,*)
 
       ENDDO
