@@ -23,7 +23,7 @@ CONTAINS
   &,  mp_t0 ,    lp_t0 )
     USE module_precision
     USE module_physical_constants,ONLY: rtd,earth_radius
-    USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_GL,JMIN_IN,JMAX_IS,mlon_rad,dlonm90km,plasma_grid_Z,minTheta,maxTheta,midpnt
+    USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_mag_colat,JMIN_IN,JMAX_IS,mlon_rad,dlonm90km,plasma_grid_Z,minTheta,maxTheta,midpnt
     USE module_IPE_dimension,ONLY: NMP,NLP
     USE module_input_parameters,ONLY:sw_perp_transport,sw_debug,lpHaloSize,mpHaloSize,MaxLpHaloUSEd,MaxMpHaloUSEd,mype,parallelBuild
     IMPLICIT NONE
@@ -118,17 +118,17 @@ CONTAINS
         ELSE IF ( theta_t0(ihem) > maxTheta ) THEN
           PRINT *,'sub-Fi_R: !STOP! invalid theta_t0',mp,lp,theta_t0(ihem),maxTheta
           STOP
-        ELSE   !IF ( plasma_grid_GL( JMIN_IN(lp),lp ) <= theta_t0(ihem) ) THEN
+        ELSE   !IF ( plasma_grid_mag_colat( JMIN_IN(lp),lp ) <= theta_t0(ihem) ) THEN
 
 !!!UNDERCONSTRUCTION!!!
-          IF(sw_debug) PRINT *,'sub-Fi_R: check GL NH[deg]',(90.-plasma_grid_GL( JMIN_IN(lp),lp )*rtd)
+          IF(sw_debug) PRINT *,'sub-Fi_R: check GL NH[deg]',(90.-plasma_grid_mag_colat( JMIN_IN(lp),lp )*rtd)
 
 !    lp_min =lp-5 !not sure IF 10 is enough???
 !    IF (lp_min<=0 ) lp_min=1
-!    IF ( plasma_grid_GL( JMIN_IN(lp_min),lp_min ) > theta_t0(ihem) ) THEN
+!    IF ( plasma_grid_mag_colat( JMIN_IN(lp_min),lp_min ) > theta_t0(ihem) ) THEN
 !      lp_min=lp-5
 !      IF (lp_min<=0 ) lp_min=1
-!      IF ( plasma_grid_GL( JMIN_IN(lp_min),lp_min ) > theta_t0(ihem) ) THEN
+!      IF ( plasma_grid_mag_colat( JMIN_IN(lp_min),lp_min ) > theta_t0(ihem) ) THEN
 !        PRINT *,'sub-Fi_R:NH !STOP! not sure IF this is working???'
 !        STOP
 !      ENDIF
@@ -182,7 +182,7 @@ CONTAINS
 
           IF(sw_debug) PRINT *,'sub-Fi_R: mp1=',mp_t0(ihem,1),' mp2=',mp_t0(ihem,2)
           IF(sw_debug) PRINT *,'sub-Fi_R: mlon',mlon_rad(mp_t0(ihem,1))*rtd, phi_t0(ihem)*rtd, mlon_rad(mp_t0(ihem,2))*rtd, mp_t0(ihem,1:2)
-          IF(sw_debug) PRINT *,'sub-Fi_R: mlat',(90.-plasma_grid_GL( JMIN_IN(lp_t0(ihem,1)),lp_t0(ihem,1) )*rtd), (90.-theta_t0(ihem)*rtd),(90.- plasma_grid_GL( JMIN_IN(lp_t0(ihem,2)),lp_t0(ihem,2) )*rtd)
+          IF(sw_debug) PRINT *,'sub-Fi_R: mlat',(90.-plasma_grid_mag_colat( JMIN_IN(lp_t0(ihem,1)),lp_t0(ihem,1) )*rtd), (90.-theta_t0(ihem)*rtd),(90.- plasma_grid_mag_colat( JMIN_IN(lp_t0(ihem,2)),lp_t0(ihem,2) )*rtd)
 
 
         ENDIF! ( plasma_grid_3d(IN,lp)%GL <= theta_t0(ihem) ) THEN

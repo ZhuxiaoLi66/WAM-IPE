@@ -30,7 +30,7 @@
         print *,'ALLOCATing ARRAYS',ISTOT,MaxFluxTube,NLP,NMP
         allocate( plasma_grid_3d(MaxFluxTube,NLP,NMP,6    ) &
      &,           plasma_grid_Z (MaxFluxTube,NLP          ) &
-     &,           plasma_grid_GL(MaxFluxTube,NLP          ) &
+     &,           plasma_grid_mag_colat(MaxFluxTube,NLP          ) &
      &,           r_meter2D     (MaxFluxTube,NLP          ) &
      &,           plasma_3d     (MaxFluxTube,NLP,NMP,ISTOT) &
      &,           plasma_3d_old (MaxFluxTube,NLP,NMP,ISTOT) &

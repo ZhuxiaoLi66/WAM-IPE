@@ -13,7 +13,7 @@
 SUBROUTINE flux_tube_solver ( utime,mp,lp )
   USE module_precision
   USE module_IPE_dimension,ONLY: ISPEC,ISPEV,IPDIM
-  USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,Pvalue,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d,ON_m3,HN_m3,N2N_m3,O2N_m3,HE_m3,N4S_m3,TN_k,TINF_k,un_ms1,mlon_rad
+  USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,Pvalue,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d,ON_m3,HN_m3,N2N_m3,O2N_m3,HE_m3,N4S_m3,TN_k,TINF_k,un_ms1,mlon_rad
   USE module_input_parameters,ONLY: time_step,F107D_new,F107_new,DTMIN_flip  &
   &, sw_INNO,FPAS_flip,HEPRAT_flip,COLFAC_flip,sw_IHEPLS,sw_INPLS,sw_debug,iout, start_time  &
   &, HPEQ_flip, sw_wind_flip, sw_depleted_flip, start_time_depleted &
@@ -87,7 +87,7 @@ SUBROUTINE flux_tube_solver ( utime,mp,lp )
   ZX(1:CTIPDIM)  = plasma_grid_Z(IN:IS,lp) * M_TO_KM !convert from m to km
   PCO = Pvalue(lp)  !Pvalue is a single value
   SLX(1:CTIPDIM) = plasma_grid_3d(IN:IS,lp,mp,ISL)
-  GLX(1:CTIPDIM) = pi/2. - plasma_grid_GL(IN:IS,lp)  ! magnetic latitude [radians]
+  GLX(1:CTIPDIM) = pi/2. - plasma_grid_mag_colat(IN:IS,lp)  ! magnetic latitude [radians]
   BMX(1:CTIPDIM) = plasma_grid_3d(IN:IS,lp,mp,IBM)   !Tesla
   GRX(1:CTIPDIM) = plasma_grid_3d(IN:IS,lp,mp,IGR)
 
@@ -331,7 +331,7 @@ SUBROUTINE flux_tube_solver ( utime,mp,lp )
 !dbg20160421 debug
     IF( EFLAG(2,1)/=0 .and. 32<(ipts+IN-1) .and. (ipts+IN-1)<39 )THEN
 !SMS$IGNORE begin
-      PRINT"(i2,' XION=',e10.2,f7.0,f7.1,i4,' lp=',i3,' mp=',i2,' LT=',f6.1)",mype,plasma_3d(ipts+IN-1,lp,mp,1),(plasma_grid_Z(ipts+IN-1,lp)*1.e-3),((pi/2. - plasma_grid_GL(ipts+IN-1,lp))*180./pi),(ipts+IN-1),lp,mp,ltime
+      PRINT"(i2,' XION=',e10.2,f7.0,f7.1,i4,' lp=',i3,' mp=',i2,' LT=',f6.1)",mype,plasma_3d(ipts+IN-1,lp,mp,1),(plasma_grid_Z(ipts+IN-1,lp)*1.e-3),((pi/2. - plasma_grid_mag_colat(ipts+IN-1,lp))*180./pi),(ipts+IN-1),lp,mp,ltime
 !SMS$IGNORE end
     ENDIF!(EFLAG
 

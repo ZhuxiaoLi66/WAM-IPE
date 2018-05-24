@@ -22,8 +22,8 @@ SUBROUTINE interpolate_flux_tube (mp,lp &
 &,mp_t0,lp_t0 ,&
 & utime_local) !dbg20141209
   USE module_precision
-!     plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,plasma_3d_old are all IN arrays
-  USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,ht90,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d,plasma_3d_old, mlon_rad,maxAltitude,minAltitude,minTheta,poleVal
+!     plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,plasma_3d_old are all IN arrays
+  USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,ht90,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d,plasma_3d_old, mlon_rad,maxAltitude,minAltitude,minTheta,poleVal
   USE module_input_parameters,ONLY:sw_perp_transport,sw_debug,sw_ksi,mype,lps,lpe,mps,mpe,nprocs,sw_ihepls,sw_inpls,sw_th_or_R
   USE module_IPE_dimension,ONLY: ISPEC,ISPET,IPDIM, ISTOT, NMP
   USE module_physical_constants,ONLY: earth_radius,pi,zero,rtd
@@ -150,7 +150,7 @@ SUBROUTINE interpolate_flux_tube (mp,lp &
         ELSE
           !note: this factor cannot work when lp<=6!!!
           !becaUSE rapex DOes not mean anything for lp<=6
-          lambda_m(ilp) = pi*0.5 - plasma_grid_GL( JMIN_IN(lp0),lp0 )
+          lambda_m(ilp) = pi*0.5 - plasma_grid_mag_colat( JMIN_IN(lp0),lp0 )
 
         ENDIF !
       ENDDO  !DO ilp=1,2

@@ -23,7 +23,7 @@ CONTAINS
   &,  mp_t0 ,    lp_t0 )
     USE module_precision
     USE module_physical_constants,ONLY: rtd,earth_radius,pi
-    USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_GL,JMIN_IN,JMAX_IS,mlon_rad,dlonm90km,plasma_grid_Z,minTheta,maxTheta,midpnt
+    USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_mag_colat,JMIN_IN,JMAX_IS,mlon_rad,dlonm90km,plasma_grid_Z,minTheta,maxTheta,midpnt
     USE module_IPE_dimension,ONLY: NMP,NLP
     USE module_input_parameters,ONLY:sw_perp_transport,sw_debug,lpHaloSize,mpHaloSize,MaxLpHaloUSEd,MaxMpHaloUSEd,mype,parallelBuild
     USE module_PLASMA,only:utime_save
@@ -123,7 +123,7 @@ CONTAINS
         ELSE IF ( theta_t0(ihem) > maxTheta ) THEN
           PRINT *,'sub-Fi_R: !STOP! invalid theta_t0',mp,lp,theta_t0(ihem),maxTheta
           STOP
-        ELSE   !IF ( plasma_grid_GL( JMIN_IN(lp),lp ) <= theta_t0(ihem) ) THEN
+        ELSE   !IF ( plasma_grid_mag_colat( JMIN_IN(lp),lp ) <= theta_t0(ihem) ) THEN
 
           z_t0 = r0_apex - earth_radius
 
@@ -145,13 +145,13 @@ CONTAINS
 
             IF(lpm < 1) lpm= NLP-1+lpm
 
-            IF(plasma_grid_GL(JMIN_IN(lpp),lpp)<=theta_t0(ihem).AND.theta_t0(ihem)<plasma_grid_GL(JMIN_IN(lpp+1),lpp+1)) THEN
+            IF(plasma_grid_mag_colat(JMIN_IN(lpp),lpp)<=theta_t0(ihem).AND.theta_t0(ihem)<plasma_grid_mag_colat(JMIN_IN(lpp+1),lpp+1)) THEN
               lp_t0(ihem,1)=lpp   !1=outer flux tube
               lp_t0(ihem,2)=lpp+1 !2=inner flux tube
               EXIT lpx_loop
             ENDIF
 
-            IF(plasma_grid_GL(JMIN_IN(lpm-1),lpm-1)<=theta_t0(ihem).AND.theta_t0(ihem)<plasma_grid_GL(JMIN_IN(lpm),lpm)) THEN
+            IF(plasma_grid_mag_colat(JMIN_IN(lpm-1),lpm-1)<=theta_t0(ihem).AND.theta_t0(ihem)<plasma_grid_mag_colat(JMIN_IN(lpm),lpm)) THEN
               lp_t0(ihem,1)=lpm-1 !1=outer flux tube
               lp_t0(ihem,2)=lpm   !2=inner flux tube
               EXIT lpx_loop

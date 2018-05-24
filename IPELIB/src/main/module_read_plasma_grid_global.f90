@@ -17,7 +17,7 @@
 &           JMIN_IN_all,JMAX_IS_all          &
 &,          JMIN_ING   ,JMAX_ISG             &
 &,          JMIN_IN    ,JMAX_IS              &
-&,          r_meter2D, plasma_grid_GL,plasma_grid_3d,apexD,apexE,Be3,plasma_grid_Z &
+&,          r_meter2D, plasma_grid_mag_colat,plasma_grid_3d,apexD,apexE,Be3,plasma_grid_Z &
 &,          ISL,IBM,IGR,IQ,IGCOLAT,IGLON,east,north,up                             &
 &,          MaxFluxTube,minTheta,maxTheta,minAltitude,maxAltitude,midpnt,plasma_3d
         USE module_open_file,ONLY: open_file
@@ -122,14 +122,14 @@
       Be3            = zero
       plasma_grid_3d = zero
       plasma_grid_Z  = zero
-      plasma_grid_GL = zero
+      plasma_grid_mag_colat = zero
       plasma_3d      = zero
       apexD          = zero
       apexE          = zero
       r_meter2D      = zero
 !SMS$IGNORE END
 
-!SMS$SERIAL(<r_meter2D,plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,OUT> : default=ignore) BEGIN
+!SMS$SERIAL(<r_meter2D,plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,OUT> : default=ignore) BEGIN
 READ (UNIT=LUN_pgrid, FMT=*) dum0, dum1, dum2, dum3 !gr_2d, gcol_2d, glon_2d, q_coordinate_2d
 do lp=1,NLP
   r_meter2D    (JMIN_IN(lp):JMAX_IS(lp),lp) = dum0(JMIN_ING(lp):JMAX_ISG(lp),1)                !r_meter
@@ -146,7 +146,7 @@ print *,"reading r_meter etc completed"
 
 READ (UNIT=LUN_pgrid, FMT=*) dum0          !bcol_2d
 do lp=1,NLP
-  plasma_grid_GL(JMIN_IN(lp):JMAX_IS(lp),lp) = dum0(JMIN_ING(lp):JMAX_ISG(lp),1) !GL
+  plasma_grid_mag_colat(JMIN_IN(lp):JMAX_IS(lp),lp) = dum0(JMIN_ING(lp):JMAX_ISG(lp),1) !GL
 enddo
 
 
@@ -161,8 +161,8 @@ print *,"reading SL_meter etc completed"
 !SMS$SERIAL END
 !SMS$EXCHANGE(plasma_grid_3d)
 
-minTheta=plasma_grid_GL(JMIN_IN(  1),  1)
-maxTheta=plasma_grid_GL(JMIN_IN(NLP),NLP) 
+minTheta=plasma_grid_mag_colat(JMIN_IN(  1),  1)
+maxTheta=plasma_grid_mag_colat(JMIN_IN(NLP),NLP) 
 !dbbg20120301: temporary solution in stepback_mag_R to keep flux tube within the sim region, instead of stopping
 midpoint_min = JMIN_IN(NLP) + ( JMAX_IS(NLP) - JMIN_IN(NLP) )/2
 midpoint_max = JMIN_IN(  1) + ( JMAX_IS(  1) - JMIN_IN(  1) )/2

@@ -18,7 +18,7 @@
 !--------------------------------------------  
       SUBROUTINE get_FLIP_grid ( mp,lp )
       USE module_precision
-      USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_3d,plasma_grid_GL,plasma_grid_Z,mlon_rad,ht90,JMIN_IN,JMAX_IS,Pvalue,apexD,east,north,up,ISL,IBM,IGR,IQ,IGCOLAT,IGLON
+      USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_3d,plasma_grid_mag_colat,plasma_grid_Z,mlon_rad,ht90,JMIN_IN,JMAX_IS,Pvalue,apexD,east,north,up,ISL,IBM,IGR,IQ,IGCOLAT,IGLON
       USE module_input_parameters,ONLY:NYEAR,NDAY,sw_debug,iout  
 !, PCO_flip,BLON_flip  !20120223
       USE module_physical_constants,ONLY: pi
@@ -85,7 +85,7 @@ plasma_grid_3d(in:is,lp,mp,ISL) = SL(1:JMAX)/M_to_CM  !cm-->m
       print "('SL_meter SH',3E12.4)",plasma_grid_3d(is-2:is,lp,mp,ISL)
 
 plasma_grid_3d(in:is,lp,mp,IBM)  =  BM(1:JMAX)*1.0E-4    !from gauss to tesla
-plasma_grid_GL(in:is,lp) = pi*0.5 - GL(1:JMAX)   ![rad]
+plasma_grid_mag_colat(in:is,lp) = pi*0.5 - GL(1:JMAX)   ![rad]
 
 
 plasma_grid_3d(in:is,lp,mp,IGCOLAT)  =  (90.0-GLATD(1:JMAX))*pi/180.0 !convert from lat[deg] to CO-LAT[rad]
@@ -99,7 +99,7 @@ print "('JMIN(IN)=',i6,'  JMAX(IS)=',i6,'  midpoint=',i5)", IN,IS, midpoint
 print "('G-LAT [deg]=NH',21f10.4)",(90.-plasma_grid_3d(in:in+20,lp,mp,IGCOLAT)*180./pi)
 print "('G-LAT [deg]=SH',21f10.4)",(90.-plasma_grid_3d(is-20:is,lp,mp,IGCOLAT)*180./pi)
 
-print "('M-LAT [deg]=',2f10.4)",(90.-plasma_grid_GL(in,lp)*180./pi),(90.-plasma_grid_GL(is,lp)*180./pi)
+print "('M-LAT [deg]=',2f10.4)",(90.-plasma_grid_mag_colat(in,lp)*180./pi),(90.-plasma_grid_mag_colat(is,lp)*180./pi)
 print "('GLON  [deg]=',2f10.4)",(plasma_grid_3d(IN,lp,mp,IGLON)*180./pi),( plasma_grid_3d(IS,lp,mp,IGLON)*180./pi)
 print "('Qvalue     =',2E12.4)", plasma_grid_3d(in,lp,mp,IQ ) , plasma_grid_3d(is,lp,mp,IQ )
 print "('BM [nT]    =',2E12.4)", plasma_grid_3d(in,lp,mp,IBM) , plasma_grid_3d(is,lp,mp,IBM)

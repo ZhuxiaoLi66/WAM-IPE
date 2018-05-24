@@ -11,7 +11,7 @@ USE module_IPE_dimension      ,ONLY: NMP,NLP,ISTOT
 USE module_physical_constants ,ONLY: earth_radius, pi, G0,zero
 USE module_input_parameters   ,ONLY: sw_debug,sw_grid,parallelBuild,mpHaloSize,nprocs,mype
 USE module_FIELD_LINE_GRID_MKS,ONLY: Pvalue,JMIN_IN,JMAX_IS, r_meter2D      &
-&, plasma_grid_GL,plasma_grid_3d,apexD,apexE,Be3,plasma_grid_Z,ISL,IBM,IGR  &
+&, plasma_grid_mag_colat,plasma_grid_3d,apexD,apexE,Be3,plasma_grid_Z,ISL,IBM,IGR  &
 & ,IQ,IGCOLAT,IGLON,east,north,up,mlon_rad,dlonm90km,apexDscalar,l_mag
 !sms$insert USE module_prepPoleVal,ONLY: prepPoleVal
 !USE module_cal_apex_param,ONLY:cal_apex_param
@@ -44,7 +44,7 @@ do lp=1,NLP
   print*,'mype=',mype,' lp=',lp,' JMIN_IN=',JMIN_IN(lp),' JMAX_IS=',JMAX_IS(lp)
 !SMS$IGNORE end
 
-  CALL Get_Pvalue_Dipole ( r_meter2D(IN,lp), plasma_grid_GL(IN,lp), Pvalue(lp) )
+  CALL Get_Pvalue_Dipole ( r_meter2D(IN,lp), plasma_grid_mag_colat(IN,lp), Pvalue(lp) )
 enddo
 
 !SMS$PARALLEL(dh, lp, mp) BEGIN
@@ -72,7 +72,7 @@ IF ( sw_debug) THEN
 print "('lp=',i6,'  IN=',i6,'  IS=',i6,'  NPTS=',i6)", lp,IN,IS,(IS-IN+1)
 print "('r [m]      =',2E12.4)", r_meter2D(in,lp),r_meter2D(is,lp)
 print "('G-LAT [deg]=',2f10.4)",(90.-plasma_grid_3d(in,lp,mp,IGCOLAT)*180./pi),(90.-plasma_grid_3d(is,lp,mp,IGCOLAT)*180./pi)
-print "('M-LAT [deg]=',2f10.4)",(90.-plasma_grid_GL(in,lp)*180./pi),(90.-plasma_grid_GL(is,lp)*180./pi)
+print "('M-LAT [deg]=',2f10.4)",(90.-plasma_grid_mag_colat(in,lp)*180./pi),(90.-plasma_grid_mag_colat(is,lp)*180./pi)
 print "('GLON  [deg]=',2f10.4)",(plasma_grid_3d(in,lp,mp,IGLON)*180./pi),(plasma_grid_3d(is,lp,mp,IGLON)*180./pi)
 print "('Qvalue     =',2E12.4)", plasma_grid_3d(in,lp,mp,IQ), plasma_grid_3d(is,lp,mp,IQ)
 print "('BM [Tesla]    =',2E12.4)", plasma_grid_3d(in,lp,mp,IBM), plasma_grid_3d(is,lp,mp,IBM)
@@ -183,9 +183,9 @@ IF ( sw_grid==0 ) THEN  !APEX
 !dbg20110831
 !d print *,'calling sub-Get_sinI'&
 !d &, i,lp,mp,sw_sinI, sinI&
-!d &, plasma_grid_GL(i), apexD(3,i,mp)%east, apexD(3,i,mp)%north, apexD(3,i,mp)%up
+!d &, plasma_grid_mag_colat(i), apexD(3,i,mp)%east, apexD(3,i,mp)%north, apexD(3,i,mp)%up
 
-           CALL Get_sinI ( sw_sinI, sinI, plasma_grid_GL(i,lp) &
+           CALL Get_sinI ( sw_sinI, sinI, plasma_grid_mag_colat(i,lp) &
      &, apexD(i,lp,mp,east,3), apexD(i,lp,mp,north,3), apexD(i,lp,mp,up,3) ) 
            plasma_grid_3d(i,lp,mp,IGR)  =  G0 * ( earth_radius * earth_radius ) / ( r_meter2D(i,lp) * r_meter2D(i,lp) ) * sinI * (-1.0)
 
@@ -217,7 +217,7 @@ END IF !( sw_grid==0 ) THEN  !APEX
 
 !debug20110314
 if( sw_debug .and. mp==1 ) then
-print *,'lp=',lp,' in=',in,' is=',is,(is-in+1),(90.-plasma_grid_GL(in,lp)*180./pi)
+print *,'lp=',lp,' in=',in,' is=',is,(is-in+1),(90.-plasma_grid_mag_colat(in,lp)*180./pi)
 endif !(mp==1) then
 
        END DO apex_latitude_height_loop   !: DO lp = 1,NLP

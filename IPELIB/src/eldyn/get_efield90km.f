@@ -20,7 +20,7 @@
       USE module_physical_constants,ONLY:pi,rtd,dtr,earth_radius,zero
       USE module_eldyn,ONLY:j0,j1,theta90_rad,ed1_90,ed2_90,coslam_m
       USE module_IPE_dimension,ONLY: NMP,NLP
-      USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_GL,JMIN_IN,JMAX_IS &
+      USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_mag_colat,JMIN_IN,JMAX_IS &
      &,mlon_rad,ht90,Be3,apexE,VEXBup,east,north,up, VEXBe,l_mag, VEXBth
       USE module_input_parameters,ONLY: sw_debug,NYEAR,NDAY,sw_exb_up    &
      &,sw_perp_transport,lpmin_perp_trans,lpmax_perp_trans,mype          &
@@ -77,8 +77,8 @@
           endif
         END DO mlat_loop130km0
 !SMS$SERIAL BEGIN
-      OPEN( UNIT=6000, FILE='plasma_grid_GL.check' )
-      WRITE( 6000, * ) plasma_grid_GL
+      OPEN( UNIT=6000, FILE='plasma_grid_mag_colat.check' )
+      WRITE( 6000, * ) plasma_grid_mag_colat
       CLOSE( 6000 )
 !SMS$SERIAL END
 
@@ -92,38 +92,38 @@
 ! NH
 !memo: mlat90_deg=(90.-plasma_grid_3d(IN,mp)%GL*rtd)
           IN = JMIN_IN(lp)
-          coslam_m(1,lp)=COS(pi*0.5-plasma_grid_GL(IN,lp))
+          coslam_m(1,lp)=COS(pi*0.5-plasma_grid_mag_colat(IN,lp))
 
 !!SMS$IGNORE begin
 !       print*,'coslam=',coslam_m(1,lp),' lp=',lp,' IN=',IN,' mype',mype &
-!     &,plasma_grid_GL(IN,lp),(pi*0.5-plasma_grid_GL(IN,lp))
+!     &,plasma_grid_mag_colat(IN,lp),(pi*0.5-plasma_grid_mag_colat(IN,lp))
 !SMS$IGNORE end
 
           if(coslam_m(1,lp)<=0.0 .or. coslam_m(1,lp)>=1.0 )then
 !SMS$IGNORE BEGIN
             print*,'sub-get_e:NH!STOP! INVALID coslam!',lp,IN,mype
-            print*, coslam_m(1,lp),(90.-plasma_grid_GL(IN,lp)*rtd),     &
-     &              plasma_grid_GL(IN,lp) 
+            print*, coslam_m(1,lp),(90.-plasma_grid_mag_colat(IN,lp)*rtd),     &
+     &              plasma_grid_mag_colat(IN,lp) 
 !SMS$IGNORE end
             STOP
           end if
 
           IS = JMAX_IS(lp)
-          coslam_m(2,lp) = COS( pi*0.5-plasma_grid_GL(IS,lp) )
+          coslam_m(2,lp) = COS( pi*0.5-plasma_grid_mag_colat(IS,lp) )
 
           if(coslam_m(2,lp)<=0.0 .or. coslam_m(2,lp)>=1.0 )then
 !SMS$IGNORE BEGIN
             print*,'sub-get_e:SH!STOP! INVALID coslam!',lp,IS,mype
-            print*, coslam_m(2,lp),(90.-plasma_grid_GL(IS,lp)*rtd),     & 
-     &              plasma_grid_GL(IS,lp) 
+            print*, coslam_m(2,lp),(90.-plasma_grid_mag_colat(IS,lp)*rtd),     & 
+     &              plasma_grid_mag_colat(IS,lp) 
 !SMS$IGNORE end
             STOP
           end if
 
 !EQ: potential difference is constant below 4.4988 < APEX=130km
-          IF ( plasma_grid_GL(IN,lp)>theta90_rad(nmlat/2) ) THEN
+          IF ( plasma_grid_mag_colat(IN,lp)>theta90_rad(nmlat/2) ) THEN
             if(sw_debug) then
-              print *,'check EQ',lp,(90.-plasma_grid_GL(IN,lp)*rtd)     &
+              print *,'check EQ',lp,(90.-plasma_grid_mag_colat(IN,lp)*rtd)     &
      &                             ,(90.-theta90_rad(nmlat/2) *rtd)
             endif
             j0(1,lp)=nmlat/2+1   !1:NH
@@ -139,12 +139,12 @@
 !           d     &             ,theta90_rad(j-1)
 
 
-              IF (theta90_rad(j)<=plasma_grid_GL(IN,lp).AND.            &
-     &            plasma_grid_GL(IN,lp)<=theta90_rad(j-1) ) THEN
+              IF (theta90_rad(j)<=plasma_grid_mag_colat(IN,lp).AND.            &
+     &            plasma_grid_mag_colat(IN,lp)<=theta90_rad(j-1) ) THEN
 !               dbg
                 if(sw_debug) then
                   print *,'AFTER',lp,j,theta90_rad(j)                   &
-     &                           ,plasma_grid_GL(IN,lp),theta90_rad(j-1)
+     &                           ,plasma_grid_mag_colat(IN,lp),theta90_rad(j-1)
                 endif
                 j0(1,lp)=j  !1:NH
                 j1(1,lp)=j-1
@@ -155,7 +155,7 @@
               ELSE
                 IF ( j==nmlat/2 ) THEN
                   print *,'sub-get_e:!STOP! could not find j!',lp,IN,j  &
-     &                   ,plasma_grid_GL(IN,lp),theta90_rad(j)
+     &                   ,plasma_grid_mag_colat(IN,lp),theta90_rad(j)
                   STOP
                 END IF
               END IF
@@ -165,10 +165,10 @@
 !           dbg20110919
             if(sw_debug)then
               print *,lp,' NH',(90.-theta90_rad(j0(1,lp))*rtd)          &
-     &                        ,(90.-plasma_grid_GL(IN,lp)*rtd)          &
+     &                        ,(90.-plasma_grid_mag_colat(IN,lp)*rtd)          &
      &                        ,(90.-theta90_rad(j1(1,lp))*rtd)
               print *,lp,' SH',(90.-theta90_rad(j0(2,lp))*rtd)          &
-     &                        ,(90.-plasma_grid_GL(IS,lp)*rtd)          &
+     &                        ,(90.-plasma_grid_mag_colat(IS,lp)*rtd)          &
      &                        ,(90.-theta90_rad(j1(2,lp))*rtd)
             end if !(sw_debug)then
           END IF                   ! ( plasma_grid_3d(IN,mp)%GL>theta90_rad(nmlat/2) ) THEN
@@ -250,8 +250,8 @@
           if(mp==1.and.lp>150.and.lp<158) then
              print"('mp',i3,' lp',i3,' IN=',i5,' latN',F6.2             &
      &            ,' IS=',i5,' latS',F6.2)",mp,lp                       &
-     &            ,IN,(90.-plasma_grid_GL(IN,lp)*rtd)                   &
-     &            ,IS,(90.-plasma_grid_GL(IS,lp)*rtd)
+     &            ,IN,(90.-plasma_grid_mag_colat(IN,lp)*rtd)                   &
+     &            ,IS,(90.-plasma_grid_mag_colat(IS,lp)*rtd)
           endif
 !         computipng ed1_90(lp,mp)
 !         FUNC-linearinterpolation does not work! need more debugging. temporary use the average of the two potentials.

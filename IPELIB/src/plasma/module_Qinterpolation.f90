@@ -22,8 +22,8 @@ CONTAINS
   &, iR, Qint_dum, TSP ) !nm20170328:
 
     USE module_precision
-!     plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,plasma_3d_old are all IN arrays
-    USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,ht90,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d_old
+!     plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,plasma_3d_old are all IN arrays
+    USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,ht90,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d_old
     USE module_input_parameters,ONLY:sw_debug,mype,lps,lpe,mps,mpe,sw_ihepls,sw_inpls
     USE module_IPE_dimension,ONLY: ISPEC,ISPET,IPDIM ,nlp
     USE module_physical_constants,ONLY: earth_radius,pi,zero

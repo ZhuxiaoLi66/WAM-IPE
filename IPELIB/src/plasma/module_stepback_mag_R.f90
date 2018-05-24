@@ -21,7 +21,7 @@ CONTAINS
   SUBROUTINE stepback_mag_R (utime,mp,lp,phi_t0,theta_t0,r0_apex)
     USE module_precision
     USE module_IPE_dimension,ONLY: NLP
-    USE module_FIELD_LINE_GRID_MKS,ONLY: mlon_rad,plasma_grid_Z,JMIN_IN,JMAX_IS,ht90,plasma_grid_GL,plasma_grid_3d,east,north,up,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,VEXBup,minAltitude,maxAltitude, VEXBe,VEXBth
+    USE module_FIELD_LINE_GRID_MKS,ONLY: mlon_rad,plasma_grid_Z,JMIN_IN,JMAX_IS,ht90,plasma_grid_mag_colat,plasma_grid_3d,east,north,up,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,VEXBup,minAltitude,maxAltitude, VEXBe,VEXBth
     USE module_physical_constants,ONLY: earth_radius,rtd,pi
     USE module_input_parameters,ONLY: time_step,sw_exb_up,sw_debug,start_time,lpmin_perp_trans, perp_transport_time_step
     IMPLICIT NONE
@@ -46,8 +46,8 @@ CONTAINS
 
     IF ( sw_debug ) PRINT*,'starting sub-stepback_mag_R:utime',utime,mp,lp
     phi_t1 = mlon_rad(mp)
-    theta_t1(1) = plasma_grid_GL( JMIN_IN(lp),lp ) !NH
-    theta_t1(2) = plasma_grid_GL( JMAX_IS(lp),lp ) !SH
+    theta_t1(1) = plasma_grid_mag_colat( JMIN_IN(lp),lp ) !NH
+    theta_t1(2) = plasma_grid_mag_colat( JMAX_IS(lp),lp ) !SH
 
     r = earth_radius + ht90 ![m]
     midpoint = JMIN_IN(lp) + ( JMAX_IS(lp) - JMIN_IN(lp) )/2
@@ -180,7 +180,7 @@ CONTAINS
     ihem=1 !only
     IF(sw_debug) THEN
       PRINT *,lp,mp, 'Z(mp,lp)',plasma_grid_Z(midpoint,lp), (plasma_grid_Z(midpoint,lp)+earth_radius)
-      PRINT *, 'mlatN(mp,lp)',90.-plasma_grid_GL( JMIN_IN(lp),lp )*180./pi !NH
+      PRINT *, 'mlatN(mp,lp)',90.-plasma_grid_mag_colat( JMIN_IN(lp),lp )*180./pi !NH
     ENDIF
     sin2theta = r/( earth_radius+plasma_grid_Z(midpoint,lp) )
     sintheta = SQRT( sin2theta )

@@ -33,7 +33,7 @@ CONTAINS
     &     HPEQ_flip,barriersOn, solar_forcing_time_step, &
     &     perp_transport_time_step
     USE module_physical_constants,ONLY:rtd,zero
-    USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,plasma_grid_3d,plasma_grid_GL,  &
+    USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,plasma_grid_3d,plasma_grid_mag_colat,  &
     &     plasma_grid_Z,JMAX_IS,hrate_mks3d,poleVal
     USE module_PLASMA,ONLY:utime_save,plasma_1d
     USE module_perpendicular_transport,ONLY:perpendicular_transport
