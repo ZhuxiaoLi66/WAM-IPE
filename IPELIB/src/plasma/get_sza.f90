@@ -40,13 +40,6 @@
         SZA_rad(:) = zero
         IN = JMIN_IN(lp)
         IS = JMAX_IS(lp)
-!        IF (.NOT. ALLOCATED(SZA_rad) )  ALLOCATE ( SZA_rad(IN:IS) ,STAT=stat_alloc)
-!if ( stat_alloc/=0 ) then
-!  print *, ALLOCATED( sza_rad )
-!  print *,"!STOP! ALLOCATION FAILD! in get_sza:",stat_alloc,mp,lp,in,is
-!  STOP
-!endif
-
         field_line_loop: DO i=IN,IS
           ii = i-IN+1 !make sure SZA_rad(1:~)
 !!        theta = aa - (m-1.0)*bb/2.0  !geographic CO-latitude [deg]
