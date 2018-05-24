@@ -1067,12 +1067,12 @@ module ipeCap
     ! currTime + timeStep is equal to the stopTime of the internal Clock
     ! for this call of the ModelAdvance() routine.
 
-    ! -- print start time
-    call ESMF_ClockPrint(clock, options="currTime", &
-      preString="------>Advancing IPE from: ", rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      ESMF_CONTEXT)) &
-      return  ! bail out
+!   ! -- print start time
+!   call ESMF_ClockPrint(clock, options="currTime", &
+!     preString="------>Advancing IPE from: ", rc=rc)
+!   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!     ESMF_CONTEXT)) &
+!     return  ! bail out
     
     ! -- import data
     ! -- initialize field to bad value
@@ -1292,12 +1292,12 @@ module ipeCap
       write(unit=9999,FMT=*)mype,"update_IPE endT=",(end_time-beg_time)
     end if
 
-    ! -- print stop time
-    call ESMF_ClockPrint(clock, options="stopTime", &
-      preString="--------------------------------> to: ", rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      ESMF_CONTEXT)) &
-      return  ! bail out
+!   ! -- print stop time
+!   call ESMF_ClockPrint(clock, options="stopTime", &
+!     preString="--------------------------------> to: ", rc=rc)
+!   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!     ESMF_CONTEXT)) &
+!     return  ! bail out
 
   end subroutine ModelAdvance
  

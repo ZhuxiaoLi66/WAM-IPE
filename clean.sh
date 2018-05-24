@@ -1,3 +1,5 @@
-IPE/clean.sh
-IPELIB/src/clean.sh
-
+cd IPE
+./clean.sh
+cd ../IPELIB/src
+./clean.sh
+cd ../../
