@@ -118,7 +118,7 @@ CONTAINS
 !
 !       ENDIF
 
-!rph will be needed for zonal transport (sw_th_or_R=0)
+!rph will be needed for zonal transport (sw_convection_footpoint_0_or_apex_1=0)
 !       rph = r90
 
         coslambda_m  = COS ( pi*0.50 - theta_t0(ihem) )

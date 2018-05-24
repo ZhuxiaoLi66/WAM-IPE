@@ -179,7 +179,7 @@
 ! if sw_perp_tr=>1
       INTEGER (KIND=int_prec), PUBLIC :: lpmin_perp_trans !=15 :mlatN=78deg???
       INTEGER (KIND=int_prec), PUBLIC :: lpmax_perp_trans !=151:mlatN=5.64deg
-      INTEGER (KIND=int_prec), PUBLIC :: sw_th_or_r
+      INTEGER (KIND=int_prec), PUBLIC :: sw_convection_footpoint_0_or_apex_1
 !0:th method (ctipe/shawn)
 !1:R method (gip)
       INTEGER (KIND=int_prec), PUBLIC :: record_number_plasma_start
@@ -279,7 +279,7 @@
            &, sw_perp_transport &
            &, lpmin_perp_trans &
            &, lpmax_perp_trans &
-           &, sw_th_or_r &
+           &, sw_convection_footpoint_0_or_apex_1 &
            &, sw_exb_up &
            &, fac_exb_up &
            &, sw_para_transport &

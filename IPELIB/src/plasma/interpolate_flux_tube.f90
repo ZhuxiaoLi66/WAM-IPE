@@ -14,7 +14,7 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
   USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat, &
                                       ht90,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d,plasma_3d_old, mlon_rad, &
                                       maxAltitude,minAltitude,minTheta,poleVal
-  USE module_input_parameters,ONLY:sw_perp_transport,mype,lps,lpe,mps,mpe,nprocs,sw_ihepls,sw_inpls,sw_th_or_R
+  USE module_input_parameters,ONLY:sw_perp_transport,mype,lps,lpe,mps,mpe,nprocs,sw_ihepls,sw_inpls,sw_convection_footpoint_0_or_apex_1
   USE module_IPE_dimension,ONLY: ISPEC,ISPET,IPDIM, ISTOT, NMP
   USE module_physical_constants,ONLY: earth_radius,pi,zero,rtd
   USE module_Qinterpolation,ONLY:Qinterpolation
@@ -104,11 +104,11 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
 !here in this interpolation should be DOne for both mp=j0,j1 simultaneously...
 
       r_apex(0) = r0_apex
-      IF ( sw_th_or_R==0 ) THEN
+      IF ( sw_convection_footpoint_0_or_apex_1==0 ) THEN
         lambda_m(0) = pi*0.50 - theta_t0(ihem)
-      ELSE IF ( sw_th_or_R==1 ) THEN
+      ELSE IF ( sw_convection_footpoint_0_or_apex_1==1 ) THEN
         lambda_m(0) = ACOS(SQRT((earth_radius+ht90)/r0_apex  ))
-      ENDIF !sw_th_or_R
+      ENDIF !sw_convection_footpoint_0_or_apex_1
 
 !R of apex altitude for the two IN/OUT FTs
       DO ilp=1,2  !outer/inner flux tubes
@@ -123,7 +123,7 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
 
 !note: this factor cannot work when lp<=6!!!
 !nm20140630 i may not need this line at all???
-        IF ( sw_th_or_R==1.and.lp>6 ) THEN
+        IF ( sw_convection_footpoint_0_or_apex_1==1.and.lp>6 ) THEN
           lambda_m(ilp) = ACOS(SQRT((earth_radius+ht90)/r_apex(ilp)))
 !t PRINT "('!dbg20140627 lambda_m=',f8.6,' ilp=',i4,' r_apex',f9.0)",lambda_m(ilp),ilp,r_apex(ilp)
         ELSE
@@ -136,7 +136,7 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
 
 !not sure which factor is more correct??? either r- or lambda (gip) base???
 
-      IF ( sw_th_or_R==1.and.lp>6.and.r_apex(1)/=r_apex(2) ) THEN
+      IF ( sw_convection_footpoint_0_or_apex_1==1.and.lp>6.and.r_apex(1)/=r_apex(2) ) THEN
 
         factor = ( r_apex(0)-r_apex(2) ) / ( r_apex(1)-r_apex(2) )
 
@@ -162,11 +162,11 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
 ! X can be either R or lambda (but only at IN/IS!!!)
           IF( r(1)/=r(2) ) THEN
 
-            IF ( sw_th_or_R==1 ) THEN
+            IF ( sw_convection_footpoint_0_or_apex_1==1 ) THEN
               x(0:2) = r(0:2)
-            else IF ( sw_th_or_R==0 ) THEN
+            else IF ( sw_convection_footpoint_0_or_apex_1==0 ) THEN
               x(0:2) = lambda_m(0:2)
-            ENDIF !sw_th_or_R
+            ENDIF !sw_convection_footpoint_0_or_apex_1
 
           ELSE IF( r(1)==r(2) ) THEN
 
