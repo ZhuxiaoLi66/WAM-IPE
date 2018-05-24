@@ -172,11 +172,11 @@ CONTAINS
                                            forcing, &
                                            time_tracker )
 
-      CALL plasma % FLIP_Wrapper( grid, & 
-                                  neutrals, &
-                                  forcing, &
-                                  time_tracker, &
-                                  flip_time_step )
+      !CALL plasma % FLIP_Wrapper( grid, & 
+      !                            neutrals, &
+      !                            forcing, &
+      !                            time_tracker, &
+      !                            flip_time_step )
 
 
   END SUBROUTINE Update_IPE_Plasma
