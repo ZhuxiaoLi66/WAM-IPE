@@ -152,6 +152,12 @@ CONTAINS
                                     AP )
 
 
+      CALL ipe % plasma % Update( ipe % grid, &
+                                  ipe % neutrals, &
+                                  ipe % forcing, &
+                                  ipe % time_tracker, &
+                                  ipe % parameters % solar_forcing_time_step )
+
 
       ! Update the timer
       ipe % time_tracker % utime = t1
@@ -167,6 +173,8 @@ CONTAINS
      IF( ipe % parameters % write_geographic_neutrals )THEN
        CALL ipe % neutrals % Interpolate_to_GeographicGrid( ipe % grid )
      ENDIF
+
+     CALL ipe % plasma % Interpolate_to_GeographicGrid( ipe % grid )
 
   END SUBROUTINE Geographic_Interpolation
 
@@ -341,6 +349,7 @@ CONTAINS
     INTEGER :: temperature_varid, u_varid, v_varid, w_varid
     INTEGER :: op_varid, hp_varid, hep_varid, np_varid, n2p_varid, o2p_varid, nop_varid
     INTEGER :: ion_temp_varid, e_varid, hc_varid, pc_varid, bc_varid
+    INTEGER :: ion_rate_varid, O_rate_varid, O2_rate_varid, N2_rate_varid
 
 
       IF( prec == sp )THEN
@@ -476,6 +485,22 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, bc_varid, "long_name", "Magnetic Field Alligned Conductivity" ) )
       CALL Check( nf90_put_att( ncid, bc_varid, "units", "[Unknown]" ) )
 
+      CALL Check( nf90_def_var( ncid, "aur_precip", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , ion_rate_varid ) )
+      CALL Check( nf90_put_att( ncid, ion_rate_varid, "long_name", "Total Ionization Rate from Auroral Precipitation" ) )
+      CALL Check( nf90_put_att( ncid, ion_rate_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "O+_precip", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , O_rate_varid ) )
+      CALL Check( nf90_put_att( ncid, O_rate_varid, "long_name", "Oxygen Ionization Rate from Auroral Precipitation" ) )
+      CALL Check( nf90_put_att( ncid, O_rate_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "O2+_precip", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , O2_rate_varid ) )
+      CALL Check( nf90_put_att( ncid, O2_rate_varid, "long_name", "Molecular Oxygen Ionization Rate from Auroral Precipitation" ) )
+      CALL Check( nf90_put_att( ncid, O2_rate_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_def_var( ncid, "N2+_precip", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , N2_rate_varid ) )
+      CALL Check( nf90_put_att( ncid, N2_rate_varid, "long_name", "Molecular Nitrogen Ionization Rate from Auroral Precipitation" ) )
+      CALL Check( nf90_put_att( ncid, N2_rate_varid, "units", "[Unknown]" ) )
+
       CALL Check( nf90_enddef(ncid) )
       
       IF( ipe % parameters % write_geographic_neutrals )THEN
@@ -507,6 +532,10 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, hc_varid, ipe % plasma % geo_hall_conductivity ) )
       CALL Check( nf90_put_var( ncid, pc_varid, ipe % plasma % geo_pedersen_conductivity ) )
       CALL Check( nf90_put_var( ncid, bc_varid, ipe % plasma % geo_b_parallel_conductivity ) )
+      CALL Check( nf90_put_var( ncid, ion_rate_varid, ipe % plasma % geo_ionization_rates(1,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, O_rate_varid, ipe % plasma % geo_ionization_rates(2,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, O2_rate_varid, ipe % plasma % geo_ionization_rates(3,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, N2_rate_varid, ipe % plasma % geo_ionization_rates(4,:,:,:) ) )
 
       CALL Check( nf90_close( ncid ) )
 
