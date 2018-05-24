@@ -84,31 +84,8 @@
           IN = JMIN_IN(lp)
           coslam_m(1,lp)=COS(pi*0.5-plasma_grid_mag_colat(IN,lp))
 
-!!SMS$IGNORE begin
-!       print*,'coslam=',coslam_m(1,lp),' lp=',lp,' IN=',IN,' mype',mype &
-!     &,plasma_grid_mag_colat(IN,lp),(pi*0.5-plasma_grid_mag_colat(IN,lp))
-!SMS$IGNORE end
-
-          if(coslam_m(1,lp)<=0.0 .or. coslam_m(1,lp)>=1.0 )then
-!SMS$IGNORE BEGIN
-            print*,'sub-get_e:NH!STOP! INVALID coslam!',lp,IN,mype
-            print*, coslam_m(1,lp),(90.-plasma_grid_mag_colat(IN,lp)*rtd),     &
-     &              plasma_grid_mag_colat(IN,lp) 
-!SMS$IGNORE end
-            STOP
-          end if
-
           IS = JMAX_IS(lp)
           coslam_m(2,lp) = COS( pi*0.5-plasma_grid_mag_colat(IS,lp) )
-
-          if(coslam_m(2,lp)<=0.0 .or. coslam_m(2,lp)>=1.0 )then
-!SMS$IGNORE BEGIN
-            print*,'sub-get_e:SH!STOP! INVALID coslam!',lp,IS,mype
-            print*, coslam_m(2,lp),(90.-plasma_grid_mag_colat(IS,lp)*rtd),     & 
-     &              plasma_grid_mag_colat(IS,lp) 
-!SMS$IGNORE end
-            STOP
-          end if
 
 !EQ: potential difference is constant below 4.4988 < APEX=130km
           IF ( plasma_grid_mag_colat(IN,lp)>theta90_rad(nmlat/2) ) THEN
@@ -121,9 +98,6 @@
 
 !           NH find the closest j of mlat90 from 130km
             mlat_loop130km1: DO j=nmlat,nmlat/2,-1 !NP(j=90)-->EQ(j=45)
-!           d print *,'BEFORE',lp,j,theta90_rad(j),plasma_grid_3d(IN,mp)%GL
-!           d     &             ,theta90_rad(j-1)
-
 
               IF (theta90_rad(j)<=plasma_grid_mag_colat(IN,lp).AND.            &
      &            plasma_grid_mag_colat(IN,lp)<=theta90_rad(j-1) ) THEN
@@ -135,11 +109,6 @@
 
                 EXIT mlat_loop130km1
               ELSE
-                IF ( j==nmlat/2 ) THEN
-                  print *,'sub-get_e:!STOP! could not find j!',lp,IN,j  &
-     &                   ,plasma_grid_mag_colat(IN,lp),theta90_rad(j)
-                  STOP
-                END IF
               END IF
 
             END DO mlat_loop130km1 !: DO j=0,nmlat        
@@ -175,17 +144,6 @@
 !SMS$PARALLEL(dh, lp, mp) BEGIN
       mlon_loop90km0: DO mp=1,NMP
 
-!       mlon_rad: from 0 to 355.5 with dlon_ipe=4.5 deg resolution
-!       mlon90_deg = mlon_rad(mp)*rtd
-!       dbg REAL((mp-1),real_prec) * dlonm90km 
-!       dbg
-!       d   print *,'mp',mp,' mlon90_deg=',mlon90_deg(mp),' dlonm=',dlonm
-!       find i of mlon 130km
-!       dlonm: delon lon grid spacing in degree
-!       BUG?  i = INT( (mlon90_deg/dlonm) , int_prec )
-!
-
-
         mlon130_loop1: DO i=0,nmlon
           i0=i
           i1=i+1
@@ -198,23 +156,13 @@
      &         mlon_rad(mp)<=mlon130_rad(i1) ) THEN
             EXIT mlon130_loop1
           ELSE
-            if ( i==nmlon ) then
-              print *,'sub-get_e:(2) !STOP! could not find mlon'        &
-     &               ,mp,mlon_rad(mp),i0,mlon130_rad(i0)
-              STOP
-            end if
           END IF
         END DO mlon130_loop1 !: DO i=0,nmlon
 
         mlat_loop90km1: DO lp=1,NLP
           IN = JMIN_IN(lp)
           IS = JMAX_IS(lp)
-          if(mp==1.and.lp>150.and.lp<158) then
-             print"('mp',i3,' lp',i3,' IN=',i5,' latN',F6.2             &
-     &            ,' IS=',i5,' latS',F6.2)",mp,lp                       &
-     &            ,IN,(90.-plasma_grid_mag_colat(IN,lp)*rtd)                   &
-     &            ,IS,(90.-plasma_grid_mag_colat(IS,lp)*rtd)
-          endif
+
 !         computipng ed1_90(lp,mp)
 !         FUNC-linearinterpolation does not work! need more debugging. temporary use the average of the two potentials.
 !         linear interpolation of the potent at plasma_grid_3d(IN,mp) in mlat
@@ -238,19 +186,6 @@
           pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50 
           pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
 
-!!SMS$IGNORE begin
-!       print*,'coslam=',coslam_m(1,lp),' lp=',lp,' mype',mype
-!!SMS$IGNORE end
-
-          if (r<=0..or.coslam_m(1,lp)==0..or.d_phi_m==0.)then
-!SMS$IGNORE BEGIN
-            print*,'sub-get_e:NH!STOP! INVALID:lp=',lp                  &
-     &,' mp=',mp,' mype=',mype
-            print*,'r=',r,' coslam_m=',coslam_m(1,lp),'d_phi_m=',d_phi_m
-!SMS$IGNORE END
-            STOP
-          endif
-
           ed1_90(1,lp,mp)=-1.0/r/coslam_m(1,lp)                         &
      &                         *(pot_i1-pot_i0)/d_phi_m
 !         SH
@@ -266,13 +201,6 @@
           jj1=j1(2,lp)              !2:SH
           pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50
           pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
-          if (r<=0..or.coslam_m(2,lp)==0..or.d_phi_m==0.)then
-!SMS$IGNORE BEGIN
-            print*,'sub-get_e:SH!STOP! INVALID',lp,mp,mype
-            print*, r,coslam_m(2,lp),d_phi_m
-!SMS$IGNORE END
-            STOP
-          endif
           ed1_90(2,lp,mp)=-1.0/r/coslam_m(2,lp)*(pot_i1-pot_i0)/d_phi_m
 !         computing ed2_90(lp,mp) continues
 !         calculate sinIm !eq(3.7)
@@ -287,10 +215,6 @@
           d_lam_m = theta90_rad( jj1 ) - theta90_rad( jj0 )
           pot_j1=( potent(i0,jj1)+potent(i1,jj1) )*0.50
           pot_j0=( potent(i0,jj0)+potent(i1,jj0) )*0.50
-          if (d_lam_m==0.)then
-            print *,'sub-get_ed2:NH!STOP! INVALID',lp,d_lam_m
-            STOP
-          endif
           ed2_90(1,lp,mp)=+1.0/r/sinI_m(ihem)*(pot_j1-pot_j0)/d_lam_m   &
      &*(-1.) !dbg20140224
 !         dbg20111108     &*(-1.)*sinI_m(ihem)     !E_m_lambda (5.10)
@@ -350,10 +274,6 @@
 !dbg20150319: it might be better to estimate sinI at JMIN_IN
 !              VEXBth(lp,mp) = v_e(2) * sinI_m(1) !if ihem=1 NH
                VEXBth(lp,mp) = v_e(2) / sinI_m(1) !if ihem=1 NH
-
-!!SMS$ignore begin
-!      PRINT *,'TWFANG getefield, mp,lp',mp,lp,'VEXBup',VEXBup(lp,mp),'VEXBth',VEXBth(lp,mp)
-!!SMS$ignore end
 
 !            else if ( sw_th_or_R==1 ) then !R method(gip)
 !               ipts = midpoint

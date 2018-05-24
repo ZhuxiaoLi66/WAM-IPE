@@ -341,7 +341,6 @@ C.... Written by P. Richards June-September 2010.
 !tmp20151112      USE module_physical_constants,ONLY: zero !,pi
 !tmp20151112      USE module_magfield,ONLY:sunlons
       IMPLICIT NONE
-      include "gptl.inc"
       INTEGER CTIPDIM         !.. CTIPe array dimension, must equal to FLDIM
 !nm20110923      INTEGER JTI             !.. Dummy variable to count the number of calls to this routine
       INTEGER I,J,JMINX,JMAXX !.. lcv + spatial grid indices
@@ -400,9 +399,7 @@ C.... Written by P. Richards June-September 2010.
       REAL :: gw
       REAL*8,dimension(3,fldim) :: qiont !1:O;2:O2;3:N2 !units number/m3/s
 
-      ret = gptlstart ('CTIPINT init_params')
       CALL initialize_module_parameters ( )
-      ret = gptlstop  ('CTIPINT init_params')
 !nm20110923      JTI=JTI+1
 
       !.. Load debug flag into EFLAG for sending to subroutines
@@ -413,7 +410,6 @@ C.... Written by P. Richards June-September 2010.
         EFLAG(11,1) =-1
         RETURN
       ENDIF
-      ret = gptlstart ('CTIPINT upload')
       !.. Upload field line grid parameters to FIELD_LINE_GRID module
       JMIN=JMINX
       JMAX=JMAXX
@@ -467,11 +463,9 @@ C.... Written by P. Richards June-September 2010.
 !nm20121020
         hrate_cgs(1:22,J)=0.0
       ENDDO
-      ret = gptlstop ('CTIPINT upload')
 
 !nm20151029 aurora
 !nm20151102      if ( mp==17.and.lp==22 ) then !UT= 120.000
-      ret = gptlstart ('ionize_ipe')
       gm_lat = GL(JMIN)
 ! call tiros only >50deg mlat
       if( abs(gm_lat*57.295779513)>=50.0 .AND. sw_aurora==1 ) then
@@ -481,8 +475,6 @@ C.... Written by P. Richards June-September 2010.
          tirosdim = midpoint-JMIN+1
          tiros_activity_level = LevPI(LPI)
          gw = GWatts(LPI)
-         if ( mp==1.and.lp==1 ) write(unit=1003,FMT='(I8,I3,f7.2)')
-     &utime,tiros_activity_level,gw
          call IONIZE_IPE (
      &     tirosdim,z(JMIN:midpoint),gr(JMIN:midpoint),on(JMIN:midpoint)
      &        ,o2n(JMIN:midpoint)
@@ -495,36 +487,25 @@ C.... Written by P. Richards June-September 2010.
       else 
          qiont=0.0
       endif                     !sw_aurora
-      ret = gptlstop ('ionize_ipe')
  
 !
 
       !.. Set up initial temperature and density profiles.
       !.. 0.1 < HPEQ < 1.0.
-      ret = gptlstart ('CTIPINT PROFIN')
       IF(HPEQ.GT.0.001)
      >  CALL PROFIN(IHEPLS,INPLS,PCO,F107,N,TI,HPEQ,HEPRAT)
-      ret = gptlstop  ('CTIPINT PROFIN')
       !.. This routine adjusts the H+ and He+ densities for depleted flux tubes      
       !..  if HPEQ is negative. 0.1 < -HPEQ < 1.0
-      ret = gptlstart ('CTIPINT NEW_HP')
       IF(HPEQ.LT.-0.001) CALL NEW_HP(JMIN,JMAX,PCO,HPEQ,N,EFLAG)
-      ret = gptlstop  ('CTIPINT NEW_HP')
 
       !.. Update solar EUV flux factors
-      ret = gptlstart ('CTIPINT FACEUV')
       CALL FACEUV(F107,F107A,UVFAC,EUVFLUX)
-      ret = gptlstop  ('CTIPINT FACEUV')
 
       !.. Update Schumann-Runge UV flux factors
-      ret = gptlstart ('CTIPINT FACSR')
       CALL FACSR(UVFAC,F107,F107A)
-      ret = gptlstop  ('CTIPINT FACSR')
 
       !.... evaluate primary EUV production
-      ret = gptlstart ('CTIPINT PRIMPR')
       CALL PRIMPR(F107,F107A,UVFAC,COLUM,EUVFLUX)
-      ret = gptlstop  ('CTIPINT PRIMPR')
 
       !.. electron density for photoelectron routine
       DO J=JMIN,JMAX
@@ -534,26 +515,21 @@ C.... Written by P. Richards June-September 2010.
 
       !.. 2-stream photoelectron routine to get electron heating 
       !.. rate and secondary ion production
-      ret = gptlstart ('CTIPINT PE2S')
       IF( sw_PE2S>0 )  !dbg20141210
      &   CALL PE2S(F107,F107A,N,TI,FPAS,-1.0E22,EDEN,UVFAC,COLUM,
      > IHEPLS,INPLS,INNO
      &,mp,lp,utime) !dbg20141209
 !dbg      sw_PE2S=0  !dbg20141210.v4
-      ret = gptlstop  ('CTIPINT PE2S')
 
       !-- Sum the EUV, photoelectron, and auroral production rate
-      ret = gptlstart ('CTIPINT SUMPRD')
       CALL SUMPRD(JMIN,JMAX
      &,qiont(1:3,JMIN:JMAX) !units number/m3/s
      &)
-      ret = gptlstop  ('CTIPINT SUMPRD')
 
       !.. Loop to calculate O+(4S) total ionization rate
       !.. PHION=total O+(4S) prod, including EUV, e*, dissoc of O2 and
       !.. minor ions. BCKPRD = small background production to eliminate 
       !,, instability below 200 km
-      ret = gptlstart ('CTIPINT tot ion')
       DO J=JMIN,JMAX 
          PHION(J)=1.0E-22
          N(3,J)=1.0E-22
@@ -584,86 +560,14 @@ C.... Written by P. Richards June-September 2010.
          !.. Sum minor ions N+, NO+, O2+, N2+ for electron density at low altitudes
          N(3,J)=XIONN(4,J)+XIONN(5,J)+XIONN(6,J)+XIONN(7,J)+XIONN(8,J)
       ENDDO
-      ret = gptlstop ('CTIPINT tot ion')
-
-      !.. Debug write
-      ret = gptlstart ('CTIPINT sw_output')
-      IF ( sw_output_fort167.AND.mp==mpfort167.AND.lp==lpfort167 ) THEN
-!sms$ignore begin
-        print*,'check unit#',LUN_FLIP1,LUN_FLIP3,LUN_FLIP2,LUN_FLIP4,   &
-     &                       mype
-!sms$ignore end
-!c      IF(JTI.EQ.1) THEN
-!sms$ignore begin
-        WRITE(UNIT=LUN_FLIP1,FMT=201)  
-        WRITE(UNIT=LUN_FLIP3,FMT=201)
- 201    FORMAT('   JMIN   JMAX   CTIPDIM  INNO  IHEPLS  INPLS')
-        WRITE(UNIT=LUN_FLIP1,FMT='(22I7)')  JMIN,JMAX,CTIPDIM,INNO
-     &,IHEPLS,INPLS
-
-        WRITE(UNIT=LUN_FLIP1,FMT=202)  
-        WRITE(UNIT=LUN_FLIP3,FMT=202)
- 202    FORMAT(/8X,'PCO       DT          DTMIN       F107       F107A'
-     >    ,10X,'FPAS        HPEQ      HEPRAT      COLFACX')
-        WRITE(UNIT=LUN_FLIP1,FMT='(22F12.3)')  PCO,DT,DTMIN,F107,F107A
-     &,FPAS,HPEQ,HEPRAT,COLFACX
-
-        WRITE(UNIT=LUN_FLIP1,FMT=203)
-        WRITE(UNIT=LUN_FLIP3,FMT=203)
- 203    FORMAT(/5X,'Z      SL            GL      BM        GR '
-     >   ,6X,'SZA        O         H       N2       O2       HE '
-     >   ,6X,'N4S ')
-
-        WRITE(UNIT=LUN_FLIP2,FMT=204)
-        WRITE(UNIT=LUN_FLIP4,FMT=204)
- 204    FORMAT(5X,'Z         TN       UN       NNO'
-     >    ,6X,'EHT      TI       TE       O+       H+      Min+'
-     >    ,5X,'He+      PHION    PRODO+     N+     EQN2D   NPLSPRD')
-!sms$ignore end
-
-        !.. Northern Hemisphere
-        DO J=JMIN,(JMAX/2)+1
-        N(4,J)=XIONN(3,J)
-!sms$ignore begin
-        WRITE(UNIT=LUN_FLIP1,FMT='(F10.2,1P,E14.7,21E9.2)') Z(J),SL(J)
-     &,GL(J),BM(J),GR(J),SZA(J),ON(J),HN(J),N2N(J),O2N(J),HE(J),N4S(J)
-
-          WRITE(UNIT=LUN_FLIP2,FMT='(3F10.2,1P,22E9.2)') Z(J),TNX(J)
-     &,UN(J),NNO(J)
-     >    ,EHT(3,J),TI(1,J),TI(3,J),N(1,J),N(2,J),N(3,J),XIONN(3,J)
-     >    ,PHION(J),SUMION(1,7,J),XIONN(4,J),EQN2D(J),NPLSPRD(J) 
-!sms$ignore end
-        ENDDO
-
-        !.. Southern Hemisphere
-        DO J=JMAX,(JMAX/2)+1,-1
-        N(4,J)=XIONN(3,J)
-!sms$ignore begin
-        WRITE(UNIT=LUN_FLIP3,FMT='(F10.2,1P,E14.7,21E9.2)') Z(J),SL(J)
-     &,GL(J),BM(J),GR(J),SZA(J),ON(J),HN(J),N2N(J),O2N(J),HE(J),N4S(J)
-
-          WRITE(UNIT=LUN_FLIP4,FMT='(3F10.2,1P,22E9.2)') Z(J),TNX(J)
-     &,UN(J),NNO(J)
-     >    ,EHT(3,J),TI(1,J),TI(3,J),N(1,J),N(2,J),N(3,J),XIONN(3,J)
-     >    ,PHION(J),SUMION(1,7,J),XIONN(4,J),EQN2D(J),NPLSPRD(J) 
-!sms$ignore end
-        ENDDO
-      END IF                    !( sw_output_fort167.AND...
-
-      ret = gptlstop ('CTIPINT sw_output')
-c      ENDIF
 
       !..  electron and ion temperature solution
       midpoint = (JMAX/2)+1
-      ret = gptlstart ('CTIPINT TLOOPS')
       IF( sw_TEI>0) ! .AND. Z(midpoint)>100.00 )
      >  CALL TLOOPS(JMIN,JMAX,FLDIM,Z,N,TI,DT,DTMIN,EFLAG)   !$$$ 
-      ret = gptlstop  ('CTIPINT TLOOPS')
       !.. O+, H+ solution
-      ret = gptlstart ('CTIPINT DLOOPS')
       IF( sw_OHPLS>0) ! .AND. Z(midpoint)>120.00 )
      >  CALL DLOOPS(JMIN,JMAX,FLDIM,Z,N,TI,DT,DTMIN,EFLAG,mp,lp)   !$$$  
-      ret = gptlstop  ('CTIPINT DLOOPS')
 !----------------------
       if ( sw_optw_flip ) then
       !.. Recalculate the minor ion densities with the new O+ density
@@ -676,10 +580,8 @@ c      ENDIF
       endif !( sw_optw_flip ) then
 !----------------------
       !.. He+ solution
-      ret = gptlstart ('CTIPINT XION')
       IF(EFLAG(2,1).EQ.0.AND.IHEPLS.GT.0) ! .AND. Z(midpoint)>200.00 )
      & CALL XION(TI,DT,DTMIN,9,EFLAG)
-      ret = gptlstop  ('CTIPINT XION')
 
       !.. N+ solution
 !dbg20120301:
@@ -688,22 +590,8 @@ c      ENDIF
          print *,'!dbg! apex ht=',z(midpoint),midpoint,lp,mp,mype
 !sms$ignore end
       endif
-      ret = gptlstart ('CTIPINT XION')
       IF(EFLAG(2,1).EQ.0.AND.INPLS.GT.0) CALL XION(TI,DT,DTMIN,11,EFLAG)
-      ret = gptlstop  ('CTIPINT XION')
 
-!nm20150322: output limiting flux: not so helpful for SED plume flux...
-!
-!      IF ( MOD( (utime-start_time),ip_freq_output)==0 ) THEN
-!      j802=87 !z_km=802km
-!      if ( lp <=40 )   !mlat=38.85
-!     & write(9009,"(2i3,9E9.2)") mp,lp, z(j802),on(j802),hn(j802)
-!     &,tnx(j802) ,ti(1,j802),ti(3,j802),n(1,j802),n(2,j802)
-!     &, (1.38E-16 * ( ti(1,j802)+ti(3,j802) )*0.5 / 
-!     &   (1.662E-24*16*(-1.)*GR(j802) ) )*1.E-5 !scale height[cm-->km]
-!      ENDIF
-
-      ret = gptlstart ('CTIPINT transfer')
         !.. transfer densities from FLIP to CTIP variable
       DO J=JMIN,JMAX
         NNOX(J)=NNO(J)/M3_to_CM3
@@ -720,7 +608,6 @@ c      ENDIF
         EHTX(I,J)=EHT(I,J)
       ENDDO
       ENDDO
-      ret = gptlstop ('CTIPINT transfer')
 
 !.. I=1 is used to turn on NHEAT writes
 !nm033111:      IF(DEBUG.EQ.1.AND.JTI.EQ.115) I=1 
@@ -731,7 +618,6 @@ c      ENDIF
       END IF
 
         !.. Get neutral gas heating rate NHEAT
-        ret = gptlstart ('CTIPINT get NHEAT')
         DO J=JMIN,JMAX
           IF(Z(J).GE.80.AND.Z(J).LE.700) THEN
             !.. electron density for photoelectron routine
@@ -757,35 +643,7 @@ c      ENDIF
 !     &       ,hrate_cgs(7,J) )!..
           ENDIF
         ENDDO
-        ret = gptlstop ('CTIPINT get NHEAT')
 c      ENDIF
-
-      !---------------------- DEBUG WRITE -----------------------------------
-      !.. Debug write if DEBUG=1
-      IF ( sw_DEBUG_flip==1 ) WRITE(172,88)    !nm20110923
- 88   FORMAT('  J     ALT    TE     TI       O+        H+       He+'
-     >  ,8X,'N+        NO+       O2+       NE      UVOX+    PEOX+'
-     >  ,6X,'UVN2+      PEN2+     EHT       VO+       VH+      VHe+'
-     >  ,7X,'VN+        NO       N2D       N4S      O1D       O1S'
-     >  ,6X,'NHEAT')
-      DO J=JMIN,JMAX
-        IF(sw_DEBUG_flip.EQ.1)    !nm20110923
-     >   WRITE(172,'(I5,I7,2F7.1,1P,29E10.2)') 
-     >   J,NINT(Z(J)),TI(3,J),TI(2,J),XIONN(1,J),XIONN(2,J),XIONN(3,J),
-     >   XIONN(4,J),XIONN(5,J),XIONN(6,J),EDEN(J),EUVION(1,1,J),
-     >   PEPION(1,1,J),EUVION(1,1,J),PEPION(3,1,J),EHT(3,J),XIONV(1,J),
-     >   XIONV(2,J),XIONV(3,J),XIONV(4,J),NNO(J),N2D(J),N4S(J),O1D(J),
-     >   O1S(J),NHEAT(J)
-      ENDDO
-
-!nm20110715: for diagnostics only
-!.. 2-stream photoelectron routine called to print fluxes
-      ret = gptlstart ('CTIPINT PE2S')
-      IF(sw_DEBUG_flip.EQ.1.AND.  !nm20110923
-     &   sw_PE2S>0 )  !dbg20141210
-     &  CALL PE2S(F107,F107A,N,TI,FPAS,300.0,EDEN,UVFAC,COLUM
-     &    ,IHEPLS,INPLS,INNO)
-      ret = gptlstop  ('CTIPINT PE2S')
 
       RETURN
       END

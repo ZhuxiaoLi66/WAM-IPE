@@ -1,9 +1,9 @@
+!      program IONIZE_IPE
       subroutine IONIZE_IPE ( 
      & flipdim,z,gr,on,o2n,n2n,hn,hen,tn
      &,gm_lat,mlt
      &,tiros_activity_level,GW
      &,qiont_O,qiont_O2,qiont_N2)
-!      use tirosdata_ipe
       implicit none
 !
       CHARACTER (LEN=*), parameter :: filename0='N'
@@ -27,12 +27,11 @@
       REAL*8,dimension(flipdim) :: qiont_total
       REAL*8,dimension(flipdim),INTENT(OUT) :: qiont_O,qiont_O2,qiont_N2
 
-      if ( filename0=='N') then 
-         imax1 = 6
-      else if ( filename0=='S') then 
-         imax1 = 4
-      end if
-
+! before the call to tiros_ionize read in the TIROS energy influx EMAPS
+! characteristic energy CMAPS, and TIROS spectra DJSPECTRA
+! read in emaps and cmaps and spectra
+!
+!      call tiros_init_ipe()
 !
 ! tiros_ionize returns ionization rates for O, O2, and N2 for a given 
 ! geomagnetic latitude GL and magnetic local time MLT based on 

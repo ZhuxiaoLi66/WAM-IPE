@@ -15,7 +15,7 @@ SUBROUTINE flux_tube_solver ( utime,mp,lp )
   USE module_IPE_dimension,ONLY: ISPEC,ISPEV,IPDIM
   USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,Pvalue,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d,ON_m3,HN_m3,N2N_m3,O2N_m3,HE_m3,N4S_m3,TN_k,TINF_k,un_ms1,mlon_rad
   USE module_input_parameters,ONLY: time_step,F107D_new,F107_new,DTMIN_flip  &
-  &, sw_INNO,FPAS_flip,HEPRAT_flip,COLFAC_flip,sw_IHEPLS,sw_INPLS,iout, start_time  &
+  &, sw_INNO,FPAS_flip,HEPRAT_flip,COLFAC_flip,sw_IHEPLS,sw_INPLS,sw_debug,iout, start_time  &
   &, HPEQ_flip, sw_wind_flip, sw_depleted_flip, start_time_depleted &
   &, sw_output_fort167,mpfort167,lpfort167 &
   &, sw_neutral_heating_flip, ip_freq_output, parallelBuild,mype &
@@ -163,15 +163,6 @@ SUBROUTINE flux_tube_solver ( utime,mp,lp )
   ltime = REAL(utime)/3600.0 + (plasma_grid_3d(midpoint,lp,mp,IGLON)*180.0/pi)/15.0
   IF ( ltime > 24.0 )  ltime = MOD(ltime, 24.0)
 
-  IF( sw_output_fort167.AND.mp==mpfort167.AND.lp==lpfort167 ) THEN
-!sms$ignore begin
-    WRITE(UNIT=LUN_FLIP1,FMT="('mp=',i3,' lp=',i3,' U',i3,' North, UT=',2F10.3)") mp,lp,LUN_FLIP1,REAL(UTIME)/3600., ltime
-    WRITE(UNIT=LUN_FLIP2,FMT="('mp=',i3,' lp=',i3,' U',i3,' North, UT=',2F10.3)") mp,lp,LUN_FLIP2,REAL(UTIME)/3600., ltime
-    WRITE(UNIT=LUN_FLIP3,FMT="('mp=',i3,' lp=',i3,' U',i3,' South, UT=',2F10.3)") mp,lp,LUN_FLIP3,REAL(UTIME)/3600., ltime
-    WRITE(UNIT=LUN_FLIP4,FMT="('mp=',i3,' lp=',i3,' U',i3,' South, UT=',2F10.3)") mp,lp,LUN_FLIP4,REAL(UTIME)/3600., ltime
-!sms$ignore end
-  ENDIF !( sw_output_fort167
-
 
   DO ipts=1,CTIPDIM
 !N&T from the previous time step are absolute necesary for the solver...
@@ -269,16 +260,6 @@ SUBROUTINE flux_tube_solver ( utime,mp,lp )
     ENDDO !jth
 
 
-!dbg20160421 debug
-    IF( EFLAG(2,1)/=0 .and. 32<(ipts+IN-1) .and. (ipts+IN-1)<39 )THEN
-!SMS$IGNORE begin
-      PRINT"(i2,' XION=',e10.2,f7.0,f7.1,i4,' lp=',i3,' mp=',i2,' LT=',f6.1)",mype,plasma_3d(ipts+IN-1,lp,mp,1),(plasma_grid_Z(ipts+IN-1,lp)*1.e-3),((pi/2. - plasma_grid_mag_colat(ipts+IN-1,lp))*180./pi),(ipts+IN-1),lp,mp,ltime
-!SMS$IGNORE end
-    ENDIF!(EFLAG
-
-
-
-
 !te
     plasma_3d(ipts+IN-1,lp,mp,ISPEC+1) = TE_TIX(3,ipts)
 !ti
@@ -292,26 +273,24 @@ SUBROUTINE flux_tube_solver ( utime,mp,lp )
 
 
 !nm20110404: save each component of heating rate for output
-    IF ( sw_neutral_heating_flip==1 .AND. &
-    &  MOD( (utime-start_time),ip_freq_output)==0) THEN
-      IF(parallelBuild) THEN
-        PRINT*,'sw_neutral_heating_flip=1 DOes not work in parallel'
-        PRINT*,'STOPping in Neut_heating'
-        STOP
-      ENDIF
+!   IF ( sw_neutral_heating_flip==1 .AND. &
+!   &  MOD( (utime-start_time),ip_freq_output)==0) THEN
+!     IF(parallelBuild) THEN
+!       PRINT*,'sw_neutral_heating_flip=1 DOes not work in parallel'
+!       PRINT*,'STOPping in Neut_heating'
+!       STOP
+!     ENDIF
 
-      CALL get_neutral_heating_rate ( hrate_cgs , lp,mp )
+!     CALL get_neutral_heating_rate ( hrate_cgs , lp,mp )
 
-    ENDIF !( sw_neutral_heating_flip==1 ) THEN
+!   ENDIF !( sw_neutral_heating_flip==1 ) THEN
 
   ENDDO       !DO ipts=1,CTIPDIM
 
-  PRUNIT_dum = PRUNIT
-  CALL WRITE_EFLAG(PRUNIT_dum, &  !.. Unit number to PRINT results
-  &                      EFLAG, &  !.. Error flag array
-  &                         mp, &
-  &                         lp,utime,ltime )
-
-
+! PRUNIT_dum = PRUNIT
+! CALL WRITE_EFLAG(PRUNIT_dum, &  !.. Unit number to PRINT results
+! &                      EFLAG, &  !.. Error flag array
+! &                         mp, &
+! &                         lp,utime,ltime )
 
 END SUBROUTINE flux_tube_solver
