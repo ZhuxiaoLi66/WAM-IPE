@@ -17,7 +17,7 @@
         USE module_precision
         USE module_FIELD_LINE_GRID_MKS,ONLY: plasma_grid_3d,JMIN_IN,JMAX_IS,ISL,IBM,IGR,IQ,IGCOLAT,IGLON
         USE module_physical_constants,ONLY: pi,zero
-        USE module_input_parameters,ONLY: NDAY,sw_debug
+        USE module_input_parameters,ONLY: NDAY
         USE module_IPE_dimension,ONLY: IPDIM
         IMPLICIT NONE
         INTEGER (KIND=int_prec),  INTENT(IN)  :: utime    !universal time [sec]
@@ -81,11 +81,6 @@ print *,'(2) !INVALID cos_sza',cos_sza,ii,mp,lp,COS(rlat),COS(sda),COS(rlt_r),SI
           END IF
           SZA_rad(ii) = ACOS( cos_sza )
 
-!dbg20110815
-IF ( sw_debug )  write(unit=1005,FMT=*) i,ii,'sza_rad',sza_rad(ii),rlat,sda,rlt_r,-COS(rlat),COS(sda),COS(rlt_r),SIN(rlat),SIN(sda)
        END DO field_line_loop !: DO i=IN,IS
 
-IF ( sw_debug ) & 
-      print "('Get_SZA [deg]    =',2F10.4)",SZA_rad(IN-IN+1)*180./pi,SZA_rad(IS-IN+1)*180./pi
- 
       END SUBROUTINE Get_SZA

@@ -332,7 +332,7 @@ C.... Written by P. Richards June-September 2010.
       USE PRODUCTION         !.. EUV, photoelectron, and auroral production
 
       USE module_input_parameters,ONLY: sw_TEI,sw_OHPLS,sw_PE2S
-     &, sw_DEBUG_flip,sw_debug,sw_output_fort167
+     &, sw_DEBUG_flip,sw_output_fort167
      &,mpfort167,lpfort167,mype
      &,sw_optw_flip
      &,start_time,ip_freq_output,sw_aurora,LPI,LevPI,GWatts
@@ -472,11 +472,6 @@ C.... Written by P. Richards June-September 2010.
 !nm20151029 aurora
 !nm20151102      if ( mp==17.and.lp==22 ) then !UT= 120.000
       ret = gptlstart ('ionize_ipe')
-      if(sw_debug) then
-!sms$ignore begin
-        print *,'starting ionize_ipe',mype
-!sms$ignore end
-      endif
       gm_lat = GL(JMIN)
 ! call tiros only >50deg mlat
       if( abs(gm_lat*57.295779513)>=50.0 .AND. sw_aurora==1 ) then
@@ -484,13 +479,6 @@ C.... Written by P. Richards June-September 2010.
 !      mlt = 0.168238 ![hr]
          midpoint = (JMAX/2)+1
          tirosdim = midpoint-JMIN+1
-         if(sw_debug) then
-!sms$ignore begin
-           print *,jmax,jmin,tirosdim, midpoint,' GL1=',gm_lat
-     &        ,mlt
-     &  , maxval(qiont(1,JMIN:midpoint)), minval(qiont(1,JMIN:midpoint))
-!sms$ignore end
-         endif
          tiros_activity_level = LevPI(LPI)
          gw = GWatts(LPI)
          if ( mp==1.and.lp==1 ) write(unit=1003,FMT='(I8,I3,f7.2)')
@@ -503,13 +491,7 @@ C.... Written by P. Richards June-September 2010.
      &        ,gm_lat,mlt
      &        ,tiros_activity_level,gw
      &        ,qiont(1,JMIN:midpoint),qiont(2,JMIN:midpoint) !units number/m3/s
-     &        ,qiont(3,JMIN:midpoint) 
-     &        ,sw_debug)
-         if(sw_debug) then
-!sms$ignore begin
-           print *,'stoping ionize_ipe',mype
-!sms$ignore end
-         endif
+     &        ,qiont(3,JMIN:midpoint))
       else 
          qiont=0.0
       endif                     !sw_aurora

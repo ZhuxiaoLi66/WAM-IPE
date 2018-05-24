@@ -1586,7 +1586,6 @@
         if (j2 < 0) j2 = 0              ! Tomoko's fix - j2 >= 0
 	wrk1 = pot_midlat(ilon,j1)
 	wrk2 = pot_highlats(ilon,j2)
-        write(iulog,*) 'pot_all ',ilon,hb1,hb2,nmlath -ibnd,tw
         min_ilat = ibnd-tw
         if (min_ilat < 0) min_ilat = 0  ! Tomoko's fix
         do ilat = min_ilat,ibnd+tw      ! do ilat = ibnd-tw,ibnd+tw

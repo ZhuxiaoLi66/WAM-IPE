@@ -25,7 +25,7 @@ CONTAINS
     USE module_physical_constants,ONLY: rtd,earth_radius,pi
     USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_mag_colat,JMIN_IN,JMAX_IS,mlon_rad,dlonm90km,plasma_grid_Z,minTheta,maxTheta,midpnt
     USE module_IPE_dimension,ONLY: NMP,NLP
-    USE module_input_parameters,ONLY:sw_perp_transport,sw_debug,lpHaloSize,mpHaloSize,MaxLpHaloUSEd,MaxMpHaloUSEd,mype,parallelBuild
+    USE module_input_parameters,ONLY:sw_perp_transport,lpHaloSize,mpHaloSize,MaxLpHaloUSEd,MaxMpHaloUSEd,mype,parallelBuild
     USE module_PLASMA,only:utime_save
     IMPLICIT NONE
 !--- INPUT ---
@@ -115,9 +115,6 @@ CONTAINS
           lp_t0(ihem,1)=missing_value !-999
           lp_t0(ihem,2)=1
 
-!SMS$IGNORE begin
-          IF(sw_debug)PRINT"('mype=',i3,'subFin:specialPole:mp=',i3,'lp=',i3)",mype,mp,lp
-!SMS$IGNORE end
           RETURN
 
         ELSE IF ( theta_t0(ihem) > maxTheta ) THEN

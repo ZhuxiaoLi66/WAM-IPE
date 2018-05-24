@@ -6,7 +6,7 @@ CONTAINS
 
   SUBROUTINE perpendicular_transport ( utime_local, mp,lp )
     USE module_precision
-    USE module_input_parameters,ONLY: sw_debug,mype, sw_th_or_r, sw_perp_transport
+    USE module_input_parameters,ONLY: mype, sw_th_or_r, sw_perp_transport
     USE module_find_neighbor_grid_TH, ONLY: find_neighbor_grid_TH
     USE module_find_neighbor_grid_R, ONLY: find_neighbor_grid_R
     USE module_stepback_mag_TH, ONLY: stepback_mag_TH

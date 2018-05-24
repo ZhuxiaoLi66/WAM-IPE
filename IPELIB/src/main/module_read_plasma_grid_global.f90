@@ -11,7 +11,7 @@
         USE module_IPE_dimension,ONLY: NMP,NLP,ISTOT
         USE module_IPE_dimension,ONLY: NPTS2D,NMP,NLP
         USE module_physical_constants,ONLY: earth_radius,pi,zero
-        USE module_input_parameters,ONLY:read_input_parameters,sw_debug,sw_neutral_heating_flip,nprocs,mype
+        USE module_input_parameters,ONLY:read_input_parameters,sw_neutral_heating_flip,nprocs,mype
         USE module_IO,ONLY: filename,LUN_pgrid
         USE module_FIELD_LINE_GRID_MKS,ONLY: &
 &           JMIN_IN_all,JMAX_IS_all          &

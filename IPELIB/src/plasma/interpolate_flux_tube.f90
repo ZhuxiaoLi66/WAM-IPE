@@ -24,7 +24,7 @@ SUBROUTINE interpolate_flux_tube (mp,lp &
   USE module_precision
 !     plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,plasma_3d_old are all IN arrays
   USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,ht90,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d,plasma_3d_old, mlon_rad,maxAltitude,minAltitude,minTheta,poleVal
-  USE module_input_parameters,ONLY:sw_perp_transport,sw_debug,sw_ksi,mype,lps,lpe,mps,mpe,nprocs,sw_ihepls,sw_inpls,sw_th_or_R
+  USE module_input_parameters,ONLY:sw_perp_transport,sw_ksi,mype,lps,lpe,mps,mpe,nprocs,sw_ihepls,sw_inpls,sw_th_or_R
   USE module_IPE_dimension,ONLY: ISPEC,ISPET,IPDIM, ISTOT, NMP
   USE module_physical_constants,ONLY: earth_radius,pi,zero,rtd
   USE module_Qinterpolation,ONLY:Qinterpolation
@@ -208,44 +208,16 @@ SUBROUTINE interpolate_flux_tube (mp,lp &
 
           ELSE IF( r(1)==r(2) ) THEN
 
-            IF(sw_debug) THEN
-!SMS$IGNORE BEGIN
-              PRINT "('!R1=R2! r0',E14.6,' r1=',E14.6,' r2=',E14.6,' Qr1',E13.5,' Qr2=',E13.5,' i=',i6,' mp=',i3,' lp=',i4,' imp=',i3)",r(0:2),Qint(iR,i1d,imp,1:2),i,mp,lp,imp
-              PRINT *, r(2),(earth_radius+ht90),(maxAltitude+earth_radius)
-!SMS$IGNORE END
-            ENDIF
-
             IF( r(2)==(earth_radius+ht90) ) THEN
 
-!dbg20111006: somehow IS DOes not fit here???
-              IF(sw_debug) THEN
-!SMS$ignore begin
-                PRINT *,'i=IN/S',i,i1d,' IN=',JMIN_IN(lp),' IS=',JMAX_IS(lp),lambda_m(0:2)*180./pi,mype
-!SMS$ignore end
-              ENDIF
               x(0:2) = lambda_m(0:2)
 
-              IF(sw_debug) THEN
-!SMS$IGNORE BEGIN
-                PRINT *,'!dbg20120503: lambda',x(0:2)*180./pi
-!SMS$IGNORE END
-              ENDIF
             ELSE IF ( r(2)==(earth_radius+maxAltitude) ) THEN
 
-              IF(sw_debug) THEN
-!SMS$IGNORE BEGIN
-                PRINT *,'midpoint lp<=6',i,i1d,' IN=',JMIN_IN(lp),' IS=',JMAX_IS(lp),lambda_m(0:2)*180./pi
-!SMS$IGNORE END
-              ENDIF
               x(0:2) = lambda_m(0:2)
 
             ELSE IF ( lp<7 ) THEN
 
-              IF(sw_debug) THEN
-!SMS$IGNORE BEGIN
-                PRINT *,'lp<7',i,i1d,' IN=',JMIN_IN(lp),' IS=',JMAX_IS(lp),lambda_m(0:2)*180./pi
-!SMS$IGNORE END
-              ENDIF
               x(0:2) = lambda_m(0:2)
 
             ELSE
@@ -263,27 +235,9 @@ SUBROUTINE interpolate_flux_tube (mp,lp &
 
 
 ! 1. interpolate Bfield intensity Bt0 at the imaginary FT(phi0,theta0) using dipole assumption
-          IF(sw_debug) THEN
-!SMS$ignore begin
-            PRINT "('QintB=',3E12.4)",Qint(iB,i1d,imp,1:2),mype
-!SMS$ignore end
-          ENDIF
           B0(1:2)=Qint(iB,i1d,imp,1:2) * ( r(1:2)*r(1:2)*r(1:2) )/(r(0)*r(0)*r(0))
           B0(0)=( B0(1)+B0(2) )*0.50
-          IF(sw_debug) THEN
-!SMS$ignore begin
-            PRINT "('B=',3E12.4)",B0(0),B0(1),B0(2),mype
-!SMS$ignore end
-          ENDIF
-          !dbg20111101:v14
-          !dbg20140627: need IF statement same as line 320!!!
-          !       IF ( x(1)/=x(2) ) THEN
           B0(0) = ( (x(1)-x(0))*Qint(iB,i1d,imp,2) + (x(0)-x(2))*Qint(iB,i1d,imp,1) ) / ( x(1)-x(2) )
-          IF(sw_debug) THEN
-!SMS$ignore begin
-            PRINT "('v14:B=',3E12.4)",B0(0) !,B0(1),B0(2),mype
-!SMS$ignore end
-          ENDIF
 
 !dbg20141210: polar cap boundary: mlat(17)=71.69
 !dbg20141210    IF ( sw_ksi==0 ) THEN
@@ -450,10 +404,6 @@ SUBROUTINE interpolate_flux_tube (mp,lp &
 
 
     ELSE IF ( lp_t0(ihem,1)==-9999 ) THEN !missing_value in module_find_nei...
-
-!SMS$IGNORE begin
-      IF(sw_debug)PRINT"('mype=',i3,'subInt:specialPole:mp=',i3,'lp=',i3,'mpt0=',2i3,'lpt0=',i4,i2)",mype,mp,lp,mp_t0(ihem,1:2),lp_t0(ihem,1:2)
-!SMS$IGNORE end
 
 !CAUTION! poleVal is calculated (in module_sub_plasma.f90) ONLY at mype=0 but is broadcast to all processors.
 !nm20140630 temporary solution for pole

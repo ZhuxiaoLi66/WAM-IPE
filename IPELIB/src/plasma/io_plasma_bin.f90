@@ -22,7 +22,7 @@ USE module_FIELD_LINE_GRID_MKS,ONLY: JMIN_IN,JMAX_IS,plasma_3d,JMIN_ING,JMAX_ISG
                                      vn_ms1_4output,tn_k,on_m3,n2n_m3,o2n_m3, maxFluxTube
 
 USE module_IPE_dimension,ONLY: NMP,NLP,NPTS2D,ISPEC,ISPEV,IPDIM,ISPET,ISTOT
-USE module_input_parameters,ONLY:sw_debug,record_number_plasma_start,mype, &
+USE module_input_parameters,ONLY:record_number_plasma_start,mype, &
                                  sw_record_number,stop_time,start_time, &
                                  duration,mpstop, sw_output_wind, sw_use_wam_fields_for_restart
 

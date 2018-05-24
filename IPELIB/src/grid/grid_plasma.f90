@@ -57,9 +57,6 @@ INTEGER(KIND=int_prec), PARAMETER :: NLP    =   170
         USE module_physical_constants,ONLY: earth_radius, pi, G0
         IMPLICIT NONE
 
-!---for module_input_parameters...
-      LOGICAL, PARAMETER :: sw_debug=.TRUE.
-
         INTEGER (KIND=int_prec) :: i, mp,lp
         REAL (KIND=real_prec) :: sinI
         INTEGER (KIND=int_prec), parameter :: sw_sinI=0  !0:flip; 1:APEX
@@ -72,8 +69,6 @@ INTEGER(KIND=int_prec), PARAMETER :: NLP    =   170
 
 
         apex_longitude_loop: DO mp = 1,NMP
-
-IF ( sw_debug )  print *,'mp=',mp        
 
 ! make sure to use the MKS units.
       Z_meter(1:NPTS2D,mp) = r_meter_all(1:NPTS2D,mp) - earth_radius ![meter]
@@ -88,27 +83,6 @@ print *,"Z_meter calculation completed"
 
 !nm20120112:            CALL Get_Pvalue_Dipole ( r_meter_all(IN,mp), GL_rad(IN,mp), Pvalue(mp,lp) )
 
-!debug write
-IF ( sw_debug ) THEN
-print "('lp=',i6,'  IN=',i6,'  IS=',i6,'  NPTS=',i6)", lp,IN,IS,(IS-IN+1)
-print "('r [m]      =',2E12.4)", r_meter_all(in,mp),r_meter_all(is,mp)
-print "('G-LAT [deg]=',2f10.4)",(90.-GCOLAT(in,mp)*180./pi),(90.-GCOLAT(is,mp)*180./pi)
-print "('M-LAT [deg]=',2f10.4)",(90.-GL_rad(in,mp)*180./pi),(90.-GL_rad(is,mp)*180./pi)
-print "('GLON  [deg]=',2f10.4)",(GLON(in,mp)*180./pi),(GLON(is,mp)*180./pi)
-print "('Qvalue     =',2E12.4)", Qvalue(in,mp), Qvalue(is,mp)
-print "('BM [nT]    =',2E12.4)", BM_nT(in,mp), BM_nT(is,mp)
-print "('D1         =',2E12.4)", D1(1,in,mp), D1(1,is,mp)
-print "('D2         =',2E12.4)", D2(1,in,mp), D2(1,is,mp)
-print "('D3         =',6E12.4)", D3(1:3,in,mp), D3(1:3,is,mp)
-print "('E1         =',2E12.4)", E1(1,in,mp), E1(1,is,mp)
-print "('E2         =',2E12.4)", E2(1,in,mp), E2(1,is,mp)
-print "('Be3 [nT] NH/SH  =',2E12.4)", Be3(1,mp,lp), Be3(2,mp,lp)
-
-print "('SL [m]     =',4E13.5)", SL_meter(in:in+1,mp), SL_meter(is-1:is,mp)
-print "('Z  [m]     =',4E13.5)",  Z_meter(in:in+1,mp),  Z_meter(is-1:is,mp)
-!nm20120112:print "('Pvalue     =',F10.4)", Pvalue(mp,lp)
-END IF !( sw_debug ) THEN
-
 
 ! assuming Newtonian gravity: G0 is gravity at the sea level (z=0) 
 !NOTE: positive in NORTHern hemisphere; negative in SOUTHern hemisphere
@@ -116,20 +90,7 @@ END IF !( sw_debug ) THEN
 !nm20120112:           CALL Get_sinI ( sw_sinI, sinI, GL_rad(i,mp), D3(1:3,i,mp) ) 
 !nm20120112:           GR_mks(i,mp)  =  G0 * ( earth_radius * earth_radius ) / ( r_meter_all(i,mp) * r_meter_all(i,mp) ) * sinI * (-1.0)
 
-!IF ( sw_debug )  print "(4E12.4)", Z_meter(i,mp),sinI, (G0 * ( earth_radius * earth_radius ) / ( r_meter_all(i,mp) * r_meter_all(i,mp) )),  GR_mks(i,mp)
-        
          END DO flux_tube
-
-!nm20120112:
-!IF ( sw_debug )  then
-!  if ( sw_sinI==0 ) then
-!    print *,'sinI: flip'
-!  else if ( sw_sinI==1 ) then
-!    print *, 'sinI: APEX'
-!  endif
-!  print "('GRavity[m2 s-1]=',4E12.4)",GR_mks(in:in+2,mp),GR_mks(is,mp)
-!END IF
-
        END DO apex_latitude_height_loop   !: DO lp = 1,NLP
      END DO apex_longitude_loop         !: DO mp = 1,NMP 
 

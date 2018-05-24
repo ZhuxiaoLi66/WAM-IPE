@@ -29,7 +29,7 @@ CONTAINS
   SUBROUTINE plasma ( utime )
     USE module_input_parameters,ONLY:mpSTOP,ip_freq_output,start_time,STOP_time,&
     &     sw_neutral_heating_flip,sw_perp_transport,lpmin_perp_trans,lpmax_perp_trans,&
-    &     sw_para_transport,sw_debug,sw_dbg_perp_trans,sw_exb_up,nprocs,mype,         &
+    &     sw_para_transport,sw_dbg_perp_trans,sw_exb_up,nprocs,mype,         &
     &     HPEQ_flip,barriersOn, solar_forcing_time_step, &
     &     perp_transport_time_step
     USE module_physical_constants,ONLY:rtd,zero

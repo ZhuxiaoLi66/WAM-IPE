@@ -25,7 +25,7 @@ CONTAINS
     USE module_physical_constants,ONLY: rtd,earth_radius
     USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_mag_colat,JMIN_IN,JMAX_IS,mlon_rad,dlonm90km,plasma_grid_Z,minTheta,maxTheta,midpnt
     USE module_IPE_dimension,ONLY: NMP,NLP
-    USE module_input_parameters,ONLY:sw_perp_transport,sw_debug,lpHaloSize,mpHaloSize,MaxLpHaloUSEd,MaxMpHaloUSEd,mype,parallelBuild
+    USE module_input_parameters,ONLY:sw_perp_transport,lpHaloSize,mpHaloSize,MaxLpHaloUSEd,MaxMpHaloUSEd,mype,parallelBuild
     IMPLICIT NONE
 !--- INPUT ---
     INTEGER (KIND=int_prec),INTENT(IN) :: mp
@@ -94,9 +94,6 @@ CONTAINS
         ENDIF
       ENDDO mpx_loop !: DO mpx=0,NMP
 
-      IF(sw_debug) THEN
-        IF (mp==1.OR.mp==nmp) PRINT *,'dbg20140205! sub-find_neighbor_grid_R:mp=',mp, mp_t0(ihem,1:2),phi_t0(ihem)*rtd, mlon_rad(mp_t0(ihem,1:2))*rtd
-      ENDIF
 !dbg20140205: correction IF mp>nmp
       IF (mp==nmp.and.mp_t0(ihem,2)>nmp ) THEN
         PRINT *,'!dbg20140205! mp_t0',mp_t0(ihem,2),mp
@@ -119,20 +116,6 @@ CONTAINS
           PRINT *,'sub-Fi_R: !STOP! invalid theta_t0',mp,lp,theta_t0(ihem),maxTheta
           STOP
         ELSE   !IF ( plasma_grid_mag_colat( JMIN_IN(lp),lp ) <= theta_t0(ihem) ) THEN
-
-!!!UNDERCONSTRUCTION!!!
-          IF(sw_debug) PRINT *,'sub-Fi_R: check GL NH[deg]',(90.-plasma_grid_mag_colat( JMIN_IN(lp),lp )*rtd)
-
-!    lp_min =lp-5 !not sure IF 10 is enough???
-!    IF (lp_min<=0 ) lp_min=1
-!    IF ( plasma_grid_mag_colat( JMIN_IN(lp_min),lp_min ) > theta_t0(ihem) ) THEN
-!      lp_min=lp-5
-!      IF (lp_min<=0 ) lp_min=1
-!      IF ( plasma_grid_mag_colat( JMIN_IN(lp_min),lp_min ) > theta_t0(ihem) ) THEN
-!        PRINT *,'sub-Fi_R:NH !STOP! not sure IF this is working???'
-!        STOP
-!      ENDIF
-!    ENDIF
 
           z_t0 = r0_apex - earth_radius
 
@@ -177,18 +160,10 @@ CONTAINS
           midpoint1 = midpnt(lp1)
           lp2 = lp_t0(ihem,2) !=l+1
           midpoint2 = midpnt(lp2)
-          IF(sw_debug) PRINT *,'lp1=',lp1,midpoint1,' lp2=',lp2,midpoint2
-          IF(sw_debug) PRINT *,'sub-Fi_R: check R',(earth_radius+plasma_grid_Z(midpoint1,lp1)),(earth_radius+Z_t0),(earth_radius+plasma_grid_Z(midpoint2,lp2))
-
-          IF(sw_debug) PRINT *,'sub-Fi_R: mp1=',mp_t0(ihem,1),' mp2=',mp_t0(ihem,2)
-          IF(sw_debug) PRINT *,'sub-Fi_R: mlon',mlon_rad(mp_t0(ihem,1))*rtd, phi_t0(ihem)*rtd, mlon_rad(mp_t0(ihem,2))*rtd, mp_t0(ihem,1:2)
-          IF(sw_debug) PRINT *,'sub-Fi_R: mlat',(90.-plasma_grid_mag_colat( JMIN_IN(lp_t0(ihem,1)),lp_t0(ihem,1) )*rtd), (90.-theta_t0(ihem)*rtd),(90.- plasma_grid_mag_colat( JMIN_IN(lp_t0(ihem,2)),lp_t0(ihem,2) )*rtd)
-
 
         ENDIF! ( plasma_grid_3d(IN,lp)%GL <= theta_t0(ihem) ) THEN
       ENDIF !(ihem==1) THEN
     ENDDO which_hemisphere!:  DO ihem=1,ihem_max
 
-    IF(sw_debug) PRINT *,  'sub-find_neighbor_grid R finished!'
   END SUBROUTINE find_neighbor_grid_R
 END MODULE module_find_neighbor_grid_R

@@ -19,7 +19,7 @@
       SUBROUTINE get_FLIP_grid ( mp,lp )
       USE module_precision
       USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_3d,plasma_grid_mag_colat,plasma_grid_Z,mlon_rad,ht90,JMIN_IN,JMAX_IS,Pvalue,apexD,east,north,up,ISL,IBM,IGR,IQ,IGCOLAT,IGLON
-      USE module_input_parameters,ONLY:NYEAR,NDAY,sw_debug,iout  
+      USE module_input_parameters,ONLY:NYEAR,NDAY,iout  
 !, PCO_flip,BLON_flip  !20120223
       USE module_physical_constants,ONLY: pi
       USE module_unit_conversion,ONLY:M_to_CM
@@ -91,37 +91,7 @@ plasma_grid_mag_colat(in:is,lp) = pi*0.5 - GL(1:JMAX)   ![rad]
 plasma_grid_3d(in:is,lp,mp,IGCOLAT)  =  (90.0-GLATD(1:JMAX))*pi/180.0 !convert from lat[deg] to CO-LAT[rad]
 plasma_grid_3d(in:is,lp,mp,IGR)  =  GR(1:JMAX)/M_to_CM  !cm2 --> m2
 
-!debug write
-!IF ( sw_debug ) THEN
-print *,'FLIP GRID',iout(1),iout(2),pco,blon
-print "('JMIN(IN)=',i6,'  JMAX(IS)=',i6,'  midpoint=',i5)", IN,IS, midpoint
+apexD(in:is,lp,mp,north,3) = COSDIP(1:JMAX)
+apexD(in:is,lp,mp,up   ,3) = SINDIP(1:JMAX)
 
-print "('G-LAT [deg]=NH',21f10.4)",(90.-plasma_grid_3d(in:in+20,lp,mp,IGCOLAT)*180./pi)
-print "('G-LAT [deg]=SH',21f10.4)",(90.-plasma_grid_3d(is-20:is,lp,mp,IGCOLAT)*180./pi)
-
-print "('M-LAT [deg]=',2f10.4)",(90.-plasma_grid_mag_colat(in,lp)*180./pi),(90.-plasma_grid_mag_colat(is,lp)*180./pi)
-print "('GLON  [deg]=',2f10.4)",(plasma_grid_3d(IN,lp,mp,IGLON)*180./pi),( plasma_grid_3d(IS,lp,mp,IGLON)*180./pi)
-print "('Qvalue     =',2E12.4)", plasma_grid_3d(in,lp,mp,IQ ) , plasma_grid_3d(is,lp,mp,IQ )
-print "('BM [nT]    =',2E12.4)", plasma_grid_3d(in,lp,mp,IBM) , plasma_grid_3d(is,lp,mp,IBM)
-
-print "('SL [m]     =',4E13.5)", plasma_grid_3d(in:in+1,lp,mp,ISL), plasma_grid_3d(is-1:is,lp,mp,ISL)
-
-print "('Z  [m]     =',4E13.5)",  plasma_grid_Z(in:in+1,lp),  plasma_grid_Z(is-1:is,lp)
-
-!END IF !( sw_debug ) THEN
-
-
-print "('SL [m]     =',4E13.5)", plasma_grid_Z(in,lp), plasma_grid_Z(is,lp)
-
-
-
-!do i=1,jmax
-!   istp=JMIN_IN(lp)+i-1
-
-   apexD(in:is,lp,mp,north,3) = COSDIP(1:JMAX)
-   apexD(in:is,lp,mp,up   ,3) = SINDIP(1:JMAX)
-
-!end do !i=1,jmax
-
-print *,'sub-get_FLIP_grid finished'
 END SUBROUTINE get_FLIP_grid

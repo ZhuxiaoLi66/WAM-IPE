@@ -32,7 +32,7 @@ CONTAINS
     USE module_IPE_dimension,ONLY: NLP
     USE module_FIELD_LINE_GRID_MKS,ONLY: mlon_rad,plasma_grid_Z,JMIN_IN,JMAX_IS,ht90,plasma_grid_mag_colat,plasma_grid_3d,east,north,up,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,VEXBup,minAltitude,maxAltitude, VEXBe,VEXBth
     USE module_physical_constants,ONLY: earth_radius,rtd,pi,zero
-    USE module_input_parameters,ONLY: time_step,sw_exb_up,sw_debug,start_time,lpmin_perp_trans,fac_exb_up, sw_perp_transport,sw_th_or_R,STOP_time,mype, perp_transport_time_step
+    USE module_input_parameters,ONLY: time_step,sw_exb_up,start_time,lpmin_perp_trans,fac_exb_up, sw_perp_transport,sw_th_or_R,STOP_time,mype, perp_transport_time_step
     IMPLICIT NONE
 ! INPUT
     INTEGER (KIND=int_prec), INTENT(IN) :: utime_local !universal time [sec]
