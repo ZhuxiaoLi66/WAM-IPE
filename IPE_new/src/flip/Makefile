@@ -1,7 +1,7 @@
 clean:
 	$(RM) libflip.a $(LIBOBJS) *.mod
 
-
+OPT=-O0 -g -traceback
 
 LIBOBJS = CMINOR.o \
           CTIPE-int.o \

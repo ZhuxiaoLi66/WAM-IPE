@@ -63,7 +63,7 @@
   compare_var_on=f
   exact_parallel_sum=f
   load_balance_method=2,1
-  load_balance_on=t,f
+  load_balance_on=f,f
   load_balance_size=58,0
   process_layout=58,8
   set_process_layout=t

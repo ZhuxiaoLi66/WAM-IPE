@@ -169,7 +169,8 @@ CONTAINS
  
       CALL plasma % Auroral_Precipitation( grid, &
                                            neutrals, &
-                                           forcing )
+                                           forcing, &
+                                           time_tracker )
 
       CALL plasma % FLIP_Wrapper( grid, & 
                                   neutrals, &
@@ -180,23 +181,24 @@ CONTAINS
 
   END SUBROUTINE Update_IPE_Plasma
 !
-  SUBROUTINE Auroral_Precipitation_IPE_Plasma( plasma, grid, neutrals, forcing )
+  SUBROUTINE Auroral_Precipitation_IPE_Plasma( plasma, grid, neutrals, forcing, time_tracker )
   ! Previously : tiros_ionize_ipe 
     IMPLICIT NONE
     CLASS( IPE_Plasma ), INTENT(inout) :: plasma
     TYPE( IPE_Grid ), INTENT(in)       :: grid
     TYPE( IPE_Neutrals ), INTENT(in)   :: neutrals
     TYPE( IPE_Forcing ), INTENT(in)    :: forcing
+    TYPE( IPE_Time ), INTENT(in)       :: time_tracker
     ! Local
     INTEGER, PARAMETER :: jmaxwell = 6
     INTEGER    :: i, lp, mp, m, j, iband, l
     INTEGER    :: i1, i2, j1, j2, k, kk
     INTEGER    :: tiros_activity_level 
     REAL(prec) :: ratio(1:21)
-    REAL(prec) :: bz, gscon, amu, e0, mlt
+    REAL(prec) :: bz, gscon, amu, e0, mlt, dfac
     REAL(prec) :: ch, chi, diff, mo, mo2, mn2, alpha 
     REAL(prec) :: eflux, essa, dl_lower,dl_upper,qiont_lower,qiont_upper 
-    REAL(prec) :: ri, rj, th, THMagd
+    REAL(prec) :: ri, rj, th, THMagd, GW
     REAL(prec) :: pres(plasma % nFluxTube)
     REAL(prec) :: den(plasma % nFluxTube), grav(plasma % nFluxTube)
     REAL(prec) :: ntot(plasma % nFluxTube), meanmass(plasma % nFluxTube)
@@ -214,7 +216,7 @@ CONTAINS
                         1.261_prec, 1.26_prec, 2.522_prec, 2.522_prec, 5.043_prec, &
                         5.043_prec, 10.0_prec, 14.81_prec, 22.13_prec, 33.06_prec /)
 
-       RLAM(1:21) = (/ 1.49_prec, 1.52_prec, 1.51_prec, 1.48_prec, 1.43_prec, &
+       rlam(1:21) = (/ 1.49_prec, 1.52_prec, 1.51_prec, 1.48_prec, 1.43_prec, &
                                   1.37_prec, 1.30_prec, 1.22_prec, 1.12_prec, 1.01_prec, &
                                   0.895_prec, 0.785_prec, 0.650_prec, 0.540_prec, 0.415_prec, &
                                   0.320_prec, 0.225_prec, 0.14_prec, 0.08_prec, 0.04_prec, 0.0_prec /)
@@ -225,8 +227,9 @@ CONTAINS
                                      7.392_prec, 8.653_prec, 9.914_prec, 12.436_prec, 14.957_prec, 17.479_prec /)
 
       tiros_activity_level = forcing % nhemi_power_index( forcing % current_index )
+      GW                   = forcing % nhemi_power( forcing % current_index )
       bz    = 1.38_prec*10.0_prec**(-23)
-      gscon = 8.314e3_prec
+      gscon = 8.314_prec*10.0_prec**(3)
       mo    = 16.0_prec
       mo2   = 32.0_prec
       mn2   = 28.0_prec
@@ -263,27 +266,33 @@ CONTAINS
 
           DO i=1,grid % flux_tube_max(lp)
             plasma % ionization_rates(1,i,lp,mp) = 0.0_prec
-            plasma % ionization_rates(1,i,lp,mp) = 0.0_prec
-            plasma % ionization_rates(1,i,lp,mp) = 0.0_prec
-            plasma % ionization_rates(1,i,lp,mp) = 0.0_prec
+            plasma % ionization_rates(2,i,lp,mp) = 0.0_prec
+            plasma % ionization_rates(3,i,lp,mp) = 0.0_prec
+            plasma % ionization_rates(4,i,lp,mp) = 0.0_prec
             qion_maxwell(i)                      = 0.0_prec
           ENDDO
 
           ! convert magnetic latitude from radians to degrees
-          thmagd = grid % magnetic_colatitude(i,lp)*180.0_prec/pi
+          ! Use the geomagnetic latitude of the foot point
+          thmagd = ( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )*180.0_prec/pi
           th = abs(thmagd) - 50.0_prec
 
           IF ( abs(thmagd) > 50.0_prec )  THEN
 
-            mlt = grid % magnetic_longitude(mp)*180.0_prec/pi/15.0_prec - &
-                  forcing % sun_longitude*12.0_prec/pi+12.0_prec 
+            mlt = time_tracker % utime/3600.0_prec + &
+                  grid % longitude(1,lp,mp)*180.0_prec/pi/15.0_prec
 
             essa = (mlt + 12.0_prec)*15.0_prec
 
             IF ( essa >= 360.0_prec ) THEN
               essa = essa - 360.0_prec
             ELSEIF ( essa < 0.0_prec ) THEN
-              essa = essa + 360._prec
+              essa = essa + 360.0_prec
+            ENDIF
+
+            dfac = 1.0_prec
+            IF( tiros_activity_level > 9 .AND. GW > 96.0_prec ) THEN
+              dfac = GW/96.0_prec
             ENDIF
 
             l = tiros_activity_level - 2
@@ -333,15 +342,16 @@ CONTAINS
               ENDIF
             ENDDO
 
+            kk = k+1
             chi = ch - ionchr(k)
             diff = ionchr(kk) - ionchr(k)
             ratio_ch = chi/diff
 
             DO i = 1 , grid % flux_tube_max(lp)
 
-              IF ( grid % altitude(i,lp) <= 1000.0_prec )THEN
+              IF ( grid % altitude(i,lp) <= 10.0_prec**(6) )THEN
 
-                grav(i) = -grid % grx(i,lp,mp)/100.0_prec
+                grav(i) = -grid % grx(i,lp,mp)
 
                 ntot(i) = ( neutrals % oxygen(i,lp,mp)  +&
                             neutrals % molecular_oxygen(i,lp,mp) +&
@@ -373,8 +383,8 @@ CONTAINS
 
                   ELSE
 
-                    DO m = 1 , 21
-                      IF ( ratioz.LE.ratio(m) ) THEN
+                    DO m = 2 , 21 !! Used to loop from 1,21
+                      IF ( ratioz <= ratio(m) ) THEN
                         rlamz = rlam(m-1) + (ratioz-ratio(m-1))*&
                                 (rlam(m)-rlam(m-1))/(ratio(m)-ratio(m-1))
                         EXIT
@@ -406,8 +416,8 @@ CONTAINS
                     rlamz = 0.0_prec
                   ELSE
 
-                    DO m = 1 , 21
-                      IF ( ratioz.LE.ratio(m) ) THEN
+                    DO m = 2 , 21 !! Used to loop from 1, 21
+                      IF ( ratioz <= ratio(m) ) THEN
                         rlamz = rlam(m-1) + (ratioz-ratio(m-1))*(rlam(m)-rlam(m-1))/(ratio(m)-ratio(m-1))
                         EXIT
                       ENDIF
@@ -419,7 +429,7 @@ CONTAINS
 
                 ENDDO
 
-                plasma % ionization_rates(1,i,lp,mp) = plasma % ionization_rates(1,i,lp,mp) + qion_maxwell(i)
+                plasma % ionization_rates(1,i,lp,mp) = ( plasma % ionization_rates(1,i,lp,mp) + qion_maxwell(i) )*dfac
 
                 q = plasma % ionization_rates(1,i,lp,mp)/( 0.92_prec*neutrals % molecular_nitrogen(i,lp,mp) +&
                                                            1.50_prec*neutrals % molecular_oxygen(i,lp,mp)  +&
@@ -440,6 +450,8 @@ CONTAINS
         ENDDO
       ENDDO
 
+      PRINT*, MINVAL( plasma % ionization_rates(1,:,:,:) ), MAXVAL( plasma % ionization_rates(1,:,:,:) )
+
   END SUBROUTINE Auroral_Precipitation_IPE_Plasma
 
   SUBROUTINE FLIP_Wrapper( plasma, grid, neutrals, forcing, time_tracker, flip_time_step )
@@ -454,7 +466,7 @@ CONTAINS
     INTEGER  :: i, lp, mp
     INTEGER  :: JMINX, JMAXX
     INTEGER  :: EFLAG(11,11)
-    REAL(dp) :: PCO, ltime, mlt
+    REAL(dp) :: PCO !, mlt
     REAL(dp) :: ZX(1:grid % nFluxTube) 
     REAL(dp) :: SLX(1:grid % nFluxTube) 
     REAL(dp) :: GLX(1:grid % nFluxTube) 
@@ -528,14 +540,6 @@ CONTAINS
             NHEAT(i)    = 0.0_dp
        
           ENDDO
-
-          ltime = time_tracker % utime/3600.0_prec + grid % longitude(i,lp,mp)*180.0_prec/pi/15.0_prec
-          IF ( ltime > 24.0_prec ) THEN
-            ltime = MOD(ltime, 24.0_prec)
-          ENDIF
-
-          mlt = grid % magnetic_longitude(mp)*180.0_prec/pi/15.0_prec - &
-                forcing % sun_longitude*12.0_prec/pi+12.0_prec 
 
           JMINX = 1
           JMAXX = grid % flux_tube_max(lp)
@@ -677,6 +681,48 @@ CONTAINS
 
 
   END SUBROUTINE Interpolate_to_GeographicGrid_IPE_Plasma
+
+  SUBROUTINE Read_Legacy_Input_IPE_Plasma( plasma, grid, filename )
+    IMPLICIT NONE
+    CLASS( IPE_Plasma ), INTENT(inout) :: plasma
+    TYPE( IPE_Grid ), INTENT(in)       :: grid
+    CHARACTER(100), INTENT(in)         :: filename
+    ! Local
+    INTEGER    :: ispec, i, lp, mp, ii, fUnit
+    REAL(prec) :: dumm(1:grid % npts2d, 1:grid % NMP, 1:12) 
+
+      
+      
+      OPEN( UNIT   = NewUnit( fUnit ), &
+            FILE   = TRIM( filename ), &
+            FORM   = 'UNFORMATTED', &
+            STATUS = 'OLD' )
+
+
+      DO ispec=1,12
+        READ( fUnit ) dumm(:,:,ispec)
+      ENDDO
+
+      CLOSE( fUnit )
+
+      DO mp = 1, grid % NMP
+
+        ii = 1
+
+        DO lp = 1, grid % NLP
+          DO i = 1, grid % flux_tube_max(lp)
+
+            ii = ii + 1
+
+            plasma % ion_densities(i,lp,mp,1:9)    = dumm(ii,mp,1:9)
+            plasma % electron_temperature(i,lp,mp) = dumm(ii,mp,10)
+            plasma % ion_temperature(i,lp,mp)      = dumm(ii,mp,11)
+
+          ENDDO
+        ENDDO
+      ENDDO
+
+  END SUBROUTINE Read_Legacy_Input_IPE_Plasma
 
 END MODULE IPE_Plasma_Class
 

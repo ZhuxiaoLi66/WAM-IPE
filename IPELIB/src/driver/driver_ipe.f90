@@ -89,18 +89,18 @@ PROGRAM  test_plasma
 
        CALL neutral ( utime_driver, start_time )
 
-       utime_sub_loop = utime_driver
-       DO sub_time_loop = 1, time_step/solar_forcing_time_step
-
-         CALL eldyn ( utime_sub_loop )
-
-         CALL plasma ( utime_sub_loop )
-
-         utime_sub_loop = utime_sub_loop + solar_forcing_time_step
-
-       ENDDO
-
-       utime_driver = utime_driver + time_step
+!       utime_sub_loop = utime_driver
+!       DO sub_time_loop = 1, time_step/solar_forcing_time_step
+!
+!         CALL eldyn ( utime_sub_loop )
+!
+!         CALL plasma ( utime_sub_loop )
+!
+!         utime_sub_loop = utime_sub_loop + solar_forcing_time_step
+!
+!       ENDDO
+!
+!       utime_driver = utime_driver + time_step
 
        IF( MOD(utime_driver,ip_freq_output)==0)THEN
           WRITE( iterChar, '(I8.8)' )utime_driver
