@@ -161,15 +161,15 @@ module module_sub_myIPE_Init
 ! call ESMF_LogWrite("sub-init_IPE STARTING:", ESMF_LOGMSG_INFO, rc=rc)
 
 ! CALL ESMF_LogWrite("sub-init_IPE: ESMF_ClockPrint", ESMF_LOGMSG_INFO, rc=rc)
-  call ESMF_ClockPrint(clock, options="currTime name startTime stopTime timeStep", rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-      	  file=__FILE__)) &
-          return  ! bail out
-  if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+! call ESMF_ClockPrint(clock, options="currTime name startTime stopTime timeStep", rc=rc)
+!     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!         line=__LINE__, &
+!     	  file=__FILE__)) &
+!         return  ! bail out
+! if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 
-  CALL ESMF_LogWrite("sub-init_IPE: ESMF_ClockGet", ESMF_LOGMSG_INFO, rc=rc)
+! CALL ESMF_LogWrite("sub-init_IPE: ESMF_ClockGet", ESMF_LOGMSG_INFO, rc=rc)
   call ESMF_ClockGet(clock, &
          timeStep=timeStep, &
          startTime=startTime, stopTime=stopTime, &
@@ -182,11 +182,11 @@ module module_sub_myIPE_Init
           return  ! bail out
 
 ! CALL ESMF_LogWrite("sub-init_IPE: ESMF_TimePrint", ESMF_LOGMSG_INFO, rc=rc)
-  call ESMF_TimePrint(currTime, rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-      	  file=__FILE__)) &
-          return  ! bail out
+! call ESMF_TimePrint(currTime, rc=rc)
+!     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!         line=__LINE__, &
+!     	  file=__FILE__)) &
+!         return  ! bail out
 
 
 ! CALL ESMF_LogWrite("sub-init_IPE: ESMF_TimeGet", ESMF_LOGMSG_INFO, rc=rc)
@@ -198,9 +198,9 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       	  file=__FILE__)) &
           return  ! bail out
 !t   if (IAM_ROOT()) then
-     print *,'NYEAR=', NYEAR,' d_i8=',d_i8
-     print *, "The clock's final current time is NYEAR=", NYEAR, "/MM=", MM, "/DD=", DD, &
-               " H=", H, ":M=", M, ":S=", S
+!    print *,'NYEAR=', NYEAR,' d_i8=',d_i8
+!    print *, "The clock's final current time is NYEAR=", NYEAR, "/MM=", MM, "/DD=", DD, &
+!              " H=", H, ":M=", M, ":S=", S
      fmt = '(i2.2)'
      fmt1 = '(i4.4)'
      write (yy_str,fmt1) NYEAR
@@ -209,9 +209,8 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
      write (h_str,fmt) H
      write (m_str,fmt) M
      write (s_str,fmt) S
-     print *, trim(yy_str)//trim(mm_str)//trim(dd_str)//'T'//trim(h_str)//trim(m_str)
-     model_start_time = &
-&          'MODEL_START_TIME.'//trim(yy_str)//trim(mm_str)//trim(dd_str)//'T'//trim(h_str)//trim(m_str)
+!    print *, trim(yy_str)//trim(mm_str)//trim(dd_str)//'T'//trim(h_str)//trim(m_str)
+     model_start_time = 'MODEL_START_TIME.'//trim(yy_str)//trim(mm_str)//trim(dd_str)//'T'//trim(h_str)//trim(m_str)                     
      open(unit=5995,FILE=model_start_time,status='unknown',form='formatted')
      write(5995,*) model_start_time
      close(5995)
@@ -222,9 +221,8 @@ call ESMF_TimeGet(stoptime, yy=yystop,mm=mmstop,dd=ddstop,h=hstop,m=mstop,s=ssto
      write (h_stop_str,fmt) hstop
      write (m_stop_str,fmt) mstop
      write (s_stop_str,fmt) sstop
-     print *, trim(yy_stop_str)//trim(mm_stop_str)//trim(dd_stop_str)//'T'//trim(h_stop_str)//trim(m_stop_str)
-     model_stop_time = &
-&          'MODEL_STOP_TIME.'//trim(yy_stop_str)//trim(mm_stop_str)//trim(dd_stop_str)//'T'//trim(h_stop_str)//trim(m_stop_str)
+!    print *, trim(yy_stop_str)//trim(mm_stop_str)//trim(dd_stop_str)//'T'//trim(h_stop_str)//trim(m_stop_str)
+     model_stop_time = 'MODEL_STOP_TIME.'//trim(yy_stop_str)//trim(mm_stop_str)//trim(dd_stop_str)//'T'//trim(h_stop_str)//trim(m_stop_str)
      open(unit=5994,FILE=model_stop_time,status='unknown',form='formatted')
      write(5994,*) model_stop_time
      close(5994)
