@@ -328,15 +328,6 @@ SUBROUTINE flux_tube_solver ( utime,mp,lp )
     ENDDO !jth
 
 
-!dbg20160421 debug
-    IF( EFLAG(2,1)/=0 .and. 32<(ipts+IN-1) .and. (ipts+IN-1)<39 )THEN
-!SMS$IGNORE begin
-      PRINT"(i2,' XION=',e10.2,f7.0,f7.1,i4,' lp=',i3,' mp=',i2,' LT=',f6.1)",mype,plasma_3d(ipts+IN-1,lp,mp,1),(plasma_grid_Z(ipts+IN-1,lp)*1.e-3),((pi/2. - plasma_grid_GL(ipts+IN-1,lp))*180./pi),(ipts+IN-1),lp,mp,ltime
-!SMS$IGNORE end
-    ENDIF!(EFLAG
-
-
-
 
 !te
     plasma_3d(ipts+IN-1,lp,mp,ISPEC+1) = TE_TIX(3,ipts)
