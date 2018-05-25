@@ -76,7 +76,7 @@ if [ $IDEA = .true. ] ; then
 	fi
 
 	# ipe.config checks
-	if [ $WAM_IPE_COUPLING = .true. ] ; then
+	if [ $IPE = .true. ] ; then
 		echo "checking to make sure NPROCIPE is valid: $NPROCIPE"
 		valid=0
 		for i in "${VALID_IPE_PET[@]}" ; do
@@ -185,8 +185,7 @@ else # restart conditions
 	        fi
 	done
 
-        echo $WAM_IPE_COUPLING
-        if [ "$WAM_IPE_COUPLING" == ".true." ]; then
+        if [ $IPE = ".true." ]; then
 	  for file in $RSTR ; do
 		if ! [[ -n "$(ls $file)" ]] ; then # file not found
 			echo "   restart file $file not found! exiting." ; exit 1
@@ -215,7 +214,7 @@ else # restart conditions
 fi # end restart block
 
 # now do the IPE initial conditions
-if [ $WAM_IPE_COUPLING = .true. ] ; then
+if [ $IPE = .true. ] ; then
 	if [ -z $IPEDATETIME ] ; then # user has not defined IPEDATETIME
 		# if RESTART=.false. then CDATE should be valid and we can skip this nonsense
 		if [ $RESTART = .false. ] ; then
