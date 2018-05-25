@@ -42,11 +42,6 @@
      &  bt,    ! IMF magnitude
      &  tilt       ! tilt of earth
 
-!-----------------------------------------------------------------
-! function declarations
-!-----------------------------------------------------------------
-!nm20121012      real, external :: get_tilt	 ! in wei96.f
-
       if( by == 0. .and. bz == 0.) then
          angle = 0.
       else
@@ -60,24 +55,13 @@
 ! use month and day of month - calculated with average no.of days per month
 ! as in Weimer
 !-------------------------------------------------------------------
-c     if(debug) write(iulog,*) 'prep_weimer: day->day of month',
-c    &iday,imo,iday_m,ut
+
       tilt = get_tilt( iyear, imo, iday_m, ut )
 
       if ( sw_ctip_input ) then
         bt    = swbt(LPI)
         angle = swangle(LPI)
         v_sw  = swvel(LPI)
-
-
-      if (mype==0) then
-      print"('Wei:LPI',i4,'Bt',f6.1,'ang',f8.0,'Vsw',f8.0,'tlt',e11.2)" &
-     &,lpi,bt,angle,v_sw,tilt
-!       write(6,*)  '  Bz   =',bz
-!       write(6,*)  '  By   =',by
-       write(unit=1001,FMT='(i8,3f8.2,e12.4)')INT(ut*3600.)             &
-     &,bt,angle,v_sw,tilt
-      end if                    !mype
       end if !( sw_ctip_input ) then
 
       call SetModel( angle, bt, tilt, v_sw )
