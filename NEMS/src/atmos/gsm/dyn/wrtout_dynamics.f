@@ -615,11 +615,9 @@ c then (only if liope)  flux state.
 
         if (me == ioproc) print *,'2 end of twritero_rst for ',
      &                             trim(filename)
-      IF(lsidea) THEN
 
         CALL TWRITES_rst_idea('fort.1051',ioproc,FHOUR,idate,
      &              SI,LS_NODES,MAX_LS_NODES,trie_ls,trio_ls)
-      END IF
 
 ! n-1 time step grid file
 !
