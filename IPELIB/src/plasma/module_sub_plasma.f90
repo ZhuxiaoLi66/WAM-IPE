@@ -47,22 +47,12 @@ CONTAINS
     INTEGER :: utime_perp_transport, time_loop
     REAL :: t1, t2
 
-!SMS$SERIAL BEGIN
-    CALL CPU_TIME( t1 )
-!SMS$SERIAL END
-    
-
 ! save ut so that other SUBROUTINEs can refer to it
     utime_save=utime
 
     IF ( sw_neutral_heating_flip==1 )  THEN
       hrate_mks3d(:,:,:,:)=zero!0.0_REAL_prec
     ENDIF
-
-
-!SMS$SERIAL (<plasma_3d,IN> :DEFAULT=IGNORE)BEGIN
-    PRINT*, 'min/max plasma : ',MINVAL(plasma_3d), MAXVAL(plasma_3d), utime
-!SMS$SERIAL END
 
 
     IF ( utime > 0 ) THEN
@@ -115,11 +105,6 @@ CONTAINS
       ENDDO
     ENDDO
 !SMS$PARALLEL END
-
-!SMS$SERIAL BEGIN
-    CALL CPU_TIME( t2 )
-    PRINT*, "PLASMA_TIME :", t2-t1
-!SMS$SERIAL END
 
   END SUBROUTINE plasma
 
