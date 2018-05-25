@@ -195,7 +195,7 @@
      &lat_sft = 54.	 ! shift of highlat_bnd to 54 deg
       integer :: ilat_sft        ! index of shift for high latitude boundary
       integer, parameter :: nmax_sin = 2 ! max. wave number to be represented
-      logical, parameter :: debug =.true.
+      logical, parameter :: debug =.false.
 !
       contains
 
