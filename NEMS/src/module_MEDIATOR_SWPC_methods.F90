@@ -3558,7 +3558,7 @@ contains
         rcToReturn=rc)) return  ! bail out
 
       ! -- print diagnostic info
-      call FieldPrintMinMax(srcFieldComp(comp), "pre  - src:" // trim(compNames(comp)), rc)
+!     call FieldPrintMinMax(srcFieldComp(comp), "pre  - src:" // trim(compNames(comp)), rc)
 
       dstFieldComp(comp) = StateGetField(rh % dstState, compNames(comp), component=comp, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -3609,7 +3609,7 @@ contains
 
     do comp = 1, compCount
       ! -- print diagnostic info
-      call FieldPrintMinMax(dstFieldComp(comp), "post - dst:" // trim(compNames(comp)), rc)
+!     call FieldPrintMinMax(dstFieldComp(comp), "post - dst:" // trim(compNames(comp)), rc)
 
       call StateStoreField(rh % srcState, srcFieldComp(comp), compNames(comp), rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -3919,7 +3919,7 @@ contains
           file=__FILE__,  &
           rcToReturn=rc)) return  ! bail out
 
-        call FieldPrintMinMax(dstField, "StateGetField:" // trim(fieldName), rc)
+!       call FieldPrintMinMax(dstField, "StateGetField:" // trim(fieldName), rc)
 
       else if (geomtype == ESMF_GEOMTYPE_GRID) then
 

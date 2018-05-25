@@ -223,7 +223,7 @@ module module_MED_SWPC
     ! -- begin
     call NamespaceAdjustFields(gridComp=mediator, rc=rc)
 
-    print *,'MED: all fields adjusted'
+!   print *,'MED: all fields adjusted'
 
   end subroutine InitializeP4
     
@@ -308,7 +308,7 @@ module module_MED_SWPC
         line=__LINE__, &
         file=__FILE__)) &
         return  ! bail out
-      print *,'MED: done creating intermediate 3D grid'
+!     print *,'MED: done creating intermediate 3D grid'
 
     else if (geomtype == ESMF_GEOMTYPE_MESH) then
 
@@ -336,17 +336,17 @@ module module_MED_SWPC
         line=__LINE__, &
         file=__FILE__)) &
         return  ! bail out
-      print *,'MED: done creating intermediate 3D mesh'
+!     print *,'MED: done creating intermediate 3D mesh'
 
     end if
    
-    print *,'MED: starting field realize ...'
+!   print *,'MED: starting field realize ...'
     call NamespaceRealizeFields(rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
-    print *,'MED: done field realize'
+!   print *,'MED: done field realize'
 
   end subroutine InitializeP5
 
@@ -361,24 +361,24 @@ module module_MED_SWPC
     ! -- begin
     rc = ESMF_SUCCESS
 
-    print *,'MED: DataInitialize: calling NamespaceInitializeFields ...'
+!   print *,'MED: DataInitialize: calling NamespaceInitializeFields ...'
     call NamespaceInitializeFields(rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
-    print *,'MED: DataInitialize: done NamespaceInitializeFields ...'
+!   print *,'MED: DataInitialize: done NamespaceInitializeFields ...'
 
     ! indicate that data initialization is complete (breaking out of init-loop)
-    print *,'MED: DataInitialize: setting complete attribute...'
+!   print *,'MED: DataInitialize: setting complete attribute...'
     call NUOPC_CompAttributeSet(mediator, &
       name="InitializeDataComplete", value="true", rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
-    print *,'MED: DataInitialize: done complete attribute'
-    print *,'MED: DataInitialize: done'
+!   print *,'MED: DataInitialize: done complete attribute'
+!   print *,'MED: DataInitialize: done'
     
   end subroutine DataInitialize
 
@@ -404,7 +404,7 @@ module module_MED_SWPC
     ! -- begin
     rc = ESMF_SUCCESS
 
-    print *,'MED: entering MediatorAdvance...'
+!   print *,'MED: entering MediatorAdvance...'
     ! query the Component for its clock, importState and exportState
     call ESMF_GridCompGet(mediator, clock=clock, &
       importState=importState, exportState=exportState, rc=rc)
@@ -502,16 +502,16 @@ module module_MED_SWPC
             line=__LINE__, &
             file=__FILE__)) &
             return  ! bail out
-          call FieldPrintMinMax(tmpField, "tmp: temp_neutral", rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
+!         call FieldPrintMinMax(tmpField, "tmp: temp_neutral", rc)
+!         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!           line=__LINE__, &
+!           file=__FILE__)) &
+!           return  ! bail out
 
           ! -- only process fields with known destination
           do item = 1, size(rh % dstState % fieldNames)
-            print *, 'MED: regridding ',trim(rh % dstState % fieldNames(item)), &
-              ' with ', trim(rh % label)
+!           print *, 'MED: regridding ',trim(rh % dstState % fieldNames(item)), &
+!             ' with ', trim(rh % label)
             call FieldRegrid(rh, trim(rh % dstState % fieldNames(item)), &
               auxArray=tnArray, options=rh % dstState % fieldOptions(item), rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -536,9 +536,9 @@ module module_MED_SWPC
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail out
-            call FieldPrintMinMax(srcField, "orig - src:" // trim(rh % dstState % fieldNames(item)), rc)
-            print *, 'MED: regridding ',trim(rh % dstState % fieldNames(item)), &
-              ' with ', trim(rh % label)
+!           call FieldPrintMinMax(srcField, "orig - src:" // trim(rh % dstState % fieldNames(item)), rc)
+!           print *, 'MED: regridding ',trim(rh % dstState % fieldNames(item)), &
+!             ' with ', trim(rh % label)
             call FieldRegrid(rh, trim(rh % dstState % fieldNames(item)), rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
