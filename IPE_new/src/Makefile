@@ -122,6 +122,26 @@ ipe_test : libnrlmsis.a libflip.a ${OBJ}
 Test_IPE.o : IPE_Precision.o IPE_Model_Class.o test/Test_IPE.F90
 	${FC} ${CPPFLAGS} ${OPT} -c test/Test_IPE.F90 ${LIB} ${INC} -o $@ 
 
+POBJ = IPE_Precision.o \
+      IPE_Common_Routines.o \
+      IPE_Constants_Dictionary.o \
+      IPE_Model_Parameters_Class.o \
+      IPE_Time_Class.o \
+      IPE_Forcing_Class.o \
+      IPE_Grid_Class.o \
+      IPE_Neutrals_Class.o \
+      IPE_Plasma_Class.o \
+      IPE_Model_Class.o \
+      Convert_LegacyPlasma_to_NetCDF.o
+ 
+l2n_plasma : libnrlmsis.a libflip.a ${POBJ} 
+	${FC} ${OPT} ${POBJ} ${LIB} ${INC} -o $@
+	mv $@ ../bin/
+
+
+Convert_LegacyPlasma_to_NetCDF.o : IPE_Model_Class.o test/Convert_LegacyPlasma_to_NetCDF.F90
+	${FC} ${CPPFLAGS} ${OPT} -c test/Convert_LegacyPlasma_to_NetCDF.F90 ${LIB} ${INC} -o $@
+
 .PHONY : clean
 
 clean :

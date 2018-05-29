@@ -68,7 +68,8 @@ CONTAINS
       forcing % current_time  = 0.0_prec
       forcing % current_index = 1
 
-      ALLOCATE( forcing % f107(1:n_time_levels), &
+      ALLOCATE( forcing % time(1:n_time_levels), &
+                forcing % f107(1:n_time_levels), &
                 forcing % f107_flag(1:n_time_levels), &
                 forcing % f107_81day_avg(1:n_time_levels), &
                 forcing % kp(1:n_time_levels), &
