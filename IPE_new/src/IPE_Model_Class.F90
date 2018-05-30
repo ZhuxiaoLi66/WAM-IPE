@@ -38,7 +38,7 @@ IMPLICIT NONE
 
       PROCEDURE :: Geographic_Interpolation
       PROCEDURE :: Write_NetCDF_IPE
-!      PROCEDURE :: Read_NetCDF_IPE
+      PROCEDURE :: Read_NetCDF_IPE
 
       PROCEDURE :: Write_Geographic_NetCDF_IPE
    
@@ -76,6 +76,7 @@ CONTAINS
 
 
         CALL ipe % grid % Read_IPE_Grid_NetCDF( ipe % parameters % netcdf_grid_file  )
+        ipe % grid % npts2d = ipe % parameters % npts2d
 
 
 #ifdef COUPLED_TO_WAM
@@ -190,7 +191,8 @@ CONTAINS
     INTEGER :: molecular_nitrogen_varid, nitrogen_varid, hydrogen_varid
     INTEGER :: temperature_varid, u_varid, v_varid, w_varid
     INTEGER :: op_varid, hp_varid, hep_varid, np_varid, n2p_varid, o2p_varid, nop_varid
-    INTEGER :: ion_temp_varid
+    INTEGER :: op2d_varid, op2p_varid, ion_temp_varid
+    INTEGER :: opv_varid(1:3), hpv_varid(1:3), hepv_varid(1:3), npv_varid(1:3), n2pv_varid(1:3), o2pv_varid(1:3), nopv_varid(1:3)
 
 
       IF( prec == sp )THEN
@@ -279,6 +281,14 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, n2p_varid, "long_name", "Molecular Nitrogen ion number density" ) )
       CALL Check( nf90_put_att( ncid, n2p_varid, "units", " m^{-3}" ) )
 
+      CALL Check( nf90_def_var( ncid, "O+(2D)", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , op2d_varid ) )
+      CALL Check( nf90_put_att( ncid, op2d_varid, "long_name", "Oxygen ion (ground state) number density" ) )
+      CALL Check( nf90_put_att( ncid, op2d_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "O+(2P)", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , op2p_varid ) )
+      CALL Check( nf90_put_att( ncid, op2p_varid, "long_name", "Oxygen ion (first excited state) number density" ) )
+      CALL Check( nf90_put_att( ncid, op2p_varid, "units", " m^{-3}" ) )
+
       CALL Check( nf90_def_var( ncid, "ion_temp", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , ion_temp_varid ) )
       CALL Check( nf90_put_att( ncid, ion_temp_varid, "long_name", "Ion temperature" ) )
       CALL Check( nf90_put_att( ncid, ion_temp_varid, "units", "K" ) )
@@ -307,34 +317,118 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, nop_varid, ipe % plasma % ion_densities(5,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, o2p_varid, ipe % plasma % ion_densities(6,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % ion_densities(7,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, op2d_varid, ipe % plasma % ion_densities(8,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, op2p_varid, ipe % plasma % ion_densities(9,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % ion_temperature ) )
 
       CALL Check( nf90_close( ncid ) )
 
   END SUBROUTINE Write_NetCDF_IPE
 !
-!  SUBROUTINE Read_IPE_Model_NetCDF( grid, filename )
-!    IMPLICIT NONE
-!    CLASS( IPE_Grid ), INTENT(inout) :: grid
-!    CHARACTER(*), INTENT(in)         :: filename
-!    ! Local
-!    INTEGER :: NF90_PREC
-!    INTEGER :: ncid
-!    INTEGER :: dimid, varid
-!    INTEGER :: nFluxtube, NLP, NMP
-!    CHARACTER(NF90_MAX_NAME) :: nameHolder
-!
-!
-!      
-!      IF( prec == sp )THEN
-!        NF90_PREC = NF90_FLOAT
-!      ELSE      
-!        NF90_PREC = NF90_DOUBLE
-!      ENDIF
-!
-!      CALL Check( nf90_open( TRIM(filename), NF90_NETCDF4, ncid))
-!  END SUBROUTINE Read_IPE_Model_NetCDF
-!
+  SUBROUTINE Read_NetCDF_IPE( ipe, filename )
+    IMPLICIT NONE
+    CLASS( IPE_Model ), INTENT(inout) :: ipe
+    CHARACTER(*), INTENT(in)          :: filename
+    ! Local
+    INTEGER :: NF90_PREC
+    INTEGER :: ncid
+    INTEGER :: dimid, varid
+    INTEGER :: nFluxtube, NLP, NMP
+    CHARACTER(NF90_MAX_NAME) :: nameHolder
+
+
+      
+      IF( prec == sp )THEN
+        NF90_PREC = NF90_FLOAT
+      ELSE      
+        NF90_PREC = NF90_DOUBLE
+      ENDIF
+
+      CALL Check( nf90_open( TRIM(filename), NF90_NETCDF4, ncid))
+
+
+      ! Obtain the dimensions of the IPE_Grid
+      CALL Check( nf90_inq_dimid( ncid, "s", dimid ) )
+      CALL Check( nf90_inquire_dimension( ncid, dimid, nameHolder, nFluxTube ) )
+
+      CALL Check( nf90_inq_dimid( ncid, "lp", dimid ) )
+      CALL Check( nf90_inquire_dimension( ncid, dimid, nameHolder, NLP ) )
+
+      CALL Check( nf90_inq_dimid( ncid, "mp", dimid ) )
+      CALL Check( nf90_inquire_dimension( ncid, dimid, nameHolder, NMP ) )
+
+      ! It is assumed that the IPE_Model has already been constructed with
+      ! appropriate NMP, NLP, nFluxTube.
+
+      IF( ipe % parameters % write_apex_neutrals )THEN
+
+        CALL Check( nf90_inq_varid( ncid, "helium", varid ) )
+        CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % helium ) )
+
+        CALL Check( nf90_inq_varid( ncid, "oxygen", varid ) )
+        CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % oxygen ) )
+
+        CALL Check( nf90_inq_varid( ncid, "molecular_oxygen", varid ) )
+        CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % molecular_oxygen ) )
+
+        CALL Check( nf90_inq_varid( ncid, "molecular_nitrogen", varid ) )
+        CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % molecular_nitrogen ) )
+
+        CALL Check( nf90_inq_varid( ncid, "nitrogen", varid ) )
+        CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % nitrogen ) )
+
+        CALL Check( nf90_inq_varid( ncid, "hydrogen", varid ) )
+        CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % hydrogen ) )
+
+        CALL Check( nf90_inq_varid( ncid, "temperature", varid ) )
+        CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % temperature ) )
+
+        CALL Check( nf90_inq_varid( ncid, "u", varid ) )
+        CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % velocity_geographic(1,:,:,:) ) )
+
+        CALL Check( nf90_inq_varid( ncid, "v", varid ) )
+        CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % velocity_geographic(2,:,:,:) ) )
+
+        CALL Check( nf90_inq_varid( ncid, "w", varid ) )
+        CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % velocity_geographic(3,:,:,:) ) )
+
+      ENDIF
+
+
+      CALL Check( nf90_inq_varid( ncid, "O+", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(1,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "H+", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(2,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "He+", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(3,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "N+", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(4,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "NO+", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(5,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "O2+", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(6,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "N2+", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(7,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "O+(2D)", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(8,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "O+(2P)", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(9,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ion_temp", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_temperature ) )
+
+
+
+  END SUBROUTINE Read_NetCDF_IPE
+
   SUBROUTINE Write_Geographic_NetCDF_IPE( ipe, filename )
     IMPLICIT NONE
     CLASS( IPE_Model ), INTENT(in) :: ipe

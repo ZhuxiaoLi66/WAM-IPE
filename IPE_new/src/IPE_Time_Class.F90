@@ -6,18 +6,26 @@ IMPLICIT NONE
 
   TYPE IPE_Time
     REAL(prec) :: utime
-    INTEGER    :: year, month, day, day_of_year, hour, minute
+    INTEGER    :: day_number, year, month, day, day_of_year, hour, minute
 
     CONTAINS
 
     PROCEDURE :: Build => Build_IPE_Time
 
-    PROCEDURE :: Set_Date => Set_Date_IPE_Time
-    PROCEDURE :: Get_Date => Get_Date_IPE_Time
+    PROCEDURE :: Set_Date  => Set_Date_IPE_Time
+    PROCEDURE :: Get_Date  => Get_Date_IPE_Time
+    PROCEDURE :: Set_UTime => Set_UTime_IPE_Time
+    PROCEDURE :: Get_UTime => Get_UTime_IPE_Time
 
+    PROCEDURE :: Update => Update_IPE_Time
     PROCEDURE :: Calculate_Hour_and_Minute => Calculate_Hour_and_Minute_IPE_Time
+    PROCEDURE :: Calculate_UTime           => Calculate_UTime_IPE_Time
 
     PROCEDURE :: DateStamp => DateStamp_IPE_Time
+    PROCEDURE :: Time_From_DateStamp => Time_From_DateStamp_IPE_Time
+
+    PROCEDURE :: Calculate_DayNumber    => Calculate_DayNumber_IPE_Time
+    PROCEDURE :: Calculate_YearMonthDay => Calculate_YearMonthDay_IPE_Time
 
   END TYPE IPE_Time
 
@@ -25,20 +33,13 @@ IMPLICIT NONE
 
 CONTAINS
 
-  SUBROUTINE Build_IPE_Time( time_tracker, year, day_of_year, start_time )
+  SUBROUTINE Build_IPE_Time( time_tracker, time_stamp )
     IMPLICIT NONE
     CLASS( IPE_Time ), INTENT(inout) :: time_tracker
-    INTEGER, INTENT(in)              :: year, day_of_year
-    REAL(prec), INTENT(in)           :: start_time
+    CHARACTER(12), INTENT(in)        :: time_stamp
 
-      time_tracker % utime = start_time 
+      CALL time_tracker % Time_From_DateStamp( time_stamp )
 
-      time_tracker % year = year
-      time_tracker % day_of_year = day_of_year
-      time_tracker % month = 0
-      time_tracker % day   = 0
-
-!      CALL time_tracker % Calculate_Month_and_Day( )
 
       CALL time_tracker % Calculate_Hour_and_Minute( )
 
@@ -66,14 +67,79 @@ CONTAINS
 
   END SUBROUTINE Get_Date_IPE_Time
 
+  SUBROUTINE Set_UTime_IPE_Time( time_tracker, utime )
+    IMPLICIT NONE
+    CLASS( IPE_Time ), INTENT(inout) :: time_tracker
+    REAL(prec), INTENT(in)           :: utime
+
+      time_tracker % utime = utime
+
+  END SUBROUTINE Set_UTime_IPE_Time
+
+  SUBROUTINE Get_UTime_IPE_Time( time_tracker, utime )
+    IMPLICIT NONE
+    CLASS( IPE_Time ), INTENT(in) :: time_tracker
+    REAL(prec), INTENT(out)       :: utime
+
+      utime = time_tracker % utime
+
+  END SUBROUTINE Get_UTime_IPE_Time
+
+  SUBROUTINE Update_IPE_Time( time_tracker, utime )
+   ! Uses the utime to advance the minute, hour, day, month, year
+   IMPLICIT NONE
+   CLASS( IPE_Time ), INTENT(inout) :: time_tracker
+   REAL(prec), INTENT(in), OPTIONAL :: utime           
+   ! Local
+   INTEGER :: additional_hours, additional_days
+
+      IF( PRESENT( utime ) )THEN
+        time_tracker % utime = utime
+      ENDIF
+
+      CALL time_tracker % Calculate_Hour_and_Minute( )
+
+      IF( time_tracker % minute > 60 )THEN
+
+        additional_hours = MOD( time_tracker % minute, 60 )
+        time_tracker % minute = time_tracker % minute - additional_hours*60
+        time_tracker % hour   = time_tracker % hour + additional_hours
+
+      ENDIF
+
+
+      IF( time_tracker % hour > 24 )THEN
+
+        additional_days = MOD( time_tracker % hour, 24 )
+        time_tracker % hour = time_tracker % hour - additional_days*24
+        time_tracker % day_number  = time_tracker % day_number + additional_days
+
+      ENDIF
+
+      CALL time_tracker % Calculate_UTime( )
+      CALL time_tracker % Calculate_YearMonthDay( )
+
+  END SUBROUTINE Update_IPE_Time
+
   SUBROUTINE Calculate_Hour_and_Minute_IPE_Time( time_tracker )
     IMPLICIT NONE
     CLASS( IPE_Time ), INTENT(inout) :: time_tracker
+    ! Local
+    INTEGER :: additional_hours
 
       time_tracker % hour   = INT( time_tracker % utime/3600.0_prec )
       time_tracker % minute = INT( (time_tracker % utime - REAL(time_tracker % hour,prec)*3600.0_prec)/60.0_prec )
 
   END SUBROUTINE Calculate_Hour_and_Minute_IPE_Time
+
+  SUBROUTINE Calculate_UTime_IPE_Time( time_tracker )
+    IMPLICIT NONE
+    CLASS( IPE_Time ), INTENT(inout) :: time_tracker
+
+      time_tracker % utime = REAL( time_tracker % hour*3600 + time_tracker % minute*60 )
+
+
+  END SUBROUTINE Calculate_UTime_IPE_Time
  
   FUNCTION DateStamp_IPE_Time( time_tracker ) RESULT( timestamp ) 
     CLASS( IPE_Time ) :: time_tracker
@@ -89,4 +155,66 @@ CONTAINS
 
   END FUNCTION DateStamp_IPE_Time
 
+  SUBROUTINE Time_From_DateStamp_IPE_Time( time_tracker, timestamp ) 
+    CLASS( IPE_Time ), INTENT(inout) :: time_tracker
+    CHARACTER(12), INTENT(in)        :: timestamp
+
+      READ( timestamp, '(I4,I2.2,I2.2,I2.2,I2.2)' ) time_tracker % year, &
+                                                    time_tracker % month, &
+                                                    time_tracker % day, &
+                                                    time_tracker % hour, &
+                                                    time_tracker % minute
+                                                     
+                                                   
+
+  END SUBROUTINE Time_From_DateStamp_IPE_Time
+
+  SUBROUTINE Calculate_DayNumber_IPE_Time( time_tracker )
+  ! Algorithm adapted from
+  ! https://alcor.concordia.ca/~gpkatch/gdate-algorithm.html
+    IMPLICIT NONE
+    CLASS( IPE_Time ), INTENT(inout) :: time_tracker
+    ! Local 
+    INTEGER :: month, year
+
+      month = MOD( (time_tracker % month + 9), 12 )
+      year  = time_tracker % year - month/10
+
+      time_tracker % day_number = 365*year + &
+                                  year/4 - &
+                                  year/100 + &
+                                  year/400 + &
+                                 (month*306 + 5)/10 + &
+                                 (time_tracker % day - 1 )
+    
+  END SUBROUTINE Calculate_DayNumber_IPE_Time
+
+  SUBROUTINE Calculate_YearMonthDay_IPE_Time( time_tracker )
+  ! Algorithm adapted from
+  ! https://alcor.concordia.ca/~gpkatch/gdate-algorithm.html
+    IMPLICIT NONE
+    CLASS( IPE_Time ), INTENT(inout) :: time_tracker
+    ! Local 
+    INTEGER :: month, year, day, ddd, mi
+
+      year = (10000*time_tracker % day_number + 14780)/3652425
+      ddd = time_tracker % day_number - (365*year + year/4 - year/100 + year/400)
+  
+      IF( ddd < 0 )THEN
+       year = year - 1
+       ddd = time_tracker % day_number - (365*year + year/4 - year/100 + year/400)
+      ENDIF
+  
+      mi    = (100*ddd + 52)/3060
+
+      month = MOD( (mi + 2), 12 ) + 1
+      year  = year + (mi + 2)/12
+      day   = ddd - (mi*306 + 5)/10 + 1
+
+      time_tracker % year  = year
+      time_tracker % month = month
+      time_tracker % day   = day
+      
+  END SUBROUTINE Calculate_YearMonthDay_IPE_Time
+  
 END MODULE IPE_Time_Class
