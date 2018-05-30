@@ -49,12 +49,13 @@ IMPLICIT NONE
 
 CONTAINS
 
-  SUBROUTINE Build_IPE_Model( ipe, init_success, init_file)
+  SUBROUTINE Build_IPE_Model( ipe, init_success )
     IMPLICIT NONE
     CLASS( IPE_Model ), INTENT(out)    :: ipe
-    CHARACTER(*), INTENT(in), OPTIONAL :: init_file
     LOGICAL, INTENT(out)               :: init_success
     ! Local 
+    CHARACTER(200) :: init_file
+    LOGICAL        :: fileExists
 
       CALL ipe % parameters % Build( init_success )
 
@@ -104,8 +105,14 @@ CONTAINS
         
       ENDIF
 
-      IF( PRESENT( init_file ) )THEN
+      init_file = "IPE_State.apex."//ipe % time_tracker % DateStamp( )//".nc" 
+      INQUIRE( FILE = TRIM(init_file), EXIST = fileExists )
+  
+      IF( fileExists )THEN
+        PRINT*, ' IPE_Model_Class : Build : Reading '//init_file
         CALL ipe % Read_NetCDF_IPE( init_file )
+      ELSE
+        PRINT*, ' IPE_Model_Class : Build : File not found : '//init_file
       ENDIF
 
   END SUBROUTINE Build_IPE_Model

@@ -6,7 +6,8 @@ IMPLICIT NONE
 
   TYPE IPE_Time
     REAL(prec) :: utime
-    INTEGER    :: day_number, year, month, day, day_of_year, hour, minute
+    INTEGER    :: year, month, day, day_of_year, hour, minute
+    INTEGER(8) :: day_number
 
     CONTAINS
 
@@ -181,7 +182,8 @@ CONTAINS
     ! Local 
     INTEGER :: month, year
 
-      month = MOD( (time_tracker % month + 9), 12 )
+      ! Adjust the calendar to start with march 1 at the "beginning of the year"
+      month = MOD( time_tracker % month + 9, 12 )
       year  = time_tracker % year - month/10
 
       time_tracker % day_number = 365*year + &
@@ -199,21 +201,21 @@ CONTAINS
     IMPLICIT NONE
     CLASS( IPE_Time ), INTENT(inout) :: time_tracker
     ! Local 
-    INTEGER :: month, year, day, ddd, mi
+    INTEGER(8) :: month, year, day, adj_day, mi
 
-      year = (10000*time_tracker % day_number + 14780)/3652425
-      ddd = time_tracker % day_number - (365*year + year/4 - year/100 + year/400)
+      year = (10000*time_tracker % day_number)/3652425
+      adj_day = time_tracker % day_number - (365*year + year/4 - year/100 + year/400)
   
-      IF( ddd < 0 )THEN
+      IF( adj_day < 0 )THEN
        year = year - 1
-       ddd = time_tracker % day_number - (365*year + year/4 - year/100 + year/400)
+       adj_day = time_tracker % day_number - (365*year + year/4 - year/100 + year/400)
       ENDIF
   
-      mi    = (100*ddd + 52)/3060
+      mi    = (100*adj_day + 52)/3060
 
       month = MOD( (mi + 2), 12 ) + 1
       year  = year + (mi + 2)/12
-      day   = ddd - (mi*306 + 5)/10 + 1
+      day   = adj_day - (mi*306 + 5)/10 + 1
 
       time_tracker % year  = year
       time_tracker % month = month
