@@ -1,4 +1,5 @@
 #define LEGACY
+#undef  LEGACY_METHODS
 module module_MED_SWPC_methods
 
   !-----------------------------------------------------------------------------
@@ -3009,6 +3010,9 @@ contains
 #endif
           call LogInterpolate(srcCoord(i,:), srcfarray(i,:), &
                               dstCoord(i,:), dstfarray(i,:), &
+#ifdef LEGACY
+                              el=extrap_start_level,         &
+#endif
                               rt=rt, ms=auxNorm, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
@@ -3042,12 +3046,13 @@ contains
     else
       ! -- linear interpolation, extrapolate with constant value
       do i = lbnd, ubnd
-#ifdef LEGACY
+#ifdef LEGACY_METHODS
         call LinearInterpolate(srcCoord(i,:), srcfarray(i,:), &
                                dstCoord(i,:), dstfarray(i,:), rc)
 #else
-        call PolyInterpolate(srcCoord(i,:), srcfarray(i,:), &
-                             dstCoord(i,:), dstfarray(i,:), 1, rc)
+        call PolyInterpolate(srcCoord(i,:), srcfarray(i,:),    &
+                             dstCoord(i,:), dstfarray(i,:), 1, &
+                             el=extrap_start_level, rc=rc)
 #endif
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
@@ -3070,6 +3075,9 @@ contains
     integer :: i, j, k, localrc
     integer, dimension(2) :: lbnd, ubnd
     real(ESMF_KIND_R8) :: auxNorm, rt
+#ifdef LEGACY
+    integer, parameter :: extrap_start_level = 149
+#endif
 
     ! -- begin
     rc = ESMF_SUCCESS
@@ -3108,6 +3116,9 @@ contains
             rt = auxfarray(i,j,ubound(auxfarray, dim=3)) / auxNorm
             call LogInterpolate(srcCoord(i,j,:), srcfarray(i,j,:), &
                                 dstCoord(i,j,:), dstfarray(i,j,:), &
+#ifdef LEGACY
+                                el=extrap_start_level,             &
+#endif
                                 rt=rt, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
@@ -3133,8 +3144,14 @@ contains
         ! -- linear interpolation, extrapolate with constant value
       do j = lbnd(2), ubnd(2)
         do i = lbnd(1), ubnd(1)
-          call PolyInterpolate(srcCoord(i,j,:), srcfarray(i,j,:), &
-                               dstCoord(i,j,:), dstfarray(i,j,:), 1, rc)
+#ifdef LEGACY_METHODS
+          call LinearInterpolate(srcCoord(i,j,:), srcfarray(i,j,:), &
+                                 dstCoord(i,j,:), dstfarray(i,j,:), rc)
+#else
+          call PolyInterpolate(srcCoord(i,j,:), srcfarray(i,j,:),    &
+                               dstCoord(i,j,:), dstfarray(i,j,:), 1, &
+                               el=extrap_start_level, rc=rc)
+#endif
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
@@ -3145,41 +3162,10 @@ contains
 
   end subroutine VerticalInterpolate2D
 
-  subroutine PolyInterpolate(xs, ys, xd, yd, m, rc)
-    real(ESMF_KIND_R8), dimension(:), intent(in)  :: xs, ys, xd
-    real(ESMF_KIND_R8), dimension(:), intent(out) :: yd
-    integer, intent(in)  :: m
-    integer, intent(out) :: rc
+  ! -- core routines for vertical interpolation/extrapolation
 
-    ! -- local variables
-    integer :: i, j, k, n, np
-    real(ESMF_KIND_R8) :: x, y, dy
-
-    ! -- begin
-    rc = ESMF_SUCCESS
-
-    n = m + 1
-    np = size(xs)
-    do i = 1, size(xd)
-      x = xd(i)
-      y = 0._ESMF_KIND_R8
-      call locate(xs, np, x, j)
-      if (j == np) then
-        y = ys(np)
-      else if (j > 0) then
-        k = min(max(j-(n-1)/2,1), np+1-n)
-        call polint(xs(k:), ys(k:), n, x, y, dy, rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg="Error in polint", &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-      end if
-      yd(i) = y
-    end do
-    
-  end subroutine PolyInterpolate
-
-#ifdef LEGACY
+#ifdef LEGACY_METHODS
+  ! -- legacy methods
   subroutine LinearInterpolate(xs, ys, xd, yd, rc)
     real(ESMF_KIND_R8), dimension(:), intent(in)  :: xs, ys, xd
     real(ESMF_KIND_R8), dimension(:), intent(out) :: yd
@@ -3221,99 +3207,27 @@ contains
     end do
 
   end subroutine LinearInterpolate
-#endif
 
-#ifndef LEGACY
-  subroutine LogInterpolate(xs, ys, xd, yd, rt, rc)
+  subroutine LogInterpolate(xs, ys, xd, yd, rt, ms, el, rc)
     ! -- note: both xs and xd are assumed to be "normalized" heights
     ! --       x = 1 + z / earthRadius
     ! -- if absolute heights (km) are used, please set earthRadius = 1
     real(ESMF_KIND_R8), dimension(:), intent(in)  :: xs, ys, xd
     real(ESMF_KIND_R8), dimension(:), intent(out) :: yd
-    real(ESMF_KIND_R8), optional, intent(in) :: rt  ! reduced T = T / mass
-    integer, intent(out) :: rc
+    real(ESMF_KIND_R8),     optional, intent(in)  :: rt  ! T at TOA
+    real(ESMF_KIND_R8),     optional, intent(in)  :: ms  ! mass
+    integer,                optional, intent(in)  :: el
+    integer,                optional, intent(out) :: rc
 
     ! -- local variables
-    integer, parameter :: n = 2  ! linear interpolation (2 points)
-    integer :: i, itop, j, k, np, nd
-    real(ESMF_KIND_R8) :: fact, x, x1, y, y1, dy, ylog(n)
-
-    real(ESMF_KIND_R8), parameter :: log_min = 1.e-10_ESMF_KIND_R8
-    real(ESMF_KIND_R8), parameter :: g0 = 9.80665_ESMF_KIND_R8
-    real(ESMF_KIND_R8), parameter :: Rgas = 8.3141_ESMF_KIND_R8
-    real(ESMF_KIND_R8), parameter :: earthRadius = 6371.2_ESMF_KIND_R8
-    real(ESMF_KIND_R8), parameter :: const = 2 * g0 * earthRadius / Rgas
- 
-    ! -- begin
-    rc = ESMF_SUCCESS
-
-    np = size(xs)
-    nd = size(xd)
-    yd = 0._ESMF_KIND_R8
-
-    ! -- interpolate
-    do i = 1, nd
-      x = xd(i)
-      y = 0._ESMF_KIND_R8
-      call locate(xs, np, x, j)
-      if (j == np) then
-        itop = i
-        exit
-      else if (j > 0) then
-        k = min(max(j-(n-1)/2,1), np+1-n)
-        ylog = log(max(ys(k:k+n-1), log_min))
-        call polint(xs(k:), ylog, n, x, y, dy, rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg="Error in polint", &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-      end if
-      yd(i) = exp(y)
-    end do
-
-    ! -- extrapolatw with hypsometric equation
-    if (present(rt)) then
-      if (rt <= 0._ESMF_KIND_R8) then
-        call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
-          msg="Optional rt argument (T/m) must be > 0", &
-          line=__LINE__, &
-          file=__FILE__, &
-          rcToReturn=rc)
-        return ! bail out
-      end if 
-      x1 = xs(np) 
-      y1 = ys(np) 
-      fact = const / rt
-      do i = itop, nd
-        y = fact * (x1-xd(i)) / (x1*x1+xd(i)*xd(i))
-        yd(i) = y1 * exp(y)
-        x1 = xd(i)
-        y1 = yd(i)
-      end do
-    end if
-
-  end subroutine LogInterpolate
-
-#else
-  ! ---------- TEST
-  subroutine LogInterpolate(xs, ys, xd, yd, rt, ms, rc)
-    ! -- note: both xs and xd are assumed to be "normalized" heights
-    ! --       x = 1 + z / earthRadius
-    ! -- if absolute heights (km) are used, please set earthRadius = 1
-    real(ESMF_KIND_R8), dimension(:), intent(in)  :: xs, ys, xd
-    real(ESMF_KIND_R8), dimension(:), intent(out) :: yd
-    real(ESMF_KIND_R8), optional, intent(in) :: rt  ! T at TOA
-    real(ESMF_KIND_R8), optional, intent(in) :: ms  ! mass
-    integer, intent(out) :: rc
-
-    ! -- local variables
+    integer :: localrc
+    integer :: extrap_start_level
     integer :: k, kk, l, np, nd
     real(ESMF_KIND_R8) :: hgt_prev, dist, H_prev, data_prev
     real(ESMF_KIND_R8) :: hgt_curr, H_avg, H_curr, data_curr
     real(ESMF_KIND_R8) :: R, g0, re
     real(ESMF_KIND_R8) :: mass
 
-    integer,            parameter :: extrap_start_level = 149
     real(ESMF_KIND_R8), parameter :: log_min = 1.0E-10
 !   real(ESMF_KIND_R8), parameter :: log_min = 1.e-10_ESMF_KIND_R8
 !   real(ESMF_KIND_R8), parameter :: re = 6371.2_ESMF_KIND_R8
@@ -3326,11 +3240,16 @@ contains
 
 
     ! -- begin
-    rc = ESMF_SUCCESS
+    if (present(rc)) rc = ESMF_SUCCESS
 
     np = size(xs)
     nd = size(xd)
     yd = 0._ESMF_KIND_R8
+    if (present(el)) then
+      extrap_start_level = el
+    else
+      extrap_start_level = 149
+    end if
 
     ! -- interpolate
 
@@ -3382,7 +3301,173 @@ contains
 
   end subroutine LogInterpolate
 
+#else
+
+  ! -- updated methods
+
+  subroutine PolyInterpolate(xs, ys, xd, yd, m, el, rc)
+    real(ESMF_KIND_R8), dimension(:), intent(in)  :: xs, ys, xd
+    real(ESMF_KIND_R8), dimension(:), intent(out) :: yd
+    integer,                          intent(in)  :: m
+    integer,                optional, intent(in)  :: el
+    integer,                optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: i, j, k, n, np, ne
+    real(ESMF_KIND_R8) :: x, y, dy
+
+    ! -- begin
+    if (present(rc)) rc = ESMF_SUCCESS
+
+    n = m + 1
+    np = size(xs)
+    if (present(el)) then
+      ne = min(np, max(el,1))
+    else
+      ne = np
+    end if
+    do i = 1, size(xd)
+      x = xd(i)
+      y = 0._ESMF_KIND_R8
+      call locate(xs, np, x, j)
+      if (j >= ne) then
+        y = ys(ne)
+      else if (j > 0) then
+        k = min(max(j-(n-1)/2,1), np+1-n)
+        call polint(xs(k:), ys(k:), n, x, y, dy, localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg="Error in polint", &
+          line=__LINE__,  &
+          file=__FILE__,  &
+          rcToReturn=rc)) &
+          return  ! bail out
+      end if
+      yd(i) = y
+    end do
+
+  end subroutine PolyInterpolate
+
+  subroutine LogInterpolate(xs, ys, xd, yd, el, rt, ms, method, rc)
+    ! -- note: both xs and xd are assumed to be "normalized" heights
+    ! --       x = 1 + z / earthRadius
+    ! -- if absolute heights (km) are used, please set earthRadius = 1
+    real(ESMF_KIND_R8), dimension(:), intent(in)  :: xs, ys, xd
+    real(ESMF_KIND_R8), dimension(:), intent(out) :: yd
+    integer,                optional, intent(in)  :: el
+    real(ESMF_KIND_R8),     optional, intent(in)  :: rt  ! T at TOA
+    real(ESMF_KIND_R8),     optional, intent(in)  :: ms  ! mass
+    integer,                optional, intent(in)  :: method
+    integer,                optional, intent(out) :: rc
+
+    ! -- local variables
+    integer, parameter :: n = 2  ! linear interpolation (2 points)
+    integer :: i, itop, j, k, np, nd, ne
+    real(ESMF_KIND_R8) :: fact, x, x1, y, y1, dy, ylog(n)
+    real(ESMF_KIND_R8) :: x2, h, h1, h2, d, d1, d2
+
+    real(ESMF_KIND_R8), parameter :: log_min = 1.e-10_ESMF_KIND_R8
+!   real(ESMF_KIND_R8), parameter :: g0 = 9.80665_ESMF_KIND_R8
+!   real(ESMF_KIND_R8), parameter :: Rgas = 8.3141_ESMF_KIND_R8
+!   real(ESMF_KIND_R8), parameter :: earthRadius = 6371.2_ESMF_KIND_R8
+    real(ESMF_KIND_R8), parameter :: g0 = 9.80665
+    real(ESMF_KIND_R8), parameter :: Rgas = 8.3141
+    real(ESMF_KIND_R8), parameter :: earthRadius = 6371.2
+    real(ESMF_KIND_R8), parameter :: const = 2 * g0 / Rgas
+
+    real(ESMF_KIND_R8) :: R, g, re
+    real(ESMF_KIND_R8) :: mass
+    integer :: localMethod
+    integer :: localrc
+
+    ! -- begin
+    if (present(rc)) rc = ESMF_SUCCESS
+
+    localMethod = 1
+    if (present(method)) localMethod = method
+
+    np = size(xs)
+    nd = size(xd)
+    if (present(el)) then
+      ne = min(np, max(el,1))
+    else
+      ne = np
+    end if
+    yd = 0._ESMF_KIND_R8
+
+    ! -- interpolate
+    do i = 1, nd
+      x = xd(i)
+      y = 0._ESMF_KIND_R8
+      call locate(xs, np, x, j)
+      if (j >= ne) then
+        itop = i
+        exit
+      else if (j > 0) then
+        k = min(max(j-(n-1)/2,1), np+1-n)
+        ylog = log(max(ys(k:k+n-1), log_min))
+        call polint(xs(k:), ylog, n, x, y, dy, localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg="Error in polint", &
+          line=__LINE__,  &
+          file=__FILE__,  &
+          rcToReturn=rc)) &
+          return  ! bail out
+      end if
+      yd(i) = exp(y)
+    end do
+
+    ! -- extrapolatw with hypsometric equation
+    if (present(rt)) then
+      mass = 1._ESMF_KIND_R8
+      if (present(ms)) mass = ms
+#if 0
+      if (rt <= 0._ESMF_KIND_R8) then
+        call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+          msg="Optional rt argument (T/m) must be > 0", &
+          line=__LINE__, &
+          file=__FILE__, &
+          rcToReturn=rc)
+        return ! bail out
+      end if
 #endif
+
+      select case (localMethod)
+        case(0)
+          ! -- closest to previous Spaceweather mediator
+          x1 = xs(ne)
+          y1 = ys(ne)
+          d  = earthRadius/(earthRadius + x1)
+          h1 = Rgas * rt / (g0*mass*d*d)
+          do i = itop, nd
+            x2 = xd(i)
+            d  = earthRadius/(earthRadius + x2)
+            h2 = Rgas * rt / (g0*mass*d*d)
+            h  = 0.5_ESMF_KIND_R8 * (h1 + h2)
+            yd(i) = y1 * exp((x1-x2)/h)
+            x1 = x2
+            h1 = h2
+            y1 = yd(i)
+          end do
+        case(1)
+          ! -- new algorithm
+          x1 = xs(ne)
+          d1 = 1._ESMF_KIND_R8 + x1 / earthRadius
+          d1 = d1 * d1
+          y1 = log(max(ys(ne), log_min))
+          fact = const * mass / rt
+          do i = itop, nd
+            x2 = xd(i)
+            d2 = 1._ESMF_KIND_R8 + x2 / earthRadius
+            d2 = d2 * d2
+            y = y1 + fact * (x1-x2) / (d1+d2)
+            yd(i) = exp(y)
+            x1 = x2
+            y1 = y
+            d1 = d2
+          end do
+      end select
+    end if
+
+  end subroutine LogInterpolate
 
   ! -- auxiliary numerical subroutines for interpolation/extrapolation from:
   ! -- W. H. Press, S. A. Teukolsky, W. T. Vetterling, B. P. Flannery,
@@ -3476,6 +3561,8 @@ contains
     end do
 
   end subroutine polint
+
+#endif
 
   subroutine FieldGet(state, fieldName, compNames, compCount, rc)
 
