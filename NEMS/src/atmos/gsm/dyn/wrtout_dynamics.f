@@ -559,7 +559,7 @@ c then (only if liope)  flux state.
         endif
       endif
 !
-      if (me == ioproc) print *,'in restart,lonsperlat=',lonsperlat
+!     if (me == ioproc) print *,'in restart,lonsperlat=',lonsperlat
 ! n-1 time step spectral file
 !
         step = -1

@@ -474,17 +474,6 @@ lpe = NLP
 mps = 1
 mpe = NMP
 !SMS$TO_LOCAL END
-print *,'finished reading namelist:',filename
-print *,' '
-print"(' NLP:                 ',I6)",NLP
-print"(' NMP:                 ',I6)",NMP
-print"(' mpstop:              ',I6)",mpstop
-print"(' stop_time            ',I6)",stop_time
-print"(' Number of Processors:',I6)",nprocs
-print"(' lpHaloSize:          ',I6)",lpHaloSize
-print"(' mpHaloSize:          ',I6)",mpHaloSize
-print *,' '
-print *,' '
 !mycore = mod(mype,NMP/2)
 !!SMS$ignore begin
 !print*,'mype,mycore=',mype,mycore
@@ -521,11 +510,6 @@ if(parallelBuild)then
 endif !parallelB
 !dbg
 
-!dbg20160711
-!SMS$IGNORE begin
-print*,mype,'sub-read_input: swNeuPar',swNeuPar
-!SMS$IGNORE end
- 
         END SUBROUTINE read_input_parameters
 
         SUBROUTINE kp2ap(kp,ap_out)
@@ -553,7 +537,7 @@ print*,mype,'sub-read_input: swNeuPar',swNeuPar
           ! take decimal portion as interpolate value
           remainder = lookup - INT(lookup)
           ! assign integer Ap value
-          write(6,*) 'amk lookup',lookup,remainder,INT(lookup),size(table)
+!         write(6,*) 'amk lookup',lookup,remainder,INT(lookup),size(table)
           ap_out(i) = (1 - remainder) * table(INT(lookup)) + remainder * table(INT(lookup)+1)
         END DO
 
