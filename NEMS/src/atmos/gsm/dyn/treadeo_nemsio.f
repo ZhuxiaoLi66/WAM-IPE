@@ -254,9 +254,9 @@
         if( me.eq.0 ) then                                              ! hmhj
           do k=1,levp1                                                  ! hmhj
             pressk=ak5(k)+bk5(k)*psurfff+ck5p(k)                        ! hmhj
-            print 180,k,ak5(k),bk5(k),ck5(k),pressk                     ! hmhj
-180         format('k=',i2,'  ak5=',f13.6,'  bk5=',e13.5,               ! hmhj
-     &            '   ck5=',f13.6,'  closed pressk=',f10.6)             ! hmhj
+!           print 180,k,ak5(k),bk5(k),ck5(k),pressk                     ! hmhj
+!180         format('k=',i2,'  ak5=',f13.6,'  bk5=',e13.5,               ! hmhj
+!    &            '   ck5=',f13.6,'  closed pressk=',f10.6)             ! hmhj
           enddo                                                         ! hmhj
         endif                                                           ! hmhj
         do k=1,levs

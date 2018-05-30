@@ -274,9 +274,9 @@
         if( me.eq.0 ) then
           do k=1,levp1
             pressk=ak5(k)+bk5(k)*psurfff+ck5p(k)
-            print 180,k,ak5(k),bk5(k),ck5(k),pressk
-180         format('k=',i3,'  ak5=',f13.6,'  bk5=',e13.5,
-     &            '   ck5=',f13.6,'  closed pressk=',f10.6)
+!           print 180,k,ak5(k),bk5(k),ck5(k),pressk
+!180         format('k=',i3,'  ak5=',f13.6,'  bk5=',e13.5,
+!    &            '   ck5=',f13.6,'  closed pressk=',f10.6)
           enddo
         endif
         do k=1,levs
