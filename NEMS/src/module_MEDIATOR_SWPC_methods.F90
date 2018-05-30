@@ -1049,7 +1049,7 @@ contains
             line=__LINE__, &
             file=__FILE__)) &
             return  ! bail out
-          print *,'MED: done adjusting with geom ',trim(s % fieldNames(item))
+!         print *,'MED: done adjusting with geom ',trim(s % fieldNames(item))
         end do
         s => s % next
       end do
@@ -4491,8 +4491,8 @@ contains
       fieldMax = max(fieldMax, fmax)
     end do
 
-    write(6,'("FieldPrintMinMax: ",a,1x,a," min = ",g14.6," max = ",g14.6)') &
-      trim(label), trim(name), fieldMin, fieldMax
+!   write(6,'("FieldPrintMinMax: ",a,1x,a," min = ",g14.6," max = ",g14.6)') &
+!     trim(label), trim(name), fieldMin, fieldMax
 
   end subroutine FieldPrintMinMax
 
@@ -4802,8 +4802,8 @@ contains
       rh => rhList
     end if
 
-    print *, 'RouteHandle Table'
-    print *, '================='
+!   print *, 'RouteHandle Table'
+!   print *, '================='
     item = 0
     do while (associated(rh))
       item = item + 1
@@ -4822,7 +4822,7 @@ contains
       end if
       rh => rh % next
     end do
-    print *, '================='
+!   print *, '================='
     
   end subroutine RouteHandlePrint
 
@@ -5091,7 +5091,7 @@ contains
     next=next+1
     if (next == PetCnt) next=0
   enddo
-  print *, PetNo, 'localnodes/myrows:', localnodes, myrows
+! print *, PetNo, 'localnodes/myrows:', localnodes, myrows
 #else
   reminder = wamdims(2)-myrows*PetCnt
   if (reminder > PetNo)  then
@@ -5106,7 +5106,7 @@ contains
     rowinds(i)=ShuffleOrder(startrow+i-1)
     localnodes = localnodes + numPerRow(rowinds(i))
   enddo
-  print *, PetNo, 'start rows:', startrow, localnodes, myrows
+! print *, PetNo, 'start rows:', startrow, localnodes, myrows
   ind1 = 1
   steps = wamdims(2)/PetCnt
   do next=0,PetCnt-1
@@ -5122,15 +5122,15 @@ contains
        ind1 = ind1+steps
     endif
   enddo
-  if (ind1 /= wamdims(2)+1) then
-     print *, 'MEDIATOR Wrong ind1 ', ind1, wamdims(2)
-  endif
+! if (ind1 /= wamdims(2)+1) then
+!    print *, 'MEDIATOR Wrong ind1 ', ind1, wamdims(2)
+! endif
 #endif
   
   ! sort rowinds
   call ESMF_UtilSort(rowinds, ESMF_SORTFLAG_ASCENDING, rc)
 
-  print *, PetNo, 'sorted rowinds ', rowinds
+! print *, PetNo, 'sorted rowinds ', rowinds
 
   ! Save the lat/lon in the order the distgrid
   allocate(lonbuf(localnodes), latbuf(localnodes))
@@ -5370,9 +5370,9 @@ contains
        	  do j=1, numPerRow(ind+1)
             ! Global id based on the 3D indices
             nodeIds(count1)= j+wamdims(1)*ind+wamdims(1)*wamdims(2)*(k-1)
-	    if (PetTable(ind+1) == PetNo) then
-	       print *, PetNo, 'wrong neighbor ', count1, PetTable(ind+1)
-            endif
+!    if (PetTable(ind+1) == PetNo) then
+!       print *, PetNo, 'wrong neighbor ', count1, PetTable(ind+1)
+!           endif
             nodeOwners(count1)=PetTable(ind+1)
 	    lon = wamlon(j,ind+1)
             lat  = wamlat(j,ind+1)
@@ -5405,9 +5405,9 @@ contains
   enddo
   endif ! PetCnt > 1
 
-  if (count1-1 /= totalnodes .or. localcount-1 /= localnodes) then
-     print *, 'totalcount mismatch ', count1-1, totalnodes, localcount-1, localnodes
-  endif
+! if (count1-1 /= totalnodes .or. localcount-1 /= localnodes) then
+!    print *, 'totalcount mismatch ', count1-1, totalnodes, localcount-1, localnodes
+! endif
 
 #ifdef USE_CART3D_COORDSYS
   wamMesh = ESMF_MeshCreate(3,3,coordSys=ESMF_COORDSYS_CART, rc=rc)
@@ -5638,9 +5638,9 @@ contains
 	   elementConn(count8+7)=base+numPerRow(ind)+totalnodes2d+jj
    	   count1=count1+1
 	   count8=count8+8
-	   if (k==1 .and. (jj /= numPerRow(ind+1))) then
-	      print *, PetNo, 'Upper row index mismatch', ind, jj, numPerRow(ind+1)
-           endif
+!   if (k==1 .and. (jj /= numPerRow(ind+1))) then
+!      print *, PetNo, 'Upper row index mismatch', ind, jj, numPerRow(ind+1)
+!          endif
         else  ! diff < 0 
           ! make triangles with base at upper row
           ! triangles will be evenly distributed
@@ -5687,31 +5687,31 @@ contains
 	   elementConn(count8+7)=base+numPerRow(ind)+totalnodes2d+j
  	   count1=count1+1
 	   count8=count8+8
-	   if (k==1 .and. (jj /= numPerRow(ind))) then
-	      print *, PetNo, 'Lower row index mismatch', ind, jj, numPerRow(ind)
-           endif
+!   if (k==1 .and. (jj /= numPerRow(ind))) then
+!      print *, PetNo, 'Lower row index mismatch', ind, jj, numPerRow(ind)
+!          endif
         endif
        endif         	            
     enddo
   enddo 
 
-  if (count1-1 /= totalelements) then
-     print *, 'total element mismatch ', count1-1, totalelements
-  endif
+! if (count1-1 /= totalelements) then
+!    print *, 'total element mismatch ', count1-1, totalelements
+! endif
 
-  do i=1, totalelements*8
-     if (elementConn(i) > totalnodes) then
-          print *, PetNo, 'node id out of bound', i/8, elementConn(i)
-     endif
-  enddo  
-  print *, PetNo, "Before MeshAddElements"
+! do i=1, totalelements*8
+!    if (elementConn(i) > totalnodes) then
+!         print *, PetNo, 'node id out of bound', i/8, elementConn(i)
+!    endif
+! enddo  
+! print *, PetNo, "Before MeshAddElements"
   call ESMF_MeshAddElements(wamMesh, elementIds, elementTypes, elementConn,rc=rc)
   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
 
-   print *, PetNo, "After MeshAddElements"
+!  print *, PetNo, "After MeshAddElements"
 
   deallocate(NumPerRow, ShuffleOrder, rowinds, petTable)
   deallocate(indList, baseind)
@@ -5774,8 +5774,8 @@ contains
 
 #ifdef ESMF_NETCDF
     if ( ncStatus .ne. nf90_noerror) then
-      print '("NetCDF Error: ", A, " : ", A)', &
-                trim(errmsg),trim(nf90_strerror(ncStatus))
+!     print '("NetCDF Error: ", A, " : ", A)', &
+!               trim(errmsg),trim(nf90_strerror(ncStatus))
       call ESMF_LogSetError(ESMF_RC_NETCDF_ERROR, &
         msg=trim(errmsg) // " : " // trim(nf90_strerror(ncStatus)), &
         line=__LINE__, &
