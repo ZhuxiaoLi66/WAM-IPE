@@ -49,10 +49,11 @@ IMPLICIT NONE
 
 CONTAINS
 
-  SUBROUTINE Build_IPE_Model( ipe, init_success )
+  SUBROUTINE Build_IPE_Model( ipe, init_success, init_file)
     IMPLICIT NONE
-    CLASS( IPE_Model ), INTENT(out) :: ipe
-    LOGICAL, INTENT(out)            :: init_success
+    CLASS( IPE_Model ), INTENT(out)    :: ipe
+    CHARACTER(*), INTENT(in), OPTIONAL :: init_file
+    LOGICAL, INTENT(out)               :: init_success
     ! Local 
 
       CALL ipe % parameters % Build( init_success )
@@ -101,6 +102,10 @@ CONTAINS
         init_success = .FALSE.
         RETURN
         
+      ENDIF
+
+      IF( PRESENT( init_file ) )THEN
+        CALL ipe % Read_NetCDF_IPE( init_file )
       ENDIF
 
   END SUBROUTINE Build_IPE_Model
@@ -253,7 +258,7 @@ CONTAINS
 
       ! Plasma
       CALL Check( nf90_def_var( ncid, "O+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , op_varid ) )
-      CALL Check( nf90_put_att( ncid, op_varid, "long_name", "Oxygen ion number density (ground state)" ) )
+      CALL Check( nf90_put_att( ncid, op_varid, "long_name", "Atomic oxygen ion number density (ground state)" ) )
       CALL Check( nf90_put_att( ncid, op_varid, "units", " m^{-3}" ) )
 
       CALL Check( nf90_def_var( ncid, "H+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , hp_varid ) )
@@ -281,11 +286,11 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, n2p_varid, "units", " m^{-3}" ) )
 
       CALL Check( nf90_def_var( ncid, "O+(2D)", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , op2d_varid ) )
-      CALL Check( nf90_put_att( ncid, op2d_varid, "long_name", "Oxygen ion number density (first excited state)" ) )
+      CALL Check( nf90_put_att( ncid, op2d_varid, "long_name", "Atomic oxygen ion number density (first excited state)" ) )
       CALL Check( nf90_put_att( ncid, op2d_varid, "units", " m^{-3}" ) )
 
       CALL Check( nf90_def_var( ncid, "O+(2P)", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , op2p_varid ) )
-      CALL Check( nf90_put_att( ncid, op2p_varid, "long_name", "Oxygen ion number density (second excited state)" ) )
+      CALL Check( nf90_put_att( ncid, op2p_varid, "long_name", "Atomic oxygen ion number density (second excited state)" ) )
       CALL Check( nf90_put_att( ncid, op2p_varid, "units", " m^{-3}" ) )
 
       CALL Check( nf90_def_var( ncid, "ion_temp", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , ion_temp_varid ) )
@@ -441,6 +446,7 @@ CONTAINS
     INTEGER :: molecular_nitrogen_varid, nitrogen_varid, hydrogen_varid
     INTEGER :: temperature_varid, u_varid, v_varid, w_varid
     INTEGER :: op_varid, hp_varid, hep_varid, np_varid, n2p_varid, o2p_varid, nop_varid
+    INTEGER :: op2d_varid, op2p_varid
     INTEGER :: ion_temp_varid, e_varid, hc_varid, pc_varid, bc_varid
     INTEGER :: ion_rate_varid, O_rate_varid, O2_rate_varid, N2_rate_varid
 
@@ -531,7 +537,7 @@ CONTAINS
 
       ! Plasma
       CALL Check( nf90_def_var( ncid, "O+", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , op_varid ) )
-      CALL Check( nf90_put_att( ncid, op_varid, "long_name", "Oxygen ion number density" ) )
+      CALL Check( nf90_put_att( ncid, op_varid, "long_name", "Atomic oxygen ion number density (ground state)" ) )
       CALL Check( nf90_put_att( ncid, op_varid, "units", " m^{-3}" ) )
 
       CALL Check( nf90_def_var( ncid, "H+", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , hp_varid ) )
@@ -557,6 +563,14 @@ CONTAINS
       CALL Check( nf90_def_var( ncid, "N2+", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , n2p_varid ) )
       CALL Check( nf90_put_att( ncid, n2p_varid, "long_name", "Molecular Nitrogen ion number density" ) )
       CALL Check( nf90_put_att( ncid, n2p_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "O+(2D)", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , op2d_varid ) )
+      CALL Check( nf90_put_att( ncid, op2d_varid, "long_name", "Atomic oxygen ion number density (first excited state)" ) )
+      CALL Check( nf90_put_att( ncid, op2d_varid, "units", " m^{-3}" ) )
+
+      CALL Check( nf90_def_var( ncid, "O+(2P)", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , op2p_varid ) )
+      CALL Check( nf90_put_att( ncid, op2p_varid, "long_name", "Atomic oxygen ion number density  (second excited state)" ) )
+      CALL Check( nf90_put_att( ncid, op2p_varid, "units", " m^{-3}" ) )
 
       CALL Check( nf90_def_var( ncid, "ion_temp", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , ion_temp_varid ) )
       CALL Check( nf90_put_att( ncid, ion_temp_varid, "long_name", "Ion temperature" ) )
@@ -620,6 +634,8 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, nop_varid, ipe % plasma % geo_ion_densities(5,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, o2p_varid, ipe % plasma % geo_ion_densities(6,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % geo_ion_densities(7,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, op2d_varid,  ipe % plasma % geo_ion_densities(8,:,:,:) ) )
+      CALL Check( nf90_put_var( ncid, op2p_varid,  ipe % plasma % geo_ion_densities(9,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % geo_ion_temperature ) )
       CALL Check( nf90_put_var( ncid, e_varid, ipe % plasma % geo_electron_density ) )
       CALL Check( nf90_put_var( ncid, hc_varid, ipe % plasma % geo_hall_conductivity ) )
