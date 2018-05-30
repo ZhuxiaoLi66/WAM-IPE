@@ -40,8 +40,12 @@ CONTAINS
 
       CALL time_tracker % Time_From_DateStamp( time_stamp )
 
+      CALL time_tracker % Calculate_DayNumber( )
+      CALL time_tracker % Calculate_UTime( )
 
-      CALL time_tracker % Calculate_Hour_and_Minute( )
+      PRINT*, time_tracker % DateStamp( )
+      PRINT*, time_tracker % utime, ' (sec)'
+      PRINT*, time_tracker % hour,':',time_tracker % minute, ' UT'
 
   END SUBROUTINE Build_IPE_Time
 

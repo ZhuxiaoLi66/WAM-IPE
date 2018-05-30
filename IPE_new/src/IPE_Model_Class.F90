@@ -58,7 +58,7 @@ CONTAINS
       CALL ipe % parameters % Build( init_success )
 
       ! Initialize the clock
-      CALL ipe % time_tracker % Build( ipe % parameters % year, ipe % parameters % day, ipe % parameters % start_time )
+      CALL ipe % time_tracker % Build( ipe % parameters % initial_timestamp )
 
       IF( init_success )THEN
 
@@ -125,7 +125,7 @@ CONTAINS
     REAL(prec) :: AP(1:7)
 
 
-      ipe % time_tracker % utime = t0
+      CALL ipe % time_tracker % Update( t0 )
       
       ! This call to update the neutrals is "diagnostic" and returns neutral
       ! parameter at the time t0
@@ -161,8 +161,7 @@ CONTAINS
 
 
       ! Update the timer
-      ipe % time_tracker % utime = t1
-      CALL ipe % time_tracker % Calculate_Hour_and_Minute( )
+      CALL ipe % time_tracker % Update( t1 )
 
   END SUBROUTINE Update_IPE_Model
 !
@@ -254,7 +253,7 @@ CONTAINS
 
       ! Plasma
       CALL Check( nf90_def_var( ncid, "O+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , op_varid ) )
-      CALL Check( nf90_put_att( ncid, op_varid, "long_name", "Oxygen ion number density" ) )
+      CALL Check( nf90_put_att( ncid, op_varid, "long_name", "Oxygen ion number density (ground state)" ) )
       CALL Check( nf90_put_att( ncid, op_varid, "units", " m^{-3}" ) )
 
       CALL Check( nf90_def_var( ncid, "H+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , hp_varid ) )
@@ -282,11 +281,11 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, n2p_varid, "units", " m^{-3}" ) )
 
       CALL Check( nf90_def_var( ncid, "O+(2D)", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , op2d_varid ) )
-      CALL Check( nf90_put_att( ncid, op2d_varid, "long_name", "Oxygen ion (ground state) number density" ) )
+      CALL Check( nf90_put_att( ncid, op2d_varid, "long_name", "Oxygen ion number density (first excited state)" ) )
       CALL Check( nf90_put_att( ncid, op2d_varid, "units", " m^{-3}" ) )
 
       CALL Check( nf90_def_var( ncid, "O+(2P)", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , op2p_varid ) )
-      CALL Check( nf90_put_att( ncid, op2p_varid, "long_name", "Oxygen ion (first excited state) number density" ) )
+      CALL Check( nf90_put_att( ncid, op2p_varid, "long_name", "Oxygen ion number density (second excited state)" ) )
       CALL Check( nf90_put_att( ncid, op2p_varid, "units", " m^{-3}" ) )
 
       CALL Check( nf90_def_var( ncid, "ion_temp", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , ion_temp_varid ) )

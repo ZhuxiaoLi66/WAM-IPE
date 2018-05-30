@@ -17,11 +17,12 @@ IMPLICIT NONE
     INTEGER        :: nFluxTube
 
     ! TimeStepping
-    REAL(prec) :: time_step
-    REAL(prec) :: start_time
-    REAL(prec) :: end_time
-    INTEGER    :: year
-    INTEGER    :: day
+    REAL(prec)    :: time_step
+    REAL(prec)    :: start_time
+    REAL(prec)    :: end_time
+    CHARACTER(12) :: initial_timestamp
+    INTEGER       :: year
+    INTEGER       :: day
 
     ! Forcing
     REAL(prec) :: solar_forcing_time_step
@@ -60,6 +61,7 @@ CONTAINS
     INTEGER :: NLP, NMP, NPTS2D, nFluxTube
     REAL(prec) :: solar_forcing_time_step
     REAL(prec) :: time_step, start_time, end_time
+    CHARACTER(12) :: initial_timestamp
     INTEGER    :: year, day
     INTEGER :: f107_kp_size
     INTEGER :: f107_kp_interval
@@ -85,8 +87,9 @@ CONTAINS
       time_step  = 180.0_prec
       start_time = 0.0_prec
       end_time   = 360.0_prec
-      year       = 200
+      year       = 1999
       day        = 76
+      initial_timestamp = "201303160000"
       ! Forcing !
       solar_forcing_time_step = 60.0_prec
       f107_kp_size      = 1
@@ -102,7 +105,7 @@ CONTAINS
 
 
       NAMELIST/SpaceManagement/ netcdf_grid_file, NLP, NMP, NPTS2D, nFluxTube
-      NAMELIST/TimeStepping/ time_step, start_time, end_time, year, day
+      NAMELIST/TimeStepping/ time_step, start_time, end_time, year, day, initial_timestamp
       NAMELIST/Forcing/ solar_forcing_time_step, f107_kp_size, f107_kp_interval, f107_kp_skip_size, f107_kp_data_size, use_f107_kp_file, f107_kp_file
       NAMELIST/FileIO/ write_apex_neutrals, write_geographic_neutrals, file_output_frequency
 
@@ -127,11 +130,12 @@ CONTAINS
         params % NPTS2D           = NPTS2D
         params % nFluxTube        = nFluxTube
 
-        params % time_step  = time_step
-        params % start_time = start_time
-        params % end_time   = end_time
-        params % year       = year
-        params % day        = day
+        params % time_step         = time_step
+        params % start_time        = start_time
+        params % end_time          = end_time
+        params % year              = year
+        params % day               = day
+        params % initial_timestamp = initial_timestamp
 
         params % solar_forcing_time_step = solar_forcing_time_step
         params % f107_kp_size            = f107_kp_size
