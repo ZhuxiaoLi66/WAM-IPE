@@ -44,7 +44,6 @@
 !-------------
 !... read in parameters
       INTEGER(KIND=int_prec) lp,mp,stat_alloc,midpoint_min,midpoint_max
-      INTEGER(KIND=int_prec) istop
 
       REAL(KIND=real_prec), DIMENSION(NPTS2D,NMP) ::  dum0    !.. distance from the center of the Earth[meter]
       REAL(KIND=real_prec), DIMENSION(NPTS2D,NMP) ::  dum1    !.. geographic co-latitude [rad]
@@ -100,10 +99,6 @@
       JMIN_ING = JMIN_IN_all(1,:)
       JMAX_ISG = JMAX_IS_all(1,:)
       MaxFluxTube = maxval(JMAX_ISG-JMIN_ING+1)
-      write(6,*) 'GHGM jmax_isg', jmax_isg
-      write(6,*) 'GHGM jmin_ing', jmin_ing
-      write(6,*) 'GHGM diff', jmax_isg - jmin_ing
-      write(6,*) 'GHGM maxfluxtube', maxfluxtube
 !SMS$SERIAL END
 
       DEALLOCATE ( JMIN_IN_all,JMAX_IS_all,STAT=stat_alloc )
@@ -140,11 +135,6 @@ do lp=1,NLP
   r_meter2D    (JMIN_IN(lp):JMAX_IS(lp),lp) = dum0(JMIN_ING(lp):JMAX_ISG(lp),1)                !r_meter
   plasma_grid_Z(JMIN_IN(lp):JMAX_IS(lp),lp) = dum0(JMIN_ING(lp):JMAX_ISG(lp),1) - earth_radius ![meter]
 enddo
-
-write(6,*) 'ghgm jmin ',JMIN_IN(1),JMAX_IS(1)
-write(6,*) 'GHGM plasma grid ', plasma_grid_Z(JMIN_IN(1):JMAX_IS(1),1) / 1000.
-
-if(istop.eq.1) stop
 
 
 
