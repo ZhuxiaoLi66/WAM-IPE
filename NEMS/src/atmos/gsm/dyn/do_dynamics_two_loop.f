@@ -590,8 +590,8 @@
               pcorr = (pdryini-pdryg)/sumto*sqrt(2.)
             endif                                                    
 !
-            if (me == 0) write(0,*)'pcorr pdryini pdryg ',pcorr,pdryini,
-     &                              pdryg
+!           if (me == 0) write(0,*)'pcorr pdryini pdryg ',pcorr,pdryini,
+!    &                              pdryg
 
             if (glbsum .and. me == me_l_0) then                          !glbsum
               write(70,111) kdt,fhour,idate                              !glbsum
