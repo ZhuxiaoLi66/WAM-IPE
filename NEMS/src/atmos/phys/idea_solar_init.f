@@ -415,7 +415,7 @@
 !
        CALL  CURRENT_NCEP_JDAT(idat_wam, irhour_wam, Mjdat, Hcur)
   
-       if (mpi_id ==0 ) print *, 'idea_solar_init, idat_wam ',  idat_wam
+!      if (mpi_id ==0 ) print *, 'idea_solar_init, idat_wam ',  idat_wam
 !
 !     data_swpc make a final decision keep it in "gloopb.f" or in "solar_init.f"
 !
@@ -437,8 +437,8 @@
           IF(.NOT. ALLOCATED(swvel_wy)) ALLOCATE(swvel_wy(f107_kp_size))
           IF(.NOT. ALLOCATED(swbz_wy))  ALLOCATE(swbz_wy (f107_kp_size))
           call read_wam_f107_kp_txt
-          if (mpi_id ==0 ) write(6,*) 
-     & ' SPW_DRIVERS => swpc_fst, 3-day forecasts:', trim(SPW_DRIVERS)
+!         if (mpi_id ==0 ) write(6,*) 
+!    & ' SPW_DRIVERS => swpc_fst, 3-day forecasts:', trim(SPW_DRIVERS)
         endif
 
 !
@@ -465,9 +465,9 @@
           wf107a_s =100.
        endif
 
-      if (mpi_id == 0) then
-         write(6,*) ' VAY-end of idea_solar_init in idea_solar_heating.f'
-      endif
+!     if (mpi_id == 0) then
+!        write(6,*) ' VAY-end of idea_solar_init in idea_solar_heating.f'
+!     endif
 
 
 !=====================================================================================
@@ -485,7 +485,7 @@
           exit
         endif
       enddo
-       print *, 'idea_solar_init, VAY solar-init nps', nps
+!      print *, 'idea_solar_init, VAY solar-init nps', nps
 !
 ! get effuv,effeuv from interplating effuv17, effeuv17 to 150 levs 
 ! get no from interplating no17 to 150 levs  
@@ -575,18 +575,18 @@
 !
 !=================================================================================
 !
-      print *, ' idea_solar_init: SRBEFF, Jo2_scale, effuv, effeuv '
-      print *, 
-     &' k,  Pr(k), SRBEFF(k), o2_scale_factor(k), effuv(k), effeuv(k) '
-      print *
-      do k=1, levs
-       write(6,123) 
-     &k,  Pr(k), SRBEFF(k), o2_scale_factor(k), effuv(k), effeuv(k) 
-      enddo
-123   format(2x, I4, 3x, F16.9, 2x,4(2x,F10.3))
-      print *
-      print *, ' ===================== Heat-Diss============== efficiencies  '
-      print *      
+!     print *, ' idea_solar_init: SRBEFF, Jo2_scale, effuv, effeuv '
+!     print *, 
+!    &' k,  Pr(k), SRBEFF(k), o2_scale_factor(k), effuv(k), effeuv(k) '
+!     print *
+!     do k=1, levs
+!      write(6,123) 
+!    &k,  Pr(k), SRBEFF(k), o2_scale_factor(k), effuv(k), effeuv(k) 
+!     enddo
+!123!  format(2x, I4, 3x, F16.9, 2x,4(2x,F10.3))
+!     print *
+!     print *, ' ===================== Heat-Diss============== efficiencies  '
+!     print *      
 
       RETURN
 !

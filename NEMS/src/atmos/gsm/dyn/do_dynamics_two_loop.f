@@ -269,7 +269,7 @@
           if (ldfi_spect) then
             ndfih  = nint(fhdfi*3600./deltim)
             kdtdfi = kdt + ndfih
-            if( me == 0 ) print *,' call spectdfini with ndfih=',ndfih
+!           if( me == 0 ) print *,' call spectdfini with ndfih=',ndfih
             call do_dynamics_spectdfini(-ndfih-1,ndfih,trie_ls,trio_ls,
      &           dfilevs)
           endif
@@ -305,7 +305,7 @@
 
 ! test dfi
           if (ldfi_spect) then
-            if( me == 0 ) print *,' finialize spectdfini '
+!           if( me == 0 ) print *,' finialize spectdfini '
             call do_dynamics_spectdfini(ndfih+1,ndfih,trie_ls,trio_ls,
      &           dfilevs)
             call do_dynamics_spectc2n(trie_ls,trio_ls)
@@ -340,7 +340,7 @@
 !---------------------------------------------------------------
 !set n and n-1 time level values as import
 ! spectral
-            if (me == 0) print *,' set time level n to time level n-1 '
+!           if (me == 0) print *,' set time level n to time level n-1 '
             call do_dynamics_spectn2c(trie_ls,trio_ls)
             call do_dynamics_spectn2m(trie_ls,trio_ls)
 ! grid
@@ -362,7 +362,7 @@
 ! -------------------------------------------------------
         else if( restart_step ) then
 ! --------------------------------------------------------------
-          if(me == 0)print *,'in restart step'
+!         if(me == 0)print *,'in restart step'
 
 !         if( .not.ndslfv ) then
 !           zfirst=.false.
@@ -1036,14 +1036,14 @@
 !--------------------------------------------
 !**jw digital filter state collect
 !--------------------------------------------
-      if (me == 0) print *,'in two loop,call gfs_dfi_coll,ldfi=',ldfi
+!     if (me == 0) print *,'in two loop,call gfs_dfi_coll,ldfi=',ldfi
       IF (ldfi) then
         call gfs_dficoll_dynamics(grid_gr,grid_gr_dfi)
       endif
 
 ! test dfi
       if(ldfi_spect) then
-        if( me==0 ) print *,' do spectdfini at kdt=',kdt
+!       if( me==0 ) print *,' do spectdfini at kdt=',kdt
         call do_dynamics_spectdfini(kdt-kdtdfi,ndfih,trie_ls,trio_ls,
      &       dfilevs)
         if( kdt-kdtdfi == ndfih ) reset_step=.true.
@@ -1127,8 +1127,8 @@
 !
 !  dfi end step, return to dfi routine
 !------------------------------------
-        if(me == 0)
-     &     print *,'in dyn two step, return aft dfi,kdt=',kdt
+!       if(me == 0)
+!    &     print *,'in dyn two step, return aft dfi,kdt=',kdt
           RETURN
       end if
 
@@ -1938,16 +1938,16 @@
            spdmax(k) = sqrt(spdmax(k))
          enddo
 !
-         print*,'in do_dynamics_two_loop for spdmx at kdt=',kdt
-         print 100,(spdmax(k),k=1,levs)
-100      format(' spdmx(001:010)=',10f5.0,:/' spdmx(011:020)=',10f5.0,
-     &        :/' spdmx(021:030)=',10f5.0,:/' spdmx(031:040)=',10f5.0,
-     &        :/' spdmx(041:050)=',10f5.0,:/' spdmx(051:060)=',10f5.0,
-     &        :/' spdmx(061:070)=',10f5.0,:/' spdmx(071:080)=',10f5.0,
-     &        :/' spdmx(081:090)=',10f5.0,:/' spdmx(091:100)=',10f5.0,
-     &        :/' spdmx(101:110)=',10f5.0,:/' spdmx(111:120)=',10f5.0,
-     &        :/' spdmx(121:130)=',10f5.0,:/' spdmx(131:140)=',10f5.0,
-     &        :/' spdmx(141:150)=',10f5.0,:/' spdmx(151:160)=',10f5.0)
+!        print*,'in do_dynamics_two_loop for spdmx at kdt=',kdt
+!        print 100,(spdmax(k),k=1,levs)
+!100      format(' spdmx(001:010)=',10f5.0,:/' spdmx(011:020)=',10f5.0,
+!    &        :/' spdmx(021:030)=',10f5.0,:/' spdmx(031:040)=',10f5.0,
+!    &        :/' spdmx(041:050)=',10f5.0,:/' spdmx(051:060)=',10f5.0,
+!    &        :/' spdmx(061:070)=',10f5.0,:/' spdmx(071:080)=',10f5.0,
+!    &        :/' spdmx(081:090)=',10f5.0,:/' spdmx(091:100)=',10f5.0,
+!    &        :/' spdmx(101:110)=',10f5.0,:/' spdmx(111:120)=',10f5.0,
+!    &        :/' spdmx(121:130)=',10f5.0,:/' spdmx(131:140)=',10f5.0,
+!    &        :/' spdmx(141:150)=',10f5.0,:/' spdmx(151:160)=',10f5.0)
 !
 !--------------------------------------------
         endif
