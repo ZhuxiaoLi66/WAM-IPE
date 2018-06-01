@@ -2106,8 +2106,8 @@ contains
       file=__FILE__, &
       rcToReturn=rc)) return
 
-    write(6,'("newcoord: BEGIN")')
-    flush 6
+!   write(6,'("newcoord: BEGIN")')
+!   flush 6
     ! -- load 2D coordinates
     do item = 1, 2
       select case (newcoordDimCount(item))
@@ -2126,8 +2126,8 @@ contains
               file=__FILE__, &
               rcToReturn=rc)) return
             fptrIn1d = fptrOut1d
-            write(6,'("newcoord: ",i0,2x,"DE: ",i0," min/max: ",2g16.6)') item, localDe, minval(fptrIn1d), maxval(fptrIn1d)
-            flush 6
+!           write(6,'("newcoord: ",i0,2x,"DE: ",i0," min/max: ",2g16.6)') item, localDe, minval(fptrIn1d), maxval(fptrIn1d)
+!           flush 6
           end do
         case (2)
           do localDe = 0, localDeCount - 1
@@ -2144,16 +2144,16 @@ contains
               file=__FILE__, &
               rcToReturn=rc)) return
             fptrIn2d = fptrOut2d
-            write(6,'("newcoord: ",i0,2x,"DE: ",i0," min/max: ",2g16.6)') item, localDe, minval(fptrIn2d), maxval(fptrIn2d)
-            flush 6
+!           write(6,'("newcoord: ",i0,2x,"DE: ",i0," min/max: ",2g16.6)') item, localDe, minval(fptrIn2d), maxval(fptrIn2d)
+!           flush 6
           end do
         case default
-            write(6,'("newcoord: ",i0,2x,"NO COORDINATE SET")') item
-            flush 6
+!           write(6,'("newcoord: ",i0,2x,"NO COORDINATE SET")') item
+!           flush 6
       end select
     end do
-    write(6,'("newcoord: END")')
-    flush 6
+!   write(6,'("newcoord: END")')
+!   flush 6
 
     deallocate(newcoordDimCount, stat=localrc)
     if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -2714,7 +2714,7 @@ contains
                 line=__LINE__,  &
                 file=__FILE__,  &
                 rcToReturn=rc)) return  ! bail out
-              write(6,'("-- NamespaceSetLocalMesh: l/u = ",2i8)') lb(1),ub(1)
+!             write(6,'("-- NamespaceSetLocalMesh: l/u = ",2i8)') lb(1),ub(1)
               do item = 1, s % fieldMaxRank
                 ! -- if local field exists, destroy and recreate
                 isCreated = ESMF_FieldIsCreated(s % localIntField(item), rc=localrc)
@@ -2994,7 +2994,7 @@ contains
     if (present(options)) then
       read(options, *, iostat=localrc) auxNorm
       if (localrc /= 0) auxNorm = 0._ESMF_KIND_R8
-      write(6,'("-- auxNorm: ",a," read as: ",f16.6)') trim(options), auxNorm
+!     write(6,'("-- auxNorm: ",a," read as: ",f16.6)') trim(options), auxNorm
     end if
       
     if (auxNorm > 0._ESMF_KIND_R8) then
@@ -3775,15 +3775,15 @@ contains
       file=__FILE__,  &
       rcToReturn=rc)) return  ! bail out
 
-    if (stateIntent == ESMF_STATEINTENT_IMPORT) then
-      write(6,'(" - StateGetField: state is Import: getting ",a," ...")') trim(fieldName)
-    else if (stateIntent == ESMF_STATEINTENT_EXPORT) then
-      write(6,'(" - StateGetField: state is Export: getting ",a," ...")') trim(fieldName)
-    else
-      write(6,'(" - StateGetField: state is UNKNOWN for field ",a," ...")') trim(fieldName)
-      if (present(rc)) rc = ESMF_FAILURE
-      return
-    end if
+!   if (stateIntent == ESMF_STATEINTENT_IMPORT) then
+!     write(6,'(" - StateGetField: state is Import: getting ",a," ...")') trim(fieldName)
+!   else if (stateIntent == ESMF_STATEINTENT_EXPORT) then
+!     write(6,'(" - StateGetField: state is Export: getting ",a," ...")') trim(fieldName)
+!   else
+!     write(6,'(" - StateGetField: state is UNKNOWN for field ",a," ...")') trim(fieldName)
+!     if (present(rc)) rc = ESMF_FAILURE
+!     return
+!   end if
 
     call ESMF_StateGet(state % self, itemName=trim(fieldName), field=field, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -3796,7 +3796,7 @@ contains
       return
     end if
 
-    write(6,'("-- StateGetField: checking if field is created ...")')
+!   write(6,'("-- StateGetField: checking if field is created ...")')
     isFieldCreated = ESMF_FieldIsCreated(state % localField(localComp), rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__,  &
@@ -3857,8 +3857,8 @@ contains
             file=__FILE__,  &
             rcToReturn=rc)) return  ! bail out
 
-          write(6,'(" - StateGetField: size 1d/2d = ",2i10)') size(fptr1d),size(fptr2d)
-          flush 6
+!         write(6,'(" - StateGetField: size 1d/2d = ",2i10)') size(fptr1d),size(fptr2d)
+!         flush 6
           fptr1d = reshape(fptr2d, (/ size(fptr1d) /))
 
           StateGetField = state % localField(localComp)
@@ -3902,11 +3902,11 @@ contains
         return ! bail out
       end if
 
-      write(6,'(" - StateGetField: interpolation is done")')
+!     write(6,'(" - StateGetField: interpolation is done")')
     else
-      write(6,'("-- StateGetField: field IS NOT created")')
+!     write(6,'("-- StateGetField: field IS NOT created")')
       StateGetField = field
-      write(6,'(" - RHStore: field is remote")')
+!     write(6,'(" - RHStore: field is remote")')
     end if
 
   end function StateGetField
@@ -3990,9 +3990,9 @@ contains
           file=__FILE__,  &
           rcToReturn=rc)) return  ! bail out
 
-        write(6,'(" - StateGetField: size 1d/2d = ",2i10," min/max = ",2g16.6)') &
-          size(fptr1d),size(fptr2d), minval(fptr1d),maxval(fptr1d)
-        flush 6
+!       write(6,'(" - StateGetField: size 1d/2d = ",2i10," min/max = ",2g16.6)') &
+!         size(fptr1d),size(fptr2d), minval(fptr1d),maxval(fptr1d)
+!       flush 6
         fptr2d = reshape(fptr1d, shape(fptr2d))
 
         ! -- interpolate from 2d+1 Mesh to 3d Mesh
@@ -4227,7 +4227,7 @@ contains
         rcToReturn=rc)) return
       if (geomtype == ESMF_GEOMTYPE_GRID) then
         ! -- get src grid
-        write(6,'(" - FieldInterpolate: get src levels from src grid ...")')
+!       write(6,'(" - FieldInterpolate: get src levels from src grid ...")')
         call ESMF_FieldGet(srcField, grid=grid, rc=localrc)
         if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
@@ -4240,7 +4240,7 @@ contains
           line=__LINE__, &
           file=__FILE__, &
           rcToReturn=rc)) return
-        write(6,'(" - FieldInterpolate: got src levels from src grid ")')
+!       write(6,'(" - FieldInterpolate: got src levels from src grid ")')
       else
         call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
           msg="if no srcLevels provided, srcField must be on Grid", &
@@ -4284,7 +4284,7 @@ contains
         rcToReturn=rc)) return
       if (geomtype == ESMF_GEOMTYPE_GRID) then
         ! -- get dst grid
-        write(6,'(" - FieldInterpolate: get dst levels from dst grid ...")')
+!       write(6,'(" - FieldInterpolate: get dst levels from dst grid ...")')
         call ESMF_FieldGet(dstField, grid=grid, rc=localrc)
         if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
@@ -4297,7 +4297,7 @@ contains
           line=__LINE__, &
           file=__FILE__, &
           rcToReturn=rc)) return
-        write(6,'(" - FieldInterpolate: got dst levels from dst grid ")')
+!       write(6,'(" - FieldInterpolate: got dst levels from dst grid ")')
       else
         call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
           msg="if no dstLevels provided, dstField must be on Grid", &
@@ -4723,10 +4723,10 @@ contains
 
 #ifdef BFB_REGRID
                   srcTermProcessing = 0
-                  write(6,'(" - RHStore: start working on RH ...",a, "(srcTermProcessing = ",i0,")")') &
-                    trim(rHandle % label), srcTermProcessing
+!                 write(6,'(" - RHStore: start working on RH ...",a, "(srcTermProcessing = ",i0,")")') &
+!                   trim(rHandle % label), srcTermProcessing
 #else
-                  write(6,'(" - RHStore: start working on RH ...",a)') trim(rHandle % label)
+!                 write(6,'(" - RHStore: start working on RH ...",a)') trim(rHandle % label)
 #endif
                   call ESMF_FieldRegridStore(srcField, dstField, &
                     regridmethod   = ESMF_REGRIDMETHOD_BILINEAR, &
@@ -4741,7 +4741,7 @@ contains
                     line=__LINE__,  &
                     file=__FILE__,  &
                     rcToReturn=rc)) return  ! bail out
-                  write(6,'(" - RHStore: done working on RH ...",a)') trim(rHandle % label)
+!                 write(6,'(" - RHStore: done working on RH ...",a)') trim(rHandle % label)
 
                   if (associated(rh)) then
                     rh % next => rHandle
@@ -4807,8 +4807,8 @@ contains
     item = 0
     do while (associated(rh))
       item = item + 1
-      write(6,'(i4,2x,a,2x,l5)') item, trim(rh % label), &
-        ESMF_RouteHandleIsCreated(rh % rh, rc=localrc)
+!     write(6,'(i4,2x,a,2x,l5)') item, trim(rh % label), &
+!       ESMF_RouteHandleIsCreated(rh % rh, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__, &
