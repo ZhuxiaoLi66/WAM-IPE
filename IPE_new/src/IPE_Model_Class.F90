@@ -495,8 +495,8 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, x_varid, "missing_value", fillValue) )
 
       CALL Check( nf90_def_var( ncid, "T", NF90_PREC, time_dimid, time_varid ) )
-      CALL Check( nf90_put_att( ncid, time_varid, "long_name", "Time since 2000-1-1 00:00 UT" ) )
-      CALL Check( nf90_put_att( ncid, time_varid, "units", "s" ) )
+      CALL Check( nf90_put_att( ncid, time_varid, "long_name", "minutes since 2000-1-1 00:00 UT" ) )
+      CALL Check( nf90_put_att( ncid, time_varid, "units", "minutes" ) )
       CALL Check( nf90_put_att( ncid, time_varid, "_FillValue", fillValue) )
       CALL Check( nf90_put_att( ncid, time_varid, "missing_value", fillValue) )
 
