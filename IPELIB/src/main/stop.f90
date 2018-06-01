@@ -10,18 +10,18 @@ integer       :: ret
 real(8)       :: TOTALTIME ! returned from gptl
 
 if(nprocs > 1) then
-  print*
+! print*
   MAXlpHalo = MaxLpHaloUsed
   MAXmpHalo = MaxMpHaloUsed
 !SMS$REDUCE(MAXlpHalo,max)
 !SMS$REDUCE(MAXmpHalo,max)
-  print"(' Maximum of MAXlpHalo over all processors: ',i0)",MAXlpHalo
-  print"(' Maximum of MAXmpHalo over all processors: ',i0)",MAXmpHalo
-  print*
-  print*,'   PE   lps   lpe   mps   mpe   MAXlpHalo   MAXmpHalo'
+! print"(' Maximum of MAXlpHalo over all processors: ',i0)",MAXlpHalo
+! print"(' Maximum of MAXmpHalo over all processors: ',i0)",MAXmpHalo
+! print*
+! print*,'   PE   lps   lpe   mps   mpe   MAXlpHalo   MAXmpHalo'
 !SMS$IGNORE BEGIN
-  write(string,100) mype,lps,lpe,mps,mpe,MaxLpHaloUsed,MaxMpHaloUsed
-100 format(5i6,i8,i12)
+!  write(string,100) mype,lps,lpe,mps,mpe,MaxLpHaloUsed,MaxMpHaloUsed
+!100 format(5i6,i8,i12)
 !SMS$IGNORE END
 !SMS$INSERT call SMSPrintModeOrdered(string)
 endif
@@ -35,7 +35,7 @@ endif
 
 !ret = gptlprint_memusage ('Memory usage:')
 ret = gptlget_wallclock ('Total', 0, TOTALTIME)  ! The "0" is thread number
-print*,'Total time =' , TOTALTIME
+!print*,'Total time =' , TOTALTIME
 print*,'IPE completed successfully'
 
 end subroutine stop

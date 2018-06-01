@@ -72,29 +72,29 @@
       jpt=0
       do node=1,nodesio
          if ( lats_nodes_r(node) .gt. 0 ) then
-            print 600
+!           print 600
             lats_sum=0
             do jcount=1,lats_nodes_r(node)
                lats_sum=lats_sum + lonsperlar(global_lats_r(jpt+jcount))
-               print 700, node-1,
-     x                    node,    lats_nodes_r(node),
-     x                    jpt+jcount, global_lats_r(jpt+jcount),
-     x                     lonsperlar(global_lats_r(jpt+jcount)),
-     x                    lats_sum
+!              print 700, node-1,
+!    x                    node,    lats_nodes_r(node),
+!    x                    jpt+jcount, global_lats_r(jpt+jcount),
+!    x                     lonsperlar(global_lats_r(jpt+jcount)),
+!    x                    lats_sum
             enddo
          endif
          jpt=jpt+lats_nodes_r(node)
       enddo
 !
-      print 600
+!     print 600
 !
-  600 format ( ' ' )
+! 600 format ( ' ' )
 !
-  700 format (  'setlats_r  me=', i4,
-     x          '  lats_nodes_r(',  i4, ' )=', i4,
-     x          '  global_lats_r(', i4, ' )=', i4,
-     x          '  lonsperlar=', i5,
-     x          '  lats_sum=',   i6 )
+! 700 format (  'setlats_r  me=', i4,
+!    x          '  lats_nodes_r(',  i4, ' )=', i4,
+!    x          '  global_lats_r(', i4, ' )=', i4,
+!    x          '  lonsperlar=', i5,
+!    x          '  lats_sum=',   i6 )
 !
       return
       end
