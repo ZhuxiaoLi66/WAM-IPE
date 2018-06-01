@@ -349,13 +349,13 @@
 !     if (me == 0) write(0,*)' in gfs_physics_initialize reduced_grid=',reduced_grid
 
       if( reduced_grid ) then
-        if (me == 0) print *,' run with reduced gaussian grid '
+!       if (me == 0) print *,' run with reduced gaussian grid '
         inquire (file="lonsperlar.dat", exist=file_exists)
         if ( .not. file_exists ) then
-          if ( me == 0 ) then
-            print *,'   Requested lonsperlar.dat  data file does not exist'
-            print *,'   *** Stopped in subroutine GFS_Init !!'
-          endif
+!         if ( me == 0 ) then
+!           print *,'   Requested lonsperlar.dat  data file does not exist'
+!           print *,'   *** Stopped in subroutine GFS_Init !!'
+!         endif
           call mpi_quit(1111)
         else
           open (iunit,file='lonsperlar.dat',status='old',form='formatted',     &
@@ -377,7 +377,7 @@
         endif
 !         write(0,*)' gis_phy%lonsperlar=',gis_phy%lonsperlar
       else
-        if (me == 0) print *,' run with full gaussian grid '
+!       if (me == 0) print *,' run with full gaussian grid '
         do j=1,latr
           gis_phy%lonsperlar(j) = lonr
         enddo
@@ -465,9 +465,9 @@
 !       print *,' g_dp ',g_dp
 !       print *,' g_dpdt ',g_dpdt
 !       print *,' lotgr ',lotgr
-        print *,' latsozp=',latsozp,' levozp=',levozp,' timeoz=',timeoz
-        print *,' latsozc=',latsozc,' levozc=',levozc,' timeozc=',        &
-                  timeozc, 'dphiozc=',dphiozc
+!       print *,' latsozp=',latsozp,' levozp=',levozp,' timeoz=',timeoz
+!       print *,' latsozc=',latsozc,' levozc=',levozc,' timeozc=',        &
+!                 timeozc, 'dphiozc=',dphiozc
 !       print *,' pl_lat=',pl_lat
 !       print *,' pl_pres=',pl_pres
 !       print *,' pl_time=',pl_time
@@ -556,8 +556,8 @@
 !
 !
       if(gis_phy%iret.ne.0) then
-        if(me == 0) print *,' incompatible physics namelist -',         &
-                            ' aborted in gfs_phy_initilize ',gis_phy%iret 
+!       if(me == 0) print *,' incompatible physics namelist -',         &
+!                           ' aborted in gfs_phy_initilize ',gis_phy%iret 
 !*                          ' aborted in gfs_phy_initilize'
         call mpi_quit(13)
       endif
@@ -618,13 +618,13 @@
 !! allocate grid_fld                      --- Sarah Lu
       gis_phy%grid_aldata = grid_aldata
       if ( gis_phy%grid_aldata ) then
-        if( me == 0) print *,'LU_PHY: grid_fld allocated ; copy is used' &
-                            ,' gis_phy%ntrac=',gis_phy%ntrac
+!       if( me == 0) print *,'LU_PHY: grid_fld allocated ; copy is used' &
+!                           ,' gis_phy%ntrac=',gis_phy%ntrac
         call gridvar_aldata (lonr, lats_node_r_max, levs,               &
                              gis_phy%ntrac, gis_phy%grid_fld, ierr)  
       else                                                            
         allocate (gis_phy%grid_fld%rqtk(lonr,lats_node_r_max))
-        if( me == 0) print *,'LU_PHY: grid_fld not allocated ; pointer is used'
+!       if( me == 0) print *,'LU_PHY: grid_fld not allocated ; pointer is used'
       endif                                                     
 
 !*    allocate (gis_phy%grid_gr(lonr*lats_node_r_max,lotgr), stat = ierr )
@@ -739,8 +739,8 @@
 !       write(0,*)' gis_phy%lonsperlar2b=',gis_phy%lonsperlar
 !       write(0,*)' before fix_fields'
 
-      PRINT*, 'in phys initialize, lsidea, ipe_to_wam_coupling=', &
-            lsidea, ipe_to_wam_coupling
+!     PRINT*, 'in phys initialize, lsidea, ipe_to_wam_coupling=', &
+!           lsidea, ipe_to_wam_coupling
       IF(lsidea .AND. ipe_to_wam_coupling) THEN
         lowst_ipe_level = 80
 
