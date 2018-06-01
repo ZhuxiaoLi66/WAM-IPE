@@ -219,7 +219,8 @@
 !
 !---
 
-      NAMELIST/IPEDIMS/NLP,NMP,NPTS2D
+
+!     NAMELIST/IPEDIMS/NLP,NMP,NPTS2D
       NAMELIST/NMIPE/start_time &
      &,stop_time &
      &,time_step &
@@ -369,7 +370,12 @@
 !SMS$IGNORE BEGIN
         OPEN(LUN_nmlt, FILE='IPE.inp',ERR=222,IOSTAT=IOST_OP,STATUS='OLD')
         REWIND LUN_nmlt
-        READ(LUN_nmlt,NML=IPEDIMS,ERR=222,IOSTAT=IOST_RD)
+!       READ(LUN_nmlt,NML=IPEDIMS,ERR=222,IOSTAT=IOST_RD)
+
+        npts2d = 44514
+        nmp = 80
+        nlp = 170
+
         REWIND LUN_nmlt
         READ(LUN_nmlt,NML=NMIPE ,ERR=222,IOSTAT=IOST_RD)
 !SMS$IGNORE END

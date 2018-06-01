@@ -478,9 +478,9 @@ module module_CPLFIELDS
             line=__LINE__, &
             file=__FILE__)) &
             return  ! bail out
-         print *, 'bound wwg', ubound(wwg), lbound(wwg)
-         print *, trim(fieldName), ' wwg size and field size', size(wwg,1),size(wwg,2),&
-	       size(wwg,3), size(fptr,1),size(fptr,2)
+!        print *, 'bound wwg', ubound(wwg), lbound(wwg)
+!        print *, trim(fieldName), ' wwg size and field size', size(wwg,1),size(wwg,2),&
+!       size(wwg,3), size(fptr,1),size(fptr,2)
         
          levels = size(fptr,2)
          if (trim(fieldName) == "O_Density" .or. trim(fieldName)=="O2_Density") then
@@ -557,14 +557,14 @@ module module_CPLFIELDS
               enddo  !i=0,PetCnt-1
  
             endif
-            if (PetNo == 0) then
-       	       print *, 'Write out ', trim(fieldName)
-            endif
+!           if (PetNo == 0) then
+!      	       print *, 'Write out ', trim(fieldName)
+!           endif
          endif !slice==2
          if (trim(fieldName) == "O_Density" .or. trim(fieldName)=="O2_Density") then
 	    deallocate(varbuf)
          endif
-	 print *, trim(fieldName), ' min/max ', minval(fptr), maxval(fptr)
+! print *, trim(fieldName), ' min/max ', minval(fptr), maxval(fptr)
       endif
    enddo
    slice = slice+1

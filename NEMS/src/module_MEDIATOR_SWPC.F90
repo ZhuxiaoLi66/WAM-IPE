@@ -283,9 +283,9 @@ module module_MED_SWPC
       file=__FILE__)) &
       return  ! bail out
 
-    write(6,'(" -- InitP5: MeshGetBounds: low/upp = ",2g16.6)') coordBounds
-    write(6,'(" -- InitP5: MeshGetBounds: low/upp = ",2g16.6)') &
-      (coordBounds-1._ESMF_KIND_R8)*earthRadius
+!   write(6,'(" -- InitP5: MeshGetBounds: low/upp = ",2g16.6)') coordBounds
+!   write(6,'(" -- InitP5: MeshGetBounds: low/upp = ",2g16.6)') &
+!     (coordBounds-1._ESMF_KIND_R8)*earthRadius
 
     call NamespaceGet("ATM", importState, geomtype=geomtype, &
       grid=grid, mesh=mesh, rc=rc)

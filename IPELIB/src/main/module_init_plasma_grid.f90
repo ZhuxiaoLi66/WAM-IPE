@@ -179,7 +179,7 @@ END IF !( sw_grid==0 ) THEN  !APEX
 !     DO mp = 1,NMP+1
      DO mp = 1-mpHaloSize,NMP+mpHaloSize
        mlon_rad(mp) = REAL( (mp-1),real_prec ) * dlonm90km *pi/180.00
-print*,'mp=',mp,'mlon=',mlon_rad(mp)
+ print*,'mp=',mp,'mlon=',mlon_rad(mp)
      END DO
 
 END SUBROUTINE init_plasma_grid
