@@ -27,6 +27,7 @@ IMPLICIT NONE
 
     PROCEDURE :: Calculate_DayNumber    => Calculate_DayNumber_IPE_Time
     PROCEDURE :: Calculate_YearMonthDay => Calculate_YearMonthDay_IPE_Time
+    PROCEDURE :: Calculate_Date_Difference
 
   END TYPE IPE_Time
 
@@ -222,5 +223,38 @@ CONTAINS
       time_tracker % day   = day
       
   END SUBROUTINE Calculate_YearMonthDay_IPE_Time
+
+  FUNCTION Calculate_Date_Difference( time_tracker, year, month, day, hour, minute ) RESULT( diff_minutes )
+  ! Calculates the difference between the date in time_tracker and the given
+  ! date. The result is reported in units of minutes
+    IMPLICIT NONE
+    CLASS( IPE_Time ) :: time_tracker
+    INTEGER           :: year, month, day, hour, minute
+    REAL(prec)        :: diff_minutes
+    ! Local 
+    INTEGER :: month_adj, year_adj, day_number, day_diff
+    REAL(prec) :: ut
+
+      ! Adjust the calendar to start with march 1 at the "beginning of the year"
+      month_adj = MOD( month + 9, 12 )
+      year_adj  = year - month_adj/10
+
+      day_number = 365*year_adj + &
+                   year_adj/4 - &
+                   year_adj/100 + &
+                   year_adj/400 + &
+                   (month_adj*306 + 5)/10 + &
+                   (day - 1 )
+
+      CALL time_tracker % Calculate_DayNumber( )
+
+      day_diff = time_tracker % day_number - day_number
+      
+      ut = REAL(hour*60 + minute,prec) ! [ minutes ] 
+
+
+      diff_minutes = REAL( day_diff*86400, prec ) + time_tracker % utime/60.0_prec - ut
+
+  END FUNCTION Calculate_Date_Difference
   
 END MODULE IPE_Time_Class

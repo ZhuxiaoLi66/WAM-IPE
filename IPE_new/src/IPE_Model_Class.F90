@@ -445,6 +445,7 @@ CONTAINS
     CLASS( IPE_Model ), INTENT(in) :: ipe
     CHARACTER(*), INTENT(in)       :: filename
     ! Local
+    REAL(prec) :: time
     INTEGER :: NF90_PREC
     INTEGER :: ncid
     INTEGER :: x_dimid, y_dimid, z_dimid, time_dimid
@@ -458,6 +459,8 @@ CONTAINS
     INTEGER :: ion_rate_varid, O_rate_varid, O2_rate_varid, N2_rate_varid
 
 
+      ! Time from reference time is calculated here
+      time = ipe % time_tracker % Calculate_Date_Difference( 2000, 1, 1, 0, 0 )
       IF( prec == sp )THEN
         NF90_PREC = NF90_FLOAT
       ELSE      
@@ -466,12 +469,12 @@ CONTAINS
 
       CALL Check( nf90_create( TRIM(filename), NF90_NETCDF4, ncid))
 
-      CALL Check( nf90_def_dim( ncid, "z", nheights_geo, z_dimid ) ) 
+      CALL Check( nf90_def_dim( ncid, "Z", nheights_geo, z_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "longitude", nlon_geo, x_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "latitude", nlat_geo, y_dimid ) ) 
-      CALL Check( nf90_def_dim( ncid, "time", NF90_UNLIMITED, time_dimid ) )
+      CALL Check( nf90_def_dim( ncid, "T", NF90_UNLIMITED, time_dimid ) )
 
-      CALL Check( nf90_def_var( ncid, "z", NF90_PREC, z_dimid, z_varid ) )
+      CALL Check( nf90_def_var( ncid, "Z", NF90_PREC, z_dimid, z_varid ) )
       CALL Check( nf90_put_att( ncid, z_varid, "long_name", "Altitude" ) )
       CALL Check( nf90_put_att( ncid, z_varid, "units", "km" ) )
       CALL Check( nf90_put_att( ncid, z_varid, "_FillValue", fillValue) )
@@ -491,8 +494,8 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, x_varid, "_FillValue", fillValue) )
       CALL Check( nf90_put_att( ncid, x_varid, "missing_value", fillValue) )
 
-      CALL Check( nf90_def_var( ncid, "time", NF90_PREC, time_dimid, time_varid ) )
-      CALL Check( nf90_put_att( ncid, time_varid, "long_name", "Internal IPE Time" ) )
+      CALL Check( nf90_def_var( ncid, "T", NF90_PREC, time_dimid, time_varid ) )
+      CALL Check( nf90_put_att( ncid, time_varid, "long_name", "Time since 2000-1-1 00:00 UT" ) )
       CALL Check( nf90_put_att( ncid, time_varid, "units", "s" ) )
       CALL Check( nf90_put_att( ncid, time_varid, "_FillValue", fillValue) )
       CALL Check( nf90_put_att( ncid, time_varid, "missing_value", fillValue) )
@@ -617,6 +620,7 @@ CONTAINS
 
       CALL Check( nf90_enddef(ncid) )
       
+      CALL Check( nf90_put_var( ncid, time_varid, time ) )
       IF( ipe % parameters % write_geographic_neutrals )THEN
         CALL Check( nf90_put_var( ncid, x_varid, ipe % grid % longitude_geo ) )
         CALL Check( nf90_put_var( ncid, y_varid, ipe % grid % latitude_geo ) )
