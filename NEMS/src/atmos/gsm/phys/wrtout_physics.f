@@ -203,11 +203,11 @@
       nfillnum = nfill(ens_nam)
       if (nfillnum > 0) then
         cfhour = cfhour(1:nfill(cfhour)) // ens_nam(1:nfill(ens_nam))
-        if (me == 0) print *,' in wrtout_physics cfhour=',cfhour,
-     &                                 ' ens_nam=',ens_nam
+!       if (me == 0) print *,' in wrtout_physics cfhour=',cfhour,
+!    &                                 ' ens_nam=',ens_nam
       else
         cfhour = cfhour(1:nfill(cfhour))
-        if (me == 0) print *,' in wrtout_physics cfhour=',cfhour
+!       if (me == 0) print *,' in wrtout_physics cfhour=',cfhour
       endif
 !
       nosfc = 62
@@ -269,7 +269,7 @@
 !  send state to I/O task.  All tasks
 !
       if(sfcio_out) then
-          if (me == 0) print *,'---- start sfc.f section -----'
+!         if (me == 0) print *,'---- start sfc.f section -----'
           call sfc_only_move(ioproc)
           cosfc = sfcf//CFHOUR
           call sfc_wrt(ioproc,nosfc,cosfc,fhour_iau,jdate_iau
@@ -300,7 +300,7 @@
 !
 !      print *,'---- start diag3d.f section -----'
       if (ldiag3d) then
-        if (me == 0) print *,' wrtout_physics ldiag3d on so wrt3d '
+!       if (me == 0) print *,' wrtout_physics ldiag3d on so wrt3d '
         no3d = 64
         if(me == IOPROC)
      &  call BAOPENWT(NO3D,d3df//CFHOUR,iostat)
@@ -322,17 +322,17 @@
 !     tf = tb-ta
       t2 = rtc()
 
-       if (me == ioproc) write(0,*)' WRTOUT_PHYSICS TIME=',tf
+!      if (me == ioproc) write(0,*)' WRTOUT_PHYSICS TIME=',tf
 
 !     print 1011,tf
 !1011 format(' WRTOUT_PHYSICS TIME ',f10.4)
       timesum = timesum+(t2-t1)
 !     print 1012,timesum,t2-t1,td,te,tf,t4-t3,tba,tbb,tbc,tbd
- 1012 format(
-     1 ' WRTOUT_PHYSICS TIME ALL TASKS  ',f10.4,f10.4,
-     1 ' state, send, io  iobarr, (beginbarr),
-     1 spectbarr,open, openbarr )  ' ,
-     1  8f9.4)
+!1012 format(
+!    1 ' WRTOUT_PHYSICS TIME ALL TASKS  ',f10.4,f10.4,
+!    1 ' state, send, io  iobarr, (beginbarr),
+!    1 spectbarr,open, openbarr )  ' ,
+!    1  8f9.4)
 !
       return
       end
@@ -973,9 +973,9 @@
         head%fhour   = xhour
         head%idate   = idate
 !
-        PRINT 99,nw,xhour,IDATE
-99      FORMAT(1H ,'in fixio nw=',i7,2x,'HOUR=',f8.2,3x,'IDATE=',
-     &  4(1X,I4))
+!       PRINT 99,nw,xhour,IDATE
+!99      FORMAT(1H ,'in fixio nw=',i7,2x,'HOUR=',f8.2,3x,'IDATE=',
+!    &  4(1X,I4))
 !
         ngrid = 1
         ngrid3 = ngrids_sfcc2d+1
@@ -1339,9 +1339,9 @@
         head%fhour = xhour
         head%idate = idate
 
-        print 99,nw,xhour,idate
- 99     format(' in nst_wrt nw=',i7,2x,'hour=',f8.2,3x,'idate=',
-     &         4(1x,i4))
+!       print 99,nw,xhour,idate
+! 99     format(' in nst_wrt nw=',i7,2x,'hour=',f8.2,3x,'idate=',
+!    &         4(1x,i4))
         ngrid = 1
         data%slmsk    => buff_mult(:,:,ngrid)
         ngrid = ngrid + 1
@@ -5894,7 +5894,7 @@
 
 !       write(0,*)' at the end in wrtflx_w max_ngridss=',ngridss
 !
-        PRINT *,'GRIB FLUX FILE WRITTEN ',FHOUR,IDATE,noflx
+!       PRINT *,'GRIB FLUX FILE WRITTEN ',FHOUR,IDATE,noflx
 
       endif           ! if (me == ioproc) then
 !

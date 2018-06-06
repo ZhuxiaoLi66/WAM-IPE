@@ -131,15 +131,15 @@
 !------------------------------------------------------------------------
 !       Input file is in grid-point space - use gfs_io package
 !
-      if (me == 0) write(0,*)' before nemsio_open cfile=',cfile
+!     if (me == 0) write(0,*)' before nemsio_open cfile=',cfile
 
       stime = timef()
       call nemsio_open(gfile_in,trim(cfile),'read',iret)
       etime = timef()
 
-      if (me == 0) write(0,*)'in read nemsio file, open time='
-     &,                       timef()-stime
-     &,     ' lonf=',lonf,' lats_node_a=',lats_node_a
+!     if (me == 0) write(0,*)'in read nemsio file, open time='
+!    &,                       timef()-stime
+!    &,     ' lonf=',lonf,' lats_node_a=',lats_node_a
 !
       call nemsio_getfilehead(gfile_in,iret=iret,
      &                        version=ivsupa,idate=idate7,
@@ -177,37 +177,37 @@
 !     &  idusr=idusr,pdryini=pdryini4,ncldt=ncldt,nvcoord=nvcoord)
 !
       if (me == 0) then
-        write(0,*)'iret=',iret,
-     &     ' levsi=',levsi,' idate=',idate,
-     &   'lonf=',lonf,'lonfi=',lonfi,'latg=',latg,'latgi=',latgi,
-     &   'jcap=',jcap,'jcapi=',jcapi,'levs=',levs,'levsi=',levsi,
-     &   'idvc=',idvc,'tlmeta=',tlmeta,
-     &   'gen_coord_hybrid=',gen_coord_hybrid,'pdryini=',pdryini
+!       write(0,*)'iret=',iret,
+!    &     ' levsi=',levsi,' idate=',idate,
+!    &   'lonf=',lonf,'lonfi=',lonfi,'latg=',latg,'latgi=',latgi,
+!    &   'jcap=',jcap,'jcapi=',jcapi,'levs=',levs,'levsi=',levsi,
+!    &   'idvc=',idvc,'tlmeta=',tlmeta,
+!    &   'gen_coord_hybrid=',gen_coord_hybrid,'pdryini=',pdryini
         if(lonf .ne. lonfi .or. latg .ne. latgi .or.
      &     jcap .ne. jcapi .or. levs .ne. levsi) then
-          print *,' Input resolution and the model resolutions are'
-     &,  ' different- run aborted'
+!         print *,' Input resolution and the model resolutions are'
+!    &,  ' different- run aborted'
           call mpi_quit(555)
         endif
         if ( gen_coord_hybrid ) then
-          if(me==0) print *, ' Use sigma-theta-p hybrid coordinate'
+!         if(me==0) print *, ' Use sigma-theta-p hybrid coordinate'
           if (idvc == 3 ) then
-           if(me==0)   
-     &       print *, ' Cold_start input is consistent, run continues'
+!          if(me==0)   
+!    &       print *, ' Cold_start input is consistent, run continues'
           else 
-           if(me==0)
-     &       print *, ' Cold_start input is different, run aborted'
+!          if(me==0)
+!    &       print *, ' Cold_start input is different, run aborted'
            call mpi_quit(556)
           endif
         endif   
         if ( hybrid ) then
-          if(me==0)print *, ' Use sigma-p hybrid coordinate'
+!         if(me==0)print *, ' Use sigma-p hybrid coordinate'
           if (idvc == 2 ) then
-           if(me==0)
-     &      print *, ' Cold_start input is consistent, run continues'
+!          if(me==0)
+!    &      print *, ' Cold_start input is consistent, run continues'
           else 
-           if(me==0)
-     &       print *, ' Cold_start input is different, run aborted'
+!          if(me==0)
+!    &       print *, ' Cold_start input is different, run aborted'
            call mpi_quit(557)
           endif
         endif   
@@ -357,10 +357,10 @@
       if (pdryini == 0.0) pdryini = pdryini4
 !
 !
-      IF (me == 0) THEN
-        write(0,*)'cfile,in treadeo fhour,idate=',cfile,fhour,idate
-     &, ' idvc=',idvc,' jcap=',jcap, ' pdryini=',pdryini
-      ENDIF
+!     IF (me == 0) THEN
+!       write(0,*)'cfile,in treadeo fhour,idate=',cfile,fhour,idate
+!    &, ' idvc=',idvc,' jcap=',jcap, ' pdryini=',pdryini
+!     ENDIF
 !
       allocate (nemsio_data(lonf*latg))
 !  Read orog

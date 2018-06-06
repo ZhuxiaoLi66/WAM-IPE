@@ -1721,7 +1721,7 @@
 !-----------------------------------------------------------------------
 !
       IF(RC_FINAL == ESMF_SUCCESS) THEN
-        WRITE(0,*)'GFS FINALIZE STEP SUCCEEDED'
+!       WRITE(0,*)'GFS FINALIZE STEP SUCCEEDED'
       ELSE
         WRITE(0,*)'GFS FINALIZE STEP FAILED'
       ENDIF
