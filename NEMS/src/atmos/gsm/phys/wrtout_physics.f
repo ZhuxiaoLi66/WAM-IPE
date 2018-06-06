@@ -707,8 +707,8 @@
          ivar_global(3) = lats_node_r_max
          call mpi_gather(ivar_global,10,MPI_INTEGER,
      1       ivar_global_a,10,MPI_INTEGER,ioproc,mc_comp,ierr)
-         if(me == ioproc) write(0,*)'in sfc_only_move, ivar_global_a=',
-     &                    ivar_global_a(1:3,1:nodes)
+!        if(me == ioproc) write(0,*)'in sfc_only_move, ivar_global_a=',
+!    &                    ivar_global_a(1:3,1:nodes)
          icount = icount+1
       endif
 !!
@@ -826,8 +826,8 @@
         ivar_global(3) = lats_node_r_max
         call mpi_gather(ivar_global,10,MPI_INTEGER,
      &       ivar_global_a,10,MPI_INTEGER,ioproc,mc_comp,ierr)
-       if(me == ioproc) write(0,*)'in nst_only_move, ivar_global_a=',
-     &                  ivar_global_a(1:3,1:nodes)
+!      if(me == ioproc) write(0,*)'in nst_only_move, ivar_global_a=',
+!    &                  ivar_global_a(1:3,1:nodes)
         icount = icount + 1
       endif
 
