@@ -26,22 +26,11 @@ CONTAINS
 !---
 
     ! calculate where the flux tube is coming from (semi-lagulangian issue)
-    IF ( sw_convection_footpoint_0_or_apex_1==0 ) THEN
-
-      CALL stepback_mag_TH (utime_local, mp,lp, phi_t0 , theta_t0, r0_apex )
-
-      CALL find_neighbor_grid_TH ( mp,lp, phi_t0, theta_t0, r0_apex, mp_t0,lp_t0 )
-      sw_perp_transport=2
-
-    ELSE IF ( sw_convection_footpoint_0_or_apex_1==1 ) THEN
 
       CALL stepback_mag_R ( utime_local, mp,lp, phi_t0 , theta_t0, r0_apex )
 
       CALL find_neighbor_grid_R ( mp,lp, phi_t0, theta_t0, r0_apex, mp_t0,lp_t0 )
       sw_perp_transport=1
-
-    ENDIF
-
 
     CALL interpolate_flux_tube ( mp,lp, phi_t0,theta_t0, r0_apex, mp_t0,lp_t0, utime_local)
 

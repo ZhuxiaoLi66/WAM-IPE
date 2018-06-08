@@ -9,12 +9,15 @@
 ! PHONE  : 303-497-4857
 ! ADDRESS: 325 Broadway, Boulder, CO 80305
 !--------------------------------------------
-SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utime_local)                              
+SUBROUTINE interpolate_flux_tube (mp,lp &
+&, phi_t0,theta_t0 &
+&, r0_apex &
+&,mp_t0,lp_t0 ,&
+& utime_local) !dbg20141209
   USE module_precision
-  USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat, &
-                                      ht90,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d,plasma_3d_old, mlon_rad, &
-                                      maxAltitude,minAltitude,minTheta,poleVal
-  USE module_input_parameters,ONLY:sw_perp_transport,mype,lps,lpe,mps,mpe,nprocs,sw_ihepls,sw_inpls,sw_convection_footpoint_0_or_apex_1
+!     plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,plasma_3d_old are all IN arrays
+  USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,ht90,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d,plasma_3d_old, mlon_rad,maxAltitude,minAltitude,minTheta,poleVal
+  USE module_input_parameters,ONLY:sw_perp_transport,mype,lps,lpe,mps,mpe,nprocs,sw_ihepls,sw_inpls
   USE module_IPE_dimension,ONLY: ISPEC,ISPET,IPDIM, ISTOT, NMP
   USE module_physical_constants,ONLY: earth_radius,pi,zero,rtd
   USE module_Qinterpolation,ONLY:Qinterpolation
@@ -37,7 +40,7 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
   REAL(KIND=REAL_prec8) :: factor, factor_ksi
   REAL(KIND=REAL_prec) :: ksi_fac
   REAL(KIND=REAL_prec8),DIMENSION(0:2) :: r
-  REAL(KIND=REAL_prec8),DIMENSION(0:2) :: lambda_m,r_apex,B0,x,y
+  REAL(KIND=REAL_prec8),DIMENSION(0:2) :: lambda_m,B0,x,y
   INTEGER (KIND=int_prec),PARAMETER :: TSP=4      !N(1:4) perp.transport
   INTEGER (KIND=int_prec),PARAMETER :: iT=ISPEC+3   !add T(1:3)
 
@@ -48,7 +51,11 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
   REAL(KIND=REAL_prec8),DIMENSION(ISTOT,IPDIM,2) :: plasma_2d !3d:imp
   REAL(KIND=REAL_prec8) :: mlon1,mlon2
   INTEGER (KIND=int_prec) :: mp1,mp2, mp3
+  REAL(KIND=REAL_prec) :: tmp_fac1
+  REAL(KIND=REAL_prec8) :: tmp_fac2
   REAL(KIND=REAL_prec) :: tmp_lam
+  REAL   (KIND=REAL_prec) :: coslambda_m
+
 !---
 
 
@@ -97,57 +104,27 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
         ENDDO lp_t0_loop !: DO ilp=1,2
       ENDDO mp_t0_loop!: DO imp=1,2
 
+      
 ! (2) intepolate between the 4 flux tubes each point with the same Q value
 ! what KIND of interpolation is the most appropriate for the 4 points???
 !note: 2 flux tubes only USEd IF imp_max=1/sw_perp_transport==1 ---THETA only transport included
 !I should check quadratic interpolation CTIPe has using the third flux tube: tubes_quadratic_interpolate.f
 !here in this interpolation should be DOne for both mp=j0,j1 simultaneously...
 
-      r_apex(0) = r0_apex
-      IF ( sw_convection_footpoint_0_or_apex_1==0 ) THEN
-        lambda_m(0) = pi*0.50 - theta_t0(ihem)
-      ELSE IF ( sw_convection_footpoint_0_or_apex_1==1 ) THEN
-        lambda_m(0) = ACOS(SQRT((earth_radius+ht90)/r0_apex  ))
-      ENDIF !sw_convection_footpoint_0_or_apex_1
+      lambda_m(0) = pi*0.50 - theta_t0(ihem)
 
 !R of apex altitude for the two IN/OUT FTs
       DO ilp=1,2  !outer/inner flux tubes
-
-
-
         lp0 = lp_t0(ihem,ilp)
-        midpoint = JMIN_IN(lp0) + ( JMAX_IS(lp0) - JMIN_IN(lp0) )/2
-        r_apex(ilp)=plasma_grid_Z(midpoint,lp0) + earth_radius
-
-
-
-!note: this factor cannot work when lp<=6!!!
-!nm20140630 i may not need this line at all???
-        IF ( sw_convection_footpoint_0_or_apex_1==1.and.lp>6 ) THEN
-          lambda_m(ilp) = ACOS(SQRT((earth_radius+ht90)/r_apex(ilp)))
-!t PRINT "('!dbg20140627 lambda_m=',f8.6,' ilp=',i4,' r_apex',f9.0)",lambda_m(ilp),ilp,r_apex(ilp)
-        ELSE
-          !note: this factor cannot work when lp<=6!!!
-          !becaUSE r_apex DOes not mean anything for lp<=6
-          lambda_m(ilp) = pi*0.5 - plasma_grid_mag_colat( JMIN_IN(lp0),lp0 )
-
-        ENDIF !
+        lambda_m(ilp) = pi*0.5 - plasma_grid_mag_colat( JMIN_IN(lp0),lp0 )
       ENDDO  !DO ilp=1,2
 
-!not sure which factor is more correct??? either r- or lambda (gip) base???
-
-      IF ( sw_convection_footpoint_0_or_apex_1==1.and.lp>6.and.r_apex(1)/=r_apex(2) ) THEN
-
-        factor = ( r_apex(0)-r_apex(2) ) / ( r_apex(1)-r_apex(2) )
-
-      ELSE IF ( lambda_m(1)/=lambda_m(2) ) THEN
-        ! the values are only for NH
         factor = ( lambda_m(0) - lambda_m(2)) / (lambda_m(1) - lambda_m(2))
-      ELSE
-      ENDIF
 
         IF ( factor>1.0 )factor=1.0
         IF ( factor<0.0 )factor=0.0
+
+
 
       mp_t0_loop1: DO imp=1,imp_max
         flux_tube_loopT1_fac: DO i=JMIN_IN(lp),JMAX_IS(lp) !9000
@@ -157,43 +134,10 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
 
           r(0) = factor * ( r(1)-r(2) ) + r(2)
 
-
-!weighting of X between Nin & Nout
-! X can be either R or lambda (but only at IN/IS!!!)
-          IF( r(1)/=r(2) ) THEN
-
-            IF ( sw_convection_footpoint_0_or_apex_1==1 ) THEN
-              x(0:2) = r(0:2)
-            else IF ( sw_convection_footpoint_0_or_apex_1==0 ) THEN
-              x(0:2) = lambda_m(0:2)
-            ENDIF !sw_convection_footpoint_0_or_apex_1
-
-          ELSE IF( r(1)==r(2) ) THEN
-
-            IF( r(2)==(earth_radius+ht90) ) THEN
-
-              x(0:2) = lambda_m(0:2)
-
-            ELSE IF ( r(2)==(earth_radius+maxAltitude) ) THEN
-
-              x(0:2) = lambda_m(0:2)
-
-            ELSE IF ( lp<7 ) THEN
-
-              x(0:2) = lambda_m(0:2)
-
-            ELSE
-            ENDIF
-          ENDIF !   IF( r(1)/=r(2) ) THEN
-
-
-
-
 ! 1. interpolate Bfield intensity Bt0 at the imaginary FT(phi0,theta0) using dipole assumption
           B0(1:2)=Qint(iB,i1d,imp,1:2) * ( r(1:2)*r(1:2)*r(1:2) )/(r(0)*r(0)*r(0))
-          B0(0) = ( (x(1)-x(0))*Qint(iB,i1d,imp,2) + (x(0)-x(2))*Qint(iB,i1d,imp,1) ) / ( x(1)-x(2) )
+          B0(0) = (1-factor) *Qint(iB,i1d,imp,2) + factor*Qint(iB,i1d,imp,1) 
 
-!dbg20141210: polar cap boundary: mlat(17)=71.69
           IF ( lp<=17 ) THEN
             ksi_fac =1.000
           else
@@ -208,20 +152,15 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
 
           jth_loop4: DO jth=1,iT !TSP+3
             IF ( jth>TSP.AND.jth<=ISPEC )  CYCLE jth_loop4
-!nm20170328: he+ ihepls<=0
             IF ( jth==3.and.sw_ihepls<=0 ) CYCLE jth_loop4
 !nm20170328: n+ inpls<=0
             IF ( jth==4.and.sw_inpls<=0 ) CYCLE jth_loop4
 
-            IF ( x(1)/=x(2) ) THEN
               IF(jth<=TSP)THEN      !for densities
-                plasma_2d(jth,i1d,imp) = ( (x(1)-x(0))*Qint(jth,i1d,imp,2) + (x(0)-x(2))*Qint(jth,i1d,imp,1) ) / ( x(1)-x(2) )*(ksi_fac*ksi_fac)
+                plasma_2d(jth,i1d,imp) = ( (1-factor)*Qint(jth,i1d,imp,2) + factor*Qint(jth,i1d,imp,1) )*(ksi_fac*ksi_fac)
               else  !for temperatures
-                plasma_2d(jth,i1d,imp) = ( (x(1)-x(0))*Qint(jth,i1d,imp,2) + (x(0)-x(2))*Qint(jth,i1d,imp,1) )*(ksi_fac**(4./3.)) / ( x(1)-x(2) )
+                plasma_2d(jth,i1d,imp) = ( (1-factor)*Qint(jth,i1d,imp,2) + factor*Qint(jth,i1d,imp,1) )*(ksi_fac**(4./3.))
               ENDIF
-
-            ELSE !IF ( x(1)/=x(2) ) THEN
-            ENDIF !IF ( x(1)/=x(2) ) THEN
 
           ENDDO jth_loop4!jth=1,iT !=TSP+3
 
@@ -266,6 +205,7 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
                 &                           + (  phi_t0(ihem) - mlon2        ) * plasma_2d(jth,i1d,1)   &
                 &                           ) / (mlon1 - mlon2)
 
+
                 ! calculate ksi_factor
                 ksi_fac = plasma_grid_3d(i,lp,mp,IBM) / B0(0)  !is this correct???
 
@@ -276,6 +216,8 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
                   factor_ksi = ksi_fac**(4./3.)
                 ENDIF !             IF ( jth<=TSP ) THEN
                 plasma_3d(i1d,lp,mp,jth) = plasma_3d(i1d,lp,mp,jth) * factor_ksi
+
+
           ELSE  !IF ( sw_perp_transport<2 ) THEN
             plasma_3d(i1d,lp,mp,jth) = plasma_2d(jth,i1d,1)
           ENDIF
@@ -287,7 +229,8 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
       ENDDO flux_tube_loopT1_fac1
 
 
-    ELSE IF ( lp_t0(ihem,1)==-9999 ) THEN !missing_value in module_find_nei...
+    ELSE IF ( lp_t0(ihem,1)==-999 ) THEN !missing_value in module_find_nei...
+
 
 !CAUTION! poleVal is calculated (in module_sub_plasma.f90) ONLY at mype=0 but is broadcast to all processors.
 !nm20140630 temporary solution for pole
@@ -303,6 +246,7 @@ SUBROUTINE interpolate_flux_tube (mp,lp,phi_t0,theta_t0,r0_apex,mp_t0,lp_t0,utim
 
           DO imp=1,imp_max
 
+!nm20180112 bug found!!!
             mp3 = mp_t0(ihem,imp)
             IF(nprocs==1)THEN
               IF ( mp3<1   ) THEN

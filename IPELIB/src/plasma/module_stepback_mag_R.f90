@@ -41,8 +41,6 @@ CONTAINS
     REAL   (KIND=REAL_prec) :: coslambda_m
     INTEGER(KIND=int_prec ) :: ihem                              !1:NH; 2:SH
     REAL   (KIND=REAL_prec) :: GLON_deg, LT_SEC
-    REAL(KIND=REAL_prec8) :: theta_t0_test
-    REAL(KIND=REAL_prec8) :: r0_apex_test
 
     phi_t1 = mlon_rad(mp)
     theta_t1(1) = plasma_grid_mag_colat( JMIN_IN(lp),lp ) !NH
@@ -89,46 +87,12 @@ CONTAINS
 
       ENDIF !ELSE IF ( sw_exb_up==3 ) THEN
 
-      r0_apex = r_apex - VEXBup(lp,mp) * perp_transport_time_step
-      r0_apex_test=r0_apex
-
-      sin2theta = r/r0_apex
-      sintheta = SQRT( sin2theta )
-      theta    = ASIN ( sintheta )
-
-      IF ( ihem==1 ) THEN
-        theta_t0(ihem) = pi*0.50 - ACOS ( sintheta )
-      else IF ( ihem==2 ) THEN
-        theta_t0(ihem) = pi*0.50 + ACOS ( sintheta )
-      ENDIF
- 
-       theta_t0_test=theta_t0(ihem)
-
        theta_t0(ihem) = theta_t1(ihem) - ( VEXBth(lp,mp) * REAL(perp_transport_time_step) ) / r
-
-!rph will be needed for zonal transport (sw_convection_footpoint_0_or_apex_1=0)
-!       rph = r90
 
         coslambda_m  = COS ( pi*0.50 - theta_t0(ihem) )
         r0_apex = ( earth_radius + ht90 ) /  coslambda_m /  coslambda_m
 
-      IF ( r0_apex<(minAltitude+earth_radius) ) THEN
-        r0_apex = minAltitude+earth_radius
-      else IF ( r0_apex>(maxAltitude+earth_radius) ) THEN
-        r0_apex = maxAltitude+earth_radius
-      ENDIF
-
-      sin2theta = r/r0_apex
-      sintheta = SQRT( sin2theta )
-      theta    = ASIN ( sintheta )
-
-      IF ( ihem==1 ) THEN
-        theta_t0(ihem) = pi*0.50 - ACOS ( sintheta )
-      else IF ( ihem==2 ) THEN
-        theta_t0(ihem) = pi*0.50 + ACOS ( sintheta )
-      ENDIF
-
-      phi_t0(ihem)   = phi_t1 - ( VEXBe(lp,mp) * perp_transport_time_step ) / r_apex
+           phi_t0(ihem)   = phi_t1 - ( VEXBe(lp,mp) * perp_transport_time_step ) / r
       IF ( phi_t0(ihem)>=pi*2.0 ) THEN
         phi_t0(ihem) = phi_t0(ihem) - pi*2.0
       ELSE IF ( phi_t0(ihem)< 0.0    ) THEN
