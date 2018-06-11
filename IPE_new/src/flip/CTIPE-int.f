@@ -318,6 +318,7 @@ C.... Written by P. Richards June-September 2010.
      >             INPLS,  !.. switches N+ diffusive solution on if > 0
      >             UTHRS,  !.. Universal time in hours !$$$
      >              EHTX,  !.. IN/OUT 2D array, Electron & ion heating rate (eV cm-3 s-1)
+     >          AUR_PROD,  !.. IN 2D, array, ionization rates 
      >            TE_TIX,  !.. OUT: 2D array, Electron and ion temperatures (K) (see below)
      >     XIONNX,XIONVX,  !.. OUT: 2D array, Storage for ion densities and velocities 
      >             NHEAT,  !.. OUT: array, Neutral heating rate (eV/cm^3/s) 
@@ -353,6 +354,7 @@ C.... Written by P. Richards June-September 2010.
       DOUBLE PRECISION TE_TIX(3,CTIPDIM)
       !.. EHTX(3,J) = e heating rate, EHTX(1,J) = ion heating rate, EHTX(2,J) unused
       DOUBLE PRECISION EHTX(3,CTIPDIM)
+      DOUBLE PRECISION AUR_PROD(3,CTIPDIM)
       !.. TINFX has to be an array for grazing incidence column densities
       DOUBLE PRECISION TINFX(CTIPDIM)  !.. Exospheric temperature
       !.. End dummy variable declarations 
@@ -371,14 +373,14 @@ C.... Written by P. Richards June-September 2010.
       DOUBLE PRECISION O2DISF(CTIPDIM)   !.. O2 dissociation frequency
       INTEGER IWR         !$$$  for writing in files
 
-      DATA M_TO_CM,M3_TO_CM3,nT_TO_Gauss/1.0,1.0,1.0/    !.. Unit conversion factors
+      DATA M_TO_CM,M3_TO_CM3,nT_TO_Gauss/1.0E+2,1.0E-6,1.0E+4/    !.. Unit conversion factors
       DATA DEBUG/0/  !.. turn on debug writes if DEBUG=1
 
       DATA JTI/0/
       JTI=JTI+1
 
       !.. Load debug flag into EFLAG for sending to subroutines
-      EFLAG(11,11) = DEBUG 
+      EFLAG(11,11) =  0 !DEBUG 
 
       !.. Check that dimensions agree
       IF(CTIPDIM.GT.FLDIM) THEN
@@ -467,7 +469,7 @@ c      CALL FACEUV(F107,F107A,UVFAC,EUVFLUX)
      > IHEPLS,INPLS,INNO)
 
       !-- Sum the EUV, photoelectron, and auroral production rate
-      CALL SUMPRD(JMIN,JMAX)
+      CALL SUMPRD(JMIN,JMAX,AUR_PROD)
 
 c        WRITE(169,200)  
 c 200    FORMAT('      ALT    EUV4S    O2dis    O2dis    PE4S    PEO2dis'

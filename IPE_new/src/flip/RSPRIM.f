@@ -220,11 +220,32 @@ C.... P. Richards March 2011
       END
 C:::::::::::::::::::::::::: SUMPRD :::::::::::::::::::::::::
 C..... Sum the EUV, PE, and AUR production
-      SUBROUTINE SUMPRD(JMIN,JMAX)
+      SUBROUTINE SUMPRD(JMIN,JMAX,AUR_PROD)
       !..EUVION PEXCIT PEPION OTHPR1 OTHPR2 SUMION SUMEXC PAUION PAUEXC NPLSPRD
       USE PRODUCTION !.. EUV, photoelectron, and auroral production
+      INTEGER, INTENT(in) :: JMIN, JMAX
+      REAL(8), INTENT(in) :: AUR_PROD(1:3,JMIN:JMAX)
+      !--- Branching ratios for ion states were updated Sep 91 by P.
+      !Richards
+      !--- N2+ from Doering and Goembel, JGR 1991, page 16025. fraction
+      !of
+      !--- N+ from Richards and Torr JGR 1985, page 9917. fraction of O+
+      !from
+      !--- O2 dissociation is from Rapp and Englander Golden J. Chem
+      !Phys, 1965
+      !--- We still need to find cross sections for the higher levels of
+      !O+
+      REAL ASPRD(3,6)
+      DATA ASPRD/.4,.47,.42, .4,.28,.34, .2,.15,.08,0.0,.05,0.0,0.0,
+     &   .05,0.0,0.0,0.0,0.16/
 
       DO 30 J=JMIN,JMAX
+
+         DO IK=1,6
+          DO IS=1,3
+           PAUION(IS,IK,J)=PAUION(IS,IK,J)+AUR_PROD(IS,J)*ASPRD(IS,IK)*1.E-6
+          ENDDO
+         ENDDO
       !..    add contributions from 2 highest O+ metastables to 3 lowest
          EUVION(1,7,J) = EUVION(1,1,J) + EUVION(1,4,J)
          EUVION(1,8,J) = EUVION(1,2,J) + EUVION(1,5,J)/1.3

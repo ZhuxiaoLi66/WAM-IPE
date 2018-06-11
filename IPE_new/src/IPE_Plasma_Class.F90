@@ -174,12 +174,12 @@ CONTAINS
                                            forcing, &
                                            time_tracker )
 
-      CALL plasma % FLIP_Wrapper( grid, & 
-                                  neutrals, &
-                                  forcing, &
-                                  time_tracker, &
-                                  flip_time_step )
-
+!      CALL plasma % FLIP_Wrapper( grid, & 
+!                                  neutrals, &
+!                                  forcing, &
+!                                  time_tracker, &
+!                                  flip_time_step )
+!
 
   END SUBROUTINE Update_IPE_Plasma
 !
@@ -353,13 +353,13 @@ CONTAINS
 
               IF ( grid % altitude(i,lp) <= 10.0_prec**(6) )THEN
 
-                grav(i) = -grid % grx(i,lp,mp)
+                grav(i) = grid % grx(i,lp,mp)
 
                 ntot(i) = ( neutrals % oxygen(i,lp,mp)  +&
                             neutrals % molecular_oxygen(i,lp,mp) +&
                             neutrals % molecular_nitrogen(i,lp,mp) +&
                             neutrals % hydrogen(i,lp,mp)  +&
-                            neutrals % helium(i,lp,mp) )*10.0_prec**6
+                            neutrals % helium(i,lp,mp) )
 
                 pres(i) = ntot(i)*bz*neutrals % temperature(i,lp,mp)
 
@@ -367,7 +367,7 @@ CONTAINS
                                 neutrals % molecular_oxygen(i,lp,mp)*mo2 +&
                                 neutrals % molecular_nitrogen(i,lp,mp)*mn2 +&
                                 neutrals % hydrogen(i,lp,mp)*mh   +&
-                                neutrals % helium(i,lp,mp)*mhe )*10.0_prec**6/ntot(i)
+                                neutrals % helium(i,lp,mp)*mhe )/ntot(i)
 
                 den(i) = pres(i)*meanmass(i)/(gscon*neutrals % temperature(i,lp,mp))
 
@@ -485,6 +485,7 @@ CONTAINS
     REAL(dp) :: XIONVX(1:9,1:grid % nFluxTube) 
     REAL(dp) :: TE_TIX(1:3,1:grid % nFluxTube)
     REAL(dp) :: EHTX(1:3,1:grid % nFluxTube)
+    REAL(dp) :: AUR_PROD(1:3,1:grid % nFluxTube)
     REAL(dp) :: NNOX(1:grid % nFluxTube) 
     REAL(dp) :: NHEAT(1:grid % nFluxTube) 
     REAL(dp) :: SZA(1:grid % nFluxTube) 
@@ -521,7 +522,9 @@ CONTAINS
                                                                 grid % magnetic_colatitude(1:grid % flux_tube_max(lp),lp), &
                                                                 grid % longitude(1:grid % flux_tube_max(lp),lp,mp), &
                                                                 grid % flux_tube_max(lp) )
-
+          
+          AUR_PROD(1:3,1:grid % flux_tube_max(lp)) = plasma % ionization_rates(2:4,1:grid % flux_tube_max(lp),lp,mp)
+ 
           EFLAG(1:11,1:11) = 0
 
           DO i=1, grid % nFluxTube
@@ -579,6 +582,7 @@ CONTAINS
                         INPLS, & !.. switches N+ dIFfusive solution on IF > 0
                         UTHR, &  !.. Universal time in hours 
                         EHTX(1:3,1:grid % flux_tube_max(lp)), & !.. IN/OUT 2D array, Electron & ion heating rate (eV cm-3 s-1)
+                        AUR_PROD(1:3,1:grid % flux_tube_max(lp)), & ! IN 2D array, ionization rates for O+, O2+, and N2+
                         TE_TIX(1:3,1:grid % flux_tube_max(lp)), & !.. IN/OUT: 2D array, Electron and ion temperatures (K) (see below)
                         XIONNX(1:9,1:grid % flux_tube_max(lp)), &
                         XIONVX(1:9,1:grid % flux_tube_max(lp)), & !.. IN/OUT: 2D array, Storage for ion densities and velocities

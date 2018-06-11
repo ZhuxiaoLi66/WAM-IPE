@@ -11,6 +11,8 @@ USE IPE_Plasma_Class
 
 USE netcdf
 
+USE omp_lib
+
 IMPLICIT NONE
 
 
@@ -133,8 +135,9 @@ CONTAINS
     CLASS( IPE_Model ), INTENT(inout) :: ipe
     REAL(prec), INTENT(in)            :: t0, t1
     ! Local
-    INTEGER    :: i, im3hr, im6hr, im9hr, im12hr, im36hr
+    INTEGER    :: i, im3hr, im6hr, im9hr, im12hr, im36hr !, num_threads
     REAL(prec) :: AP(1:7)
+    !REAL(prec) :: start_time, end_time
 
 
       CALL ipe % time_tracker % Update( t0 )
@@ -156,6 +159,8 @@ CONTAINS
       AP(6) = ipe % forcing % ap_1day_avg(im12hr)
       AP(7) = ipe % forcing % ap_1day_avg(im36hr)
 
+      !CALL CPU_TIME( start_time )
+      !start_time = omp_get_wtime()
       CALL ipe % neutrals % Update( ipe % grid, &
                                     ipe % time_tracker % utime, &
                                     ipe % time_tracker % year, &
@@ -163,8 +168,15 @@ CONTAINS
                                     ipe % forcing % f107(i) , &
                                     ipe % forcing % f107_81day_avg(i), &
                                     AP )
+      !CALL CPU_TIME( end_time )
+      !end_time = omp_get_wtime()
 
+!      !$OMP PARALLEL
+!      num_threads = omp_get_num_threads()
+!      !$OMP END PARALLEL
+!      PRINT*, 'Neutral Call Time :', end_time - start_time, num_threads
 
+   
       CALL ipe % plasma % Update( ipe % grid, &
                                   ipe % neutrals, &
                                   ipe % forcing, &

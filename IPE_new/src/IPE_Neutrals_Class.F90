@@ -181,6 +181,8 @@ CONTAINS
 
       iyd = 99000 + day
 
+      !$OMP PARALLEL PRIVATE( iyd, slt, lat, lon, alt, densities, temperatures, w, ap_msis )
+      !$OMP DO COLLAPSE(3)
       DO mp = 1, neutrals % NMP    
         DO lp = 1, neutrals % NLP    
           DO i = 1, grid % flux_tube_max(lp)
@@ -242,6 +244,8 @@ CONTAINS
           ENDDO
         ENDDO
       ENDDO
+      !$OMP END DO
+      !$OMP END PARALLEL
 
 #ifdef COUPLED
 

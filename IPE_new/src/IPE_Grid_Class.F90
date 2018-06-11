@@ -1070,7 +1070,7 @@ CONTAINS
             grid % l_magnitude(2,2,i,lp,mp) = grid % l_magnitude(3,1,i,lp,mp)*bhat(1) - grid % l_magnitude(1,1,i,lp,mp)*bhat(3)
             grid % l_magnitude(3,2,i,lp,mp) = grid % l_magnitude(1,1,i,lp,mp)*bhat(2) - grid % l_magnitude(2,1,i,lp,mp)*bhat(1)
 
-            grid % grx(i,lp,mp) = -( G0*earth_radius**2 )/( grid % r_meter(i,lp)**2 )!*grid % sinI(i,lp,mp)
+            grid % grx(i,lp,mp) = ( G0*earth_radius**2 )/( grid % r_meter(i,lp)**2 )!*grid % sinI(i,lp,mp)
 
           ENDDO
         ENDDO
