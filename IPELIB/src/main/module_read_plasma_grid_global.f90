@@ -23,24 +23,6 @@
         USE module_open_file,ONLY: open_file
         IMPLICIT NONE
 
-!        integer (kind=int_prec), parameter :: NMP=80
-!        integer (kind=int_prec), parameter :: NLP=170
-!        integer (kind=int_prec), parameter :: NPTS2D=44438 
-!        real(kind=8) gr_2d(npts2,nmp)
-!        real(kind=8) gcol_2d(npts2,nmp)
-!    real(kind=8) glon_2d(npts2,nmp)
-!    real(kind=8) q_coordinate_2d(npts2,nmp)
-!    real(kind=8) bcol_2d(npts2,nmp)
-!    real(kind=8) Apex_D1_2d(3,npts2,nmp)
-!    real(kind=8) Apex_D2_2d(3,npts2,nmp)
-!    real(kind=8) Apex_D3_2d(3,npts2,nmp)
-!    real(kind=8) Apex_E1_2d(3,npts2,nmp)
-!    real(kind=8) Apex_E2_2d(3,npts2,nmp)
-!    real(kind=8) Apex_grdlbm2_2d(3,npts2,nmp)
-!    real(kind=8) integral_ds_2d(npts2,nmp)
-!    real(kind=8) apex_BMAG_2d(npts2,nmp)
-!    real(kind=8)  Apex_BE3_N(nmp,nlp), Apex_BE3_S(nmp,nlp)
-
 !-------------
 !... read in parameters
       INTEGER(KIND=int_prec) lp,mp,stat_alloc,midpoint_min,midpoint_max
@@ -49,16 +31,9 @@
       REAL(KIND=real_prec), DIMENSION(NPTS2D,NMP) ::  dum1    !.. geographic co-latitude [rad]
       REAL(KIND=real_prec), DIMENSION(NPTS2D,NMP) ::  dum2    !.. geographic longitude [rad]
       REAL(KIND=real_prec), DIMENSION(NPTS2D,NMP) ::  dum3
-!dbg20110927      REAL(KIND=real_prec), DIMENSION(NPTS2D,NMP) ::  GL_rad_all    !.. magnetic co-latitude Eq(6.1) [rad]
-!dbg20110927      REAL(KIND=real_prec), DIMENSION(NPTS2D,NMP) ::  SL_meter_all  !.. distance of point from northern hemisphere foot point [meter]
-!dbg20110927      REAL(KIND=real_prec), DIMENSION(NPTS2D,NMP) ::  BM_T_all      !.. magnetic field strength [T]
-! components (east, north, up) of base vectors
       REAL(KIND=real_prec), DIMENSION(3,NPTS2D,NMP) ::  dum4    !.. Eq(3.8) Richmond 1995
       REAL(KIND=real_prec), DIMENSION(3,NPTS2D,NMP) ::  dum5    !.. Eq(3.9) Richmond 1995
       REAL(KIND=real_prec), DIMENSION(3,NPTS2D,NMP) ::  dum6    !.. Eq(3.10) Richmond 1995
-!dbg20110927      REAL(KIND=real_prec), DIMENSION(3,NPTS2D,NMP) ::  E1_all    !.. Eq(3.11) Richmond 1995
-!dbg20110927      REAL(KIND=real_prec), DIMENSION(3,NPTS2D,NMP) ::  E2_all    !.. Eq(3.12) Richmond 1995
-!JFM  REAL(KIND=real_prec), DIMENSION(2,NMP,NLP) ::  Be3_all         ! .. Eq(4.13) Richmond 1995 at Hr=90km in the NH(1)/SH(2) foot point [T]
 !SMS$DISTRIBUTE(dh,NLP,NMP) BEGIN
       REAL(KIND=real_prec), DIMENSION(NMP,NLP) ::  Be3_all1,Be3_all2 ! .. Eq(4.13) Richmond 1995 at Hr=90km in the NH(1)/SH(2) foot point [T]: "Ed1, Ed2, and Be3 are constant along magnetic field lines"
 !SMS$DISTRIBUTE END
@@ -82,30 +57,17 @@
      &,            JMAX_ISG    (     NLP  ) &
      &,            STAT=stat_alloc        )
  
-      IF ( stat_alloc/=0 ) THEN
-        print *,"!STOP! ALLOCATION of JMAX* and JMIN* FAILD!:",stat_alloc
-        STOP
-      END IF
-
 !JMIN_IN_all and JMAX_IS_all are OUT variables to workaround an SMS bug
 !SMS$SERIAL(<JMIN_ING,JMAX_ISG,MaxFluxTube,JMIN_IN_all,JMAX_IS_all,OUT> : default=ignore) BEGIN
       filename =filepath_pgrid//filename_pgrid
       FORM_dum ='formatted' 
       STATUS_dum ='old'
       CALL open_file ( filename, LUN_pgrid, FORM_dum, STATUS_dum ) 
-      print *,"open file completed"
       READ (UNIT=LUN_pgrid, FMT=*) JMIN_IN_all, JMAX_IS_all  !IN_2d_3d , IS_2d_3d
-      print *,"reading JMIN_IN etc completed"
       JMIN_ING = JMIN_IN_all(1,:)
       JMAX_ISG = JMAX_IS_all(1,:)
       MaxFluxTube = maxval(JMAX_ISG-JMIN_ING+1)
 !SMS$SERIAL END
-
-      DEALLOCATE ( JMIN_IN_all,JMAX_IS_all,STAT=stat_alloc )
-      IF ( stat_alloc/=0 ) THEN
-        print *,"!STOP! DEALLOCATION of JMIN_IN_all/JMAX_IS_all FAILD!",stat_alloc
-        STOP
-      END IF
 
       CALL allocate_arrays ( 0 )
 
@@ -145,7 +107,6 @@ do mp=1,NMP
     plasma_grid_3d(JMIN_IN(lp):JMAX_IS(lp),lp,mp,IQ     ) = dum3(JMIN_ING(lp):JMAX_ISG(lp),mp) !Q
   enddo
 enddo
-print *,"reading r_meter etc completed"
 
 READ (UNIT=LUN_pgrid, FMT=*) dum0          !bcol_2d
 do lp=1,NLP
@@ -154,13 +115,11 @@ enddo
 
 
 
-print *,"reading GL_rad etc completed"
 READ (UNIT=LUN_pgrid, FMT=*) dum0, dum1 !integral_ds_2d, apex_BMAG_2d
 do lp=1,NLP
   plasma_grid_3d(JMIN_IN(lp):JMAX_IS(lp),lp,1:NMP,ISL) = dum0(JMIN_ING(lp):JMAX_ISG(lp),1:NMP) !SL
   plasma_grid_3d(JMIN_IN(lp):JMAX_IS(lp),lp,1:NMP,IBM) = dum1(JMIN_ING(lp):JMAX_ISG(lp),1:NMP) !BM
 enddo
-print *,"reading SL_meter etc completed"
 !SMS$SERIAL END
 !SMS$EXCHANGE(plasma_grid_3d)
 
@@ -196,7 +155,6 @@ do lp=1,NLP
   apexD(JMIN_IN(lp):JMAX_IS(lp),lp,1:NMP,north,3) =  dum6(2,JMIN_ING(lp):JMAX_ISG(lp),1:NMP)
   apexD(JMIN_IN(lp):JMAX_IS(lp),lp,1:NMP,up   ,3) =  dum6(3,JMIN_ING(lp):JMAX_ISG(lp),1:NMP)
 enddo
-      print *,"reading D1-3 etc completed"
 !SMS$SERIAL END
 
 !SMS$SERIAL(<apexE,OUT> : default=ignore) BEGIN
@@ -211,7 +169,6 @@ do lp=1,NLP
   apexE(JMIN_IN(lp):JMAX_IS(lp),lp,1:NMP,north,2) =  dum5(2,JMIN_ING(lp):JMAX_ISG(lp),1:NMP)
   apexE(JMIN_IN(lp):JMAX_IS(lp),lp,1:NMP,up   ,2) =  dum5(3,JMIN_ING(lp):JMAX_ISG(lp),1:NMP)
 enddo
-      print *,"reading E1/2 etc completed"
 !SMS$SERIAL END
 
 !JFM Be3_all1 and Be3_all2 are OUT variables to workaround an SMS limitation.
@@ -231,9 +188,7 @@ enddo
 !nm20130830          Be3(2,lp,mp)=Be3_all2(mp,lp)
         enddo
       enddo
-      print *,"reading Be3 completed"
       CLOSE(UNIT=LUN_pgrid)
-      print *,"global grid reading finished, file closed..."
 !SMS$SERIAL END
 
 !dbg20110811:
