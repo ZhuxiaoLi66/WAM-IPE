@@ -1,6 +1,7 @@
 #!/bin/bash
 
-export SCRIPTSDIR=`pwd`
+export SCRIPTSDIR=`pwd`/..
+export COMPSETDIR=`pwd`
 export CONFIGDIR=`pwd`/config
 
 # run detect_machine, will exit if machine is unknown or config file doesn't exist for machine

@@ -1,5 +1,4 @@
 #!/bin/bash
-
 echo $1 $2 $3 $4
 # Control variables
 
@@ -89,7 +88,7 @@ runscript_theia() {
   echo "$($modcmd $machine $compiler)"
   echo "module list"
   echo "export RESDIR=/scratch3/NCEPDEV/swpc/noscrub/Naomi.Maruyama/wam-ipe_initial_conditions/T62_80x170/20151703_0000UT/IPE/"
-  echo "echo $RESDIR"
+  echo "export HWMPATH=$PWD/../../src/neutral"
   test $parallelism == parallel && extra="mpirun -np $tasks "
   echo "time $extra./$(basename $exe) >output 2>&1 && echo 'ipe finished' && exit 0"
   echo "echo 'ipe failed' && exit 23"
@@ -314,6 +313,11 @@ rundir=$(date +%s)_$pre
 test "$parallelism" = "parallel" && rundir+="_$tasks"
 mkdir $rundir || fail
 echo Created run directory: $rundir
+#                                                                        -s parameter should be 36 hours beore start of initial condition
+$PWD/../../scripts/interpolate_input_parameters/interpolate_input_parameters.py -d $((240+36)) -s 2015031512 -p /scratch3/NCEPDEV/swpc/noscrub/Adam.Kubaryk/WAM-IPE_INPUT_PARAMETERS -o wam_input_f107_kp.txt -m timeobs
+#                                                     -d parameter is maximum_run_time+36 (for MSIS) -- if you alter this, you also
+#                                                          need to change the f107_kp parameters in IPE.inp
+
 inp=IPE.inp
 f107kp=wam_input_f107_kp.txt
 smsnl=SMSnamelist
@@ -336,7 +340,6 @@ linksafe  $IPEAURORA/tiros_spectra  $rundir/tiros_spectra
 #linksafe /scratch3/NCEPDEV/swpc/noscrub/George.Millward/restart_directory/ipe_grid_plasma_params $rundir/ipe_grid_plasma_params
 #export RESDIR=/glade2/scratch2/naomi/ipe/data/1515447988_ipe_theia_intel_serial/
 #echo "RESDIR=" $RESDIR
-
 # Enter the run directory, edit SMSnamelist, create and submit the run script.
 
 cd $rundir || fail

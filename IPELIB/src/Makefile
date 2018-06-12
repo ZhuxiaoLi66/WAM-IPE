@@ -160,12 +160,12 @@ endif
     CC        = icc
     OPT_FLAGS = -O3  -fpp
     #OPT_FLAGS = -g -O0 -traceback -warn all -check all -debug all -ftrapuv -fp-model precise -fpp
-#    OPT_FLAGS = -g -O0 -traceback -check all -debug all -ftrapuv -fp-model precise -fpp
+    #OPT_FLAGS = -g -O0 -traceback -check all -debug all -ftrapuv -fp-model precise -fpp
     SMS       = /scratch3/NCEPDEV/swpc/noscrub/sms/SMSr825-intel_14.0.2-mpi_5.1.2.150
-#    ifeq ($(DEBUG),yes)
-#      DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0 -fpp
-#      OPT_FLAGS = -g -O0 -traceback -check all -debug all -fpp
-#    endif
+  #  ifeq ($(DEBUG),yes)
+  #    DEBUG_FLAGS = -g -O0 -ftz -traceback -check bounds -fpe0 -fpp
+  #    OPT_FLAGS = -g -O0 -traceback -check all -debug all -fpp
+  #  endif
     ifeq ($(PARALLELISM),parallel)
       ifeq ($(GPTL_USE_GPTL),yes)
         GPTL_INCFLAGS = -I/contrib/gptl/gptl-v5.4.4_impi_noomp/include

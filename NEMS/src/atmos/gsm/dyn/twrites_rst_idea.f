@@ -95,6 +95,7 @@
       IF (me.eq.ioproc) THEN
        OPEN(1050, FILE=fname,FORM='unformatted')
        WRITE(1050) trieo_ls_nodes
+       CLOSE(1050)
       endif   !me.eq.ioproc
       deallocate ( trieo_ls_nodes )
 !!
