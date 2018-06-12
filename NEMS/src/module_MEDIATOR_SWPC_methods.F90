@@ -3114,10 +3114,9 @@ contains
     integer,            parameter :: extrap_start_level = 149
 
     ! Use a fairly high min value. Values close to 0.0 cause problems in IPE
-    !real(ESMF_KIND_R8), parameter :: log_min = 1.e+3_ESMF_KIND_R8
-
-    ! Keep this log_min for now because this is the legacy version??
-    real(ESMF_KIND_R8), parameter :: log_min = 1.0E-10
+    real(ESMF_KIND_R8), parameter :: log_min = 1.e+3_ESMF_KIND_R8 
+   ! This is the value used by the orginal legacy code, now it uses the above value
+   !  real(ESMF_KIND_R8), parameter :: log_min = 1.0E-10
 !   real(ESMF_KIND_R8), parameter :: log_min = 1.e-10_ESMF_KIND_R8
 !   real(ESMF_KIND_R8), parameter :: re = 6371.2_ESMF_KIND_R8
 !   real(ESMF_KIND_R8), parameter :: g0 = 9.80665_ESMF_KIND_R8
@@ -4490,7 +4489,7 @@ contains
 #endif
 
   ! Set file name for intermediate fixed height grid
-  wamfilename = 'WAMFixedHgtGrid_20180312.nc'
+   wamfilename = 'WAMFixedHgtGrid_20180312.nc'
 !   wamfilename = 'wam3dgridnew_20160427.nc' ! Last version
 
   filename = 'wam2dmesh.nc'
