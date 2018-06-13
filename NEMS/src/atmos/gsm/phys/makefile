@@ -2,7 +2,7 @@ include ../../../conf/configure.nems
 
 MAKEFILE = makefile
 
-UTILINCS = -I../../share -I../libutil -I../../phys -I../dyn $(GOCARTINCS) -I/scratch3/NCEPDEV/nwprod/lib/sigio/v2.0.1/incmod/sigio_v2.0.1_4
+UTILINCS = -I../../share -I../libutil -I../../phys -I../dyn $(GOCARTINCS)
 ARCH=$(shell uname -s)
 GOCARTINCS = -I../../../chem/gocart/${ARCH}/include/Chem_Base \
              -I../../../chem/gocart/${ARCH}/include/GMAO_mpeu \
