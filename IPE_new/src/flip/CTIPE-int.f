@@ -7,7 +7,7 @@ C.... Written by P. Richards June 2010.
         IMPLICIT NONE
         !... Check dimensions are the same in all FLIP modules
         INTEGER JMIN,JMAX   !.. first and last indices on field line grid
-        INTEGER, PARAMETER :: FLDIM = 401     !.. Field line grid dimension
+        INTEGER, PARAMETER :: FLDIM = 1115     !.. Field line grid dimension
         DOUBLE PRECISION Z(FLDIM),SZA(FLDIM)  !.. altitude, Solar zenith angle
         DOUBLE PRECISION BM(FLDIM)            !.. magnetic field strength
         DOUBLE PRECISION SL(FLDIM)            !.. distance along the field line
@@ -20,7 +20,7 @@ C.... O+ H+ He+ N+ NO+ O2+ N2+ O+(2D) O+(2P)
       MODULE ION_DEN_VEL
         IMPLICIT NONE
         !... Check dimensions are the same in all FLIP modules
-        INTEGER, PARAMETER :: IDIM = 401  !.. Field line grid dimension
+        INTEGER, PARAMETER :: IDIM = 1115  !.. Field line grid dimension
         INTEGER, PARAMETER :: ISPEC = 9   !.. Species dimension
       !.. Ion densities & Velocities
       DOUBLE PRECISION XIONN(ISPEC,IDIM),XIONV(ISPEC,IDIM)
@@ -32,7 +32,7 @@ C.... Written by P. Richards June 2010.
       MODULE SOLVARR
         IMPLICIT NONE
         !... Check dimensions are the same in all FLIP modules
-        INTEGER, PARAMETER :: SDIM = 401  !.. Field line grid dimension
+        INTEGER, PARAMETER :: SDIM = 1115  !.. Field line grid dimension
         DOUBLE PRECISION DELTA(3*SDIM),RHS(3*SDIM)
         DOUBLE PRECISION WORK(15*SDIM),S(15*SDIM)
       END MODULE SOLVARR
@@ -43,7 +43,7 @@ C.... Written by P. Richards June 2010.
       MODULE THERMOSPHERE
         IMPLICIT NONE
         !... Check dimensions are the same in all FLIP modules
-        INTEGER, PARAMETER :: TDIM = 401  !.. Field line grid dimension
+        INTEGER, PARAMETER :: TDIM = 1115  !.. Field line grid dimension
         DOUBLE PRECISION ON(TDIM),HN(TDIM),N2N(TDIM),O2N(TDIM),HE(TDIM)
         DOUBLE PRECISION TN(TDIM),UN(TDIM),TINF(TDIM)
         DOUBLE PRECISION EHT(3,TDIM)
@@ -55,7 +55,7 @@ C.... Written by P. Richards June 2010.
       MODULE AVE_PARAMS
         IMPLICIT NONE
         !... Check dimensions are the same in all FLIP modules
-        INTEGER, PARAMETER :: AVDIM = 401  !.. Field line grid dimension
+        INTEGER, PARAMETER :: AVDIM = 1115  !.. Field line grid dimension
         DOUBLE PRECISION TEJ(AVDIM),TIJ(AVDIM),NUX(2,AVDIM) !$$$,RBM(AVDIM)
         DOUBLE PRECISION UNJ(AVDIM),DS(AVDIM)
         DOUBLE PRECISION GRADTE(AVDIM),GRADTI(AVDIM),GRAV(AVDIM)
@@ -69,7 +69,7 @@ C.... Written by P. Richards August 2010.
       MODULE PRODUCTION
         IMPLICIT NONE
         !... Check dimensions are the same in all FLIP modules
-        INTEGER, PARAMETER :: PDIM = 401  !.. Field line grid dimension
+        INTEGER, PARAMETER :: PDIM = 1115  !.. Field line grid dimension
       !.. EUV and photoelectron production rates 
       REAL EUVION(3,12,PDIM),PEXCIT(3,12,PDIM),PEPION(3,12,PDIM)
       DOUBLE PRECISION OTHPR1(6,PDIM),OTHPR2(6,PDIM)
@@ -87,7 +87,7 @@ C.... Written by P. Richards September 2010.
       MODULE MINORNEUT
         IMPLICIT NONE
         !... Check dimensions are the same in all FLIP modules
-        INTEGER, PARAMETER :: NDIM = 401  !.. Field line grid dimension
+        INTEGER, PARAMETER :: NDIM = 1115  !.. Field line grid dimension
         DOUBLE PRECISION N4S(NDIM),N2D(NDIM),NNO(NDIM),N2P(NDIM),
      >    N2A(NDIM),O1D(NDIM),O1S(NDIM),EQN2D(NDIM)
       END MODULE MINORNEUT
@@ -359,7 +359,7 @@ C.... Written by P. Richards June-September 2010.
       DOUBLE PRECISION TINFX(CTIPDIM)  !.. Exospheric temperature
       !.. End dummy variable declarations 
       !.. HPEQ is equatorial H+ density = HPEQ * density of a full flux tube.
-      !.. If zero the densities from the previous time step are used.
+      !.. If 0.0 the densities from the previous time step are used.
       !.. If positive, initial densities and temperatures are set. 
       !.. If negative, H+ and He+ densities are reset for flux tube depletion
       DOUBLE PRECISION HPEQ              !.. HPEQ is equatorial H+ density
@@ -379,6 +379,56 @@ C.... Written by P. Richards June-September 2010.
       DATA JTI/0/
       JTI=JTI+1
 
+        Z(:)=0.0               !(FLDIM)
+        SZA(:)=0.0
+        BM(:)=0.0
+        SL(:)=0.0
+        GR(:)=0.0
+        GL(:)=0.0
+
+!ION_DEN_VEL
+        XIONN(:,:)=0.0!(ISPEC,IDIM)
+        XIONV(:,:)=0.0
+
+!(2) SOLVARR
+        !DELTA(:)=0.0 !(10*SDIM)
+        !RHS(:)=0.0   !(10*SDIM)
+        !WORK(:)=0.0   !(50*SDIM)
+        !S(:)=0.0   !(50*SDIM)
+
+!THERMOSPHERE
+        ON(:)=0.0              !(TDIM)
+        HN(:)=0.0
+        N2N(:)=0.0
+        O2N(:)=0.0
+        HE(:)=0.0
+        TN(:)=0.0
+        UN(:)=0.0
+        TINF(:)=0.0
+        EHT(:,:)=0.0           !(3,TDIM)
+        COLFAC=0.0 
+
+!(3)AVE_PARAMS
+      !TEJ(:)=0.0 !(AVDIM)
+      !TIJ(:)=0.0 !(AVDIM)
+      !NUX(:,:)=0.0 !(2,AVDIM)
+      !RBM(:)=0.0 !(AVDIM)
+      !UNJ(:)=0.0 !(AVDIM)
+      !DS(:)=0.0 !(AVDIM)
+      !GRADTE(:)=0.0 !(AVDIM)
+      !GRADTI(:)=0.0 !(AVDIM)
+      !GRAV(:)=0.0 !(AVDIM)
+      !OLOSS(:)=0.0 !(AVDIM)
+      !HLOSS(:)=0.0 !(AVDIM)
+      !HPROD(:)=0.0 !(AVDIM)
+
+!(1) production
+      EUVION(:,:,:)=0.0
+      PEXCIT(:,:,:)=0.0
+      PEPION(:,:,:)=0.0
+      OTHPR1(:,:)=0.0
+      OTHPR2(:,:)=0.0
+      SUMION(:,:,:)=0.0 !(3,12,PDIM)
       !.. Load debug flag into EFLAG for sending to subroutines
       EFLAG(11,11) =  0 !DEBUG 
 
@@ -494,7 +544,7 @@ c            WRITE(169,'(F10.2,1P,22E9.2)') Z(J),EUVION(1,7,J),
 c     >       EUVION(2,4,J),EUVION(2,5,J),PEPION(1,7,J),PEPION(2,4,J)
 c     >       ,PEPION(2,5,J),BCKPRD,(FD(I),I=5,9),PHION(J)      !$$$
          ELSE
-           !.. Make sure minor ions and neutrals are zero above upper boundary
+           !.. Make sure minor ions and neutrals are 0.0 above upper boundary
            DO I=5,ISPEC
              XIONN(I,J)=0
            ENDDO
