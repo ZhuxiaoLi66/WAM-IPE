@@ -14,11 +14,11 @@
 !nm20130201:      SUBROUTINE stepback_mag (mp,lp &
 
 
-MODULE module_stepback_mag_R
+MODULE module_stepback
   PRIVATE
-  PUBLIC :: stepback_mag_R
+  PUBLIC :: stepback
 CONTAINS
-  SUBROUTINE stepback_mag_R (utime,mp,lp,phi_t0,theta_t0,r0_apex)
+  SUBROUTINE stepback (utime,mp,lp,phi_t0,theta_t0,r0_apex)
     USE module_precision
     USE module_IPE_dimension,ONLY: NLP
     USE module_FIELD_LINE_GRID_MKS,ONLY: mlon_rad,plasma_grid_Z,JMIN_IN,JMAX_IS,ht90,plasma_grid_mag_colat,plasma_grid_3d,east,north,up,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,VEXBup,minAltitude,maxAltitude, VEXBe,VEXBth
@@ -106,5 +106,5 @@ CONTAINS
     sintheta = SQRT( sin2theta )
     theta_t1(ihem)    = ASIN ( sintheta )
 
-  END SUBROUTINE stepback_mag_R
-END MODULE module_stepback_mag_R
+  END SUBROUTINE stepback
+END MODULE module_stepback

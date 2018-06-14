@@ -9,13 +9,13 @@
 ! PHONE  : 303-497-4857
 ! ADDRESS: 325 Broadway, Boulder, CO 80305
 !--------------------------------------------
-MODULE module_find_neighbor_grid_R
+MODULE module_find_neighbor_grid
   PRIVATE
-  PUBLIC :: find_neighbor_grid_R
+  PUBLIC :: find_neighbor_grid
 CONTAINS
 !20111005
 ! using r0_apex as in GIP
-  SUBROUTINE find_neighbor_grid_R ( mp,lp &
+  SUBROUTINE find_neighbor_grid ( mp,lp &
   &, phi_t0 , theta_t0 &
   &, r0_apex &
   &,  mp_t0 ,    lp_t0 )
@@ -133,5 +133,5 @@ CONTAINS
       ENDIF !(ihem==1) THEN
     ENDDO which_hemisphere!:  DO ihem=1,ihem_max
 
-  END SUBROUTINE find_neighbor_grid_R
-END MODULE module_find_neighbor_grid_R
+  END SUBROUTINE find_neighbor_grid
+END MODULE module_find_neighbor_grid
