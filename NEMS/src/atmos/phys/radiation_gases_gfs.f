@@ -460,14 +460,14 @@
                 co2vmr_sav(:,:,imo) = (co2dat(:,:) + rate) * 1.0e-6
               enddo
 
-              if ( me == 0 ) then
-                print *,' CHECK: Sample of selected months of CO2 ',    &
-     &                  'data used for year:',iyear
-                do imo = 1, 12, 3
-                  print *,'        Month =',imo
-                  print *, co2vmr_sav(1,:,imo)
-                enddo
-              endif
+!             if ( me == 0 ) then
+!               print *,' CHECK: Sample of selected months of CO2 ',    &
+!    &                  'data used for year:',iyear
+!               do imo = 1, 12, 3
+!                 print *,'        Month =',imo
+!                 print *, co2vmr_sav(1,:,imo)
+!               enddo
+!             endif
             endif   ! end if_ICTM_block
 
           endif   ! end if_ICO2_block
@@ -515,20 +515,20 @@
               endif
             enddo
 
-            if ( me==0 ) then
-              if ( ICO2==1 ) then
-                print *,' CHECK: Monthly deviations of climatology ',   &
-     &                  'to be superimposed on global annual mean'
-                print *, gco2cyc
-              elseif ( ICO2==2 ) then
-                print *,' CHECK: AFTER adding seasonal cycle, Sample ', &
-     &                  'of selected months of CO2 data for year:',iyear
-                do imo = 1, 12, 3
-                  print *,'        Month =',imo
-                  print *, co2vmr_sav(1,:,imo)
-                enddo
-              endif
-            endif   ! end if_me_block
+!           if ( me==0 ) then
+!             if ( ICO2==1 ) then
+!               print *,' CHECK: Monthly deviations of climatology ',   &
+!    &                  'to be superimposed on global annual mean'
+!               print *, gco2cyc
+!             elseif ( ICO2==2 ) then
+!               print *,' CHECK: AFTER adding seasonal cycle, Sample ', &
+!    &                  'of selected months of CO2 data for year:',iyear
+!               do imo = 1, 12, 3
+!                 print *,'        Month =',imo
+!                 print *, co2vmr_sav(1,:,imo)
+!               enddo
+!             endif
+!           endif   ! end if_me_block
 
             gco2cyc(:) = gco2cyc(:) * 1.0e-6       ! convert from ppm to ppp
 

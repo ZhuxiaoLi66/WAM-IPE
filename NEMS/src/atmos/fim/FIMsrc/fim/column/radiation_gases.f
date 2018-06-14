@@ -389,13 +389,13 @@
               co2vmr_sav(:,:,imo) = (co2dat(:,:) + rate) * 1.0e-6
             enddo
 
-            if ( me == 0 ) then
-              print *,' CHECK: Sample CO2 data used for year:',iyear
-              do imo = 1, 12, 3
-                print *,'        Month =',imo
-                print *, co2vmr_sav(1,:,imo)
-              enddo
-            endif
+!           if ( me == 0 ) then
+!             print *,' CHECK: Sample CO2 data used for year:',iyear
+!             do imo = 1, 12, 3
+!               print *,'        Month =',imo
+!               print *, co2vmr_sav(1,:,imo)
+!             enddo
+!           endif
           endif
 
           close ( NICO2CN )

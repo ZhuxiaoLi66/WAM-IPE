@@ -378,17 +378,17 @@
                 enddo
               enddo
 
-              if ( me == 0 ) then
-                print *,' - Using co2 monthly 2-d data from user',      &
-     &                ' provided data set:',co2usr_file
-                print *, iyr,cline(1:94),co2g1,'  GROWTH RATE =', co2g2
+!             if ( me == 0 ) then
+!               print *,' - Using co2 monthly 2-d data from user',      &
+!    &                ' provided data set:',co2usr_file
+!               print *, iyr,cline(1:94),co2g1,'  GROWTH RATE =', co2g2
 
-                print *,' CHECK: Sample of selected months of CO2 data'
-                do imo = 1, 12, 3
-                  print *,'        Month =',imo
-                  print *, co2vmr_sav(1,:,imo)
-                enddo
-              endif
+!               print *,' CHECK: Sample of selected months of CO2 data'
+!               do imo = 1, 12, 3
+!                 print *,'        Month =',imo
+!                 print *, co2vmr_sav(1,:,imo)
+!               enddo
+!             endif
             else
               print *,' ICO2=',ico2flg,' is not a valid selection',     &
      &                ' - Stoped in subroutine gas_init!!!'
@@ -795,17 +795,17 @@
               enddo
             enddo
 
-            if ( me==0 ) then
-              print *,' CHECK: Sample of 2-d annual mean of CO2 ',      &
-     &                'data used for year:',iyear
-              print *, co2ann(1,:)
-              print *,' CHECK: AFTER adding seasonal cycle, Sample ',   &
-     &                'of selected months of CO2 data for year:',iyear
-              do imo = 1, 12, 3
-                print *,'        Month =',imo
-                print *, co2vmr_sav(1,:,imo)
-              enddo
-            endif
+!           if ( me==0 ) then
+!             print *,' CHECK: Sample of 2-d annual mean of CO2 ',      &
+!    &                'data used for year:',iyear
+!             print *, co2ann(1,:)
+!             print *,' CHECK: AFTER adding seasonal cycle, Sample ',   &
+!    &                'of selected months of CO2 data for year:',iyear
+!             do imo = 1, 12, 3
+!               print *,'        Month =',imo
+!               print *, co2vmr_sav(1,:,imo)
+!             enddo
+!           endif
           endif   ! endif_icl2flg_block
 
         else                  ! no need to calc ic time annual mean first
