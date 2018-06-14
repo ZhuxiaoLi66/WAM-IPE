@@ -5061,7 +5061,7 @@
           call wryte(noflx,lg,g)
         else
           print*,'wrtsfc gribit ierr=',ierr,'  68) ',
-     &     'Pressure (pa) convective cloud bottom level'
+     &     'Pressure (pa) convective cloud bot level'
         endif
 !.................................................
 !  - sea ice thickness

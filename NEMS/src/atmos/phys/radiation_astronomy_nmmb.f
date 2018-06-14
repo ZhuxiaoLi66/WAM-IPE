@@ -378,11 +378,11 @@
 !           read (NIRADSF, 24) iyr1,iyr2,icy1,icy2,smean,cline
 ! 24        format(4i5,f8.2,a60)
 
-            if ( me == 0 ) then
-              print *,'  Updating solar constant with cycle approx'
-              print *,'   Opened solar constant data file: ',solar_fname
+!           if ( me == 0 ) then
+!             print *,'  Updating solar constant with cycle approx'
+!             print *,'   Opened solar constant data file: ',solar_fname
 !check        print *, iyr1, iyr2, icy1, icy2, smean, cline
-            endif
+!           endif
 
 !  --- ...  check if there is a upper year limit put on the data table
 

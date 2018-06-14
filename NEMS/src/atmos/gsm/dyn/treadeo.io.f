@@ -298,8 +298,8 @@ csela print*,' read second record successfully '
      &    head%pdryini > 0.0 ) then
         if (pdryini .eq. 0.0) pdryini = head%pdryini
       endif
-      if (me == 0) print *,' IN TREAD PDRYINI=',pdryini,
-     &                     ' head=',head%pdryini
+!     if (me == 0) print *,' IN TREAD PDRYINI=',pdryini,
+!    &                     ' head=',head%pdryini
 !sela ntraci = nint(tracers-1)
       ntraci = head%ntrac
       if (head%idvt .gt. 0.0) then

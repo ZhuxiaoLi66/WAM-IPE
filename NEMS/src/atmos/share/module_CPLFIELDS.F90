@@ -350,7 +350,7 @@ module module_CPLFIELDS
          localnodes=localnodes + lonsperlat(ind)
       enddo
 
-      write(0,*) 'start lat, count and totalnodes: ', ipt_lats_node_a, lats_node_a, localnodes
+!     write(0,*) 'start lat, count and totalnodes: ', ipt_lats_node_a, lats_node_a, localnodes
 
       ! Create a distgrid using a collapsed 1D index array based on the local row index
       ! WAM's 2D grid has the latitude from North to South.  Need to create an index that 

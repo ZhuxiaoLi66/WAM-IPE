@@ -1219,9 +1219,9 @@
      &        form='FORMATTED')
         rewind (NIAERCM)
 
-        if ( me == 0 ) then
-          print *,'   Opened aerosol data file: ',trim(aerosol_file)
-        endif
+!       if ( me == 0 ) then
+!         print *,'   Opened aerosol data file: ',trim(aerosol_file)
+!       endif
       else
         print *,'    Requested aerosol data file "',aerosol_file,       &
      &          '" not found!'

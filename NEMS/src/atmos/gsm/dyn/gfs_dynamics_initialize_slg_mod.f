@@ -448,12 +448,12 @@
 !
 !$$$      time0=timer()
 !
-      if (me == 0) then
+!     if (me == 0) then
 !       print 100, jcap,levs
 !100   format (' smf ',i3,i3,' created august 2000 ev od ri ')
-        print*,'number of threads is',num_parthds()
-        print*,'number of mpi procs is',nodes
-      endif
+!       print*,'number of threads is',num_parthds()
+!       print*,'number of mpi procs is',nodes
+!     endif
 !
       gis_dyn%cons0    =    0.0d0
       gis_dyn%cons0p5  =    0.5d0
@@ -527,9 +527,9 @@
          len_trie_ls = len_trie_ls+(jcap+3-l)/2
          len_trio_ls = len_trio_ls+(jcap+2-l)/2
       enddo
-      if (me == 0) print *,'ls_node=',gis_dyn%ls_node(1:ls_dim),'2dim=',  &
-         gis_dyn%ls_node(ls_dim+1:2*ls_dim),'3dim=',  &
-         gis_dyn%ls_node(2*ls_dim+1:3*ls_dim)
+!     if (me == 0) print *,'ls_node=',gis_dyn%ls_node(1:ls_dim),'2dim=',  &
+!        gis_dyn%ls_node(ls_dim+1:2*ls_dim),'3dim=',  &
+!        gis_dyn%ls_node(2*ls_dim+1:3*ls_dim)
 !
 !
       allocate ( gis_dyn%epse  (len_trie_ls) )
@@ -553,8 +553,8 @@
       gis_dyn%maxstp = 36
 
  
-      if(me == 0) print*,'from compns_dynamics : iret=',gis_dyn%iret		&
-                        ,' nsout=',nsout,' nsres=',nsres
+!     if(me == 0) print*,'from compns_dynamics : iret=',gis_dyn%iret		&
+!                       ,' nsout=',nsout,' nsres=',nsres
       if(gis_dyn%iret/=0) then
         if(me == 0) print *,' incompatible namelist - aborted in main'
         call mpi_quit(13)
@@ -778,11 +778,11 @@
       allocate ( gis_dyn%fhour_idate(1,5) )
 !      write(0,*)'after allocate fhour_idate'
 !
-      if (me == 0) then
-        print*, ' lats_dim_a=', lats_dim_a, ' lats_node_a=', lats_node_a
+!     if (me == 0) then
+!       print*, ' lats_dim_a=', lats_dim_a, ' lats_node_a=', lats_node_a
 !       print*, ' lats_dim_ext=', lats_dim_ext,                           &
 !               ' lats_node_ext=', lats_node_ext
-      endif
+!     endif
 !c
 !$omp parallel do private(i,j,k)
       do k=1,lotgr
@@ -827,10 +827,10 @@
 
       gis_dyn%pdryini = 0.0
 
-      if (me == 0) then
-        print *,' grid_ini=',trim(gis_dyn%nam_gfs_dyn%grid_ini),'fhrot=',fhrot,    &
-        'fhini=',fhini,'restart_run=',gis_dyn%restart_run
-      endif
+!     if (me == 0) then
+!       print *,' grid_ini=',trim(gis_dyn%nam_gfs_dyn%grid_ini),'fhrot=',fhrot,    &
+!       'fhini=',fhini,'restart_run=',gis_dyn%restart_run
+!     endif
 
       cfile  = gis_dyn%nam_gfs_dyn%sig_ini
       cfile2 = gis_dyn%nam_gfs_dyn%sig_ini2
@@ -858,12 +858,12 @@
           gis_dyn%reset_step    = .false.
           gis_dyn%restart_step  = .false.
       ELSE
-        if (me == 0) print *,'restart,filenames=', TRIM(cfile),', ', TRIM(cfile2)
+!       if (me == 0) print *,'restart,filenames=', TRIM(cfile),', ', TRIM(cfile2)
         gis_dyn% start_step    = .false.
         gis_dyn% reset_step    = .false.
         gis_dyn% restart_step  = .true.
         gis_dyn% ndfi = gis_dyn% ndfi + gis_dyn% kdt
-        print *,'in gfs dyn init, ndfi=',gis_dyn% ndfi,'kdt=',gis_dyn%kdt
+!       print *,'in gfs dyn init, ndfi=',gis_dyn% ndfi,'kdt=',gis_dyn%kdt
       END IF
 !!
 !!

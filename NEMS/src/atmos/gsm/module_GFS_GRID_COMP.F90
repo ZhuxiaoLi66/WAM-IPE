@@ -1195,8 +1195,8 @@
       rtim1           = rtc()
       total_integ_tim = (rtc()-btim0)
 !
-      IF(gfs_int_state%MYPE == 0 )  &
-          WRITE(0, *) ' GFS_init_tim=', total_integ_tim, (rtim1-rtim0)
+!     IF(gfs_int_state%MYPE == 0 )  &
+!         WRITE(0, *) ' GFS_init_tim=', total_integ_tim, (rtim1-rtim0)
 !
 !-----------------------------------------------------------------------
 !

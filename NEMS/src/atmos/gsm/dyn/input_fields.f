@@ -68,17 +68,17 @@ cmy bug fix on dimension of ls_node
      &                                   CONS600=600.0
       integer		lan, lat, lons_lat, jlonf, step
 !
-      if(me.eq.0) PRINT  9876,FHOUR,idate
- 9876 FORMAT(1H ,'FHOUR IN input_fields ',F6.2,
-     & ' idate no yet read in',4(1x,i4))
+!     if(me.eq.0) PRINT  9876,FHOUR,idate
+!9876 FORMAT(1H ,'FHOUR IN input_fields ',F6.2,
+!    & ' idate no yet read in',4(1x,i4))
       IPRINT = 0
 c$$$  IF ( ME .EQ. 0 ) IPRINT = 1
 !
-      if (me == 0) write(0,*)'input field, cread=',cread,'ntoz=',ntoz,
-     &  'nemsio_in=',nemsio_in
+!     if (me == 0) write(0,*)'input field, cread=',cread,'ntoz=',ntoz,
+!    &  'nemsio_in=',nemsio_in
 
       if(nemsio_in) then
-        if (me == 0) write(0,*)'read in nemsio file,cread=',trim(cread)
+!       if (me == 0) write(0,*)'read in nemsio file,cread=',trim(cread)
 
         CALL TREADEO_nemsio(cread,IDATE,
      &                      trie_ls,trio_ls,
@@ -101,7 +101,8 @@ c$$$  IF ( ME .EQ. 0 ) IPRINT = 1
         enddo
 
       else
-        print *,'read in sigio file,cread=',trim(cread)
+
+!      print *,'read in sigio file,cread=',trim(cread)
         CALL TREADEO(IDATE,trie_ls,trio_ls,
      &               grid_gr,
      X               LS_NODE,LS_NODES,MAX_LS_NODES,
@@ -112,11 +113,11 @@ c$$$  IF ( ME .EQ. 0 ) IPRINT = 1
       endif
 
       fhini=fhour
-      if(me.eq.0) PRINT 9877, FHOUR
- 9877 FORMAT(1H ,'FHOUR AFTER TREAD',F6.2)
+!     if(me.eq.0) PRINT 9877, FHOUR
+!9877 FORMAT(1H ,'FHOUR AFTER TREAD',F6.2)
  
-      if (me .eq. 0) write(0,*)' fhini=',fhini,'last_fcst_pe=',
-     &     last_fcst_pe,'fhrot=',fhrot
+!     if (me .eq. 0) write(0,*)' fhini=',fhini,'last_fcst_pe=',
+!    &     last_fcst_pe,'fhrot=',fhrot
 
 !---------------------------------------------------------------
       if(fhini.eq.fhrot) THEN
