@@ -16,36 +16,28 @@ include         $(TOP)/conf/configure.nems.NUOPC
 NETCDF_INC   = -I$(NETCDF)/include
 NETCDF_LIB   = -L$(NETCDF)/lib -lnetcdf
 
-LIBDIR=/scratch4/NCEPDEV/meso/noscrub/Ratko.Vasic/libs
 PARADIR=/contrib/nceplibs_ext/lib
 POSTDIR=/scratch2/portfolios/NCEPDEV/global/save/Shrinivas.Moorthi/nceppost_moorthi/sorc/ncep_post.fd
 
-NEMSIO_INC   = -I${LIBDIR}/incmod/nemsio
-NEMSIO_LIB   = -L${LIBDIR} -lnemsio
-
-BACIO_LIB    = -L${LIBDIR} -lbacio_4
-W3_LIB       = -L${LIBDIR} -lw3nco_d -lw3emc_d
-SP_LIB       = -L${LIBDIR} -lsp_d
-SYS_LIB      =
- 
 EXTLIBS      = $(NEMSIO_LIB) \
-               $(BACIO_LIB) \
-               $(W3_LIB) \
-               $(SP_LIB) \
+               $(BACIO_LIB4) \
+               $(W3NCO_LIBd) \
+               $(W3EMC_LIBd) \
+               $(SP_LIBd) \
                $(NETCDF_LIB) \
                $(ESMF_LIB) \
-               $(SYS_LIB)
+               $(SIGIO_LIB4)
 
 ## for the post quilting option
 POSTMOD     = ${POSTDIR}/incmod/post_4
 POST_INC    = -I${POSTDIR}/incmod/post_4
 POST_LIB    = -L${POSTDIR} -lnceppost
-W3_POST_LIB = -L${LIBDIR}  -lw3nco_4 -lw3emc_4
+W3_POST_LIB = ${W3NCO_LIBd} ${W3EMC_LIBd}
 CRTM_LIB    = -L${PARADIR} -lcrtm
-G2_LIB      =  -L${LIBDIR} -lg2tmpl -lg2_4  -L${PARADIR} -ljasper -lpng -lz
+G2_LIB      =  ${G2_LIB4} ${JASPER_LIB} ${PNG_LIB} ${Z_LIB}
 XML_LIB     = -L${PARADIR} -lxmlparse
-SIGIO_LIB   = -L${LIBDIR} -lsigio_4
-SFCIO_LIB   = -L${LIBDIR} -lsfcio
+SIGIO_LIB   = ${SIGIO_LIB4}
+SFCIO_LIB   = ${SFCIO_LIB4}
 
 EXTLIBS_POST = $(NEMSIO_LIB) \
                $(POST_LIB) \
@@ -67,7 +59,7 @@ FREE         = -free
 FIXED        = -fixed
 R8           = -r8
 
-FINCS        = $(ESMF_INC) $(NEMSIO_INC) $(NETCDF_INC)
+FINCS        = $(ESMF_INC) -I$(NEMSIO_INC) $(NETCDF_INC) -I${SIGIO_INC4}
 #TRAPS        =
 #TRAPS        = -g -fno-inline -no-ip -traceback -ftrapuv -fpe0 -ftz -check all -check noarg_temp_created -fp-stack-check
 
