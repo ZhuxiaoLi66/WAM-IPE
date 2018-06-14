@@ -6,10 +6,8 @@ CONTAINS
 
   SUBROUTINE perpendicular_transport ( utime_local, mp,lp )
     USE module_precision
-    USE module_input_parameters,ONLY: mype, sw_convection_footpoint_0_or_apex_1, sw_perp_transport
-    USE module_find_neighbor_grid_TH, ONLY: find_neighbor_grid_TH
+    USE module_input_parameters,ONLY: mype, sw_perp_transport
     USE module_find_neighbor_grid_R, ONLY: find_neighbor_grid_R
-    USE module_stepback_mag_TH, ONLY: stepback_mag_TH
     USE module_stepback_mag_R, ONLY: stepback_mag_R
     IMPLICIT NONE
 !--- INPUT ---

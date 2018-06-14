@@ -91,7 +91,6 @@ CONTAINS
         IF ( theta_t0(ihem) < minTheta ) THEN
           lp_t0(ihem,1)=missing_value !-999
           lp_t0(ihem,2)=1
-          PRINT *,'sub-Fi_R: mp',mp,' lp',lp,'needs special pole interpolation'
           RETURN
         ELSE IF ( theta_t0(ihem) > maxTheta ) THEN
           PRINT *,'sub-Fi_R: !STOP! invalid theta_t0',mp,lp,theta_t0(ihem),maxTheta

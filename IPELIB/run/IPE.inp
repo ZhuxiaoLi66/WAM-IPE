@@ -82,7 +82,7 @@
   sw_pcp=0
   sw_perp_transport=2
   sw_record_number=1
-  sw_convection_footpoint_0_or_apex_1=0
+  sw_convection_footpoint_0_or_apex_1=1
   sw_use_wam_fields_for_restart=f
   ut_start_perp_trans=0
   utime0LPI=0

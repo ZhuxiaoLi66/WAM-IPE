@@ -24,8 +24,7 @@
      &,mlon_rad,ht90,Be3,apexE,VEXBup,east,north,up, VEXBe,l_mag, VEXBth
       USE module_input_parameters,ONLY: NYEAR,NDAY,sw_exb_up    &
      &,sw_perp_transport,lpmin_perp_trans,lpmax_perp_trans,mype          &
-     &,lps,start_time,ip_freq_output                                     &
-     &,sw_convection_footpoint_0_or_apex_1
+     &,lps,start_time,ip_freq_output
       USE module_magfield,ONLY:sunlons
       USE module_sunloc,ONLY:sunloc
       IMPLICIT NONE
@@ -258,8 +257,6 @@
 !           VEXBup(lp,mp) = v_e(2) * (-1.0) !convert from down to UPward
             VEXBup(lp,mp) = vexbgeo(up)
 
-!nm20140528: VEXBth at 90km required for th method, sinI_m for NH
-!           if ( sw_convection_footpoint_0_or_apex_1==0 ) then !th method(ctipe/shawn)
                ipts = JMIN_IN(lp) ! if ihem=1 NH
 !               ipts = JMAX_IS(lp) ! if ihem=2 SH
 ! EXB in geographic frame at 90km NH (IN,lp,mp)
@@ -275,19 +272,8 @@
 !              VEXBth(lp,mp) = v_e(2) * sinI_m(1) !if ihem=1 NH
                VEXBth(lp,mp) = v_e(2) / sinI_m(1) !if ihem=1 NH
 
-!            else if ( sw_convection_footpoint_0_or_apex_1==1 ) then !R method(gip)
-!               ipts = midpoint
-!           end if !( sw_convection_footpoint_0_or_apex_1==1
-! exact magnetic eastward  
-! R method: at APEX
-! th method: at 90km JMIN_IN
-
-            if( sw_convection_footpoint_0_or_apex_1==0 ) then
-               VEXBe(lp,mp) = v_e(1)  !+magnetic eastward
-            else if( sw_convection_footpoint_0_or_apex_1==1 )then
 !temporary solution to test the code
                VEXBe(lp,mp) = 0.0
-            endif
 
 
               if ( sw_perp_transport==1 )   VEXBe(lp,mp)=zero
