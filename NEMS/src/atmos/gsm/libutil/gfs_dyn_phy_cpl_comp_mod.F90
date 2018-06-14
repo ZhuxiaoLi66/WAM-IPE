@@ -450,11 +450,11 @@
       call esmf_stateget(imp_state, name=import_statename, rc=rc)
       call esmf_stateget(exp_state, name=export_statename, rc=rc)
 !
-      IF ( first .and. (MYPE == 0)  ) then
-           print *,' coupler is to move data from '                     &
-             ,' (',trim(import_statename),') to '                       &
-             ,' (',trim(export_statename),') '
-      ENDIF
+!     IF ( first .and. (MYPE == 0)  ) then
+!          print *,' coupler is to move data from '                     &
+!            ,' (',trim(import_statename),') to '                       &
+!            ,' (',trim(export_statename),') '
+!     ENDIF
 !
 ! if the pointer has already set, return
 !

@@ -579,10 +579,10 @@
 
       anginc = pid12 * dtswh / float(nstp-1)          ! solar angle inc during each calc step
 
-      if ( me == 0 ) then
-        print *,'   for cosz calculations: nswr,deltim,deltsw,dtswh =', &
-     &          nswr,deltim,deltsw,dtswh,'  anginc,nstp =',anginc,nstp
-      endif
+!     if ( me == 0 ) then
+!       print *,'   for cosz calculations: nswr,deltim,deltsw,dtswh =', &
+!    &          nswr,deltim,deltsw,dtswh,'  anginc,nstp =',anginc,nstp
+!     endif
 
 !     if (me == 0) print*,'in sol_update completed sr solar'
 !

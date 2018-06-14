@@ -108,10 +108,10 @@
 !----------------------------------------------------------------------
 !	... open the netcdf file
 !----------------------------------------------------------------------
-       if(mpi_id.eq.0) then
-           write(iulog,*)file        
-           write(iulog,*) 'idea_solar_input: opening file for readno', trim(file) 
-        endif
+!      if(mpi_id.eq.0) then
+!          write(iulog,*)file        
+!          write(iulog,*) 'idea_solar_input: opening file for readno', trim(file) 
+!       endif
        ierNC=NF90_OPEN(trim(File), nf90_nowrite, ncid)   
        if (iernc /=0) write(iulog,*) ncid, 'ncid ', iernc, ' iernc '     
 !----------------------------------------------------------------------

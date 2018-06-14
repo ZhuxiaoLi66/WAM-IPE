@@ -822,14 +822,14 @@
               enddo
             enddo
 
-            if ( me == 0 ) then
-              print *,' CHECK: Sample of selected months of CO2 ',      &
-     &                'data used for year:',iyear
-              do imo = 1, 12, 3
-                print *,'        Month =',imo
-                print *, co2vmr_sav(1,:,imo)
-              enddo
-            endif
+!           if ( me == 0 ) then
+!             print *,' CHECK: Sample of selected months of CO2 ',      &
+!    &                'data used for year:',iyear
+!             do imo = 1, 12, 3
+!               print *,'        Month =',imo
+!               print *, co2vmr_sav(1,:,imo)
+!             enddo
+!           endif
           endif   ! endif_ico2flg_block
 
           do imo = 1, 12

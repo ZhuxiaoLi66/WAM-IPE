@@ -14,7 +14,6 @@ USE module_FIELD_LINE_GRID_MKS,ONLY: Pvalue,JMIN_IN,JMAX_IS, r_meter2D      &
 &, plasma_grid_mag_colat,plasma_grid_3d,apexD,apexE,Be3,plasma_grid_Z,ISL,IBM,IGR  &
 & ,IQ,IGCOLAT,IGLON,east,north,up,mlon_rad,dlonm90km,apexDscalar,l_mag
 !sms$insert USE module_prepPoleVal,ONLY: prepPoleVal
-!USE module_cal_apex_param,ONLY:cal_apex_param
 
 INTEGER (KIND=int_prec)           :: i,mp,lp,in,is
 REAL    (KIND=real_prec)          :: sinI
@@ -24,16 +23,12 @@ INTEGER (KIND=int_prec)           :: midpoint
       REAL    (KIND=real_prec)              :: ufac
       REAL    (KIND=real_prec),DIMENSION(3) :: bhat !eq(3.14)
       REAL    (KIND=real_prec),DIMENSION(3) :: a,b,c      
-!dbg20130814
       INTEGER (KIND=int_prec)               :: ii
 
 
-
-!if the new GLOBAL 3D version
 CALL read_plasma_grid_global
 
 ! make sure to use the MKS units.
-print *,"Z_meter calculation completed"
 
 Pvalue = zero
 do lp=1,NLP
@@ -60,8 +55,6 @@ IF ( sw_grid==0 ) THEN  !APEX
 !NOTE: positive in NORTHern hemisphere; negative in SOUTHern hemisphere
          flux_tube: DO i=IN,IS
 
-!nm20130201: need to calculate some more apex parameters 
-!           CALL cal_apex_param (i,lp,mp,sinI)
 !---
 !nm20130814: double check if apexD has the values...
             if ( apexD(i,lp,mp,east,1)==0.0.AND.apexD(i,lp,mp,east,2)==0.0 ) then
@@ -85,33 +78,22 @@ IF ( sw_grid==0 ) THEN  !APEX
            b(2) = apexD(ii,lp,mp,north,2)
            b(3) = apexD(ii,lp,mp,up,2)
 
-!      call cross_product (a,b,c)
 !---
-! calculate cross product   a X b 
-
+! cross product   a X b 
 
            c(1) = a(2)*b(3) - a(3)*b(2) 
            c(2) = a(3)*b(1) - a(1)*b(3) 
            c(3) = a(1)*b(2) - a(2)*b(1) 
 !---
+           apexDscalar(i,lp,mp) = ABS (c(1)*c(1) + c(2)*c(2) + c(3)*c(3))                                                 
 
-           apexDscalar(i,lp,mp) = &
-                &     ABS ( &
-                & c(1)*c(1) + c(2)*c(2) + c(3)*c(3) &
-                & )
-
-
-! calculate bhat
+! bhat
            bhat(east)  = apexD(ii,lp,mp,east, 3) * apexDscalar(i,lp,mp)
            bhat(north) = apexD(ii,lp,mp,north,3) * apexDscalar(i,lp,mp)
            bhat(up)    = apexD(ii,lp,mp,up,   3) * apexDscalar(i,lp,mp)
 
            sinI = -bhat(up) !output
-
-!dbg           print *,i,lp,mp,'bhat',bhat
            ufac  = SQRT(bhat(north)**2 + bhat(east)**2)
-
-!dbg           print *,'ufac',ufac
 
 ! l_mag: unit vector
 !(1) magnetic eastward exactly horizontal
@@ -137,24 +119,13 @@ IF ( sw_grid==0 ) THEN  !APEX
            l_mag(i,lp,mp,up,   2) = l_mag(i,lp,mp,east ,1)*bhat(north)- l_mag(i,lp,mp,north,1)*bhat(east)
 !with the vector l you can use the formula in Art's paper.
 
-!inserted from
-!      END SUBROUTINE  cal_apex_param
-!      END MODULE module_cal_apex_param
-
-
-!dbg20110831
-!d print *,'calling sub-Get_sinI'&
-!d &, i,lp,mp,sw_sinI, sinI&
-!d &, plasma_grid_mag_colat(i), apexD(3,i,mp)%east, apexD(3,i,mp)%north, apexD(3,i,mp)%up
-
            CALL Get_sinI ( sw_sinI, sinI, plasma_grid_mag_colat(i,lp) &
      &, apexD(i,lp,mp,east,3), apexD(i,lp,mp,north,3), apexD(i,lp,mp,up,3) ) 
            plasma_grid_3d(i,lp,mp,IGR)  =  G0 * ( earth_radius * earth_radius ) / ( r_meter2D(i,lp) * r_meter2D(i,lp) ) * sinI * (-1.0)
 
          END DO flux_tube
 
-!nm20120304: introducing the flip grid
-!reminder:
+! introducing the flip grid
 !(1) neutral wind should be calculated using sinI from flip_grid: "SINDIP"
 ELSE IF ( sw_grid==1 ) THEN  !FLIP
   if(parallelBuild) then
@@ -175,11 +146,8 @@ END IF !( sw_grid==0 ) THEN  !APEX
 
 
      mlon_rad(:) = zero
-!nm20160419
-!     DO mp = 1,NMP+1
      DO mp = 1-mpHaloSize,NMP+mpHaloSize
        mlon_rad(mp) = REAL( (mp-1),real_prec ) * dlonm90km *pi/180.00
- !print*,'mp=',mp,'mlon=',mlon_rad(mp)
      END DO
 
 END SUBROUTINE init_plasma_grid
