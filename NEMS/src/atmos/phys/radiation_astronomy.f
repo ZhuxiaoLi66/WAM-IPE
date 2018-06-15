@@ -477,10 +477,10 @@
                 if ( i == iyr .and. iyr == jyr ) then
                   solc0  = smean + solc1
 
-                  if (me == 0) then
-                    print *,' CHECK: Solar constant data used for year',&
-     &                       iyr, solc1, solc0
-                  endif
+!                 if (me == 0) then
+!                   print *,' CHECK: Solar constant data used for year',&
+!    &                       iyr, solc1, solc0
+!                 endif
                   exit Lab_dowhile3
                 else
 !check            if(me == 0) print *,'  Skip solar const data for yr',i
@@ -500,10 +500,10 @@
                   enddo
                   solc0  = smean + smon(imon)
 
-                  if (me == 0) then
-                    print *,' CHECK: Solar constant data used for year',&
-     &                      iyr,' and month',imon
-                  endif
+!                 if (me == 0) then
+!                   print *,' CHECK: Solar constant data used for year',&
+!    &                      iyr,' and month',imon
+!                 endif
                   exit Lab_dowhile4
                 else
 !check            if(me == 0) print *,'  Skip solar const data for yr',i

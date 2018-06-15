@@ -70,6 +70,7 @@ module module_update_IPE
        character(len=8) :: m_str
        character(len=8) :: s_str
        character(len=12) :: timestamp_for_IPE_output_files
+       character(len=16) :: timestamp_for_logfile
 
 
        if(swEsmfTime) CALL ESMF_VMWtime(beg_time)
@@ -124,6 +125,8 @@ module module_update_IPE
        write (m_str,fmt) M
        write (s_str,fmt) S
        timestamp_for_IPE_output_files = trim(yy_str)//trim(mm_str)//trim(dd_str)//trim(h_str)//trim(m_str)                  
+       timestamp_for_logfile = trim(yy_str)//'-'//trim(mm_str)//'-'//trim(dd_str)//' '//trim(h_str)//':'//trim(m_str)
+       if(mype==0) print *, "IPE progress : "//timestamp_for_logfile
 
 
         if(swEsmfTime) then

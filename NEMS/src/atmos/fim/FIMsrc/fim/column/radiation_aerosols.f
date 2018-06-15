@@ -1250,7 +1250,7 @@
           enddo
           enddo
         else
-          if ( me == 0 ) print *,'  --- Reading ',cline
+!         if ( me == 0 ) print *,'  --- Reading ',cline
 
           do j = 1, JMXAE
           do i = 1, IMXAE

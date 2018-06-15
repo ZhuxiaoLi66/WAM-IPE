@@ -425,22 +425,22 @@
                 iyr = iyr + icy
               enddo Lab_dowhile1
 
-              if ( me == 0 ) then
-                print *,'   *** Year',iyear,' out of table range!',     &
-     &                  iyr1, iyr2
-                print *,'       Using the closest-cycle year (',iyr,')'
-              endif
+!             if ( me == 0 ) then
+!               print *,'   *** Year',iyear,' out of table range!',     &
+!    &                  iyr1, iyr2
+!               print *,'       Using the closest-cycle year (',iyr,')'
+!             endif
             elseif ( iyr > iyr2 ) then
               icy = iyr2 - icy2 + 1    ! range of the latest cycle in data table
               Lab_dowhile2 : do while ( iyr > iyr2 )
                 iyr = iyr - icy
               enddo Lab_dowhile2
 
-              if ( me == 0 ) then
-                print *,'   *** Year',iyear,' out of table range!',     &
-     &                  iyr1, iyr2
-                print *,'       Using the closest-cycle year (',iyr,')'
-              endif
+!             if ( me == 0 ) then
+!               print *,'   *** Year',iyear,' out of table range!',     &
+!    &                  iyr1, iyr2
+!               print *,'       Using the closest-cycle year (',iyr,')'
+!             endif
             endif
 
 !  --- ...  locate the right record for the year of data
@@ -455,10 +455,10 @@
                 if ( i == iyr .and. iyr == jyr ) then
                   solc0  = smean + solc1
 
-                  if (me == 0) then
-                    print *,' CHECK: Solar constant data used for year',&
-     &                       iyr, solc1, solc0
-                  endif
+!                 if (me == 0) then
+!                   print *,' CHECK: Solar constant data used for year',&
+!    &                       iyr, solc1, solc0
+!                 endif
                   exit Lab_dowhile3
                 else
 !check            if(me == 0) print *,'  Skip solar const data for yr',i
@@ -478,10 +478,10 @@
                   enddo
                   solc0  = smean + smon(imon)
 
-                  if (me == 0) then
-                    print *,' CHECK: Solar constant data used for year',&
-     &                      iyr,' and month',imon
-                  endif
+!                 if (me == 0) then
+!                   print *,' CHECK: Solar constant data used for year',&
+!    &                      iyr,' and month',imon
+!                 endif
                   exit Lab_dowhile4
                 else
 !check            if(me == 0) print *,'  Skip solar const data for yr',i

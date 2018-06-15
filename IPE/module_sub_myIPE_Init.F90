@@ -42,7 +42,6 @@ module module_sub_myIPE_Init
   USE module_IO,ONLY: PRUNIT
   USE module_open_file,ONLY: open_file
   implicit none
-!g  include "gptl.inc"
   include "mpif.h"
 !---
   type(ESMF_Clock)     :: clock
@@ -73,26 +72,11 @@ module module_sub_myIPE_Init
        type(ESMF_TimeInterval)   :: timeStep
        type(ESMF_Time)           :: startTime
        type(ESMF_Time)           :: stopTime
-!       type(ESMF_TimeInterval)   :: runDuration
-!       real(ESMF_KIND_R8)        :: runTimeStepCount
-!       type(ESMF_Time)           :: refTime
        type(ESMF_Time)           :: currTime
-!       type(ESMF_Time)           :: prevTime
-!       type(ESMF_TimeInterval)   :: currSimTime
-!       type(ESMF_TimeInterval)   :: prevSimTime
        type(ESMF_Calendar)       :: calendar
-!       type(ESMF_CalKind_Flag)   :: calkindflag
-!       integer                   :: timeZone
-!       integer(ESMF_KIND_I8)     :: advanceCount
-!       integer                   :: alarmCount
-!       type(ESMF_Direction_Flag) :: direction
-!t       character (len=*)         :: name
 !---time
-!       integer(ESMF_KIND_I4) :: yy
-!       integer(ESMF_KIND_I8),   intent(out), optional :: yy_i8
        integer :: mm
        integer :: dd
-!       integer(ESMF_KIND_I4),   intent(out), optional :: d
        integer(ESMF_KIND_I8) :: d_i8
        integer(ESMF_KIND_I4) :: h
        integer(ESMF_KIND_I4) :: m
@@ -118,44 +102,11 @@ module module_sub_myIPE_Init
        character(len=8) :: m_stop_str
        character(len=8) :: s_stop_str
        character(len=56) :: model_start_time
+       character(len=16) :: start_time_for_logfile
        character(len=56) :: model_stop_time
-!       integer(ESMF_KIND_I8),   intent(out), optional :: s_i8
-!       integer(ESMF_KIND_I4),   intent(out), optional :: ms
-!       integer(ESMF_KIND_I4),   intent(out), optional :: us
-!       integer(ESMF_KIND_I4),   intent(out), optional :: ns
-!       real(ESMF_KIND_R8),      intent(out), optional :: d_r8
-!       real(ESMF_KIND_R8),      intent(out), optional :: h_r8
-!       real(ESMF_KIND_R8),      intent(out), optional :: m_r8
-!       real(ESMF_KIND_R8),      intent(out), optional :: s_r8
-!       real(ESMF_KIND_R8),      intent(out), optional :: ms_r8
-!       real(ESMF_KIND_R8),      intent(out), optional :: us_r8
-!       real(ESMF_KIND_R8),      intent(out), optional :: ns_r8
-!       integer(ESMF_KIND_I4),   intent(out), optional :: sN
-!       integer(ESMF_KIND_I8),   intent(out), optional :: sN_i8
-!       integer(ESMF_KIND_I4),   intent(out), optional :: sD
-!       integer(ESMF_KIND_I8),   intent(out), optional :: sD_i8
-!       type(ESMF_Calendar),     intent(out), optional :: calendar
-!       type(ESMF_CalKind_Flag), intent(out), optional :: calkindflag
-!       integer,                 intent(out), optional :: timeZone ! not imp
-!       character (len=*),       intent(out), optional :: timeString
-!       character (len=*),       intent(out), optional :: timeStringISOFrac
-!       integer,                 intent(out), optional :: dayOfWeek
-!       type(ESMF_Time),         intent(out), optional :: midMonth
-!       integer(ESMF_KIND_I4),   intent(out), optional :: dayOfYear
-!       real(ESMF_KIND_R8),      intent(out), optional :: dayOfYear_r8
-!       type(ESMF_TimeInterval), intent(out), optional :: dayOfYear_intvl
-!---calendarget
-!       type(ESMF_CalKind_Flag),intent(out), optional :: calkindflag
        integer :: daysPerMonth(12)
        integer :: monthsPerYear
        integer(ESMF_KIND_I4) :: secondsPerDay
-!       integer(ESMF_KIND_I4) :: secondsPerYear
-!       integer(ESMF_KIND_I4) :: daysPerYear
-!       integer(ESMF_KIND_I4),  intent(out), optional :: daysPerYearDn
-!       integer(ESMF_KIND_I4),  intent(out), optional :: daysPerYearDd
-!       character (len=*),      intent(out), optional :: name
-!nm20160723 gptl
-      INTEGER :: ret
 !---
 
 ! call ESMF_LogWrite("sub-init_IPE STARTING:", ESMF_LOGMSG_INFO, rc=rc)
@@ -197,10 +148,7 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
       	  file=__FILE__)) &
           return  ! bail out
-!t   if (IAM_ROOT()) then
-!    print *,'NYEAR=', NYEAR,' d_i8=',d_i8
-!    print *, "The clock's final current time is NYEAR=", NYEAR, "/MM=", MM, "/DD=", DD, &
-!              " H=", H, ":M=", M, ":S=", S
+
      fmt = '(i2.2)'
      fmt1 = '(i4.4)'
      write (yy_str,fmt1) NYEAR
@@ -209,11 +157,12 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
      write (h_str,fmt) H
      write (m_str,fmt) M
      write (s_str,fmt) S
-!    print *, trim(yy_str)//trim(mm_str)//trim(dd_str)//'T'//trim(h_str)//trim(m_str)
      model_start_time = 'MODEL_START_TIME.'//trim(yy_str)//trim(mm_str)//trim(dd_str)//'T'//trim(h_str)//trim(m_str)                     
      open(unit=5995,FILE=model_start_time,status='unknown',form='formatted')
      write(5995,*) model_start_time
      close(5995)
+
+
 call ESMF_TimeGet(stoptime, yy=yystop,mm=mmstop,dd=ddstop,h=hstop,m=mstop,s=sstop,rc=rc)
      write (yy_stop_str,fmt1) yystop
      write (mm_stop_str,fmt) mmstop
@@ -280,35 +229,34 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
      &   NNT_ABORT_ON_ERROR, ppp__status)
 
 
-!g      call gptlprocess_namelist ('GPTLnamelist', 77, ret) 
-!g      ret = gptlinitialize ()
-!g      ret = gptlstart ('Total')
 
 !!SMS$INSERT parallelBuild=.true.
  parallelBuild=.true.
 ! set up input parameters
-!g      ret = gptlstart ('read_input')
 !     CALL ESMF_LogWrite("sub-initialize_IPE: read_input_parameters", ESMF_LOGMSG_INFO, rc=rc)
       CALL read_input_parameters ( )
       !ut_start_perp_trans = 0
       ut_start_perp_trans = start_time 
 
-!g      ret = gptlstop  ('read_input')
+
+      if ( mype==0 ) then
+        start_time_for_logfile = trim(yy_str)//'-'//trim(mm_str)//'-'//trim(dd_str)//' '//trim(h_str)//':'//trim(m_str)            
+        print *, "******************************************"
+        print *, "IPE startup  : "//start_time_for_logfile
+        print *, "******************************************"
+      endif
+
 
 ! open Input/Output files
-!g      ret = gptlstart ('open_output_files')
 !--- unit=8
 !filename ='FLIP_ERROR_FLAG_'//TRIM(string_tmp)//'.log'
       CALL open_file ( 'FLIP_ERR', PRUNIT,'formatted','unknown') !open by all processors
 !     CALL ESMF_LogWrite("sub-initialize_IPE: open_output_files", ESMF_LOGMSG_INFO, rc=rc)	
       CALL open_output_files ( )
-!g      ret = gptlstop  ('open_output_files')
 
 ! set up plasma grids by reading file
-!g      ret = gptlstart ('init_plasma_grid')
 !     CALL ESMF_LogWrite("sub-initialize_IPE: init_plasma_grid", ESMF_LOGMSG_INFO, rc=rc)
       CALL init_plasma_grid ( )
-!g      ret = gptlstop  ('init_plasma_grid')
 
 !!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-1")
 
@@ -350,11 +298,9 @@ if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
      &   NNT_ABORT_ON_ERROR, ppp__status)
       endif    ! end of SMS_DEBUGGING_ON()
 IF ( sw_output_plasma_grid ) THEN
-!g  ret = gptlstart ('output_plasma_grid')
 
 ! CALL ESMF_LogWrite("sub-initialize_IPE: output_plasma_grid", ESMF_LOGMSG_INFO, rc=rc)
   CALL output_plasma_grid ( )
-!g  ret = gptlstop  ('output_plasma_grid')
 END IF
 !!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-2")
 
@@ -399,10 +345,8 @@ END IF
 ! initialise the flux tubes from previous runs
       IF ( HPEQ_flip==0.0 ) THEN
 
-!g        ret = gptlstart ('io_plasma_bin')
 !       CALL ESMF_LogWrite("sub-initialize_IPE: io_plasma_bin", ESMF_LOGMSG_INFO, rc=rc)
         CALL io_plasma_bin ( 2, start_time, model_start_time )
-!g        ret = gptlstop  ('io_plasma_bin')
 
       END IF
 !nm20160608: IPE internal time management
@@ -451,12 +395,10 @@ END IF
 
 ! initialization of electrodynamic module:
 ! read in E-field
-!g      ret = gptlstart ('init_eldyn')
       IF ( sw_perp_transport>=1 ) THEN
 !       CALL ESMF_LogWrite("sub-initialize_IPE: init_eldyn", ESMF_LOGMSG_INFO, rc=rc)
         CALL init_eldyn ( )
       ENDIF
-!g      ret = gptlstop  ('init_eldyn')
 !!sms$compare_var(plasma_3d,"driver_ipe.f90 - plasma_3d-4")
 
       if (SMS_DEBUGGING_ON()) then

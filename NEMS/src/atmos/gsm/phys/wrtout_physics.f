@@ -5043,8 +5043,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-          print*,'wrtsfc gribit ierr=',ierr,'  67) ',
-     &     'Pressure (pa) convective cloud top level'
+!         print*,'wrtsfc gribit ierr=',ierr,'  67) ',
+!    &     'Pressure (pa) convective cloud top level'
         endif
 !.................................................
 !  - pressure at convective cloud bottom
@@ -5060,8 +5060,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-          print*,'wrtsfc gribit ierr=',ierr,'  68) ',
-     &     'Pressure (pa) convective cloud bot level'
+!         print*,'wrtsfc gribit ierr=',ierr,'  68) ',
+!    &     'Pressure (pa) convective cloud bot level'
         endif
 !.................................................
 !  - sea ice thickness
