@@ -1286,7 +1286,11 @@ if [ $IDEA = .true. ]; then
   $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew2.nc .
   if [ $WAM_IPE_COUPLING = .true. ]; then
    $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/ipe3dgrid2.nc .
+
+# Copy both for now, when fully switched get rid of wam3dgridnew_20160427.nc
    $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew_20160427.nc .
+   $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/WAMFixedHgtGrid_20180312.nc .
+
    $NLN $IPEGRID ${DATA}/ipe_grid
 
    # IPE fix files

@@ -32,6 +32,11 @@ module module_MEDSpaceWeather
 
   integer, parameter :: MAXNAMELEN = 128
 
+  ! Earth Radius
+  ! The same value used by IPE, but in km. 
+  real(ESMF_KIND_R8), parameter :: earthradius=6371.2_ESMF_KIND_R8
+
+
   ! private internal state to keep instance data
   type InternalStateStruct
     integer :: wamdims(3)
@@ -811,7 +816,6 @@ module module_MEDSpaceWeather
   real, parameter :: PI=3.1415927
   integer :: j1
   integer :: localrc, status
-  real, parameter :: earthradius=6371.0  !in kilometers
 
   ! For output
   real(ESMF_KIND_R8), pointer :: lontbl(:), lattbl(:), hgttbl(:)
@@ -852,10 +856,21 @@ module module_MEDSpaceWeather
       file=__FILE__)) &
       return  ! bail out
 
-  !wamfilename = 'data/wam3dgridnew.nc'
-  wamfilename = 'wam3dgridnew_20160427.nc'
+  ! Set file name for intermediate fixed height grid
+  wamfilename = 'WAMFixedHgtGrid_20180312.nc'
+  !wamfilename = 'wam3dgridnew_20160427.nc' ! The last version
+
+  ! Write fixed height grid file name
+  if (PetNo .eq. 0) then
+     write(*,*) "Fixed height grid filename = ",wamfilename
+  endif
+
   filename = 'wam2dmesh.nc'
-  minheight = 90
+
+!  Make min height a little lower to deal with small differences 
+!  in definition of height between fixed height grid and IPE cap.
+!  minheight = 90.0
+  minheight = 89.0
   maxheight = 800
   deg2rad = PI/180.0
 
@@ -1017,7 +1032,7 @@ module module_MEDSpaceWeather
   
   ! Create the 3D mesh with fixed height
   ! find the lower height level where height > minheight
-  do i=1,wamdims(3)
+  do i=2,wamdims(3)
      if (wamhgt(i) > minheight) then
     	startlevel = i-1
 	exit
@@ -1520,7 +1535,9 @@ end subroutine InitGrids
 ! Log function which handles negative numbers
 function log_hneg(in)
   real(ESMF_KIND_R8) :: in, log_hneg
-  real(ESMF_KIND_R8), parameter :: log_min=1.0E-10
+ ! Use a fairly high min value. Values close to 0.0 cause problems in IPE
+ ! real(ESMF_KIND_R8), parameter :: log_min=1.0E-10
+  real(ESMF_KIND_R8), parameter :: log_min=1.0E+3
 
   if (in >= log_min) then
      log_hneg=log(in)
@@ -2167,11 +2184,10 @@ subroutine convert2Cart (lon, lat, hgt, coords, rc)
    real(ESMF_KIND_R8):: coords(3)
    integer, optional :: rc
 
-   real(ESMF_KIND_R8) :: earthradius, nhgt
+   real(ESMF_KIND_R8) ::nhgt
    integer :: localrc
 
    if (present(rc)) rc=ESMF_FAILURE
-   earthradius = 6371.0
    nhgt = 1+hgt/earthradius
 
    call c_esmc_sphdeg_to_cart(lon, lat, &
@@ -2192,11 +2208,10 @@ subroutine convert2Cart (lon, lat, hgt, coords, rc)
    real(ESMF_KIND_R8):: coords(3)
    integer, optional :: rc
 
-   real(ESMF_KIND_R8) :: earthradius, nhgt
+   real(ESMF_KIND_R8) :: nhgt
    integer :: localrc
 
    if (present(rc)) rc=ESMF_FAILURE
-   earthradius = 6371.0
    nhgt = 1+hgt/earthradius
 
    coords(1)=lon
@@ -2213,11 +2228,10 @@ subroutine convert2Sphdeg (coord1, coord2, coord3, lon, lat, hgt)
    real(ESMF_KIND_R8):: coord1, coord2, coord3
    real(ESMF_KIND_R8):: lon, lat, hgt
 
-   real(ESMF_KIND_R8) :: earthradius, nhgt, rad2deg
+   real(ESMF_KIND_R8) :: nhgt, rad2deg
    real, parameter :: PI=3.1415927
    integer :: localrc
 
-   earthradius = 6371.0
    rad2deg = 180.0/PI
    nhgt = sqrt(coord1*coord1+coord2*coord2+coord3*coord3)
    hgt = (nhgt-1)*earthradius

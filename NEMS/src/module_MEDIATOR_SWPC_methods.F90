@@ -3228,7 +3228,11 @@ contains
     real(ESMF_KIND_R8) :: R, g0, re
     real(ESMF_KIND_R8) :: mass
 
-    real(ESMF_KIND_R8), parameter :: log_min = 1.0E-10
+    ! Use a fairly high min value. Values close to 0.0 cause problems in IPE
+    ! NOTE THIS WILL CHANGE THE LEGACY VALUE FROM ORIGINAL, BUT IT WILL
+    ! MATCH THE VALUE NOW IN THE OLD (LEGACY) MEDIATOR
+    ! real(ESMF_KIND_R8), parameter :: log_min = 1.0E-10
+    real(ESMF_KIND_R8), parameter :: log_min = 1.e+3_ESMF_KIND_R8
 !   real(ESMF_KIND_R8), parameter :: log_min = 1.e-10_ESMF_KIND_R8
 !   real(ESMF_KIND_R8), parameter :: re = 6371.2_ESMF_KIND_R8
 !   real(ESMF_KIND_R8), parameter :: g0 = 9.80665_ESMF_KIND_R8
@@ -3237,7 +3241,6 @@ contains
     R  = 8.3141
     g0 = 9.80665
     re = 6.3712e03
-
 
     ! -- begin
     if (present(rc)) rc = ESMF_SUCCESS
@@ -4956,7 +4959,11 @@ contains
   real, parameter :: PI=3.1415927
   integer :: j1
   integer :: localrc, status
-  real, parameter :: earthradius=6371.0  !in kilometers
+
+   ! Earth Radius
+  ! Use the same value used by IPE, but in km. 
+  real(ESMF_KIND_R8), parameter :: earthradius=6371.2_ESMF_KIND_R8
+  !real, parameter :: earthradius=6371.0  !in kilometers
 
   ! For output
   real(ESMF_KIND_R8), pointer :: lontbl(:), lattbl(:), hgttbl(:)
@@ -5001,8 +5008,10 @@ contains
       return  ! bail out
 #endif
 
-  !wamfilename = 'data/wam3dgridnew.nc'
-  wamfilename = 'wam3dgridnew_20160427.nc'
+  ! Set file name for intermediate fixed height grid
+   wamfilename = 'WAMFixedHgtGrid_20180312.nc'
+!   wamfilename = 'wam3dgridnew_20160427.nc' ! Last version
+
   filename = 'wam2dmesh.nc'
 ! minheight = 90.
 ! maxheight = 782.
@@ -5750,7 +5759,12 @@ contains
     integer :: localrc
 
     if (present(rc)) rc=ESMF_FAILURE
-    earthradius = 6371.0
+
+    ! Earth Radius
+    ! Use the same value used by IPE, but in km. 
+    earthradius=6371.2_ESMF_KIND_R8
+    !earthradius = 6371.0
+
     nhgt = 1+hgt/earthradius
 
     coords(1)=lon

@@ -37,6 +37,7 @@ module ipeCap
   use module_input_parameters,    only: lps, lpe, mps, mpe, &
     mesh_height_min, mesh_height_max, mesh_write, mesh_write_file, &
     mype, swESMFTime
+  use module_physical_constants, only: earth_radius
 
 
   implicit none
@@ -393,7 +394,8 @@ module ipeCap
       ! -- local parameters
       integer, dimension(8), parameter :: iConn       = (/ 0,0,0,1,1,1,1,0 /)  ! connection array for hexahedron face (i,i+1) -> (i+2,i+3)...
       real(ESMF_KIND_R8),    parameter :: rad2deg     = 57.29577951308232087721_ESMF_KIND_R8
-      real(ESMF_KIND_R8),    parameter :: earthRadius = 6371008.8_ESMF_KIND_R8 ! IUGG Earth Mean Radius (Moritz, 2000)
+      real(ESMF_KIND_R8),    parameter :: earth_radius_R8 = REAL(earth_radius,ESMF_KIND_R8) ! IPE earth radius converted to R8
+
 
       ! -- begin
       if (present(rc)) rc = ESMF_SUCCESS
@@ -571,7 +573,7 @@ module ipeCap
               kp = kpp + kpOffset
               nodeCoords(i + 1) = rad2deg * local_grid_3d(kp,lp,mpp,1)
               nodeCoords(i + 2) = 90._ESMF_KIND_R8 - rad2deg * local_grid_3d(kp,lp,mpp,2)
-              nodeCoords(i + 3) = (1._ESMF_KIND_R8 + plasma_grid_Z(kp,lp)/earthRadius)
+              nodeCoords(i + 3) = (1._ESMF_KIND_R8 + plasma_grid_Z(kp,lp)/earth_radius_R8)
               i = i + 3
             end do
             lpOffset = lpOffset + numLineNodes(lp,iHemi)
