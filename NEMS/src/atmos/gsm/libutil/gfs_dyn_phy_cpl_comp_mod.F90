@@ -505,10 +505,10 @@
                         ,field     = ESMFField                      & 
                         ,rc        = rc2)                            
       if ( rc2 == esmf_success ) then                               
-         if(MYPE == 0) print *,' LU_CPL: ESMFField found in imp state'
+!        if(MYPE == 0) print *,' LU_CPL: ESMFField found in imp state'
          cpl_field = .true.                                     
       else                                                     
-         if(MYPE == 0) print *,' LU_CPL: ESMFField not found in imp state'
+!        if(MYPE == 0) print *,' LU_CPL: ESMFField not found in imp state'
          cpl_field = .false.                                 
       endif                                           
 !---> query tracer bundle
@@ -517,10 +517,10 @@
                         ,fieldbundle = ESMFBundle                   & 
                         ,rc          = rc2)                          
       if ( rc2 == esmf_success ) then                          
-         if(MYPE == 0) print *,' LU_CPL: ESMFBundle found in imp state'
+!        if(MYPE == 0) print *,' LU_CPL: ESMFBundle found in imp state'
          cpl_bundle = .true.                                       
       else                                                        
-         if(MYPE == 0) print *,' LU_CPL: ESMFBundle not found in imp state'
+!        if(MYPE == 0) print *,' LU_CPL: ESMFBundle not found in imp state'
          cpl_bundle = .false.                                  
       endif                                              
 
@@ -791,9 +791,9 @@
                         ,itemnamelist = exp_item_name                   &
                         ,rc   =rc)
 
-        print *,' coupler is done for expor state '                     &
-             ,' (',trim(export_statename),') with item =',exp_item      &
-             ,' and item name is ',(exp_item_name(n),n=1,exp_item)
+!       print *,' coupler is done for expor state '                     &
+!            ,' (',trim(export_statename),') with item =',exp_item      &
+!            ,' and item name is ',(exp_item_name(n),n=1,exp_item)
 !
         rcfinal=rc
         ENDIF

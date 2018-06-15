@@ -288,10 +288,10 @@
             read (NICO2CN, 24) iyr1, iyr2, cline
   24        format(i4,4x,i4,a48)
 
-            if ( me == 0 ) then
-              print *,'   Opened co2 data file: ',cfile0
+!           if ( me == 0 ) then
+!             print *,'   Opened co2 data file: ',cfile0
 !check        print *, iyr1, iyr2, cline(1:48)
-            endif
+!           endif
 
             if ( idyr < iyr1 ) then
               iyr = iyr1
@@ -414,10 +414,10 @@
           read (NICO2CN, 36) iyr, cline, co2g1, co2g2
   36      format(i4,a94,f7.2,16x,f5.2)
 
-          if ( me == 0 ) then
-            print *,'   Opened co2 data file: ',cfile1
-            print *, iyr, cline(1:94), co2g1,'  GROWTH RATE =', co2g2
-          endif
+!         if ( me == 0 ) then
+!           print *,'   Opened co2 data file: ',cfile1
+!           print *, iyr, cline(1:94), co2g1,'  GROWTH RATE =', co2g2
+!         endif
 
 !  --- ...  add growth rate if needed
           if ( lextpl ) then
@@ -429,10 +429,10 @@
           endif
 
           co2_glb = (co2g1 + rate) * 1.0e-6
-          if ( me == 0 ) then
-            print *,'   Global annual mean CO2 data for year',          &
-     &              iyear, co2_glb
-          endif
+!         if ( me == 0 ) then
+!           print *,'   Global annual mean CO2 data for year',          &
+!    &              iyear, co2_glb
+!         endif
 
           if ( ICO2 == 2 ) then
 
