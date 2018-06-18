@@ -66,9 +66,14 @@ IMPLICIT NONE
   REAL(dp), PARAMETER, PRIVATE :: COLFACX  = 1.7D0 
   REAL(dp), PARAMETER, PRIVATE :: HPEQ     = 0.0D0 
   ! IHEPLS,INPLS turn on diffusive solutions if > 0. no solution if 0, chemical equilibrium if < 0
-  INTEGER, PARAMETER, PRIVATE  :: IHEPLS   = 1 
-  INTEGER, PARAMETER, PRIVATE  :: INPLS    = 1 
+  INTEGER, PARAMETER, PRIVATE  :: IHEPLS   = 0 
+  INTEGER, PARAMETER, PRIVATE  :: INPLS    = 0 
   INTEGER, PARAMETER, PRIVATE  :: INNO     = -1
+
+
+! Temporary Timers
+  REAL(prec) :: flip_time_avg, aur_precip_time_avg
+  REAL(prec) :: flip_count, aur_precip_count
 
 CONTAINS
 
@@ -127,6 +132,12 @@ CONTAINS
       plasma % geo_pedersen_conductivity   = 0.0_prec
       plasma % geo_b_parallel_conductivity = 0.0_prec
 
+
+      flip_time_avg = 0.0_prec
+      aur_precip_time_avg = 0.0_prec
+      flip_count = 0.0_prec
+      aur_precip_count = 0.0_prec
+
   END SUBROUTINE Build_IPE_Plasma
 !
   SUBROUTINE Trash_IPE_Plasma( plasma )
@@ -154,6 +165,9 @@ CONTAINS
                 plasma % geo_pedersen_conductivity, & 
                 plasma % geo_b_parallel_conductivity )
 
+     PRINT*, 'FLIP_Wrapper ', flip_time_avg/flip_count
+     PRINT*, 'Auroral_Precipitation ', aur_precip_time_avg/aur_precip_count
+
   END SUBROUTINE Trash_IPE_Plasma
 !
   SUBROUTINE Update_IPE_Plasma( plasma, grid, neutrals, forcing, time_tracker, flip_time_step )
@@ -165,21 +179,30 @@ CONTAINS
     TYPE( IPE_Time ), INTENT(in)       :: time_tracker
     REAL(prec), INTENT(in)             :: flip_time_step
     ! Local
+    REAL(prec) :: t2, t1
 
          
       !CALL plasma % Cross_Flux_Tube_Transport( )
  
+      CALL CPU_TIME( t1 )
       CALL plasma % Auroral_Precipitation( grid, &
                                            neutrals, &
                                            forcing, &
                                            time_tracker )
+      CALL CPU_TIME( t2 )
+      aur_precip_time_avg = aur_precip_time_avg + t2 - t1
+      aur_precip_count    = aur_precip_count + 1
 
+      CALL CPU_TIME( t1 )
 !      CALL plasma % FLIP_Wrapper( grid, & 
 !                                  neutrals, &
 !                                  forcing, &
 !                                  time_tracker, &
 !                                  flip_time_step )
-!
+      CALL CPU_TIME( t2 )
+      flip_time_avg = flip_time_avg + t2 - t1
+      flip_count    = flip_count + 1
+
 
   END SUBROUTINE Update_IPE_Plasma
 !
@@ -353,7 +376,7 @@ CONTAINS
 
               IF ( grid % altitude(i,lp) <= 10.0_prec**(6) )THEN
 
-                grav(i) = grid % grx(i,lp,mp)
+                grav(i) = -grid % grx(i,lp,mp)
 
                 ntot(i) = ( neutrals % oxygen(i,lp,mp)  +&
                             neutrals % molecular_oxygen(i,lp,mp) +&
