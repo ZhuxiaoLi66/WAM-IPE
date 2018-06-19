@@ -238,7 +238,7 @@
                          ,m    = M                                &
                          ,s    = S                                &
                          ,rc   = RC)
-        if (mype == 0) write(0,*)' curr time=',yy,mm,dd,h,m,s,' first=',first
+!       if (mype == 0) write(0,*)' curr time=',yy,mm,dd,h,m,s,' first=',first
         first = .false.
       END IF
 !
@@ -373,7 +373,7 @@
                              ,m    = M                                &
                              ,s    = S                                &
                              ,rc   = RC)
-            if (mype == 0) write(0,*)' curr time=',yy,mm,dd,h,m,s
+!           if (mype == 0) write(0,*)' curr time=',yy,mm,dd,h,m,s
 !
 
             IF(CURRTIME == DFITIME) THEN

@@ -105,14 +105,14 @@
         nfsecondn=int((xhour-nfhour)*3600.-nfminute*60.)
         nfsecondd=1
 !
-        PRINT 99,xhour,IDATE
-99      FORMAT(1H ,'in fixio HOUR=',f8.2,3x,'IDATE=',
-     &  4(1X,I4))
+!       PRINT 99,xhour,IDATE
+!99      FORMAT(1H ,'in fixio HOUR=',f8.2,3x,'IDATE=',
+!     &  4(1X,I4))
 !!
 ! open nemsio sfc restart file
         call nemsio_init()
 !
-        write(0,*)'before nemsio_open for restart nst file'
+!       write(0,*)'before nemsio_open for restart nst file'
         call nemsio_open(gfile,trim(cfile),'write',iret,   
      & modelname='GFS',gdatatype='bin8',idate=idate7,nfhour=nfhour, 
      & nfminute=nfminute,nfsecondn=nfsecondn,nfsecondd=nfsecondd,   

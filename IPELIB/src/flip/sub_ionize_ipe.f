@@ -3,9 +3,7 @@
      & flipdim,z,gr,on,o2n,n2n,hn,hen,tn
      &,gm_lat,mlt
      &,tiros_activity_level,GW
-     &,qiont_O,qiont_O2,qiont_N2
-     &,sw_debug)
-!      use tirosdata_ipe
+     &,qiont_O,qiont_O2,qiont_N2)
       implicit none
 !
       CHARACTER (LEN=*), parameter :: filename0='N'
@@ -28,66 +26,12 @@
      &,PHION,PRODOP,NP,EQN2D,NPLSPRD
       REAL*8,dimension(flipdim) :: qiont_total
       REAL*8,dimension(flipdim),INTENT(OUT) :: qiont_O,qiont_O2,qiont_N2
-      logical,intent(in)::sw_debug
 
-      if(sw_debug) print *,'start IONIZE_IPE',gm_lat,KIND(gm_lat),mlt
-
-!      print *,'(1) start reading ', filename1
-!nm      OPEN(UNIT=UNIT1,FILE=TRIM(filename1),STATUS='old',
-!nm     &FORM='formatted',IOSTAT=istat)
-!1)
-      if ( filename0=='N') then 
-         imax1 = 6
-      else if ( filename0=='S') then 
-         imax1 = 4
-      end if
-
-!nm      do i=1,imax1
-!nm         READ(UNIT=UNIT1,FMT=*) string_dum
-!         print *, i, string_dum
-!nm      end do
-!2)
-!nm      do i=1,FLIPDIM
-!nm        READ(UNIT=UNIT1,FMT='(F10.2,1P,E14.7,21E9.2)') Z(i),SL
-!nm     &,GL(i),BM,GR(i),SZA,ON(i),HN(i),N2N(i),
-!nm     &O2N(i),HEN(i),N4S
-!        print *, i, Z(i),GR(i),ON(i),HN(i),
-!     &N2N(i),O2N(i),HEN(i)
-!nm      end do
-!
-!nm      CLOSE(UNIT=UNIT1)
-!      print *,'reading ', filename1, ' finished!'
-
-!
-!
-!      print *,'(2) start reading ', filename2
-!nm      OPEN(UNIT=UNIT2,FILE=TRIM(filename2),STATUS='old',
-!nm     &FORM='formatted',IOSTAT=istat)
-!1)
-!nm      do i=1,imax2
-!nm         READ(UNIT=UNIT2,FMT=*) string_dum
-!         print *, i, string_dum
-!nm      end do
-!2)
-!nm      do i=1,FLIPDIM
-!nm         READ(UNIT=UNIT2,FMT='(3F10.2,1P,22E9.2)') 
-!nm      &Z(i),TN(i)
-!nm      &,UN,NNO 
-!nm      &,EHT,TI,TE,OP,HP,MINP,HEP
-!nm      &,PHION,PRODOP,NP,EQN2D,NPLSPRD
-
-!         print *, i, Z(i),TN(i)
-
-!nm       end do
-!
-!nm       CLOSE(UNIT=UNIT2)
-!      print *,'reading ', filename2, ' finished!'
-!
 ! before the call to tiros_ionize read in the TIROS energy influx EMAPS
 ! characteristic energy CMAPS, and TIROS spectra DJSPECTRA
 ! read in emaps and cmaps and spectra
 !
-       call tiros_init_ipe()
+!      call tiros_init_ipe()
 !
 ! tiros_ionize returns ionization rates for O, O2, and N2 for a given 
 ! geomagnetic latitude GL and magnetic local time MLT based on 
@@ -117,30 +61,10 @@
 ! qiont_02 total molecular oxygen ionization rate from aurora
 ! qiont_N2 total molecular nitrogen ionization rate from aurora
 !
-      if(sw_debug)print *,'before tiros: flipdim=',flipdim,gm_lat,mlt
-     &,maxval(qiont_o),minval(qiont_o)
       call tiros_ionize_ipe(flipdim,z,gr,on,o2n,n2n,hn,hen,tn
      &,gm_lat,mlt,
-     &tiros_activity_level,GW,qiont_total,qiont_O,qiont_O2,qiont_N2
-     &,sw_debug)
-      if(sw_debug)print *,'after tiros:qiontO',maxval(qiont_o)
-     &,minval(qiont_o)
+     &tiros_activity_level,GW,qiont_total,qiont_O,qiont_O2,qiont_N2)
 !
-!      print *, 'how about here'
-      if(sw_debug)write(6001,4000)
- 4000 format(10x,'height',10x,'qiont_total',9x,'qiont_O',6x,'qiont_O2'
-     &,5x,'qiont_N2')
-      if ( sw_debug ) then
-         do i=1,100
-            write(6001,1000)i,z(i),qiont_total(i),qiont_O(i),qiont_O2(i)
-     &           ,qiont_N2(i)
- 1000       format(1x, i5, f10.2,3x, 1p4e14.2)
-         enddo
-      endif
-
-      if (sw_debug) print *,'end sub-IONIZE_IPE'
       return 
       end subroutine IONIZE_IPE
-!      STOP
-!      end program IONIZE_IPE
 

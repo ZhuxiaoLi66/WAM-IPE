@@ -1,7 +1,7 @@
       subroutine tiros_ionize_ipe(flipdim,z,gr,on,o2n,
      &n2n,hn,hen,tn,gm_lat,mlt
      &,tiros_activity_level,GW
-     &,qiont,qiont_O,qiont_O2,qiont_N2,sw_debug)
+     &,qiont,qiont_O,qiont_O2,qiont_N2)
       use tirosdata_ipe
       implicit none
 !
@@ -43,10 +43,7 @@ c
 !     &     2.61E20 , 0.00E19 , 0.00E18 , 3.07E20 , 5.26E20 , 0.00E19 , 
 !     &     0.00E18 , 0.00E18 , 8.57E20/
 !      DATA qdmsp/15*0.0/
-      logical,intent(in)::sw_debug
 
-      if(sw_debug)print *,'start tiros_ionize: flipdim',flipdim, gm_lat
-     &,maxval(qiont_o),minval(qiont_o)
       pi=3.14159
       do 16 m=1,21
    16 ratio(m) = (m-1)*0.05
@@ -92,8 +89,6 @@ c
       enddo
 ! convert magnetic latitude from radians to degrees
       thmagd = gm_lat * 180./PI
-      if(sw_debug) write(6001,*) 'gm_lat   thmagd  mlt', gm_lat,thmagd
-     &, mlt
       th = abs(thmagd) - 50.
       if(abs(thmagd).le.50.) goto 200
 ! calculate magnetic hour angle from noon in gregrees
@@ -123,12 +118,10 @@ c
      &        + rj*(1.-ri)*Emaps_Ipe(j2,i1,l) + (1.-rj)*(1.-ri)
      &        *Emaps_Ipe(j1,i1,l)
       eflux = 10.**(eflux)/1000.
-      if(sw_debug) write(6001,*) 'eflux   ', eflux
 cc  **
 c
       ch = rj*ri*Cmaps_Ipe(j2,i2,l) + (1.-rj)*ri*Cmaps_Ipe(j1,i2,l) + rj*(1.-ri)
      &     *Cmaps_Ipe(j2,i1,l) + (1.-rj)*(1.-ri)*Cmaps_Ipe(j1,i1,l)
-       if(sw_debug) write(6001,*) 'ch   ', ch
 ! validation tests:
 ! to compare with figure 5 F-R and Evans 1987
 ! set ch to 5 different mean energies and 
@@ -226,8 +219,6 @@ c
  2000 continue
   200 continue
 
-      if(sw_debug)print *,'end tiros_ionize',MAXVAL(qiont_O)
-     &,MINVAL(qiont_O)
       RETURN
       END subroutine tiros_ionize_ipe
 

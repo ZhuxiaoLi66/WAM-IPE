@@ -203,11 +203,11 @@
       nfillnum = nfill(ens_nam)
       if (nfillnum > 0) then
         cfhour = cfhour(1:nfill(cfhour)) // ens_nam(1:nfill(ens_nam))
-        if (me == 0) print *,' in wrtout_physics cfhour=',cfhour,
-     &                                 ' ens_nam=',ens_nam
+!       if (me == 0) print *,' in wrtout_physics cfhour=',cfhour,
+!    &                                 ' ens_nam=',ens_nam
       else
         cfhour = cfhour(1:nfill(cfhour))
-        if (me == 0) print *,' in wrtout_physics cfhour=',cfhour
+!       if (me == 0) print *,' in wrtout_physics cfhour=',cfhour
       endif
 !
       nosfc = 62
@@ -269,7 +269,7 @@
 !  send state to I/O task.  All tasks
 !
       if(sfcio_out) then
-          if (me == 0) print *,'---- start sfc.f section -----'
+!         if (me == 0) print *,'---- start sfc.f section -----'
           call sfc_only_move(ioproc)
           cosfc = sfcf//CFHOUR
           call sfc_wrt(ioproc,nosfc,cosfc,fhour_iau,jdate_iau
@@ -300,7 +300,7 @@
 !
 !      print *,'---- start diag3d.f section -----'
       if (ldiag3d) then
-        if (me == 0) print *,' wrtout_physics ldiag3d on so wrt3d '
+!       if (me == 0) print *,' wrtout_physics ldiag3d on so wrt3d '
         no3d = 64
         if(me == IOPROC)
      &  call BAOPENWT(NO3D,d3df//CFHOUR,iostat)
@@ -322,17 +322,17 @@
 !     tf = tb-ta
       t2 = rtc()
 
-       if (me == ioproc) write(0,*)' WRTOUT_PHYSICS TIME=',tf
+!      if (me == ioproc) write(0,*)' WRTOUT_PHYSICS TIME=',tf
 
 !     print 1011,tf
 !1011 format(' WRTOUT_PHYSICS TIME ',f10.4)
       timesum = timesum+(t2-t1)
 !     print 1012,timesum,t2-t1,td,te,tf,t4-t3,tba,tbb,tbc,tbd
- 1012 format(
-     1 ' WRTOUT_PHYSICS TIME ALL TASKS  ',f10.4,f10.4,
-     1 ' state, send, io  iobarr, (beginbarr),
-     1 spectbarr,open, openbarr )  ' ,
-     1  8f9.4)
+!1012 format(
+!    1 ' WRTOUT_PHYSICS TIME ALL TASKS  ',f10.4,f10.4,
+!    1 ' state, send, io  iobarr, (beginbarr),
+!    1 spectbarr,open, openbarr )  ' ,
+!    1  8f9.4)
 !
       return
       end
@@ -707,8 +707,8 @@
          ivar_global(3) = lats_node_r_max
          call mpi_gather(ivar_global,10,MPI_INTEGER,
      1       ivar_global_a,10,MPI_INTEGER,ioproc,mc_comp,ierr)
-         if(me == ioproc) write(0,*)'in sfc_only_move, ivar_global_a=',
-     &                    ivar_global_a(1:3,1:nodes)
+!        if(me == ioproc) write(0,*)'in sfc_only_move, ivar_global_a=',
+!    &                    ivar_global_a(1:3,1:nodes)
          icount = icount+1
       endif
 !!
@@ -826,8 +826,8 @@
         ivar_global(3) = lats_node_r_max
         call mpi_gather(ivar_global,10,MPI_INTEGER,
      &       ivar_global_a,10,MPI_INTEGER,ioproc,mc_comp,ierr)
-       if(me == ioproc) write(0,*)'in nst_only_move, ivar_global_a=',
-     &                  ivar_global_a(1:3,1:nodes)
+!      if(me == ioproc) write(0,*)'in nst_only_move, ivar_global_a=',
+!    &                  ivar_global_a(1:3,1:nodes)
         icount = icount + 1
       endif
 
@@ -973,9 +973,9 @@
         head%fhour   = xhour
         head%idate   = idate
 !
-        PRINT 99,nw,xhour,IDATE
-99      FORMAT(1H ,'in fixio nw=',i7,2x,'HOUR=',f8.2,3x,'IDATE=',
-     &  4(1X,I4))
+!       PRINT 99,nw,xhour,IDATE
+!99      FORMAT(1H ,'in fixio nw=',i7,2x,'HOUR=',f8.2,3x,'IDATE=',
+!    &  4(1X,I4))
 !
         ngrid = 1
         ngrid3 = ngrids_sfcc2d+1
@@ -1339,9 +1339,9 @@
         head%fhour = xhour
         head%idate = idate
 
-        print 99,nw,xhour,idate
- 99     format(' in nst_wrt nw=',i7,2x,'hour=',f8.2,3x,'idate=',
-     &         4(1x,i4))
+!       print 99,nw,xhour,idate
+! 99     format(' in nst_wrt nw=',i7,2x,'hour=',f8.2,3x,'idate=',
+!    &         4(1x,i4))
         ngrid = 1
         data%slmsk    => buff_mult(:,:,ngrid)
         ngrid = ngrid + 1
@@ -4141,8 +4141,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-          print*,'wrtsfc gribit ierr=',ierr,'  01)',
-     &     'Zonal compt of momentum flux (n/m**2) land and sea surface'
+!         print*,'wrtsfc gribit ierr=',ierr,'  01)',
+!    &     'Zonal compt of momentum flux (n/m**2) land and sea surface'
         endif
 !..........................................................
 !  - meridional component of momentum flux:
@@ -4159,8 +4159,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-          print*,'wrtsfc gribit ierr=',ierr,'  02) ',
-     &     'Merid compt of momentum flux (n/m**2) land and sea surface'
+!         print*,'wrtsfc gribit ierr=',ierr,'  02) ',
+!    &     'Merid compt of momentum flux (n/m**2) land and sea surface'
         endif
 !..........................................................
 !  - sensible heat flux:
@@ -4178,8 +4178,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-            print*,'wrtsfc gribit ierr=',ierr,'  03) ',
-     &       'Sensible heat flux (w/m**2) land and sea surface'
+!           print*,'wrtsfc gribit ierr=',ierr,'  03) ',
+!    &       'Sensible heat flux (w/m**2) land and sea surface'
         endif
 !..........................................................
 !  - latent heat flux:
@@ -4197,8 +4197,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-          print*,'wrtsfc gribit ierr=',ierr,'  04) ',
-     &     'Latent heat flux (w/m**2) land and sea surface'
+!         print*,'wrtsfc gribit ierr=',ierr,'  04) ',
+!    &     'Latent heat flux (w/m**2) land and sea surface'
         endif
 !..........................................................
 !  - surface temperature:
@@ -4219,8 +4219,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-          print*,'wrtsfc gribit ierr=',ierr,'  05) ',
-     &     'Temperature (k) land and sea surface'
+!         print*,'wrtsfc gribit ierr=',ierr,'  05) ',
+!    &     'Temperature (k) land and sea surface'
           stop
         endif
 !..........................................................
@@ -4240,8 +4240,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-          print*,'wrtsfc gribit ierr=',ierr,'  06) ',
-     &     'Volumetric soil moist content (frac) layer 10cm and 0cm'
+!         print*,'wrtsfc gribit ierr=',ierr,'  06) ',
+!    &     'Volumetric soil moist content (frac) layer 10cm and 0cm'
         endif
 !..........................................................
 !  - volumetric soil moist content at layer 40cm and 10cm:
@@ -4260,8 +4260,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-          print*,'wrtsfc gribit ierr=',ierr,'  07) ',
-     &     'Volumetric soil moist content (frac) layer 40cm and 10cm'
+!         print*,'wrtsfc gribit ierr=',ierr,'  07) ',
+!    &     'Volumetric soil moist content (frac) layer 40cm and 10cm'
         endif
 !..........................................................
 !  - temperature at layer 10cm and 0cm:
@@ -4280,8 +4280,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-          print*,'wrtsfc gribit ierr=',ierr,'  08) ',
-     &    'Temp (k) layer betw two depth below land sfc 10cm and 0cm'
+!         print*,'wrtsfc gribit ierr=',ierr,'  08) ',
+!    &    'Temp (k) layer betw two depth below land sfc 10cm and 0cm'
         endif
 !..........................................................
 !  - temperature at layer 40cm and 10cm:
@@ -4301,8 +4301,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-          print*,'wrtsfc gribit ierr=',ierr,'  09) ',
-     &     'Temp (k) layer betw 2 depth below land sfc 40cm and 10cm'
+!         print*,'wrtsfc gribit ierr=',ierr,'  09) ',
+!    &     'Temp (k) layer betw 2 depth below land sfc 40cm and 10cm'
         endif
 !..........................................................
 !  - water equivalent of accummulated snow depth:
@@ -4319,8 +4319,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-          print*,'wrtsfc gribit ierr=',ierr,'  10) ',
-     &     'Water equiv of accum snow depth (kg/m**2) land sea surface'
+!         print*,'wrtsfc gribit ierr=',ierr,'  10) ',
+!    &     'Water equiv of accum snow depth (kg/m**2) land sea surface'
         endif
 !..........................................................
 !  - total sky radiation fluxes at toa and surface:
@@ -4337,15 +4337,15 @@
 
          if (ierr == 0) then
            call wryte(noflx,lg,g)
-         else
-           if (k == 1) print*,'wrtsfc gribit ierr=',ierr,'  11) ',
-     &      'Upward long wave radiation flux (w/m**2) at TOA'
-           if (k == 2) print*,'wrtsfc gribit ierr=',ierr,'  12) ',
-     &      'Upward solar radiation flux (w/m**2) at TOA'
-           if (k == 3) print*,'wrtsfc gribit ierr=',ierr,'  13) ',
-     &      'Upward solar radiation flux (w/m**2) at surface'
-           if (k == 4) print*,'wrtsfc gribit ierr=',ierr,'  14) ',
-     &      'Downward solar radiation flux (w/m**2) at surface'
+!        else
+!          if (k == 1) print*,'wrtsfc gribit ierr=',ierr,'  11) ',
+!    &      'Upward long wave radiation flux (w/m**2) at TOA'
+!          if (k == 2) print*,'wrtsfc gribit ierr=',ierr,'  12) ',
+!    &      'Upward solar radiation flux (w/m**2) at TOA'
+!          if (k == 3) print*,'wrtsfc gribit ierr=',ierr,'  13) ',
+!    &      'Upward solar radiation flux (w/m**2) at surface'
+!          if (k == 4) print*,'wrtsfc gribit ierr=',ierr,'  14) ',
+!    &      'Downward solar radiation flux (w/m**2) at surface'
          endif
         enddo
 !..........................................................
@@ -4368,13 +4368,13 @@
 
          if (ierr == 0) then
            call wryte(noflx,lg,g)
-         else
-           if (k == 5) print*,'wrtsfc gribit ierr=',ierr,'  15) ',
-     &      'Total cloud cover (percent) high cloud layer'
-           if (k == 6) print*,'wrtsfc gribit ierr=',ierr,'  19) ',
-     &      'Total cloud cover (percent) middle cloud layer'
-           if (k == 7) print*,'wrtsfc gribit ierr=',ierr,'  23) ',
-     &      'Total cloud cover (percent) low cloud layer'
+!        else
+!          if (k == 5) print*,'wrtsfc gribit ierr=',ierr,'  15) ',
+!    &      'Total cloud cover (percent) high cloud layer'
+!          if (k == 6) print*,'wrtsfc gribit ierr=',ierr,'  19) ',
+!    &      'Total cloud cover (percent) middle cloud layer'
+!          if (k == 7) print*,'wrtsfc gribit ierr=',ierr,'  23) ',
+!    &      'Total cloud cover (percent) low cloud layer'
          endif
 
 !  - pressure at cloud top:
@@ -4390,13 +4390,13 @@
 
          if (ierr == 0) then
            call wryte(noflx,lg,g)
-         else
-           if (k == 5) print*,'wrtsfc gribit ierr=',ierr,'  16) ',
-     &      'Pressure (pa) high cloud top level'
-           if (k == 6) print*,'wrtsfc gribit ierr=',ierr,'  20) ',
-     &      'Pressure (pa) middle cloud top level'
-           if (k == 7) print*,'wrtsfc gribit ierr=',ierr,'  24) ',
-     &      'Pressure (pa) low cloud top level'
+!        else
+!          if (k == 5) print*,'wrtsfc gribit ierr=',ierr,'  16) ',
+!    &      'Pressure (pa) high cloud top level'
+!          if (k == 6) print*,'wrtsfc gribit ierr=',ierr,'  20) ',
+!    &      'Pressure (pa) middle cloud top level'
+!          if (k == 7) print*,'wrtsfc gribit ierr=',ierr,'  24) ',
+!    &      'Pressure (pa) low cloud top level'
          endif
 
 !  - pressure at cloud base:
@@ -4415,13 +4415,13 @@
 
          if (ierr == 0) then
            call wryte(noflx,lg,g)
-         else
-           if (k == 5) print*,'wrtsfc gribit ierr=',ierr,'  17) ',
-     &      'Pressure (pa) high cloud bottom level'
-           if (k == 6) print*,'wrtsfc gribit ierr=',ierr,'  21) ',
-     &      'Pressure (pa) middle cloud bottom level'
-           if (k == 7) print*,'wrtsfc gribit ierr=',ierr,'  25) ',
-     &      'Pressure (pa) low cloud bottom level'
+!        else
+!          if (k == 5) print*,'wrtsfc gribit ierr=',ierr,'  17) ',
+!    &      'Pressure (pa) high cloud bottom level'
+!          if (k == 6) print*,'wrtsfc gribit ierr=',ierr,'  21) ',
+!    &      'Pressure (pa) middle cloud bottom level'
+!          if (k == 7) print*,'wrtsfc gribit ierr=',ierr,'  25) ',
+!    &      'Pressure (pa) low cloud bottom level'
          endif
 
 !  - temperature at cloud top:
@@ -4437,13 +4437,13 @@
 
          if (ierr == 0) then
            call wryte(noflx,lg,g)
-         else
-           if (k == 5) print*,'wrtsfc gribit ierr=',ierr,'  18) ',
-     &      'Temperature (k) high cloud top level'
-           if (k == 6) print*,'wrtsfc gribit ierr=',ierr,'  22) ',
-     &      'Temperature (k) middle cloud top level'
-           if (k == 7) print*,'wrtsfc gribit ierr=',ierr,'  26) ',
-     &      'Temperature (k) low cloud top level'
+!        else
+!          if (k == 5) print*,'wrtsfc gribit ierr=',ierr,'  18) ',
+!    &      'Temperature (k) high cloud top level'
+!          if (k == 6) print*,'wrtsfc gribit ierr=',ierr,'  22) ',
+!    &      'Temperature (k) middle cloud top level'
+!          if (k == 7) print*,'wrtsfc gribit ierr=',ierr,'  26) ',
+!    &      'Temperature (k) low cloud top level'
          endif
 
         enddo  lab_do_cloud
@@ -4461,9 +4461,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  27) ',
-     &     'Total cloud cover (percent) total atmospheric column'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  27) ',
+!    &     'Total cloud cover (percent) total atmospheric column'
         endif
 !     write(0,*)' gribit 27 ngridss aft tot cloud- ',ngridss
 !.................................................
@@ -4479,9 +4479,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  28) ',
-     &     'Total cloud cover (percent) boundary layer cloud layer'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  28) ',
+!    &     'Total cloud cover (percent) boundary layer cloud layer'
         endif
 !..........................................................
 !  - surface downeard lw fluxes: (use the surface temp adjusted quantities
@@ -4497,9 +4497,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  29) ',
-     &     'Downward long wave radiation flux (w/m**2) at surface'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  29) ',
+!    &     'Downward long wave radiation flux (w/m**2) at surface'
         endif
 !..........................................................
 !  - surface upward lw fluxes: (use the one recalc'ed from surface temp
@@ -4515,9 +4515,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  30) ',
-     &     'Upward long wave radiation flux (w/m**2) at surface'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  30) ',
+!    &     'Upward long wave radiation flux (w/m**2) at surface'
         endif
 !..........................................................
 !  - uv-b flux at surface for total sky:
@@ -4532,9 +4532,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  31) ',
-     &     'UV-B downward solar flux (w/m**2) at surface'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  31) ',
+!    &     'UV-B downward solar flux (w/m**2) at surface'
         endif
 !..........................................................
 !  - uv-b flux at surface for clear sky:
@@ -4549,9 +4549,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  32) ',
-     &     'Clear sky UV-B downward solar flux (w/m**2) at surface'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  32) ',
+!    &     'Clear sky UV-B downward solar flux (w/m**2) at surface'
         endif
 !..........................................................
 !  - incoming solar radiation at toa:
@@ -4566,9 +4566,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  33) ',                   &
-     &     'Downward solar radiation flux (W/m**2) at TOA'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  33) ',                   &
+!    &     'Downward solar radiation flux (W/m**2) at TOA'
         endif
 !..........................................................
 !  - sw downward surface flux components:
@@ -4586,15 +4586,15 @@
 
           if (ierr == 0) then
             call wryte(noflx,lg,g)
-          else
-            if (l == 24) print*,'wrtsfc gribit ierr=',ierr,'  34) ',
-     &       'Downward sw uv+vis beam radiation flux (w/m**2) sfc '
-            if (l == 25) print*,'wrtsfc gribit ierr=',ierr,'  35) ',
-     &       'Downward sw uv+vis diffuse radiation flux (w/m**2) sfc'
-            if (l == 26) print*,'wrtsfc gribit ierr=',ierr,'  36) ',
-     &       'Downward sw nir beam radiation flux (w/m**2) sfc '
-            if (l == 27) print*,'wrtsfc gribit ierr=',ierr,'  37) ',
-     &       'Downward sw nir diffuse radiation flux (w/m**2) sfc '
+!         else
+!           if (l == 24) print*,'wrtsfc gribit ierr=',ierr,'  34) ',
+!    &       'Downward sw uv+vis beam radiation flux (w/m**2) sfc '
+!           if (l == 25) print*,'wrtsfc gribit ierr=',ierr,'  35) ',
+!    &       'Downward sw uv+vis diffuse radiation flux (w/m**2) sfc'
+!           if (l == 26) print*,'wrtsfc gribit ierr=',ierr,'  36) ',
+!    &       'Downward sw nir beam radiation flux (w/m**2) sfc '
+!           if (l == 27) print*,'wrtsfc gribit ierr=',ierr,'  37) ',
+!    &       'Downward sw nir diffuse radiation flux (w/m**2) sfc '
           endif
         enddo
 !..........................................................
@@ -4614,19 +4614,19 @@
 
           if (ierr == 0) then
             call wryte(noflx,lg,g)
-          else
-            if (l == 28) print*,'wrtsfc gribit ierr=',ierr,'  38) ',
-     &       'CS upward long wave radiation flux (w/m**2) at TOA'
-            if (l == 29) print*,'wrtsfc gribit ierr=',ierr,'  39) ',
-     &       'CS upward solar radiation flux (w/m**2) at TOA'
-            if (l == 30) print*,'wrtsfc gribit ierr=',ierr,'  40) ',
-     &       'CS downward long radiation flux (w/m**2) at surface'
-            if (l == 31) print*,'wrtsfc gribit ierr=',ierr,'  41) ',
-     &       'CS upward solar radiation flux (w/m**2)  at surface'
-            if (l == 32) print*,'wrtsfc gribit ierr=',ierr,'  42) ',
-     &       'CS downward solar radiation flux (w/m**2) at surface'
-            if (l == 33) print*,'wrtsfc gribit ierr=',ierr,'  43) ',
-     &       'CS upward long wave radiation (w/m**2) at surface'
+!         else
+!           if (l == 28) print*,'wrtsfc gribit ierr=',ierr,'  38) ',
+!    &       'CS upward long wave radiation flux (w/m**2) at TOA'
+!           if (l == 29) print*,'wrtsfc gribit ierr=',ierr,'  39) ',
+!    &       'CS upward solar radiation flux (w/m**2) at TOA'
+!           if (l == 30) print*,'wrtsfc gribit ierr=',ierr,'  40) ',
+!    &       'CS downward long radiation flux (w/m**2) at surface'
+!           if (l == 31) print*,'wrtsfc gribit ierr=',ierr,'  41) ',
+!    &       'CS upward solar radiation flux (w/m**2)  at surface'
+!           if (l == 32) print*,'wrtsfc gribit ierr=',ierr,'  42) ',
+!    &       'CS downward solar radiation flux (w/m**2) at surface'
+!           if (l == 33) print*,'wrtsfc gribit ierr=',ierr,'  43) ',
+!    &       'CS upward long wave radiation (w/m**2) at surface'
           endif
         enddo
 !...................................................................
@@ -4645,9 +4645,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  44) ',
-     &     'Albedo (percent) land and sea surface '
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  44) ',
+!    &     'Albedo (percent) land and sea surface '
         endif
 !...................................................................
 !  - precipitation rate (geshem unit in m, final unit = mm/s = kg/m2/s)
@@ -4662,9 +4662,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  45) ',
-     &     'Precipitation rate (kg/m**2/s) land and sea surface'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  45) ',
+!    &     'Precipitation rate (kg/m**2/s) land and sea surface'
         endif
 !...................................................................
 !  - convective precipitation rate:
@@ -4679,9 +4679,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  46) ',
-     &     'Convective precipitation rate (kg/m**2/s) at surface'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  46) ',
+!    &     'Convective precipitation rate (kg/m**2/s) at surface'
         endif
 !...................................................................
 !  - ground heat flux:
@@ -4697,9 +4697,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  47) ',
-     &     'Ground heat flux (w/m**2) land and sea surface'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  47) ',
+!    &     'Ground heat flux (w/m**2) land and sea surface'
         endif
 !...................................................................
 !  - land-sea mask:
@@ -4714,9 +4714,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  48) ',
-     &     'Land-Sea mask (1=land; 0=sea) (integer) land sea surface'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  48) ',
+!    &     'Land-Sea mask (1=land; 0=sea) (integer) land sea surface'
         endif
 !...................................................................
 !  - sea-ice concentration:
@@ -4731,9 +4731,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  49) ',
-     &     'Ice concentration (ice>0; no ice=0) (1/0) land sea surface'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  49) ',
+!    &     'Ice concentration (ice>0; no ice=0) (1/0) land sea surface'
         endif
 !...................................................................
 !  - 10m u wind:
@@ -4748,9 +4748,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  50) ',
-     &     'u wind (m/s) height above ground'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  50) ',
+!    &     'u wind (m/s) height above ground'
         endif
 !...................................................................
 !  - 10m v wind:
@@ -4765,9 +4765,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  51) ',
-     &     'v wind (m/s) height above ground'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  51) ',
+!    &     'v wind (m/s) height above ground'
         endif
 !...................................................................
 !  - 2m temperature:
@@ -4782,9 +4782,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  52) ',
-     &     'Temperature (k) height above ground'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  52) ',
+!    &     'Temperature (k) height above ground'
         endif
 !...................................................................
 !  - 2m specific humidity:
@@ -4799,9 +4799,9 @@
 
         if (ierr == 0) then
           call wryte(noflx,lg,g)
-        else
-          print*,'wrtsfc gribit ierr=',ierr,'  53) ',
-     &     'Specific humidity (kg/kg) height above ground'
+!       else
+!         print*,'wrtsfc gribit ierr=',ierr,'  53) ',
+!    &     'Specific humidity (kg/kg) height above ground'
         endif
 !...................................................................
 !  - surface pressure:
@@ -5043,8 +5043,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-          print*,'wrtsfc gribit ierr=',ierr,'  67) ',
-     &     'Pressure (pa) convective cloud top level'
+!         print*,'wrtsfc gribit ierr=',ierr,'  67) ',
+!    &     'Pressure (pa) convective cloud top level'
         endif
 !.................................................
 !  - pressure at convective cloud bottom
@@ -5060,8 +5060,8 @@
         if (ierr == 0) then
           call wryte(noflx,lg,g)
         else
-          print*,'wrtsfc gribit ierr=',ierr,'  68) ',
-     &     'Pressure (pa) convective cloud bottom level'
+!         print*,'wrtsfc gribit ierr=',ierr,'  68) ',
+!    &     'Pressure (pa) convective cloud bot level'
         endif
 !.................................................
 !  - sea ice thickness
@@ -5894,7 +5894,7 @@
 
 !       write(0,*)' at the end in wrtflx_w max_ngridss=',ngridss
 !
-        PRINT *,'GRIB FLUX FILE WRITTEN ',FHOUR,IDATE,noflx
+!       PRINT *,'GRIB FLUX FILE WRITTEN ',FHOUR,IDATE,noflx
 
       endif           ! if (me == ioproc) then
 !

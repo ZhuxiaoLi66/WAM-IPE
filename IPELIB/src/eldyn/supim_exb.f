@@ -42,10 +42,6 @@
       if ( sw_ctip_input ) then
         LPI = INT( ( utime - utime0LPI ) / real(input_params_interval)) &
      &+ 1 + input_params_begin
-!t        if(sw_debug)
-        print*,'sub-eld: LPI=',lpi
-!t        if(sw_debug)
-        print*,'sub-eld: utime',utime,'dt_m=',((utime-utime0LPI)/60.)
       else
         LPI=1
       end if

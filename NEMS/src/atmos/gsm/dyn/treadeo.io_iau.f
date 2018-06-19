@@ -110,7 +110,7 @@ c$$$      REAL(KIND=KIND_IO4) Z(lnt2)
       INCLUDE 'function2'
 !!
 !!
-      print *,' enter treadeo.io_fd '					! hmhj
+!     print *,' enter treadeo.io_fd '					! hmhj
       if (semilag) then
          lon1=lon_dim_a
          lon2=lonf
@@ -126,13 +126,13 @@ c$$$      REAL(KIND=KIND_IO4) Z(lnt2)
       call sigio_rrhead(nft,head,iret)
 !
       ivsinp = head%ivs
-      IF (me .eq. 0) THEN
-        print *,' In treadeo iret=',iret,' cfile=',cfile
-     &,' ivs=',head%ivs,' levs=',head%levs
-      ENDIF
+!     IF (me .eq. 0) THEN
+!       print *,' In treadeo iret=',iret,' cfile=',cfile
+!    &,' ivs=',head%ivs,' levs=',head%levs
+!     ENDIF
       IF (iret .ne. 0) THEN
-        print *,' unable to read from unit ',nft,' Job Aborted'
-     &,' iret=',iret,' me=',me
+!       print *,' unable to read from unit ',nft,' Job Aborted'
+!    &,' iret=',iret,' me=',me
         call mpi_quit(7777)
       ENDIF
 !

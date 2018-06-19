@@ -4,8 +4,7 @@ module_close_files ../main/module_close_files.f90
 module_decomp ../main/module_decomp_sms.f.tmp
 module_ELDYN ../eldyn/module_eldyn.f
 module_field_line_grid_mks ../main/module_field_line_grid_sms.f.tmp
-module_find_neighbor_grid_r ./module_find_neighbor_grid_R_sms.f.tmp
-module_find_neighbor_grid_th ./module_find_neighbor_grid_th_sms.f.tmp
+module_find_neighbor_grid ./module_find_neighbor_grid_sms.f.tmp
 module_heating_rate ../plasma/module_heating_rate_sms.f.tmp
 module_init_plasma_grid ../main/module_init_plasma_grid_sms.f.tmp
 module_input_parameters ../main/module_input_parameters_sms.f.tmp
@@ -23,8 +22,7 @@ module_plasma ./module_plasma_sms.f.tmp
 module_precision ../main/module_precision.f90
 module_qinterpolation ./module_Qinterpolation_sms.f.tmp
 module_read_plasma_grid_global ../main/module_read_plasma_grid_global_sms.f.tmp
-module_stepback_mag_r ./module_stepback_mag_R_sms.f.tmp
-module_stepback_mag_th ./module_stepback_mag_th_sms.f.tmp
+module_stepback ./module_stepback_sms.f.tmp
 module_sub_PLASMA ../plasma/module_sub_plasma.f90
 module_sub_plasma ./module_sub_plasma_sms.f.tmp
 module_sunloc ../eldyn/module_sunloc.f

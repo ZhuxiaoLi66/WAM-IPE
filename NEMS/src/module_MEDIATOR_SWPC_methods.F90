@@ -1049,7 +1049,7 @@ contains
             line=__LINE__, &
             file=__FILE__)) &
             return  ! bail out
-          print *,'MED: done adjusting with geom ',trim(s % fieldNames(item))
+!         print *,'MED: done adjusting with geom ',trim(s % fieldNames(item))
         end do
         s => s % next
       end do
@@ -2106,8 +2106,8 @@ contains
       file=__FILE__, &
       rcToReturn=rc)) return
 
-    write(6,'("newcoord: BEGIN")')
-    flush 6
+!   write(6,'("newcoord: BEGIN")')
+!   flush 6
     ! -- load 2D coordinates
     do item = 1, 2
       select case (newcoordDimCount(item))
@@ -2126,8 +2126,8 @@ contains
               file=__FILE__, &
               rcToReturn=rc)) return
             fptrIn1d = fptrOut1d
-            write(6,'("newcoord: ",i0,2x,"DE: ",i0," min/max: ",2g16.6)') item, localDe, minval(fptrIn1d), maxval(fptrIn1d)
-            flush 6
+!           write(6,'("newcoord: ",i0,2x,"DE: ",i0," min/max: ",2g16.6)') item, localDe, minval(fptrIn1d), maxval(fptrIn1d)
+!           flush 6
           end do
         case (2)
           do localDe = 0, localDeCount - 1
@@ -2144,16 +2144,16 @@ contains
               file=__FILE__, &
               rcToReturn=rc)) return
             fptrIn2d = fptrOut2d
-            write(6,'("newcoord: ",i0,2x,"DE: ",i0," min/max: ",2g16.6)') item, localDe, minval(fptrIn2d), maxval(fptrIn2d)
-            flush 6
+!           write(6,'("newcoord: ",i0,2x,"DE: ",i0," min/max: ",2g16.6)') item, localDe, minval(fptrIn2d), maxval(fptrIn2d)
+!           flush 6
           end do
         case default
-            write(6,'("newcoord: ",i0,2x,"NO COORDINATE SET")') item
-            flush 6
+!           write(6,'("newcoord: ",i0,2x,"NO COORDINATE SET")') item
+!           flush 6
       end select
     end do
-    write(6,'("newcoord: END")')
-    flush 6
+!   write(6,'("newcoord: END")')
+!   flush 6
 
     deallocate(newcoordDimCount, stat=localrc)
     if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -2714,7 +2714,7 @@ contains
                 line=__LINE__,  &
                 file=__FILE__,  &
                 rcToReturn=rc)) return  ! bail out
-              write(6,'("-- NamespaceSetLocalMesh: l/u = ",2i8)') lb(1),ub(1)
+!             write(6,'("-- NamespaceSetLocalMesh: l/u = ",2i8)') lb(1),ub(1)
               do item = 1, s % fieldMaxRank
                 ! -- if local field exists, destroy and recreate
                 isCreated = ESMF_FieldIsCreated(s % localIntField(item), rc=localrc)
@@ -2994,7 +2994,7 @@ contains
     if (present(options)) then
       read(options, *, iostat=localrc) auxNorm
       if (localrc /= 0) auxNorm = 0._ESMF_KIND_R8
-      write(6,'("-- auxNorm: ",a," read as: ",f16.6)') trim(options), auxNorm
+!     write(6,'("-- auxNorm: ",a," read as: ",f16.6)') trim(options), auxNorm
     end if
       
     if (auxNorm > 0._ESMF_KIND_R8) then
@@ -3228,7 +3228,11 @@ contains
     real(ESMF_KIND_R8) :: R, g0, re
     real(ESMF_KIND_R8) :: mass
 
-    real(ESMF_KIND_R8), parameter :: log_min = 1.0E-10
+    ! Use a fairly high min value. Values close to 0.0 cause problems in IPE
+    ! NOTE THIS WILL CHANGE THE LEGACY VALUE FROM ORIGINAL, BUT IT WILL
+    ! MATCH THE VALUE NOW IN THE OLD (LEGACY) MEDIATOR
+    ! real(ESMF_KIND_R8), parameter :: log_min = 1.0E-10
+    real(ESMF_KIND_R8), parameter :: log_min = 1.e+3_ESMF_KIND_R8
 !   real(ESMF_KIND_R8), parameter :: log_min = 1.e-10_ESMF_KIND_R8
 !   real(ESMF_KIND_R8), parameter :: re = 6371.2_ESMF_KIND_R8
 !   real(ESMF_KIND_R8), parameter :: g0 = 9.80665_ESMF_KIND_R8
@@ -3237,7 +3241,6 @@ contains
     R  = 8.3141
     g0 = 9.80665
     re = 6.3712e03
-
 
     ! -- begin
     if (present(rc)) rc = ESMF_SUCCESS
@@ -3645,7 +3648,7 @@ contains
         rcToReturn=rc)) return  ! bail out
 
       ! -- print diagnostic info
-      call FieldPrintMinMax(srcFieldComp(comp), "pre  - src:" // trim(compNames(comp)), rc)
+!     call FieldPrintMinMax(srcFieldComp(comp), "pre  - src:" // trim(compNames(comp)), rc)
 
       dstFieldComp(comp) = StateGetField(rh % dstState, compNames(comp), component=comp, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -3696,7 +3699,7 @@ contains
 
     do comp = 1, compCount
       ! -- print diagnostic info
-      call FieldPrintMinMax(dstFieldComp(comp), "post - dst:" // trim(compNames(comp)), rc)
+!     call FieldPrintMinMax(dstFieldComp(comp), "post - dst:" // trim(compNames(comp)), rc)
 
       call StateStoreField(rh % srcState, srcFieldComp(comp), compNames(comp), rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -3775,15 +3778,15 @@ contains
       file=__FILE__,  &
       rcToReturn=rc)) return  ! bail out
 
-    if (stateIntent == ESMF_STATEINTENT_IMPORT) then
-      write(6,'(" - StateGetField: state is Import: getting ",a," ...")') trim(fieldName)
-    else if (stateIntent == ESMF_STATEINTENT_EXPORT) then
-      write(6,'(" - StateGetField: state is Export: getting ",a," ...")') trim(fieldName)
-    else
-      write(6,'(" - StateGetField: state is UNKNOWN for field ",a," ...")') trim(fieldName)
-      if (present(rc)) rc = ESMF_FAILURE
-      return
-    end if
+!   if (stateIntent == ESMF_STATEINTENT_IMPORT) then
+!     write(6,'(" - StateGetField: state is Import: getting ",a," ...")') trim(fieldName)
+!   else if (stateIntent == ESMF_STATEINTENT_EXPORT) then
+!     write(6,'(" - StateGetField: state is Export: getting ",a," ...")') trim(fieldName)
+!   else
+!     write(6,'(" - StateGetField: state is UNKNOWN for field ",a," ...")') trim(fieldName)
+!     if (present(rc)) rc = ESMF_FAILURE
+!     return
+!   end if
 
     call ESMF_StateGet(state % self, itemName=trim(fieldName), field=field, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -3796,7 +3799,7 @@ contains
       return
     end if
 
-    write(6,'("-- StateGetField: checking if field is created ...")')
+!   write(6,'("-- StateGetField: checking if field is created ...")')
     isFieldCreated = ESMF_FieldIsCreated(state % localField(localComp), rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__,  &
@@ -3857,8 +3860,8 @@ contains
             file=__FILE__,  &
             rcToReturn=rc)) return  ! bail out
 
-          write(6,'(" - StateGetField: size 1d/2d = ",2i10)') size(fptr1d),size(fptr2d)
-          flush 6
+!         write(6,'(" - StateGetField: size 1d/2d = ",2i10)') size(fptr1d),size(fptr2d)
+!         flush 6
           fptr1d = reshape(fptr2d, (/ size(fptr1d) /))
 
           StateGetField = state % localField(localComp)
@@ -3902,11 +3905,11 @@ contains
         return ! bail out
       end if
 
-      write(6,'(" - StateGetField: interpolation is done")')
+!     write(6,'(" - StateGetField: interpolation is done")')
     else
-      write(6,'("-- StateGetField: field IS NOT created")')
+!     write(6,'("-- StateGetField: field IS NOT created")')
       StateGetField = field
-      write(6,'(" - RHStore: field is remote")')
+!     write(6,'(" - RHStore: field is remote")')
     end if
 
   end function StateGetField
@@ -3990,9 +3993,9 @@ contains
           file=__FILE__,  &
           rcToReturn=rc)) return  ! bail out
 
-        write(6,'(" - StateGetField: size 1d/2d = ",2i10," min/max = ",2g16.6)') &
-          size(fptr1d),size(fptr2d), minval(fptr1d),maxval(fptr1d)
-        flush 6
+!       write(6,'(" - StateGetField: size 1d/2d = ",2i10," min/max = ",2g16.6)') &
+!         size(fptr1d),size(fptr2d), minval(fptr1d),maxval(fptr1d)
+!       flush 6
         fptr2d = reshape(fptr1d, shape(fptr2d))
 
         ! -- interpolate from 2d+1 Mesh to 3d Mesh
@@ -4006,7 +4009,7 @@ contains
           file=__FILE__,  &
           rcToReturn=rc)) return  ! bail out
 
-        call FieldPrintMinMax(dstField, "StateGetField:" // trim(fieldName), rc)
+!       call FieldPrintMinMax(dstField, "StateGetField:" // trim(fieldName), rc)
 
       else if (geomtype == ESMF_GEOMTYPE_GRID) then
 
@@ -4227,7 +4230,7 @@ contains
         rcToReturn=rc)) return
       if (geomtype == ESMF_GEOMTYPE_GRID) then
         ! -- get src grid
-        write(6,'(" - FieldInterpolate: get src levels from src grid ...")')
+!       write(6,'(" - FieldInterpolate: get src levels from src grid ...")')
         call ESMF_FieldGet(srcField, grid=grid, rc=localrc)
         if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
@@ -4240,7 +4243,7 @@ contains
           line=__LINE__, &
           file=__FILE__, &
           rcToReturn=rc)) return
-        write(6,'(" - FieldInterpolate: got src levels from src grid ")')
+!       write(6,'(" - FieldInterpolate: got src levels from src grid ")')
       else
         call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
           msg="if no srcLevels provided, srcField must be on Grid", &
@@ -4284,7 +4287,7 @@ contains
         rcToReturn=rc)) return
       if (geomtype == ESMF_GEOMTYPE_GRID) then
         ! -- get dst grid
-        write(6,'(" - FieldInterpolate: get dst levels from dst grid ...")')
+!       write(6,'(" - FieldInterpolate: get dst levels from dst grid ...")')
         call ESMF_FieldGet(dstField, grid=grid, rc=localrc)
         if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
@@ -4297,7 +4300,7 @@ contains
           line=__LINE__, &
           file=__FILE__, &
           rcToReturn=rc)) return
-        write(6,'(" - FieldInterpolate: got dst levels from dst grid ")')
+!       write(6,'(" - FieldInterpolate: got dst levels from dst grid ")')
       else
         call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
           msg="if no dstLevels provided, dstField must be on Grid", &
@@ -4491,8 +4494,8 @@ contains
       fieldMax = max(fieldMax, fmax)
     end do
 
-    write(6,'("FieldPrintMinMax: ",a,1x,a," min = ",g14.6," max = ",g14.6)') &
-      trim(label), trim(name), fieldMin, fieldMax
+!   write(6,'("FieldPrintMinMax: ",a,1x,a," min = ",g14.6," max = ",g14.6)') &
+!     trim(label), trim(name), fieldMin, fieldMax
 
   end subroutine FieldPrintMinMax
 
@@ -4723,10 +4726,10 @@ contains
 
 #ifdef BFB_REGRID
                   srcTermProcessing = 0
-                  write(6,'(" - RHStore: start working on RH ...",a, "(srcTermProcessing = ",i0,")")') &
-                    trim(rHandle % label), srcTermProcessing
+!                 write(6,'(" - RHStore: start working on RH ...",a, "(srcTermProcessing = ",i0,")")') &
+!                   trim(rHandle % label), srcTermProcessing
 #else
-                  write(6,'(" - RHStore: start working on RH ...",a)') trim(rHandle % label)
+!                 write(6,'(" - RHStore: start working on RH ...",a)') trim(rHandle % label)
 #endif
                   call ESMF_FieldRegridStore(srcField, dstField, &
                     regridmethod   = ESMF_REGRIDMETHOD_BILINEAR, &
@@ -4741,7 +4744,7 @@ contains
                     line=__LINE__,  &
                     file=__FILE__,  &
                     rcToReturn=rc)) return  ! bail out
-                  write(6,'(" - RHStore: done working on RH ...",a)') trim(rHandle % label)
+!                 write(6,'(" - RHStore: done working on RH ...",a)') trim(rHandle % label)
 
                   if (associated(rh)) then
                     rh % next => rHandle
@@ -4802,13 +4805,13 @@ contains
       rh => rhList
     end if
 
-    print *, 'RouteHandle Table'
-    print *, '================='
+!   print *, 'RouteHandle Table'
+!   print *, '================='
     item = 0
     do while (associated(rh))
       item = item + 1
-      write(6,'(i4,2x,a,2x,l5)') item, trim(rh % label), &
-        ESMF_RouteHandleIsCreated(rh % rh, rc=localrc)
+!     write(6,'(i4,2x,a,2x,l5)') item, trim(rh % label), &
+!       ESMF_RouteHandleIsCreated(rh % rh, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__, &
@@ -4822,7 +4825,7 @@ contains
       end if
       rh => rh % next
     end do
-    print *, '================='
+!   print *, '================='
     
   end subroutine RouteHandlePrint
 
@@ -4956,7 +4959,11 @@ contains
   real, parameter :: PI=3.1415927
   integer :: j1
   integer :: localrc, status
-  real, parameter :: earthradius=6371.0  !in kilometers
+
+   ! Earth Radius
+  ! Use the same value used by IPE, but in km. 
+  real(ESMF_KIND_R8), parameter :: earthradius=6371.2_ESMF_KIND_R8
+  !real, parameter :: earthradius=6371.0  !in kilometers
 
   ! For output
   real(ESMF_KIND_R8), pointer :: lontbl(:), lattbl(:), hgttbl(:)
@@ -5001,8 +5008,10 @@ contains
       return  ! bail out
 #endif
 
-  !wamfilename = 'data/wam3dgridnew.nc'
-  wamfilename = 'wam3dgridnew_20160427.nc'
+  ! Set file name for intermediate fixed height grid
+   wamfilename = 'WAMFixedHgtGrid_20180312.nc'
+!   wamfilename = 'wam3dgridnew_20160427.nc' ! Last version
+
   filename = 'wam2dmesh.nc'
 ! minheight = 90.
 ! maxheight = 782.
@@ -5091,7 +5100,7 @@ contains
     next=next+1
     if (next == PetCnt) next=0
   enddo
-  print *, PetNo, 'localnodes/myrows:', localnodes, myrows
+! print *, PetNo, 'localnodes/myrows:', localnodes, myrows
 #else
   reminder = wamdims(2)-myrows*PetCnt
   if (reminder > PetNo)  then
@@ -5106,7 +5115,7 @@ contains
     rowinds(i)=ShuffleOrder(startrow+i-1)
     localnodes = localnodes + numPerRow(rowinds(i))
   enddo
-  print *, PetNo, 'start rows:', startrow, localnodes, myrows
+! print *, PetNo, 'start rows:', startrow, localnodes, myrows
   ind1 = 1
   steps = wamdims(2)/PetCnt
   do next=0,PetCnt-1
@@ -5122,15 +5131,15 @@ contains
        ind1 = ind1+steps
     endif
   enddo
-  if (ind1 /= wamdims(2)+1) then
-     print *, 'MEDIATOR Wrong ind1 ', ind1, wamdims(2)
-  endif
+! if (ind1 /= wamdims(2)+1) then
+!    print *, 'MEDIATOR Wrong ind1 ', ind1, wamdims(2)
+! endif
 #endif
   
   ! sort rowinds
   call ESMF_UtilSort(rowinds, ESMF_SORTFLAG_ASCENDING, rc)
 
-  print *, PetNo, 'sorted rowinds ', rowinds
+! print *, PetNo, 'sorted rowinds ', rowinds
 
   ! Save the lat/lon in the order the distgrid
   allocate(lonbuf(localnodes), latbuf(localnodes))
@@ -5370,9 +5379,9 @@ contains
        	  do j=1, numPerRow(ind+1)
             ! Global id based on the 3D indices
             nodeIds(count1)= j+wamdims(1)*ind+wamdims(1)*wamdims(2)*(k-1)
-	    if (PetTable(ind+1) == PetNo) then
-	       print *, PetNo, 'wrong neighbor ', count1, PetTable(ind+1)
-            endif
+!    if (PetTable(ind+1) == PetNo) then
+!       print *, PetNo, 'wrong neighbor ', count1, PetTable(ind+1)
+!           endif
             nodeOwners(count1)=PetTable(ind+1)
 	    lon = wamlon(j,ind+1)
             lat  = wamlat(j,ind+1)
@@ -5405,9 +5414,9 @@ contains
   enddo
   endif ! PetCnt > 1
 
-  if (count1-1 /= totalnodes .or. localcount-1 /= localnodes) then
-     print *, 'totalcount mismatch ', count1-1, totalnodes, localcount-1, localnodes
-  endif
+! if (count1-1 /= totalnodes .or. localcount-1 /= localnodes) then
+!    print *, 'totalcount mismatch ', count1-1, totalnodes, localcount-1, localnodes
+! endif
 
 #ifdef USE_CART3D_COORDSYS
   wamMesh = ESMF_MeshCreate(3,3,coordSys=ESMF_COORDSYS_CART, rc=rc)
@@ -5638,9 +5647,9 @@ contains
 	   elementConn(count8+7)=base+numPerRow(ind)+totalnodes2d+jj
    	   count1=count1+1
 	   count8=count8+8
-	   if (k==1 .and. (jj /= numPerRow(ind+1))) then
-	      print *, PetNo, 'Upper row index mismatch', ind, jj, numPerRow(ind+1)
-           endif
+!   if (k==1 .and. (jj /= numPerRow(ind+1))) then
+!      print *, PetNo, 'Upper row index mismatch', ind, jj, numPerRow(ind+1)
+!          endif
         else  ! diff < 0 
           ! make triangles with base at upper row
           ! triangles will be evenly distributed
@@ -5687,31 +5696,31 @@ contains
 	   elementConn(count8+7)=base+numPerRow(ind)+totalnodes2d+j
  	   count1=count1+1
 	   count8=count8+8
-	   if (k==1 .and. (jj /= numPerRow(ind))) then
-	      print *, PetNo, 'Lower row index mismatch', ind, jj, numPerRow(ind)
-           endif
+!   if (k==1 .and. (jj /= numPerRow(ind))) then
+!      print *, PetNo, 'Lower row index mismatch', ind, jj, numPerRow(ind)
+!          endif
         endif
        endif         	            
     enddo
   enddo 
 
-  if (count1-1 /= totalelements) then
-     print *, 'total element mismatch ', count1-1, totalelements
-  endif
+! if (count1-1 /= totalelements) then
+!    print *, 'total element mismatch ', count1-1, totalelements
+! endif
 
-  do i=1, totalelements*8
-     if (elementConn(i) > totalnodes) then
-          print *, PetNo, 'node id out of bound', i/8, elementConn(i)
-     endif
-  enddo  
-  print *, PetNo, "Before MeshAddElements"
+! do i=1, totalelements*8
+!    if (elementConn(i) > totalnodes) then
+!         print *, PetNo, 'node id out of bound', i/8, elementConn(i)
+!    endif
+! enddo  
+! print *, PetNo, "Before MeshAddElements"
   call ESMF_MeshAddElements(wamMesh, elementIds, elementTypes, elementConn,rc=rc)
   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
 
-   print *, PetNo, "After MeshAddElements"
+!  print *, PetNo, "After MeshAddElements"
 
   deallocate(NumPerRow, ShuffleOrder, rowinds, petTable)
   deallocate(indList, baseind)
@@ -5750,7 +5759,12 @@ contains
     integer :: localrc
 
     if (present(rc)) rc=ESMF_FAILURE
-    earthradius = 6371.0
+
+    ! Earth Radius
+    ! Use the same value used by IPE, but in km. 
+    earthradius=6371.2_ESMF_KIND_R8
+    !earthradius = 6371.0
+
     nhgt = 1+hgt/earthradius
 
     coords(1)=lon
@@ -5774,8 +5788,8 @@ contains
 
 #ifdef ESMF_NETCDF
     if ( ncStatus .ne. nf90_noerror) then
-      print '("NetCDF Error: ", A, " : ", A)', &
-                trim(errmsg),trim(nf90_strerror(ncStatus))
+!     print '("NetCDF Error: ", A, " : ", A)', &
+!               trim(errmsg),trim(nf90_strerror(ncStatus))
       call ESMF_LogSetError(ESMF_RC_NETCDF_ERROR, &
         msg=trim(errmsg) // " : " // trim(nf90_strerror(ncStatus)), &
         line=__LINE__, &

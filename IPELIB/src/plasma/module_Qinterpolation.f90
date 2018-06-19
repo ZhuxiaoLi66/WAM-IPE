@@ -22,9 +22,9 @@ CONTAINS
   &, iR, Qint_dum, TSP ) !nm20170328:
 
     USE module_precision
-!     plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,plasma_3d_old are all IN arrays
-    USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,ht90,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d_old
-    USE module_input_parameters,ONLY:sw_debug,mype,lps,lpe,mps,mpe,sw_ihepls,sw_inpls
+!     plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,plasma_3d_old are all IN arrays
+    USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,JMAX_IS,plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,ht90,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,plasma_3d_old
+    USE module_input_parameters,ONLY:mype,lps,lpe,mps,mpe,sw_ihepls,sw_inpls
     USE module_IPE_dimension,ONLY: ISPEC,ISPET,IPDIM ,nlp
     USE module_physical_constants,ONLY: earth_radius,pi,zero
     USE module_PLASMA,ONLY:utime_save
@@ -71,7 +71,7 @@ CONTAINS
 !check the foot point values
 !ispecial=2: interpolation at/below IN
 
-!JFM  Will this be in the halo? plasma_grid_3d has it's halo set in module_read_plasma_grid_global by the SERIAL directive.
+!JFM  Will this be in the halo? plasma_grid_3d has it's halo set in module_read_plasma_grid_mag_colatobal by the SERIAL directive.
 !     And the distance from lp and mp is checked against the hal size in perpendicular_transport.
       IF ( plasma_grid_3d( JMIN_IN(lp0) , lp0,mp0,IQ) < plasma_grid_3d(ip ,lp,mp,IQ) ) THEN
         ispecial=2
@@ -103,11 +103,6 @@ CONTAINS
             & ( plasma_grid_3d(inorth,lp0,mp0,IQ) - plasma_grid_3d(isouth,lp0,mp0,IQ) )
 
 
-            IF ( factor2<zero.or.factor2>1.0) THEN
-              WRITE(6,*) 'sub-Intrp:!STOP! INVALID factor2',factor2 ,ip,lp,mp,isouth,lp0,mp0
-              STOP
-            ENDIF
-
             EXIT flux_tube_loopT0
           ENDIF
 
@@ -132,24 +127,7 @@ CONTAINS
           !nm20170328: n+ inpls<=0
           IF ( jth==4.and.sw_inpls<=0 ) CYCLE jth_loop0
 
-          !nm20160421 DOUBLE log interpolation
-          IF(jth<=TSP)THEN      !for densities
-            Qint_dum(jth, ip1d) = 10**( factor2*(ALOG10(plasma_3d_old(iNorth,lp0,mp0,jth)) - ALOG10(plasma_3d_old(iSouth,lp0,mp0,jth))) + ALOG10(plasma_3d_old(iSouth,lp0,mp0,jth)) )
-          else
-            Qint_dum(jth, ip1d) = (factor2*(plasma_3d_old(inorth,lp0,mp0,jth) - plasma_3d_old(isouth,lp0,mp0,jth))) + plasma_3d_old(isouth,lp0,mp0,jth)
-          ENDIF
-
-!dbg20160417 error STOP
-          IF ( Qint_dum(jth, ip1d)<=zero ) THEN
-!SMS$IGNORE begin
-            PRINT*,mype,utime_save,'subQint(0):INVALID Qint !STOP!',Qint_dum(jth, ip1d) &
-            &,plasma_3d_old(inorth,lp0,mp0,jth) &
-            &,plasma_3d_old(isouth,lp0,mp0,jth) &
-            &,lp,mp,lp0,mp0,ip1d,inorth,isouth,factor2,jth
-            IF(jth<=TSP) PRINT*,jth,'after LOG!',( factor2*(ALOG10(plasma_3d_old(iNorth,lp0,mp0,jth)) - ALOG10(plasma_3d_old(iSouth,lp0,mp0,jth))) + ALOG10(plasma_3d_old(iSouth,lp0,mp0,jth)) )
-!SMS$IGNORE end
-            STOP
-          ENDIF !( jth==1.and.Qint_dum(jth, ip1d)<=0. ) THEN
+          Qint_dum(jth, ip1d) = (factor2*(plasma_3d_old(inorth,lp0,mp0,jth) - plasma_3d_old(isouth,lp0,mp0,jth))) + plasma_3d_old(isouth,lp0,mp0,jth)
 
         ENDDO jth_loop0 !jth=1,iT !=TSP+3
 
@@ -173,17 +151,6 @@ CONTAINS
           Qint_dum(jth   ,ip1d) = plasma_3d_old(isouth,lp0,mp0,jth)
 
 
-!dbg20160417
-          IF ( jth==1.and.Qint_dum(jth, ip1d)<=zero ) THEN
-!SMS$IGNORE begin
-            PRINT *,mype,'sub-Qint(1)',lp,mp,lp0,mp0,jth,isouth, plasma_3d_old(isouth,lp0,mp0,jth)
-!SMS$IGNORE end
-            STOP
-          ENDIF
-
-
-
-
         ENDDO jth_loop1 !jth
         !B:
         Qint_dum(iB      ,ip1d) = plasma_grid_3d(isouth,lp0,mp0,IBM)
@@ -200,12 +167,6 @@ CONTAINS
           IF ( jth==4.and.sw_inpls<=0 ) CYCLE jth_loop2
           Qint_dum(jth   ,ip1d) = plasma_3d_old(inorth,lp0,mp0,jth)
           !dbg20160417
-          IF ( jth==1.and.Qint_dum(jth, ip1d)<=zero ) THEN
-!SMS$IGNORE begin
-            PRINT *,mype,'sub-Qint(2)',lp,mp,lp0,mp0,jth,inorth, plasma_3d_old(inorth,lp0,mp0,jth)
-!SMS$IGNORE end
-            STOP
-          ENDIF
         ENDDO jth_loop2!jth
         !B
         Qint_dum(iB      ,ip1d) = plasma_grid_3d(inorth,lp0,mp0,IBM)

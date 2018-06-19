@@ -188,24 +188,24 @@
   !      ipsd0 = 17*idate(1)+43*idate(2)+37*idate(3)+23*idate(4)
   !    endif
 
-      if ( me == 0 ) then
-        print *,'  In rad_initialize, before calling radinit'
-        print *,' si =',si
-        print *,' levr=',levr,' ictm=',ictm,' isol=',isol,' ico2=',ico2,&
-     &          ' iaer=',iaer,' ialb=',ialb,' iems=',iems,' ntcw=',ntcw
-        print *,' np3d=',num_p3d,' ntoz=',ntoz,' iovrsw=',iovr_sw,      &
-     &          ' iovrlw=',iovr_lw,' isubcsw=',isubc_sw,                &
-     &          ' isubclw=',isubc_lw,' iflip=',iflip,'  me=',me
-        print *,' sashal=',sashal,' crick=',crick_proof,                &
-     &          ' ccnorm=',ccnorm,' norad=',norad_precip
+!     if ( me == 0 ) then
+!       print *,'  In rad_initialize, before calling radinit'
+!       print *,' si =',si
+!       print *,' levr=',levr,' ictm=',ictm,' isol=',isol,' ico2=',ico2,&
+!    &          ' iaer=',iaer,' ialb=',ialb,' iems=',iems,' ntcw=',ntcw
+!       print *,' np3d=',num_p3d,' ntoz=',ntoz,' iovrsw=',iovr_sw,      &
+!    &          ' iovrlw=',iovr_lw,' isubcsw=',isubc_sw,                &
+!    &          ' isubclw=',isubc_lw,' iflip=',iflip,'  me=',me
+!       print *,' sashal=',sashal,' crick=',crick_proof,                &
+!    &          ' ccnorm=',ccnorm,' norad=',norad_precip
 
-        print *,'=== lw optical property for clouds ==='
-        print *,' ilwcice=',ilwcice, ' ilwcliq=',ilwcliq
+!       print *,'=== lw optical property for clouds ==='
+!       print *,' ilwcice=',ilwcice, ' ilwcliq=',ilwcliq
 
-        print *,'=== sw optical property for clouds ==='
-        print *,' iswcice=',iswcice, ' iswcliq=',iswcliq
+!       print *,'=== sw optical property for clouds ==='
+!       print *,' iswcice=',iswcice, ' iswcliq=',iswcliq
 
-      endif
+!     endif
 
       call radinit_nmmb                                                 &
 !  ---  inputs:

@@ -192,7 +192,7 @@ module module_MEDIATOR
   ! local variables
   type(ESMF_Grid)    :: gridAtm, gridOcn, gridIce, gridLnd, gridHyd, gridMed
   integer, parameter :: nx_med=400, ny_med=200
-  integer            :: dbug_flag = 5
+  integer            :: dbug_flag = 0
   integer            :: restart_interval = 0
   logical            :: statewrite_flag = .true.      ! diagnostics output, default
   logical            :: rhprint_flag = .false.        ! diagnostics output, default
