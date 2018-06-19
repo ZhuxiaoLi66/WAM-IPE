@@ -5,7 +5,6 @@
       CONTAINS
 !---------------------
       SUBROUTINE cal_monthday (year,sum,month,day)
-      USE module_input_parameters,ONLY:sw_debug
         implicit none
 
         integer,intent(in) :: year
@@ -28,12 +27,6 @@
 !-----------------
 
 
-      if ( sw_debug ) then
-         print *, "input YEAR=",year
-         print *, "day of year=",sum
-      end if
-
-
         day=sum
         month_loop1: do m=1,nmonth
 
@@ -52,8 +45,6 @@
         end if
      
       enddo month_loop1
-!     print *, "output DATE: year=",year," month=",month," day=",day   
 
-      if ( sw_debug )       print *,'subroutine cal_monthday finished!'
       END SUBROUTINE cal_monthday
       END MODULE module_cal_monthday

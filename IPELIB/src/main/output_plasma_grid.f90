@@ -13,7 +13,7 @@
 SUBROUTINE output_plasma_grid ( )
 USE module_precision
 USE module_IO,ONLY: filename
-USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_3d,plasma_grid_Z,plasma_grid_GL,JMIN_IN,JMAX_IS,mlon_rad,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,JMIN_ING,JMAX_ISG
+USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_3d,plasma_grid_Z,plasma_grid_mag_colat,JMIN_IN,JMAX_IS,mlon_rad,ISL,IBM,IGR,IQ,IGCOLAT,IGLON,JMIN_ING,JMAX_ISG
 USE module_IPE_dimension,ONLY: NPTS2D,NMP,NLP
 USE module_open_file,ONLY: open_file
 IMPLICIT NONE
@@ -37,7 +37,7 @@ WRITE(UNIT=lun) JMIN_IN (1:NLP)
 WRITE(UNIT=lun) JMAX_IS (1:NLP)
 WRITE(UNIT=lun) mlon_rad(1:NMP+1) !rad
 WRITE(UNIT=lun) (plasma_grid_Z (JMIN_IN(lp):JMAX_IS(lp),lp),lp=1,NLP)  !meter
-WRITE(UNIT=lun) (plasma_grid_GL(JMIN_IN(lp):JMAX_IS(lp),lp),lp=1,NLP)  !rad
+WRITE(UNIT=lun) (plasma_grid_mag_colat(JMIN_IN(lp):JMAX_IS(lp),lp),lp=1,NLP)  !rad
 !SMS$SERIAL END
 
 !SMS$SERIAL(<plasma_grid_3d,IN> : default=ignore) BEGIN

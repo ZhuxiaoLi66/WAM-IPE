@@ -84,7 +84,7 @@
 !SMS$DISTRIBUTE END
 
       REAL(KIND=real_prec),ALLOCATABLE,PUBLIC,TARGET :: plasma_grid_Z (:,:)  !.. altitude [meter] (MaxFluxTube,NLP)
-      REAL(KIND=real_prec),ALLOCATABLE,PUBLIC,TARGET :: plasma_grid_GL(:,:)  !.. magnetic co-latitude Eq(6.1) [rad]
+      REAL(KIND=real_prec),ALLOCATABLE,PUBLIC,TARGET :: plasma_grid_mag_colat(:,:)  !.. magnetic co-latitude Eq(6.1) [rad]
       REAL(KIND=real_prec),ALLOCATABLE               :: r_meter2D     (:,:)  !.. distance from the center of the Earth[meter]
       REAL(KIND=real_prec),ALLOCATABLE,PUBLIC,TARGET :: mlon_rad      (:)    !mag longitude in [rad]
 

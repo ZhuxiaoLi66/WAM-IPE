@@ -38,9 +38,6 @@
       USE module_eldyn,only : j0,j1,Ed1_90,Ed2_90,coslam_m
       IMPLICIT NONE
       integer :: allocStatus
-!      integer :: jth,lp,mp
-!20120304:      CHARACTER(len=*),PARAMETER :: path='~/sandbox/efield/'
-      print *,'begin init_eldyn'
 
       ALLOCATE( j0(1:2,1:NLP),&
                 j1(1:2,1:NLP),&
@@ -64,17 +61,10 @@
      !  enddo
      !  enddo
 
-      !if(allocStatus /=0) then
-      !  print*,'Allocation failed in module_init_eldyn',allocStatus
-      !  print*,'Stopping in module_init_eldyn'
-      !  stop
-      !endif
-      !print *, "ghgm before efield_init"
       CALL efield_init( 'coeff_lflux.dat',                              &
      &                  'coeff_hflux.dat',                              &
      &                  'wei96.cofcnts'   )
 
-      print *,'END sub-init_eld'
       END SUBROUTINE init_eldyn
 !---
       END MODULE module_init_eldyn

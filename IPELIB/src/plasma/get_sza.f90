@@ -17,7 +17,7 @@
         USE module_precision
         USE module_FIELD_LINE_GRID_MKS,ONLY: plasma_grid_3d,JMIN_IN,JMAX_IS,ISL,IBM,IGR,IQ,IGCOLAT,IGLON
         USE module_physical_constants,ONLY: pi,zero
-        USE module_input_parameters,ONLY: NDAY,sw_debug
+        USE module_input_parameters,ONLY: NDAY
         USE module_IPE_dimension,ONLY: IPDIM
         IMPLICIT NONE
         INTEGER (KIND=int_prec),  INTENT(IN)  :: utime    !universal time [sec]
@@ -40,13 +40,6 @@
         SZA_rad(:) = zero
         IN = JMIN_IN(lp)
         IS = JMAX_IS(lp)
-!        IF (.NOT. ALLOCATED(SZA_rad) )  ALLOCATE ( SZA_rad(IN:IS) ,STAT=stat_alloc)
-!if ( stat_alloc/=0 ) then
-!  print *, ALLOCATED( sza_rad )
-!  print *,"!STOP! ALLOCATION FAILD! in get_sza:",stat_alloc,mp,lp,in,is
-!  STOP
-!endif
-
         field_line_loop: DO i=IN,IS
           ii = i-IN+1 !make sure SZA_rad(1:~)
 !!        theta = aa - (m-1.0)*bb/2.0  !geographic CO-latitude [deg]
@@ -81,11 +74,6 @@ print *,'(2) !INVALID cos_sza',cos_sza,ii,mp,lp,COS(rlat),COS(sda),COS(rlt_r),SI
           END IF
           SZA_rad(ii) = ACOS( cos_sza )
 
-!dbg20110815
-IF ( sw_debug )  write(unit=1005,FMT=*) i,ii,'sza_rad',sza_rad(ii),rlat,sda,rlt_r,-COS(rlat),COS(sda),COS(rlt_r),SIN(rlat),SIN(sda)
        END DO field_line_loop !: DO i=IN,IS
 
-IF ( sw_debug ) & 
-      print "('Get_SZA [deg]    =',2F10.4)",SZA_rad(IN-IN+1)*180./pi,SZA_rad(IS-IN+1)*180./pi
- 
       END SUBROUTINE Get_SZA

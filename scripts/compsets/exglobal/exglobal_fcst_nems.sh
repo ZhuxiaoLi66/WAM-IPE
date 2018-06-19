@@ -1443,7 +1443,7 @@ cat  > IPE.inp <<EOF
   sw_pcp=0
   sw_perp_transport=2
   sw_record_number=1
-  sw_th_or_r=0
+  sw_convection_footpoint_0_or_apex_1=1
   ut_start_perp_trans=${START_UT_SEC}
   utime0LPI=${START_UT_SEC}
   barriersOn=f

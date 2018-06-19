@@ -188,8 +188,8 @@
       wrt_last_fcst_pe = last_fcst_pe
       first_fcst_pe    = minval(petlist_fcst(1:num_pes_fcst) )
 
-      write(0,*)'gfs_setup,first_fcst_pe=',first_fcst_pe,'last_fcst_pe=', &
-        last_fcst_pe
+!     write(0,*)'gfs_setup,first_fcst_pe=',first_fcst_pe,'last_fcst_pe=', &
+!       last_fcst_pe
 
       if(quilting) then
 
@@ -201,10 +201,10 @@
                               ,WRITE_GROUPS,WRITE_TASKS_PER_GROUP         &
                               ,mpi_intra_b,max_inter_groups               &
                               ,mpi_comm_inter_array)
-        if (mype == 0)                                                    &
-          write(0,*)'after setup_servers_gfs, write_groups=',write_groups,&
-                    'WRITE_TASKS_PER_GROUP=', WRITE_TASKS_PER_GROUP,      &
-                    'last_fcst_pe=', last_fcst_pe
+!       if (mype == 0)                                                    &
+!         write(0,*)'after setup_servers_gfs, write_groups=',write_groups,&
+!                   'WRITE_TASKS_PER_GROUP=', WRITE_TASKS_PER_GROUP,      &
+!                   'last_fcst_pe=', last_fcst_pe
 
       else            !if not quilt, for 1pe
         NUM_PES       = num_pes_fcst

@@ -42,11 +42,11 @@
 !
 !---------------------------------------------------------------------
 !
-      if ( me  ==  ioproc ) then
+!     if ( me  ==  ioproc ) then
 !       write(0,*)' enter para_fix_w '            		! hmhj
-        write(0,*)'lonr=',lonr,'lats_node_r_max=',lats_node_r_max,
-     &    'total_levels=',nfld,'lonsperlar=',lonsperlar
-      endif
+!       write(0,*)'lonr=',lonr,'lats_node_r_max=',lats_node_r_max,
+!    &    'total_levels=',nfld,'lonsperlar=',lonsperlar
+!     endif
 
       allocate ( grid_node ( lonr,lats_node_r_max,nfld ) )
 

@@ -3219,9 +3219,9 @@
       line=__LINE__, file=trim(name)//":"//__FILE__)) return  ! bail out
 
     ! Diagnostic output
-    call NUOPC_DriverPrint(driver, orderflag=.true., rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, file=trim(name)//":"//__FILE__)) return  ! bail out
+!   call NUOPC_DriverPrint(driver, orderflag=.true., rc=rc)
+!   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!     line=__LINE__, file=trim(name)//":"//__FILE__)) return  ! bail out
     
   end subroutine
     
@@ -3400,7 +3400,7 @@
               slot = slotHWM + 1
               slotHWM = slotHWM + 1
               read(tempString(2:len(tempString)), *) seconds
-              print *, "found time step indicator: ", seconds
+!             print *, "found time step indicator: ", seconds
               call ESMF_TimeIntervalSet(timeStep, s_r8=seconds, rc=rc)
               if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
                 line=__LINE__, &

@@ -25,32 +25,13 @@
 !---------------------------
       SUBROUTINE open_file ( filename_dum, UNIT_dum, FORM_dum, STATUS_dum )  
       USE module_precision
-      USE module_IO,ONLY: LUN_LOG
       IMPLICIT NONE
       CHARACTER (LEN=*)      , INTENT(IN) :: filename_dum
       INTEGER (KIND=int_prec), INTENT(IN) :: UNIT_dum
       CHARACTER (LEN=*)      , INTENT(IN) :: FORM_dum
       CHARACTER (LEN=*)      , INTENT(IN) :: STATUS_dum
-!---local
-      LOGICAL                             :: flag
-      INTEGER (KIND=int_prec)             :: istat
 
-      IF (UNIT_dum>=1) THEN
-        print *,'SUBROUTINE open_file, unit number = ',UNIT_dum
-      ELSE
-        print *,'!STOP! unit number not provided!!!'
-        STOP
-      END IF
-      INQUIRE ( UNIT=UNIT_dum, OPENED=flag ) 
-      WRITE( UNIT=LUN_LOG, FMT=*) flag
-      IF ( .NOT. flag ) THEN
-        WRITE( UNIT=LUN_LOG, FMT=*) 'opening file:',filename_dum
-        OPEN(UNIT=UNIT_dum,FILE=TRIM(filename_dum),STATUS=STATUS_dum,FORM=FORM_dum,IOSTAT=istat)
-        IF ( istat /= 0 ) THEN
-          WRITE( UNIT=LUN_LOG, FMT=*)'ERROR OPENING FILE',filename_dum
-          STOP
-        END IF
-      END IF      
+      OPEN(UNIT=UNIT_dum,FILE=TRIM(filename_dum),STATUS=STATUS_dum,FORM=FORM_dum)
 
       END SUBROUTINE open_file
 END MODULE module_open_file

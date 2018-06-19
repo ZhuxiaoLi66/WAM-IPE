@@ -22,7 +22,7 @@
       integer,allocatable :: lats_hold(:,:)
 !
 !     print *,' enter setlats_r ',latr,nodes
-      write(0,*)' lonsperlar in setlats_r=',lonsperlar
+!     write(0,*)' lonsperlar in setlats_r=',lonsperlar
 
       allocate ( lats_hold(latr,nodes) )
 !
@@ -79,7 +79,7 @@
        endif
       enddo
 !!
-      write(0,*)' lonsperlar in setlats_r2=',lonsperlar
+!     write(0,*)' lonsperlar in setlats_r2=',lonsperlar
 !     do node=1,nodesio
 !       if (nodesio.eq.1) then
 !         lats_nodes_ext(node)=lats_nodes_r(node)+2*jintmx
@@ -155,35 +155,35 @@
 !       jpt=jpt+lats_nodes_r(node)
 !     enddo
 !
-      write(0,*)' lonsperlar in setlats_r6=',lonsperlar
+!     write(0,*)' lonsperlar in setlats_r6=',lonsperlar
       if ( iprint .ne. 1 ) return
 !
       jpt=0
       do node=1,nodesio
          if ( lats_nodes_r(node) .gt. 0 ) then
-            print 600
+!           print 600
             lats_sum=0
             do jcount=1,lats_nodes_r(node)
                lats_sum=lats_sum + lonsperlar(global_lats_r(jpt+jcount))
-               print 700, node-1,
-     &                    node,    lats_nodes_r(node),
-     &                    jpt+jcount, global_lats_r(jpt+jcount),
-     &                     lonsperlar(global_lats_r(jpt+jcount)),
-     &                    lats_sum
+!              print 700, node-1,
+!    &                    node,    lats_nodes_r(node),
+!    &                    jpt+jcount, global_lats_r(jpt+jcount),
+!    &                     lonsperlar(global_lats_r(jpt+jcount)),
+!    &                    lats_sum
             enddo
          endif
          jpt=jpt+lats_nodes_r(node)
       enddo
 !
-      print 600
+!     print 600
 !
-  600 format ( ' ' )
+! 600 format ( ' ' )
 !
-  700 format (  'setlats  me=', i4,
-     x          '  lats_nodes_r(',  i4, ' )=', i4,
-     x          '  global_lats_r(', i4, ' )=', i4,
-     x          '  lonsperlar=', i5,
-     x          '  lats_sum=',   i6 )
+! 700 format (  'setlats  me=', i4,
+!    x          '  lats_nodes_r(',  i4, ' )=', i4,
+!    x          '  global_lats_r(', i4, ' )=', i4,
+!    x          '  lonsperlar=', i5,
+!    x          '  lats_sum=',   i6 )
 !
       deallocate ( lats_hold )
 !

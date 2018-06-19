@@ -5,7 +5,7 @@ CONTAINS
 subroutine deplete_flux_tube ( utime, mp, lp, HPEQ )
       USE module_precision
       USE module_input_parameters,ONLY: HPEQ_flip,start_time, sw_depleted_flip, start_time_depleted
-      USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,plasma_grid_GL
+      USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,plasma_grid_mag_colat
       USE module_physical_constants,ONLY:pi,zero
 IMPLICIT NONE
 !
@@ -47,7 +47,7 @@ IMPLICIT NONE
 !(1) fixed boundary location=75deg (as an example)
 ! (2.1) HPEQ=0.8 !the rate of the depletion
 
-            mlat = ( 90. - plasma_grid_GL(JMIN_IN(lp),lp) * 180./pi )
+            mlat = ( 90. - plasma_grid_mag_colat(JMIN_IN(lp),lp) * 180./pi )
             IF ( mlat >= mlat_boundary ) THEN
                HPEQ      = -0.2
             ELSE

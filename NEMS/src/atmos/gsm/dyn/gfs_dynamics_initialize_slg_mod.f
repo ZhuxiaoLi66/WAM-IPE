@@ -93,8 +93,8 @@
 !-------------------------------------------------------------------
       btime  = timef()
       me     = gis_dyn%me
-      if (me == 0) write(0,*)'in initial,nbefore allocate lonsperlat,',&
-                   allocated(gis_dyn%lonsperlat),'latg=',latg
+!     if (me == 0) write(0,*)'in initial,nbefore allocate lonsperlat,',&
+!                  allocated(gis_dyn%lonsperlat),'latg=',latg
 !
       nodes  = gis_dyn%nodes
       nlunit = gis_dyn%nam_gfs_dyn%nlunit
@@ -121,15 +121,15 @@
       call tracer_config_init( gis_dyn%ntrac, gis_dyn%ntoz, gis_dyn%ntcw, &
                                gis_dyn%ncld,  gis_dyn%ntke, me )
 !      gfs_dyn_tracer = gis_dyn%gfs_dyn_tracer
-      if( me == 0) then
-        write(0,*)'LU_TRC, exit tracer_config_init in dyn'
-        write(0,*)'LU_TRC, ntrac=     ',gfs_dyn_tracer%ntrac,ntrac
-        write(0,*)'LU_TRC, ntrac_met =',gfs_dyn_tracer%ntrac_met
-        write(0,*)'LU_TRC, ntrac_chem=',gfs_dyn_tracer%ntrac_chem
-        do n = 1, gfs_dyn_tracer%ntrac
-          write(0,*)'LU_TRC, tracer_vname=',gfs_dyn_tracer%vname(n, :)
-        enddo
-      endif
+!     if( me == 0) then
+!       write(0,*)'LU_TRC, exit tracer_config_init in dyn'
+!       write(0,*)'LU_TRC, ntrac=     ',gfs_dyn_tracer%ntrac,ntrac
+!       write(0,*)'LU_TRC, ntrac_met =',gfs_dyn_tracer%ntrac_met
+!       write(0,*)'LU_TRC, ntrac_chem=',gfs_dyn_tracer%ntrac_chem
+!       do n = 1, gfs_dyn_tracer%ntrac
+!         write(0,*)'LU_TRC, tracer_vname=',gfs_dyn_tracer%vname(n, :)
+!       enddo
+!     endif
 !
       ntrac   = gis_dyn%ntrac
       nxpt    = gis_dyn%nxpt
@@ -230,29 +230,29 @@
 
       allocate(spdmax(levs))
 
-      if (me == 0)                                                       &
-      write(0,*)'before allocate lonsperlat,',allocated(gis_dyn%lonsperlat),'latg=',latg
+!     if (me == 0)                                                       &
+!     write(0,*)'before allocate lonsperlat,',allocated(gis_dyn%lonsperlat),'latg=',latg
 
       allocate(gis_dyn%lonsperlat(latg))
 
       inquire (file="lonsperlat.dat", exist=file_exists)
       if ( .not. file_exists ) then
-        if ( me == 0 ) then
-          write(0,*)' Requested lonsperlat.dat  data file does not exist'
-          write(0,*)'   *** Stopped in subroutine GFS_Init !!'
-        endif
+!       if ( me == 0 ) then
+!         write(0,*)' Requested lonsperlat.dat  data file does not exist'
+!         write(0,*)'   *** Stopped in subroutine GFS_Init !!'
+!       endif
         call mpi_quit(1111)
       else
         open (iunit,file='lonsperlat.dat',status='old',form='formatted',      &
                                           action='read',iostat=iret)
         if (iret /= 0) then
-          write(0,*)' iret while reading lonsperlat.dat ',iret
+!         write(0,*)' iret while reading lonsperlat.dat ',iret
           call mpi_quit(1112)
         endif
         rewind iunit
         read (iunit,*,iostat=iret) latghf,(gis_dyn%lonsperlat(i),i=1,latghf)
         if (latghf+latghf /= latg) then
-           write(0,*)' ltghf=',latghf,' not equal to latg/2=',latg/2
+!          write(0,*)' ltghf=',latghf,' not equal to latg/2=',latg/2
            call mpi_quit(1113)
         endif
         do i=1,latghf
@@ -448,12 +448,12 @@
 !
 !$$$      time0=timer()
 !
-      if (me == 0) then
+!     if (me == 0) then
 !       print 100, jcap,levs
 !100   format (' smf ',i3,i3,' created august 2000 ev od ri ')
-        print*,'number of threads is',num_parthds()
-        print*,'number of mpi procs is',nodes
-      endif
+!       print*,'number of threads is',num_parthds()
+!       print*,'number of mpi procs is',nodes
+!     endif
 !
       gis_dyn%cons0    =    0.0d0
       gis_dyn%cons0p5  =    0.5d0
@@ -465,8 +465,8 @@
 !cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 !
       if (me == 0)                                                       &
-       write(0,*)'before allocate ls_nodes,',allocated(gis_dyn%ls_nodes),&
-       'ls_dim=', ls_dim,'nodes=',nodes
+!      write(0,*)'before allocate ls_nodes,',allocated(gis_dyn%ls_nodes),&
+!      'ls_dim=', ls_dim,'nodes=',nodes
 !
       allocate (      gis_dyn%ls_node (ls_dim*3) )
       allocate (      gis_dyn%ls_nodes(ls_dim,nodes) )
@@ -527,9 +527,9 @@
          len_trie_ls = len_trie_ls+(jcap+3-l)/2
          len_trio_ls = len_trio_ls+(jcap+2-l)/2
       enddo
-      if (me == 0) print *,'ls_node=',gis_dyn%ls_node(1:ls_dim),'2dim=',  &
-         gis_dyn%ls_node(ls_dim+1:2*ls_dim),'3dim=',  &
-         gis_dyn%ls_node(2*ls_dim+1:3*ls_dim)
+!     if (me == 0) print *,'ls_node=',gis_dyn%ls_node(1:ls_dim),'2dim=',  &
+!        gis_dyn%ls_node(ls_dim+1:2*ls_dim),'3dim=',  &
+!        gis_dyn%ls_node(2*ls_dim+1:3*ls_dim)
 !
 !
       allocate ( gis_dyn%epse  (len_trie_ls) )
@@ -553,8 +553,8 @@
       gis_dyn%maxstp = 36
 
  
-      if(me == 0) print*,'from compns_dynamics : iret=',gis_dyn%iret		&
-                        ,' nsout=',nsout,' nsres=',nsres
+!     if(me == 0) print*,'from compns_dynamics : iret=',gis_dyn%iret		&
+!                       ,' nsout=',nsout,' nsres=',nsres
       if(gis_dyn%iret/=0) then
         if(me == 0) print *,' incompatible namelist - aborted in main'
         call mpi_quit(13)
@@ -578,9 +578,9 @@
       gis_dyn%lats_node_a     = gis_dyn%lats_nodes_a(me+1)
       gis_dyn%ipt_lats_node_a = ipt_lats_node_a
 
-      if (me == 0)                                                        &
-       write(0,*)'after getcon_dynamics,lats_node_a=',gis_dyn%lats_node_a &
-         ,'ipt_lats_node_a=',gis_dyn%ipt_lats_node_a,'ngptc=',ngptc
+!     if (me == 0)                                                        &
+!      write(0,*)'after getcon_dynamics,lats_node_a=',gis_dyn%lats_node_a &
+!        ,'ipt_lats_node_a=',gis_dyn%ipt_lats_node_a,'ngptc=',ngptc
 !
 !     if (gg_tracers) then
         if (.not. allocated(lats_nodes_h))  allocate (lats_nodes_h(nodes))
@@ -595,8 +595,8 @@
         if (.not.allocated(rgt_h))          allocate (rgt_h(lon_dim_h,levs,lats_dim_h,ntrac))
         rgt_h = 0.0
         rgt_a = 0.0
-        if (me == 0) write(0,*)' in initialize lon_dim_h-',lon_dim_h,' levs=',levs  &
-                  ,' lats_dim_h=',lats_dim_h,' ntrac=',ntrac, ' size_rgt=',size(rgt_h,dim=3)
+!       if (me == 0) write(0,*)' in initialize lon_dim_h-',lon_dim_h,' levs=',levs  &
+!                 ,' lats_dim_h=',lats_dim_h,' ntrac=',ntrac, ' size_rgt=',size(rgt_h,dim=3)
 !     endif
 !
 !     print *,'ls_nodes=',gis_dyn%ls_nodes(1:ls_dim,me+1)
@@ -778,11 +778,11 @@
       allocate ( gis_dyn%fhour_idate(1,5) )
 !      write(0,*)'after allocate fhour_idate'
 !
-      if (me == 0) then
-        print*, ' lats_dim_a=', lats_dim_a, ' lats_node_a=', lats_node_a
+!     if (me == 0) then
+!       print*, ' lats_dim_a=', lats_dim_a, ' lats_node_a=', lats_node_a
 !       print*, ' lats_dim_ext=', lats_dim_ext,                           &
 !               ' lats_node_ext=', lats_node_ext
-      endif
+!     endif
 !c
 !$omp parallel do private(i,j,k)
       do k=1,lotgr
@@ -827,17 +827,17 @@
 
       gis_dyn%pdryini = 0.0
 
-      if (me == 0) then
-        print *,' grid_ini=',trim(gis_dyn%nam_gfs_dyn%grid_ini),'fhrot=',fhrot,    &
-        'fhini=',fhini,'restart_run=',gis_dyn%restart_run
-      endif
+!     if (me == 0) then
+!       print *,' grid_ini=',trim(gis_dyn%nam_gfs_dyn%grid_ini),'fhrot=',fhrot,    &
+!       'fhini=',fhini,'restart_run=',gis_dyn%restart_run
+!     endif
 
       cfile  = gis_dyn%nam_gfs_dyn%sig_ini
       cfile2 = gis_dyn%nam_gfs_dyn%sig_ini2
       n1     = 11
       n2     = 12
 !
-      if (me == 0) write(0,*)' before input_fields_slg lotls=',lotls
+!     if (me == 0) write(0,*)' before input_fields_slg lotls=',lotls
       CALL input_fields_slg(n1, n2, gis_dyn%pdryini,                                 &
                             gis_dyn%trie_ls, gis_dyn%trio_ls, gis_dyn%grid_gr ,      &
                             gis_dyn%ls_node, gis_dyn%ls_nodes, gis_dyn%max_ls_nodes, &
@@ -858,12 +858,12 @@
           gis_dyn%reset_step    = .false.
           gis_dyn%restart_step  = .false.
       ELSE
-        if (me == 0) print *,'restart,filenames=', TRIM(cfile),', ', TRIM(cfile2)
+!       if (me == 0) print *,'restart,filenames=', TRIM(cfile),', ', TRIM(cfile2)
         gis_dyn% start_step    = .false.
         gis_dyn% reset_step    = .false.
         gis_dyn% restart_step  = .true.
         gis_dyn% ndfi = gis_dyn% ndfi + gis_dyn% kdt
-        print *,'in gfs dyn init, ndfi=',gis_dyn% ndfi,'kdt=',gis_dyn%kdt
+!       print *,'in gfs dyn init, ndfi=',gis_dyn% ndfi,'kdt=',gis_dyn%kdt
       END IF
 !!
 !!
@@ -874,7 +874,7 @@
       rc            = 0
       dyn_ini_time  = dyn_ini_time + (timef() - btime)
 
-      write(0,*)' dyn_ini_time=',dyn_ini_time*1.0e-3,' me=',me
+!     write(0,*)' dyn_ini_time=',dyn_ini_time*1.0e-3,' me=',me
 !
 !
       end subroutine gfs_dynamics_initialize_slg

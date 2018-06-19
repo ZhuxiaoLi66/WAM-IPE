@@ -83,10 +83,10 @@
       call sigio_rrhead(nft,head,iret)
 !
       ivsinp = head%ivs
-      if (me == 0) then
-        print *,' In treadeo iret=',iret,' cfile=',cfile
-     &,' ivs=',head%ivs,' levs=',head%levs
-      endif
+!     if (me == 0) then
+!       print *,' In treadeo iret=',iret,' cfile=',cfile
+!    &,' ivs=',head%ivs,' levs=',head%levs
+!     endif
       if (iret .ne. 0) then
         print *,' unable to read from unit ',nft,' Job Aborted'
      &,' iret=',iret,' me=',me
@@ -147,8 +147,8 @@
      &    head%pdryini > 0.0 ) then
         if (pdryini == 0.0) pdryini = head%pdryini
       endif
-      if (me == 0) print *,' IN TREAD PDRYINI=',pdryini,
-     &                     ' head=',head%pdryini
+!     if (me == 0) print *,' IN TREAD PDRYINI=',pdryini,
+!    &                     ' head=',head%pdryini
       ntraci = head%ntrac
       if (head%idvt > 0.0) then
         nt0   = mod(head%idvt,10)
@@ -198,7 +198,7 @@
       dati%i = 1                                           ! hs
       dati%f => TRISCA
       call sigio_rrdbti(nft,head,dati,iret)
-      if (me == 0) print *,' Z_R=',trisca(1:10),' iret=',iret
+!     if (me == 0) print *,' Z_R=',trisca(1:10),' iret=',iret
       Z   = TRISCA
       Z_R = TRISCA
       CALL TRISEORI(TRISCA,GZE,GZO,1,LS_NODE)

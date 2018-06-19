@@ -4703,10 +4703,10 @@
 !
       IF(TRIM(MODE)=='TRUE')THEN
         PHYSICS_ON=.FALSE.
-        WRITE(0,*)' Finalize without physics coupling. '
+!       WRITE(0,*)' Finalize without physics coupling. '
       ELSE
         PHYSICS_ON=.TRUE.
-        WRITE(0,*)' Finalize with physics coupling. '
+!       WRITE(0,*)' Finalize with physics coupling. '
       ENDIF
 !
 !-----------------------------------------------------------------------

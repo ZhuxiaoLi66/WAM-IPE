@@ -137,7 +137,7 @@ c$$$      REAL(KIND=KIND_IO4) Z(lnt2)
       INCLUDE 'function2'
 !!
 !!
-      print *,' enter treadeo.io_fd '					! hmhj
+!     print *,' enter treadeo.io_fd '					! hmhj
 
       nft=152
       call sigio_rropen(nft,cfile,iret)
@@ -145,13 +145,13 @@ c$$$      REAL(KIND=KIND_IO4) Z(lnt2)
       call sigio_rrhead(nft,head,iret)
 !
       ivsinp = head%ivs
-      if (me .eq. 0) then
-        print *,' In treadeo iret=',iret,' cfile=',cfile
-     &,' ivs=',head%ivs,' levs=',head%levs
-      endif
+!     if (me .eq. 0) then
+!       print *,' In treadeo iret=',iret,' cfile=',cfile
+!    &,' ivs=',head%ivs,' levs=',head%levs
+!     endif
       if (iret .ne. 0) then
-        print *,' unable to read from unit ',nft,' Job Aborted'
-     &,' iret=',iret,' me=',me
+!       print *,' unable to read from unit ',nft,' Job Aborted'
+!    &,' iret=',iret,' me=',me
         call mpi_quit(7777)
       endif
 !
@@ -163,17 +163,17 @@ c$$$      REAL(KIND=KIND_IO4) Z(lnt2)
       RKAPI  = 1.0 / RKAP
       RKAPP1 = 1.0 + RKAP
 
-      if (me .eq. 0) then
-        print *,' gen_coord_hybrid=',gen_coord_hybrid,
-     &' idvc=',head%idvc,' idvm=',head%idvm,' hybrid=',hybrid
-      endif
+!     if (me .eq. 0) then
+!       print *,' gen_coord_hybrid=',gen_coord_hybrid,
+!    &' idvc=',head%idvc,' idvm=',head%idvm,' hybrid=',hybrid
+!     endif
       if (gen_coord_hybrid) then					! hmhj
 
         sfcpress_id = mod ( head%idvm , 10 )				! hmhj
         thermodyn_id = mod ( head%idvm / 10 , 10 )			! hmhj
-        if (me .eq. 0) then
-          print *,' sfcpress_id thermodyn_id ',sfcpress_id,thermodyn_id	! hmhj
-        endif
+!       if (me .eq. 0) then
+!         print *,' sfcpress_id thermodyn_id ',sfcpress_id,thermodyn_id	! hmhj
+!       endif
 !   ak bk ck in file have the same order as model			! hmhj
         do k=1,levp1							! hmhj
           ak5(k) = head%vcoord(k,1)/1000.				! hmhj
@@ -207,9 +207,9 @@ c$$$      REAL(KIND=KIND_IO4) Z(lnt2)
         if( me.eq.0 ) then						! hmhj
           do k=1,levp1							! hmhj
             pressk=ak5(k)+bk5(k)*psurfff+ck5p(k)			! hmhj
-            print 180,k,ak5(k),bk5(k),ck5(k),pressk			! hmhj
-180         format('k=',i3,'  ak5=',f13.9,'  bk5=',e15.8,		! hmhj
-     &            '   ck5=',f13.9,'  closed pressk=',f10.6)		! hmhj
+!           print 180,k,ak5(k),bk5(k),ck5(k),pressk			! hmhj
+!180         format('k=',i3,'  ak5=',f13.9,'  bk5=',e15.8,		! hmhj
+!     &            '   ck5=',f13.9,'  closed pressk=',f10.6)		! hmhj
           enddo								! hmhj
         endif								! hmhj
         do k=1,levs
@@ -233,17 +233,17 @@ c$$$      REAL(KIND=KIND_IO4) Z(lnt2)
           bk5(k) = head%vcoord(levp1+1-k,2)
           pressk = ak5(k)+bk5(k)*psurfff
           
-          if(me.eq.0)print 190,k,ak5(k),bk5(k),pressk
-190       format('k=',i3,'  ak5=',E15.8,'  bk5=',e15.8,
-     &           '  pressk=',E14.6)
+!         if(me.eq.0)print 190,k,ak5(k),bk5(k),pressk
+!190       format('k=',i3,'  ak5=',E15.8,'  bk5=',e15.8,
+!     &           '  pressk=',E14.6)
            
         enddo
         do k=1,levs
           dbk(k) = bk5(k+1)-bk5(k)
           bkl(k) = (bk5(k+1)+bk5(k))*0.5
           ck(k)  = ak5(k+1)*bk5(k)-ak5(k)*bk5(k+1)
-          if(me.eq.0)print 200,k,dbk(k),ck(k)
-200       format('k=',i3,'  dbk=',f9.6,'  ck=',e13.5)
+!         if(me.eq.0)print 200,k,dbk(k),ck(k)
+!200       format('k=',i3,'  dbk=',f9.6,'  ck=',e13.5)
         enddo
 !
 ! hmhj give an estimated si and sl for dynamics
@@ -264,12 +264,12 @@ c$$$      REAL(KIND=KIND_IO4) Z(lnt2)
           slk(k)   = (sikp1(k)-sikp1(k+1))/tem
           sl(k)    = slk(k) ** rkapi
 !         sl(k)    = ((sikp1(k)-sikp1(k+1))/tem)**rkapi
-          if (me .eq. 0) print 250, k, si(k), sl(k)
-250       format('k=',i2,'  si=',f9.6,'  sl=',e13.5)
+!         if (me .eq. 0) print 250, k, si(k), sl(k)
+!250       format('k=',i2,'  si=',f9.6,'  sl=',e13.5)
         enddo
       else
-        print *,' Non compatible Initial state IDVC=',head%idvc
-     &,' iret=',iret
+!       print *,' Non compatible Initial state IDVC=',head%idvc
+!    &,' iret=',iret
         call MPI_QUIT(333)
       endif
 !
@@ -298,8 +298,8 @@ csela print*,' read second record successfully '
      &    head%pdryini > 0.0 ) then
         if (pdryini .eq. 0.0) pdryini = head%pdryini
       endif
-      if (me == 0) print *,' IN TREAD PDRYINI=',pdryini,
-     &                     ' head=',head%pdryini
+!     if (me == 0) print *,' IN TREAD PDRYINI=',pdryini,
+!    &                     ' head=',head%pdryini
 !sela ntraci = nint(tracers-1)
       ntraci = head%ntrac
       if (head%idvt .gt. 0.0) then
@@ -348,8 +348,8 @@ csela print*,' read second record successfully '
      &, ' ixgr=',ixgr,' pdryini=',pdryini
       ENDIF
 !cjfe
-      IF(IPRINT.EQ.1)
-     X PRINT *,'TREAD UNIT,FHOUR,IDATE=',NFT,FHOUR,IDATE
+!     IF(IPRINT.EQ.1)
+!    X PRINT *,'TREAD UNIT,FHOUR,IDATE=',NFT,FHOUR,IDATE
  
 !
       dati%i = 1                                           ! hs
@@ -399,10 +399,10 @@ csela print*,' read second record successfully '
 !     if (me == 0) print *,' GZE=',maxval(GZo(:,1:2)),
 !    &  minval(GZo(:,1:2))
  
-      if (mod(head%idvm/10,10) == 3 .and. me == 0)then
-        print *,' CPI=',head%cpi(1:ntraci+1)
-        print *,' RI=',head%ri(1:ntraci+1)
-      endif
+!     if (mod(head%idvm/10,10) == 3 .and. me == 0)then
+!       print *,' CPI=',head%cpi(1:ntraci+1)
+!       print *,' RI=',head%ri(1:ntraci+1)
+!     endif
       dati%i = 2                               ! Surface pressure
       dati%f => TRISCA                       
       call sigio_rrdbti(nft,head,dati,iret)
@@ -454,7 +454,7 @@ csela print*,' levh=',levh
           CALL TRISEORI(TRISCA,RQE(1,1,lv,KK),RQO(1,1,lv,KK),1,LS_NODE)
         END DO
       END DO
-      print *,'in sigio read, ixgr=',ixgr,'nxss=',head%nxss
+!     print *,'in sigio read, ixgr=',ixgr,'nxss=',head%nxss
 !
 !jw      if (((ixgr .eq. 4 .and. num_p3d .eq. 4) .or.   ! Zhao Scheme!
 !jw     &     (ixgr .eq. 5 .and. num_p3d .eq. 3))       ! Ferrier Scheme!
@@ -514,10 +514,10 @@ csela print*,' levh=',levh
 !        sI(K)=XI(K)
 !     END DO
 !Moor PRINT 100,(XI(K),K=1,LEVP1)
-100   FORMAT(1H0, 12   (E10.3))
+!100   FORMAT(1H0, 12   (E10.3))
 !Moor PRINT 101,NFT,FHOUR,IDATE,Z00
-101   FORMAT (1H0, 'IF ABOVE TWO ROWS NOT ZERO,INCONSISTENCY IN SIG.DEF'
-     1,'ON NFT=',I2,2X,F6.1,2X,4(I4),'Z00=',E12.4)
+!101   FORMAT (1H0, 'IF ABOVE TWO ROWS NOT ZERO,INCONSISTENCY IN SIG.DEF'
+!    1,'ON NFT=',I2,2X,F6.1,2X,4(I4),'Z00=',E12.4)
 !!!!
 !
 !   Convert from virtual temperature to enthalpy if need
@@ -780,23 +780,23 @@ csela print*,' levh=',levh
 !        write(991)grid_gr(1:lonf,1:lats_node_a,g_qm)
 !        close(991)
 !      endif
-      print *,'in treadeo.io, ps=',
-     &   maxval(grid_gr(:,1:lats_node_a,g_q)),
-     &   minval(grid_gr(:,1:lats_node_a,g_q)),'gz=',
-     &   maxval(grid_gr(:,1:lats_node_a,g_gz)),
-     &   minval(grid_gr(:,1:lats_node_a,g_gz)),'dp=',
-     &   maxval(grid_gr(:,1:lats_node_a,g_dp:g_dp+levs-1)),
-     &   minval(grid_gr(:,1:lats_node_a,g_dp:g_dp+levs-1)),'t=',
-     &   maxval(grid_gr(:,1:lats_node_a,g_tt:g_tt+levs-1)),
-     &   minval(grid_gr(:,1:lats_node_a,g_tt:g_tt+levs-1)),'q=',
-     &   maxval(grid_gr(:,1:lats_node_a,g_rq:g_rq+levh-1)),
-     &   minval(grid_gr(:,1:lats_node_a,g_rq:g_rq+levh-1)),'u=',
-     &   maxval(grid_gr(:,1:lats_node_a,g_uu:g_uu+levs-1)),
-     &   minval(grid_gr(:,1:lats_node_a,g_uu:g_uu+levs-1)),'v=',
-     &   maxval(grid_gr(:,1:lats_node_a,g_vv:g_vv+levs-1)),
-     &   minval(grid_gr(:,1:lats_node_a,g_vv:g_vv+levs-1))
+!     print *,'in treadeo.io, ps=',
+!    &   maxval(grid_gr(:,1:lats_node_a,g_q)),
+!    &   minval(grid_gr(:,1:lats_node_a,g_q)),'gz=',
+!    &   maxval(grid_gr(:,1:lats_node_a,g_gz)),
+!    &   minval(grid_gr(:,1:lats_node_a,g_gz)),'dp=',
+!    &   maxval(grid_gr(:,1:lats_node_a,g_dp:g_dp+levs-1)),
+!    &   minval(grid_gr(:,1:lats_node_a,g_dp:g_dp+levs-1)),'t=',
+!    &   maxval(grid_gr(:,1:lats_node_a,g_tt:g_tt+levs-1)),
+!    &   minval(grid_gr(:,1:lats_node_a,g_tt:g_tt+levs-1)),'q=',
+!    &   maxval(grid_gr(:,1:lats_node_a,g_rq:g_rq+levh-1)),
+!    &   minval(grid_gr(:,1:lats_node_a,g_rq:g_rq+levh-1)),'u=',
+!    &   maxval(grid_gr(:,1:lats_node_a,g_uu:g_uu+levs-1)),
+!    &   minval(grid_gr(:,1:lats_node_a,g_uu:g_uu+levs-1)),'v=',
+!    &   maxval(grid_gr(:,1:lats_node_a,g_vv:g_vv+levs-1)),
+!    &   minval(grid_gr(:,1:lats_node_a,g_vv:g_vv+levs-1))
 !  
-      print *,' leave treadeo.io_fd '
+!     print *,' leave treadeo.io_fd '
 
       RETURN
       END

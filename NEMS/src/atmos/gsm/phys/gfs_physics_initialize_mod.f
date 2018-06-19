@@ -205,7 +205,7 @@
                           gis_phy%nam_gfs_phy%nlunit, me,               &
                           gis_phy%nam_gfs_phy%gfs_phy_namelist)
 
-      if (me == 0) write(0,*)' after compns_physics ntke=', gis_phy%ntke
+!     if (me == 0) write(0,*)' after compns_physics ntke=', gis_phy%ntke
 !
 !     This is also called in nuopc_phys_init, don't run twice if using the wrapper
 !       if ( .not. use_nuopc ) then
@@ -226,15 +226,15 @@
 !      gfs_phy_tracer = gis_phy%gfs_phy_tracer
       gis_phy%lgocart = gfs_phy_tracer%doing_GOCART     ! for internal state
       lgocart = gis_phy%lgocart                         ! for resol_def module
-      if( me == 0) then
-       write(0,*)'LU_TRC, ntrac     =',gfs_phy_tracer%ntrac, gis_phy%ntrac
-       write(0,*)'LU_TRC, ntrac_met =',gfs_phy_tracer%ntrac_met
-       write(0,*)'LU_TRC, ntrac_chem=',gfs_phy_tracer%ntrac_chem
-       write(0,*)'LU_TRC, lgocart   =',gis_phy%lgocart,lgocart
-       do n = 1, gfs_phy_tracer%ntrac
-         write(0,*)'LU_TRC, tracer_vname=',gfs_phy_tracer%vname(n)
-       enddo
-      endif
+!     if( me == 0) then
+!      write(0,*)'LU_TRC, ntrac     =',gfs_phy_tracer%ntrac, gis_phy%ntrac
+!      write(0,*)'LU_TRC, ntrac_met =',gfs_phy_tracer%ntrac_met
+!      write(0,*)'LU_TRC, ntrac_chem=',gfs_phy_tracer%ntrac_chem
+!      write(0,*)'LU_TRC, lgocart   =',gis_phy%lgocart,lgocart
+!      do n = 1, gfs_phy_tracer%ntrac
+!        write(0,*)'LU_TRC, tracer_vname=',gfs_phy_tracer%vname(n)
+!      enddo
+!     endif
 
 !
       nlunit   = gis_phy%nam_gfs_phy%nlunit
@@ -346,28 +346,28 @@
       allocate ( gis_phy%lats_nodes_r_fix(nodes), stat = ierr )    !added for mGrid
 !     allocate ( gis_phy%global_lats_ext(latr+2*jintmx+2*nypt*(nodes-1)), stat = ierr )
 
-      if (me == 0) write(0,*)' in gfs_physics_initialize reduced_grid=',reduced_grid
+!     if (me == 0) write(0,*)' in gfs_physics_initialize reduced_grid=',reduced_grid
 
       if( reduced_grid ) then
-        if (me == 0) print *,' run with reduced gaussian grid '
+!       if (me == 0) print *,' run with reduced gaussian grid '
         inquire (file="lonsperlar.dat", exist=file_exists)
         if ( .not. file_exists ) then
-          if ( me == 0 ) then
-            print *,'   Requested lonsperlar.dat  data file does not exist'
-            print *,'   *** Stopped in subroutine GFS_Init !!'
-          endif
+!         if ( me == 0 ) then
+!           print *,'   Requested lonsperlar.dat  data file does not exist'
+!           print *,'   *** Stopped in subroutine GFS_Init !!'
+!         endif
           call mpi_quit(1111)
         else
           open (iunit,file='lonsperlar.dat',status='old',form='formatted',     &
                                             action='read',iostat=iret)
           if (iret /= 0) then
-            write(0,*)' iret while reading lonsperlar.dat ',iret
+!           write(0,*)' iret while reading lonsperlar.dat ',iret
             call mpi_quit(1112)
           endif
           rewind iunit
           read (iunit,*,iostat=iret) latrhf,(gis_phy%lonsperlar(i),i=1,latrhf)
           if (latrhf+latrhf /= latr) then
-             write(0,*)' latrhf=',latrhf,' not equal to latr/2=',latr/2
+!            write(0,*)' latrhf=',latrhf,' not equal to latr/2=',latr/2
              call mpi_quit(1113)
           endif
           do i=1,latrhf
@@ -377,7 +377,7 @@
         endif
 !         write(0,*)' gis_phy%lonsperlar=',gis_phy%lonsperlar
       else
-        if (me == 0) print *,' run with full gaussian grid '
+!       if (me == 0) print *,' run with full gaussian grid '
         do j=1,latr
           gis_phy%lonsperlar(j) = lonr
         enddo
@@ -465,9 +465,9 @@
 !       print *,' g_dp ',g_dp
 !       print *,' g_dpdt ',g_dpdt
 !       print *,' lotgr ',lotgr
-        print *,' latsozp=',latsozp,' levozp=',levozp,' timeoz=',timeoz
-        print *,' latsozc=',latsozc,' levozc=',levozc,' timeozc=',        &
-                  timeozc, 'dphiozc=',dphiozc
+!       print *,' latsozp=',latsozp,' levozp=',levozp,' timeoz=',timeoz
+!       print *,' latsozc=',latsozc,' levozc=',levozc,' timeozc=',        &
+!                 timeozc, 'dphiozc=',dphiozc
 !       print *,' pl_lat=',pl_lat
 !       print *,' pl_pres=',pl_pres
 !       print *,' pl_time=',pl_time
@@ -485,7 +485,7 @@
       dxmax = log(1.0/(max_lon*max_lat))
       dxmin = log(1.0/(min_lon*min_lat))
       dxinv = 1.0 / (dxmax-dxmin)
-      if (me  == 0) write(0,*)' dxmax=',dxmax,' dxmin=',dxmin,' dxinv=',dxinv
+!     if (me  == 0) write(0,*)' dxmax=',dxmax,' dxmin=',dxmin,' dxinv=',dxinv
 
 !      write(0,*)' finished array allocation in gfs_physics_initialize '
 
@@ -556,8 +556,8 @@
 !
 !
       if(gis_phy%iret.ne.0) then
-        if(me == 0) print *,' incompatible physics namelist -',         &
-                            ' aborted in gfs_phy_initilize ',gis_phy%iret 
+!       if(me == 0) print *,' incompatible physics namelist -',         &
+!                           ' aborted in gfs_phy_initilize ',gis_phy%iret 
 !*                          ' aborted in gfs_phy_initilize'
         call mpi_quit(13)
       endif
@@ -618,13 +618,13 @@
 !! allocate grid_fld                      --- Sarah Lu
       gis_phy%grid_aldata = grid_aldata
       if ( gis_phy%grid_aldata ) then
-        if( me == 0) print *,'LU_PHY: grid_fld allocated ; copy is used' &
-                            ,' gis_phy%ntrac=',gis_phy%ntrac
+!       if( me == 0) print *,'LU_PHY: grid_fld allocated ; copy is used' &
+!                           ,' gis_phy%ntrac=',gis_phy%ntrac
         call gridvar_aldata (lonr, lats_node_r_max, levs,               &
                              gis_phy%ntrac, gis_phy%grid_fld, ierr)  
       else                                                            
         allocate (gis_phy%grid_fld%rqtk(lonr,lats_node_r_max))
-        if( me == 0) print *,'LU_PHY: grid_fld not allocated ; pointer is used'
+!       if( me == 0) print *,'LU_PHY: grid_fld not allocated ; pointer is used'
       endif                                                     
 
 !*    allocate (gis_phy%grid_gr(lonr*lats_node_r_max,lotgr), stat = ierr )
@@ -739,8 +739,8 @@
 !       write(0,*)' gis_phy%lonsperlar2b=',gis_phy%lonsperlar
 !       write(0,*)' before fix_fields'
 
-      PRINT*, 'in phys initialize, lsidea, ipe_to_wam_coupling=', &
-            lsidea, ipe_to_wam_coupling
+!     PRINT*, 'in phys initialize, lsidea, ipe_to_wam_coupling=', &
+!           lsidea, ipe_to_wam_coupling
       IF(lsidea .AND. ipe_to_wam_coupling) THEN
         lowst_ipe_level = 80
 
@@ -845,7 +845,7 @@
                 si_loc(k) = float(levr+1-k) / float(levr)
               enddo
             endif
-            if (me == 0) write(0,*)' si_loc=',si_loc(1:levr+1)
+!           if (me == 0) write(0,*)' si_loc=',si_loc(1:levr+1)
 !*********************************************************************
 !         else                        ! vertical from top to sfc
 !           si_loc(1) = ak5(1)/typical_pgr+bk5(1)
@@ -888,8 +888,8 @@
       gis_phy%zhour = gis_phy%phour
 
       if (me == 0)                                                      &
-      write(0,*)' in physics initialize phour=',gis_phy%phour,          &
-                ' fhour=',fhour,' zhour=',gis_phy%zhour
+!     write(0,*)' in physics initialize phour=',gis_phy%phour,          &
+!               ' fhour=',fhour,' zhour=',gis_phy%zhour
 
       gis_phy%FLUXR = 0.
 !
@@ -934,7 +934,7 @@
 !
       if (allocated(si_loc)) deallocate (si_loc)
       phys_ini_time = phys_ini_time + (timef() - btime)
-      write(0,*)' phys_ini_time=',phys_ini_time*1.0e-3,' me=',me
+!     write(0,*)' phys_ini_time=',phys_ini_time*1.0e-3,' me=',me
 !
 !       write(0,*)' gis_phy%lonsperlar2=',gis_phy%lonsperlar
 !       write(0,*)' returning from gfs_physics_initialize'

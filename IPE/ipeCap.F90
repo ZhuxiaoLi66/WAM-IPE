@@ -442,17 +442,17 @@ module ipeCap
         rcToReturn=rc)) return
 
       ! -- debug
-      if (logLevel > 0) then
-        if (localPet == 0) then
-          write(6,'("====== IPEMeshCreate: tile bounds ======"/&
-                   &"localPET     mps     mpe     lps     lpe"/&
-                   &40("-"))')
-          do i = 1, size(globalBounds), 4
-            write(6,'(5i8)') i/4, globalBounds(i:i+3)
-          end do
-          write(6,'(40("="))')
-        end if
-      end if
+!     if (logLevel > 0) then
+!       if (localPet == 0) then
+!         write(6,'("====== IPEMeshCreate: tile bounds ======"/&
+!                  &"localPET     mps     mpe     lps     lpe"/&
+!                  &40("-"))')
+!         do i = 1, size(globalBounds), 4
+!           write(6,'(5i8)') i/4, globalBounds(i:i+3)
+!         end do
+!         write(6,'(40("="))')
+!       end if
+!     end if
 
       ! -- get halo size for local DE
       call IPEGetHalo(lUBound=lpu, lHaloSize=lHalo, mUBound=mpu, mHaloSize=mHalo)
@@ -806,7 +806,7 @@ module ipeCap
             end do
           end do
         end do
-        if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4,2(" <- ",i4))') dstPet,localPet,srcPet
+!       if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4,2(" <- ",i4))') dstPet,localPet,srcPet
         call ESMF_VMSendRecv(vm, sendData, nCount, dstPet, recvData, nCount, srcPet, rc=localrc)
         if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
           ESMF_CONTEXT, &
@@ -883,7 +883,7 @@ module ipeCap
               end do
             end do
           end do
-          if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," -> ",i4)') localPet, dstPet
+!         if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," -> ",i4)') localPet, dstPet
           call ESMF_VMSend(vm, sendData, nCount, dstPet, syncflag=ESMF_SYNC_NONBLOCKING, &
             commhandle=chSend, rc=localrc)
           if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -905,7 +905,7 @@ module ipeCap
           if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             ESMF_CONTEXT, &
             rcToReturn=rc)) return
-          if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," <- ",i4)') localPet, srcPet
+!         if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," <- ",i4)') localPet, srcPet
           call ESMF_VMRecv(vm, recvData, nCount, srcPet, syncflag=ESMF_SYNC_NONBLOCKING, &
             commhandle=chRecv, rc=localrc)
           if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -929,7 +929,7 @@ module ipeCap
           if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             ESMF_CONTEXT, &
             rcToReturn=rc)) return
-          if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," <- ",i4," - COMPLETE")') localPet, srcPet
+!         if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," <- ",i4," - COMPLETE")') localPet, srcPet
           deallocate(recvData, stat=localrc)
           if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             ESMF_CONTEXT, &
@@ -940,7 +940,7 @@ module ipeCap
           if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             ESMF_CONTEXT, &
             rcToReturn=rc)) return
-          if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," -> ",i4," - COMPLETE")') localPet, dstPet
+!         if (logLevel > 10) write(6,'(" IPE Halo: comm: ",i4," -> ",i4," - COMPLETE")') localPet, dstPet
           deallocate(sendData, stat=localrc)
           if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             ESMF_CONTEXT, &
@@ -951,27 +951,27 @@ module ipeCap
       end do
 
       if (checkFields) then
-        write(6,'(" Checking tile on PET ",i0,":"2(" (",i0,":",i0,") x (",i0,":",i0,")"))') &
-          localPet, lps, lpe, mps, mpe, lps, lpu, mps, mpu
+!       write(6,'(" Checking tile on PET ",i0,":"2(" (",i0,":",i0,") x (",i0,":",i0,")"))') &
+!         localPet, lps, lpe, mps, mpe, lps, lpu, mps, mpu
         nCount = count(abs(coord-BAD_VALUE) < 0.1_ESMF_KIND_R4)
         if (nCount > 0) then
-          write(6,'(" - Total number of bad points: ",i0)') nCount
+!         write(6,'(" - Total number of bad points: ",i0)') nCount
           nCount = count(abs(coord(:,lps:lpe,mps:mpe,:) - BAD_VALUE) < 0.1_ESMF_KIND_R4)
-          write(6,'(" - Local number of bad points/flux tube/axis: ",g0)') 0.5 * nCount / MaxFluxTube
+!         write(6,'(" - Local number of bad points/flux tube/axis: ",g0)') 0.5 * nCount / MaxFluxTube
           if (mHalo > 0) then
             nCount = count(abs(coord(:,lps:lpe,mpu:mpu,:) - BAD_VALUE) < 0.1_ESMF_KIND_R4)
-            write(6,'(" - Number of bad points in Eastern halo region/flux tube/axis: ",g0)') 0.5 * nCount / MaxFluxTube
+!           write(6,'(" - Number of bad points in Eastern halo region/flux tube/axis: ",g0)') 0.5 * nCount / MaxFluxTube
           end if
           if (lHalo > 0) then
             nCount = count(abs(coord(:,lpu:lpu,mps:mpe,:) - BAD_VALUE) < 0.1_ESMF_KIND_R4)
-            write(6,'(" - Number of bad points in Southern halo region/flux tube/axis: ",g0)') 0.5 * nCount / MaxFluxTube
+!           write(6,'(" - Number of bad points in Southern halo region/flux tube/axis: ",g0)') 0.5 * nCount / MaxFluxTube
           end if
           if ((lHalo > 0) .and. (mHalo > 0)) then
             nCount = count(abs(coord(:,lpu:lpu,mpu:mpu,:) - BAD_VALUE) < 0.1_ESMF_KIND_R4)
-            write(6,'(" - Number of bad points in Southeastern halo region/flux tube/axis: ",g0)') 0.5 * nCount / MaxFluxTube
+!           write(6,'(" - Number of bad points in Southeastern halo region/flux tube/axis: ",g0)') 0.5 * nCount / MaxFluxTube
           end if
         else
-          write(6,'(" - No bad point found")')
+!         write(6,'(" - No bad point found")')
         end if
       end if
 
@@ -1069,12 +1069,12 @@ module ipeCap
     ! currTime + timeStep is equal to the stopTime of the internal Clock
     ! for this call of the ModelAdvance() routine.
 
-    ! -- print start time
-    call ESMF_ClockPrint(clock, options="currTime", &
-      preString="------>Advancing IPE from: ", rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      ESMF_CONTEXT)) &
-      return  ! bail out
+!   ! -- print start time
+!   call ESMF_ClockPrint(clock, options="currTime", &
+!     preString="------>Advancing IPE from: ", rc=rc)
+!   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!     ESMF_CONTEXT)) &
+!     return  ! bail out
     
     ! -- import data
     ! -- initialize field to bad value
@@ -1213,24 +1213,24 @@ module ipeCap
                    ! -- field array contains NaN
                    errmsg = "NaN"
                 end if
-                if (len_trim(errmsg) > 0) then
-                  write(6,'("ERROR: ",a,": ",a," found (",g20.8,") at (mp,lp,kp) = (",2(i0,","),i0,")"' &
-                    //'," coord: ",2(f12.6,","),g20.8)') &
-                    trim(importFieldNames(item)), trim(errmsg), mp, lp, kp, &
-                    ownedNodeCoords(nCount:nCount+spatialDim-1)
-                endif
+!               if (len_trim(errmsg) > 0) then
+!                 write(6,'("ERROR: ",a,": ",a," found (",g20.8,") at (mp,lp,kp) = (",2(i0,","),i0,")"' &
+!                   //'," coord: ",2(f12.6,","),g20.8)') &
+!                   trim(importFieldNames(item)), trim(errmsg), mp, lp, kp, &
+!                   ownedNodeCoords(nCount:nCount+spatialDim-1)
+!               endif
                 errmsg = ""
                 select case (trim(importFieldNames(item)))
                   case ("temp_neutral", "O_Density", "O2_Density", "N2_Density")
                     ! -- these fields must contain positive values
                     if (dataValue <= 0._ESMF_KIND_R8) errmsg = "value <= 0.0"
                 end select
-                if (len_trim(errmsg) > 0) then
-                  write(6,'("ERROR: ",a,": ",a," found (",g20.8,") at (mp,lp,kp) = (",2(i0,","),i0,")"' &
-                    //'," coord: ",2(f12.6,","),g20.8)') &
-                    trim(importFieldNames(item)), trim(errmsg), mp, lp, kp, &
-                    ownedNodeCoords(nCount:nCount+spatialDim-1)
-                endif
+!               if (len_trim(errmsg) > 0) then
+!                 write(6,'("ERROR: ",a,": ",a," found (",g20.8,") at (mp,lp,kp) = (",2(i0,","),i0,")"' &
+!                   //'," coord: ",2(f12.6,","),g20.8)') &
+!                   trim(importFieldNames(item)), trim(errmsg), mp, lp, kp, &
+!                   ownedNodeCoords(nCount:nCount+spatialDim-1)
+!               endif
                 localMin(item) = min(dataValue, localMin(item))
                 localMax(item) = max(dataValue, localMax(item))
               end do
@@ -1257,11 +1257,11 @@ module ipeCap
         ESMF_CONTEXT)) &
         return  ! bail out
 
-      if (localPet == 0) then
-        do item = 1, importFieldCount
-          write(6,*) trim(importFieldNames(item))," ipeCap min/max =",globalMin(item), globalMax(item)
-        end do
-      end if
+!     if (localPet == 0) then
+!       do item = 1, importFieldCount
+!         write(6,*) trim(importFieldNames(item))," ipeCap min/max =",globalMin(item), globalMax(item)
+!       end do
+!     end if
 
       deallocate(localMin, localMax, globalMin, globalMax, stat=localrc)
       if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -1294,12 +1294,12 @@ module ipeCap
       write(unit=9999,FMT=*)mype,"update_IPE endT=",(end_time-beg_time)
     end if
 
-    ! -- print stop time
-    call ESMF_ClockPrint(clock, options="stopTime", &
-      preString="--------------------------------> to: ", rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      ESMF_CONTEXT)) &
-      return  ! bail out
+!   ! -- print stop time
+!   call ESMF_ClockPrint(clock, options="stopTime", &
+!     preString="--------------------------------> to: ", rc=rc)
+!   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!     ESMF_CONTEXT)) &
+!     return  ! bail out
 
   end subroutine ModelAdvance
  

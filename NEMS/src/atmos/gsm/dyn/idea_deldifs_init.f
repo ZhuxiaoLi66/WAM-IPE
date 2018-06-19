@@ -79,8 +79,8 @@ craa********************************************************************
 ! hmhj ak5, bk5, ck5 in gen_coord_hybrid is the same order as model index
             BKLY(k)=0.5*(bk5(k)+bk5(k+1))				! hmhj
             CKLY(k)=0.5*(ck5(k)+ck5(k+1))*rkappa/thref(k)	        ! hmhj
-            if( me.eq.0 )						! hmhj
-     &         print*,'sl bkly ckly  in deldif=',k,sl(k),bkly(k),ckly(k)! hmhj
+!           if( me.eq.0 )						! hmhj
+!    &         print*,'sl bkly ckly  in deldif=',k,sl(k),bkly(k),ckly(k)! hmhj
           enddo								! hmhj
        else if (hybrid) then						! hmhj
           DO  k=1,LEVS
@@ -122,17 +122,17 @@ craa********************************************************************
 ! no Rayleigh damping for WAM    RTRD1=0.
         RTRD1=0.
 
-        IF (ME.EQ.0) THEN
-          PRINT 6,RTNP,NP,N0,JDEL
-    6     FORMAT(' HORIZONTAL DIFFUSION PARAMETERS'/
-     &  '   EFFECTIVE ',6PF10.3,' MICROHERTZ AT WAVENUMBER ',I4/
-     &  '   MAXIMUM WAVENUMBER FOR ZERO DIFFUSION ',I4/
-     &  '   ORDER OF DIFFUSION ',I2)
+!       IF (ME.EQ.0) THEN
+!         PRINT 6,RTNP,NP,N0,JDEL
+!   6     FORMAT(' HORIZONTAL DIFFUSION PARAMETERS'/
+!    &  '   EFFECTIVE ',6PF10.3,' MICROHERTZ AT WAVENUMBER ',I4/
+!    &  '   MAXIMUM WAVENUMBER FOR ZERO DIFFUSION ',I4/
+!    &  '   ORDER OF DIFFUSION ',I2)
 
-         print *, '***IDEA*** Using physical diffusion in all layers'
-         print *,JCAP,N0,FSHK,rtrd1
+!        print *, '***IDEA*** Using physical diffusion in all layers'
+!        print *,JCAP,N0,FSHK,rtrd1
 
-        ENDIF
+!       ENDIF
 !
 !
         DO K=1,LEVS

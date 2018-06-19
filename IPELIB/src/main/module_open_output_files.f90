@@ -23,7 +23,7 @@
       CONTAINS
 !---------------------------
         SUBROUTINE open_output_files ( )
-        USE module_input_parameters,ONLY: NYEAR,NDAY,HPEQ_flip,sw_debug,sw_output_plasma_grid &
+        USE module_input_parameters,ONLY: NYEAR,NDAY,HPEQ_flip,sw_output_plasma_grid &
            ,record_number_plasma_start,sw_output_fort167,sw_output_wind,mype,sw_use_wam_fields_for_restart
         USE module_IO,ONLY: &
   filename,FORM_dum,STATUS_dum &
