@@ -45,7 +45,7 @@
      &,input_params_begin,input_params_interval
 #else
       USE module_input_parameters,ONLY:NYEAR,NDAY,start_time,mype,      &
-     & ip_freq_output,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld,       &
+     & ip_freq_output,lpi,kp_eld,sw_bnd_wei,bnd_wei_eld,                &
      & lat_sft_eld,sw_ctip_input,utime0LPI,f107_new,f107d_new,          &
      & input_params_begin,input_params_interval
 #endif
