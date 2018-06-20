@@ -14,22 +14,19 @@
 !--------------------------------------------   
 !note: potential in efield.f is the value at 130km
 !     & h_r  = 130.0e3,    ! reference height [m] (same as for apex.F90)     
-      SUBROUTINE GET_EFIELD90km ( utime )
+      SUBROUTINE GET_EFIELD90km ( utime_local )
       USE module_precision
       USE efield_ipe,ONLY: nmlat,ylatm,dlonm,potent,ylonm,nmlon
       USE module_physical_constants,ONLY:pi,rtd,dtr,earth_radius,zero
       USE module_eldyn,ONLY:j0,j1,theta90_rad,ed1_90,ed2_90,coslam_m
       USE module_IPE_dimension,ONLY: NMP,NLP
-      USE module_FIELD_LINE_GRID_MKS,ONLY:plasma_grid_mag_colat,JMIN_IN,JMAX_IS &
-     &,mlon_rad,ht90,Be3,apexE,VEXBup,east,north,up, VEXBe,l_mag, VEXBth
-      USE module_input_parameters,ONLY: NYEAR,NDAY,sw_exb_up    &
-     &,sw_perp_transport,lpmin_perp_trans,lpmax_perp_trans,mype          &
-     &,lps,start_time,ip_freq_output
+      USE module_FIELD_LINE_GRID_MKS
+      USE module_input_parameters
       USE module_magfield,ONLY:sunlons
       USE module_sunloc,ONLY:sunloc
       IMPLICIT NONE
 !
-      INTEGER (KIND=int_prec),INTENT(IN)   :: utime !universal time [sec]
+      INTEGER (KIND=int_prec),INTENT(IN)   :: utime_local !universal time [sec]
 !
       REAL(KIND=real_prec) :: utsecs
       INTEGER :: iyr
@@ -128,7 +125,7 @@
 !     note: NYEAR=2000: is above the MAX recommended for extrapolation!!!
       iyr=1999 
 !     iday=97
-      utsecs=REAL(utime, real_prec)
+      utsecs=REAL(utime_local, real_prec)
       CALL sunloc(iyr,NDAY,utsecs) !iyr,iday,secs)        
 !     convert from MLT(ylonm)[rad] to mlon[deg]
       mlon130_loop0: DO i=0,nmlon
@@ -292,14 +289,14 @@
 !SMS$PARALLEL END
 
 
-         IF ( MOD( (utime-start_time),ip_freq_output)==0 ) THEN
+         IF ( MOD( (utime_local-start_time),ip_freq_output)==0 ) THEN
 !SMS$SERIAL(<vexbup,vexbe,vexbth,IN>:default=ignore) BEGIN
             write(unit=2011,FMT='(20E12.4)') vexbup
             write(unit=2012,FMT='(20E12.4)') vexbe
             write(unit=2013,FMT='(E12.4)  ') sunlons(1)
             write(unit=2014,FMT='(20E12.4)') vexbth
 !SMS$SERIAL END
-         END IF                 ! ( MOD( (utime-start_time),ip_freq_output)==0 ) THEN
+         END IF                 ! ( MOD( (utime_local-start_time),ip_freq_output)==0 ) THEN
 
       END SUBROUTINE GET_EFIELD90km
 !
