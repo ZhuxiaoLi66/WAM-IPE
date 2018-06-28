@@ -20,6 +20,14 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: electron_velocity(:,:,:,:)
     REAL(prec), ALLOCATABLE :: electron_temperature(:,:,:)
 
+    REAL(prec), ALLOCATABLE :: ion_densities_old(:,:,:,:)
+    REAL(prec), ALLOCATABLE :: ion_velocities_old(:,:,:,:,:)
+    REAL(prec), ALLOCATABLE :: ion_temperature_old(:,:,:)
+
+    REAL(prec), ALLOCATABLE :: electron_density_old(:,:,:)
+    REAL(prec), ALLOCATABLE :: electron_velocity_old(:,:,:,:)
+    REAL(prec), ALLOCATABLE :: electron_temperature_old(:,:,:)
+
     REAL(prec), ALLOCATABLE :: ionization_rates(:,:,:,:)
 
     REAL(prec), ALLOCATABLE :: hall_conductivity(:,:,:) 
@@ -45,7 +53,10 @@ IMPLICIT NONE
       PROCEDURE :: Trash => Trash_IPE_Plasma
 
       PROCEDURE :: Update => Update_IPE_Plasma
-      PROCEDURE :: Auroral_Precipitation => Auroral_Precipitation_IPE_Plasma
+
+      PROCEDURE :: Buffer_Old_State
+      PROCEDURE :: Calculate_Pole_Values 
+      PROCEDURE :: Auroral_Precipitation
       PROCEDURE :: FLIP_Wrapper     
 
       PROCEDURE :: Interpolate_to_GeographicGrid => Interpolate_to_GeographicGrid_IPE_Plasma
@@ -94,6 +105,12 @@ CONTAINS
                 plasma % electron_density(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_velocity(1:3,1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_temperature(1:nFluxTube,1:NLP,1:NMP), &
+                plasma % ion_densities_old(1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
+                plasma % ion_velocities_old(1:3,1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
+                plasma % ion_temperature_old(1:nFluxTube,1:NLP,1:NMP), &
+                plasma % electron_density_old(1:nFluxTube,1:NLP,1:NMP), &
+                plasma % electron_velocity_old(1:3,1:nFluxTube,1:NLP,1:NMP), &
+                plasma % electron_temperature_old(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % ionization_rates(1:4,1:nFluxTube,1:NLP,1:NMP), &
                 plasma % hall_conductivity(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % pedersen_conductivity(1:nFluxTube,1:NLP,1:NMP), &
@@ -151,6 +168,12 @@ CONTAINS
                 plasma % electron_density, &
                 plasma % electron_velocity, &
                 plasma % electron_temperature, &
+                plasma % ion_densities_old, &
+                plasma % ion_velocities_old, &
+                plasma % ion_temperature_old, &
+                plasma % electron_density_old, &
+                plasma % electron_velocity_old, &
+                plasma % electron_temperature_old, &
                 plasma % ionization_rates, &
                 plasma % hall_conductivity, & 
                 plasma % pedersen_conductivity, & 
@@ -165,8 +188,8 @@ CONTAINS
                 plasma % geo_pedersen_conductivity, & 
                 plasma % geo_b_parallel_conductivity )
 
-     PRINT*, 'FLIP_Wrapper ', flip_time_avg/flip_count
      PRINT*, 'Auroral_Precipitation ', aur_precip_time_avg/aur_precip_count
+     PRINT*, 'FLIP_Wrapper ', flip_time_avg/flip_count
 
   END SUBROUTINE Trash_IPE_Plasma
 !
@@ -178,11 +201,35 @@ CONTAINS
     TYPE( IPE_Forcing ), INTENT(in)    :: forcing
     TYPE( IPE_Time ), INTENT(in)       :: time_tracker
     REAL(prec), INTENT(in)             :: flip_time_step
+   ! REAL(prec), INTENT(in)             :: perp_transport_time_step
     ! Local
+    INTEGER    :: time_loop, n_perp_transport_steps
+    INTEGER    :: i, lp, mp, j
     REAL(prec) :: t2, t1
+    REAL(prec) :: ion_density_pole_value(1:n_ion_species, 1:plasma % nFluxTube)
+    REAL(prec) :: ion_temperature_pole_value(1:plasma % nFluxTube)
+    REAL(prec) :: ion_velocity_pole_value(1:3,1:n_ion_species, 1:plasma % nFluxTube)
+    REAL(prec) :: electron_density_pole_value(1:plasma % nFluxTube)
+    REAL(prec) :: electron_temperature_pole_value(1:plasma % nFluxTube)
 
          
-      !CALL plasma % Cross_Flux_Tube_Transport( )
+     ! n_perp_transport_steps = INT( flip_time_step/perp_transport_time_step )
+
+      !DO time_loop = 1, n_perp_transport_steps
+ 
+        !CALL plasma % Buffer_Old_State( )
+
+        !CALL plasma % Calculate_Pole_Values( grid, &
+        !                                     ion_density_pole_value,  &
+        !                                     ion_temperature_pole_value, &
+        !                                     ion_velocity_pole_value, &
+        !                                     electron_density_pole_value, &
+        !                                     electron_temperature_pole_value ) 
+
+        !CALL plasma % Cross_Flux_Tube_Transport( )
+
+      !ENDDO
+
  
       CALL CPU_TIME( t1 )
       CALL plasma % Auroral_Precipitation( grid, &
@@ -194,11 +241,11 @@ CONTAINS
       aur_precip_count    = aur_precip_count + 1
 
       CALL CPU_TIME( t1 )
-!      CALL plasma % FLIP_Wrapper( grid, & 
-!                                  neutrals, &
-!                                  forcing, &
-!                                  time_tracker, &
-!                                  flip_time_step )
+      CALL plasma % FLIP_Wrapper( grid, & 
+                                  neutrals, &
+                                  forcing, &
+                                  time_tracker, &
+                                  flip_time_step )
       CALL CPU_TIME( t2 )
       flip_time_avg = flip_time_avg + t2 - t1
       flip_count    = flip_count + 1
@@ -206,7 +253,63 @@ CONTAINS
 
   END SUBROUTINE Update_IPE_Plasma
 !
-  SUBROUTINE Auroral_Precipitation_IPE_Plasma( plasma, grid, neutrals, forcing, time_tracker )
+  SUBROUTINE Buffer_Old_State( plasma )
+    IMPLICIT NONE
+    CLASS( IPE_Plasma ), INTENT(inout) :: plasma
+
+      plasma % ion_densities_old   = plasma % ion_densities
+      plasma % ion_temperature_old = plasma % ion_temperature
+      plasma % ion_velocities_old  = plasma % ion_velocities
+
+      plasma % electron_density_old   = plasma % electron_density
+      plasma % electron_temperature_old = plasma % electron_temperature
+
+  END SUBROUTINE Buffer_Old_State
+!
+  SUBROUTINE Calculate_Pole_Values( plasma, grid, ion_density_pole_value, ion_temperature_pole_value, ion_velocity_pole_value, electron_density_pole_value, electron_temperature_pole_value ) 
+    IMPLICIT NONE
+    CLASS( IPE_Plasma ), INTENT(in) :: plasma
+    TYPE( IPE_Grid ), INTENT(in)    :: grid
+    REAL(prec), INTENT(out)         :: ion_density_pole_value(1:n_ion_species, 1:plasma % nFluxTube)
+    REAL(prec), INTENT(out)         :: ion_temperature_pole_value(1:plasma % nFluxTube)
+    REAL(prec), INTENT(out)         :: ion_velocity_pole_value(1:3,1:n_ion_species, 1:plasma % nFluxTube)
+    REAL(prec), INTENT(out)         :: electron_density_pole_value(1:plasma % nFluxTube)
+    REAL(prec), INTENT(out)         :: electron_temperature_pole_value(1:plasma % nFluxTube)
+    ! Local
+    INTEGER    :: i, lp, mp, j
+
+      ion_density_pole_value      = 0.0_prec
+      ion_temperature_pole_value  = 0.0_prec
+      ion_velocity_pole_value     = 0.0_prec
+
+      electron_density_pole_value     = 0.0_prec
+      electron_temperature_pole_value = 0.0_prec
+
+      DO mp = 1, plasma % NMP
+        DO i = 1, grid % flux_tube_max(1)
+          DO j = 1, n_ion_species
+        
+            ion_density_pole_value(j,i)      = ion_density_pole_value(j,i) + plasma % ion_densities(j,i,1,mp)
+            ion_velocity_pole_value(1:3,j,i) = ion_velocity_pole_value(1:3,j,i) + plasma % ion_velocities(1:3,j,i,1,mp)
+
+          ENDDO
+
+          ion_temperature_pole_value(i)  = ion_temperature_pole_value(i) + plasma % ion_temperature(i,1,mp)
+          electron_density_pole_value(i)      = electron_density_pole_value(i) + plasma % electron_density(i,1,mp)
+          electron_temperature_pole_value(i)  = electron_temperature_pole_value(i) + plasma % electron_temperature(i,1,mp)
+
+        ENDDO
+      ENDDO
+
+      ion_density_pole_value          = ion_density_pole_value/REAL( plasma % NMP )
+      ion_temperature_pole_value      = ion_temperature_pole_value/REAL( plasma % NMP )
+      ion_velocity_pole_value         = ion_velocity_pole_value/REAL( plasma % NMP )
+      electron_density_pole_value     = electron_density_pole_value/REAL( plasma % NMP )
+      electron_temperature_pole_value = electron_temperature_pole_value/REAL( plasma % NMP )
+
+  END SUBROUTINE Calculate_Pole_Values
+      
+  SUBROUTINE Auroral_Precipitation( plasma, grid, neutrals, forcing, time_tracker )
   ! Previously : tiros_ionize_ipe 
     IMPLICIT NONE
     CLASS( IPE_Plasma ), INTENT(inout) :: plasma
@@ -475,7 +578,7 @@ CONTAINS
         ENDDO
       ENDDO
 
-  END SUBROUTINE Auroral_Precipitation_IPE_Plasma
+  END SUBROUTINE Auroral_Precipitation
 
   SUBROUTINE FLIP_Wrapper( plasma, grid, neutrals, forcing, time_tracker, flip_time_step )
     IMPLICIT NONE
@@ -572,6 +675,7 @@ CONTAINS
           JMINX = 1
           JMAXX = grid % flux_tube_max(lp)
  
+          PRINT*, lp, mp
           CALL CTIPINT( JMINX, & !.. index of the first point on the field line
                         JMAXX, & !.. index of the last point on the field line
                         grid % flux_tube_max(lp), & !.. CTIPe array dimension, must equal to FLDIM

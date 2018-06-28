@@ -534,6 +534,7 @@ c     >  ,2X,'PEO2dis    BCKPRD             FD(5..9)')      !$$$
          DO I=1,9
             FD(I)=0.0
          ENDDO
+         N2D(J)=0.0
          IF(Z(J).GE.80.AND.Z(J).LE.700) THEN
             !.. CALL cminor to get NO+, O+(2D), O2+, N2+ & O+(2P) densities
             CALL CMINOR(0,J,0,IHEPLS,INPLS,INNO,FD,7,N,TI,Z,EFLAG)
@@ -661,32 +662,32 @@ c      IF(JTI.LT.4.AND.IWR.EQ.0) THEN        !$$$
      >      XIONN(5,J)+XIONN(6,J)
             CALL RATS(J,TI(3,J),TI(1,J),TN(J),RTS)  !.. Reaction rates
             !.. Neutral heating rate
-            CALL NEUT_HEATING(0,JMIN,J,Z(J),RTS,TI(3,J),TI(2,J),TN(J),
-     >        ON(J),O2N(J),N2N(J),HE(J),N4S(J),EDEN(J),N(1,J),XIONN(6,J)
-     >       ,XIONN(5,J),N(2,J),XIONN(7,J),XIONN(4,J),NNO(J),N2D(J)
-     >       ,N2P(J),N2A(J),XIONN(8,J),XIONN(9,J),O1D(J),O1S(J)
-     >       ,EHT(3,J),NHEAT(J),O2DISF(J))
+!            CALL NEUT_HEATING(0,JMIN,J,Z(J),RTS,TI(3,J),TI(2,J),TN(J),
+!     >        ON(J),O2N(J),N2N(J),HE(J),N4S(J),EDEN(J),N(1,J),XIONN(6,J)
+!     >       ,XIONN(5,J),N(2,J),XIONN(7,J),XIONN(4,J),NNO(J),N2D(J)
+!     >       ,N2P(J),N2A(J),XIONN(8,J),XIONN(9,J),O1D(J),O1S(J)
+!     >       ,EHT(3,J),NHEAT(J),O2DISF(J))
           ENDIF
       ENDDO
 c      ENDIF
 
       !---------------------- DEBUG WRITE -----------------------------------
       !.. Debug write if DEBUG=1
-      IF(DEBUG.EQ.1.AND.JTI.EQ.3) WRITE(171,88) 
+      !IF(DEBUG.EQ.1.AND.JTI.EQ.3) WRITE(171,88) 
  88   FORMAT('  J     ALT    TE     TI       O+        H+       He+'
      >  ,8X,'N+        NO+       O2+       NE      UVOX+    PEOX+'
      >  ,6X,'UVN2+      PEN2+     EHT       VO+       VH+      VHe+'
      >  ,7X,'VN+        NO       N2D       N4S      O1D       O1S'
      >  ,7X,'NHEAT     O2DISF')
-      DO J=JMIN,JMAX
-        IF(DEBUG.EQ.1.AND.JTI.EQ.108) 
-     >   WRITE(171,'(I5,I7,2F7.1,1P,29E10.2)') 
-     >   J,NINT(Z(J)),TI(3,J),TI(2,J),XIONN(1,J),XIONN(2,J),XIONN(3,J),
-     >   XIONN(4,J),XIONN(5,J),XIONN(6,J),EDEN(J),EUVION(1,1,J),
-     >   PEPION(1,1,J),EUVION(1,1,J),PEPION(3,1,J),EHT(3,J),XIONV(1,J),
-     >   XIONV(2,J),XIONV(3,J),XIONV(4,J),NNO(J),N2D(J),N4S(J),O1D(J),
-     >   O1S(J),NHEAT(J),O2DISF(J)
-      ENDDO
+!      DO J=JMIN,JMAX
+!        IF(DEBUG.EQ.1.AND.JTI.EQ.108) 
+!     >   WRITE(171,'(I5,I7,2F7.1,1P,29E10.2)') 
+!     >   J,NINT(Z(J)),TI(3,J),TI(2,J),XIONN(1,J),XIONN(2,J),XIONN(3,J),
+!     >   XIONN(4,J),XIONN(5,J),XIONN(6,J),EDEN(J),EUVION(1,1,J),
+!     >   PEPION(1,1,J),EUVION(1,1,J),PEPION(3,1,J),EHT(3,J),XIONV(1,J),
+!     >   XIONV(2,J),XIONV(3,J),XIONV(4,J),NNO(J),N2D(J),N4S(J),O1D(J),
+!     >   O1S(J),NHEAT(J),O2DISF(J)
+!      ENDDO
 
       !.. 2-stream photoelectron routine called to print fluxes 
       IF(DEBUG.EQ.1.AND.JTI.EQ.3) THEN
