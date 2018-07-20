@@ -54,10 +54,11 @@ IMPLICIT NONE
 
       PROCEDURE :: Update => Update_IPE_Plasma
 
-      PROCEDURE :: Buffer_Old_State
-      PROCEDURE :: Calculate_Pole_Values 
-      PROCEDURE :: Auroral_Precipitation
-      PROCEDURE :: FLIP_Wrapper     
+      PROCEDURE, PRIVATE :: Buffer_Old_State
+      PROCEDURE, PRIVATE :: Calculate_Pole_Values 
+      PROCEDURE, PRIVATE :: Cross_Flux_Tube_Transport
+      PROCEDURE, PRIVATE :: Auroral_Precipitation
+      PROCEDURE, PRIVATE :: FLIP_Wrapper     
 
       PROCEDURE :: Interpolate_to_GeographicGrid => Interpolate_to_GeographicGrid_IPE_Plasma
 
@@ -193,15 +194,15 @@ CONTAINS
 
   END SUBROUTINE Trash_IPE_Plasma
 !
-  SUBROUTINE Update_IPE_Plasma( plasma, grid, neutrals, forcing, time_tracker, flip_time_step )
+  SUBROUTINE Update_IPE_Plasma( plasma, grid, neutrals, forcing, time_tracker, v_ExB, time_step )
     IMPLICIT NONE
     CLASS( IPE_Plasma ), INTENT(inout) :: plasma
     TYPE( IPE_Grid ), INTENT(in)       :: grid
     TYPE( IPE_Neutrals ), INTENT(in)   :: neutrals
     TYPE( IPE_Forcing ), INTENT(in)    :: forcing
     TYPE( IPE_Time ), INTENT(in)       :: time_tracker
-    REAL(prec), INTENT(in)             :: flip_time_step
-   ! REAL(prec), INTENT(in)             :: perp_transport_time_step
+    REAL(prec), INTENT(in)             :: v_ExB(1:3,1:grid % NLP,1:grid % NMP)
+    REAL(prec), INTENT(in)             :: time_step
     ! Local
     INTEGER    :: time_loop, n_perp_transport_steps
     INTEGER    :: i, lp, mp, j
@@ -213,22 +214,17 @@ CONTAINS
     REAL(prec) :: electron_temperature_pole_value(1:plasma % nFluxTube)
 
          
-     ! n_perp_transport_steps = INT( flip_time_step/perp_transport_time_step )
+      CALL plasma % Buffer_Old_State( )
 
-      !DO time_loop = 1, n_perp_transport_steps
- 
-        !CALL plasma % Buffer_Old_State( )
+      !CALL plasma % Calculate_Pole_Values( grid, &
+      !                                     ion_density_pole_value,  &
+      !                                     ion_temperature_pole_value, &
+      !                                     ion_velocity_pole_value, &
+      !                                     electron_density_pole_value, &
+      !                                     electron_temperature_pole_value ) 
 
-        !CALL plasma % Calculate_Pole_Values( grid, &
-        !                                     ion_density_pole_value,  &
-        !                                     ion_temperature_pole_value, &
-        !                                     ion_velocity_pole_value, &
-        !                                     electron_density_pole_value, &
-        !                                     electron_temperature_pole_value ) 
+      CALL plasma % Cross_Flux_Tube_Transport( grid, v_ExB, time_step )
 
-        !CALL plasma % Cross_Flux_Tube_Transport( )
-
-      !ENDDO
 
  
       CALL CPU_TIME( t1 )
@@ -245,7 +241,7 @@ CONTAINS
                                   neutrals, &
                                   forcing, &
                                   time_tracker, &
-                                  flip_time_step )
+                                  time_step )
       CALL CPU_TIME( t2 )
       flip_time_avg = flip_time_avg + t2 - t1
       flip_count    = flip_count + 1
@@ -309,6 +305,168 @@ CONTAINS
 
   END SUBROUTINE Calculate_Pole_Values
       
+  SUBROUTINE Cross_Flux_Tube_Transport( plasma, grid, v_ExB, time_step )
+    IMPLICIT NONE
+    CLASS( IPE_Plasma ), INTENT(in)  :: plasma
+    TYPE( IPE_Grid ), INTENT(in)     :: grid
+    REAL(prec), INTENT(in)           :: v_ExB(1:3,1:grid % NLP, 1:grid % NMP)
+    REAL(prec), INTENT(in)           :: time_step
+
+    ! Local
+
+    REAL(prec) :: colat_90km(1:grid % NLP)
+    REAL(prec) :: phi_t0 !magnetic longitude,phi[rad] at t0(previous time step)
+    REAL(prec) :: theta_t0 !magnetic latitude,theta[rad] at t0
+    REAL(prec) :: q_value
+    REAL(prec) :: lp_comp_weight(1:2)
+    REAL(prec) :: i_comp_weight(1:2)
+    REAL(prec) :: q_int(1:2)
+    REAL(prec) :: plasma_int(1:n_ion_species)
+    INTEGER    :: lp_t0(1:2)
+    INTEGER    :: lp_min, mp_min, isouth, inorth, ii, ispecial
+    INTEGER    :: mp, lp, i, lpx, mpx, jth
+    INTEGER    :: i_min(1:2)
+
+
+      colat_90km(1:grid % NLP) = grid % magnetic_colatitude(1,1:grid % NLP)
+
+      DO mp = 1, grid % NMP
+        DO lp = 1, grid % NLP
+  
+          theta_t0 = colat_90km(lp) - v_ExB(1,lp,mp)*time_step
+          phi_t0   = grid % magnetic_longitude(mp) - v_ExB(2,lp,mp)*time_step
+
+          ! If a Lagrangian trajectory crosses the equator, we clip the colatitude
+          ! so that the point resides at the equator.
+          IF( theta_t0 > colat_90km( grid % NLP ) )THEN ! NLP ==> Equator
+            theta_t0 = colat_90km( grid % NLP )
+          ENDIF
+  
+          ! Apply periodicity in the zonal direction
+          IF ( phi_t0 >= pi*2.0 ) THEN
+  
+            phi_t0 = phi_t0 - pi*2.0
+  
+          ELSE IF ( phi_t0 < 0.0    ) THEN
+  
+            phi_t0 = phi_t0 + pi*2.0
+  
+          ENDIF
+  
+          ! We are trying to find the lp indices for the flux tubes nearest to
+          ! theta_t0. Output is lp_t0(1:2)
+
+          lp_min = grid % NLP
+
+          DO lpx = 1, grid % NLP
+
+            IF( theta_t0 <= colat_90km(lpx) )THEN
+              lp_min = lpx
+              EXIT
+            ENDIF
+
+          ENDDO
+  
+          IF( lp_min == 1 )THEN 
+
+            ! This is the most poleward flux tube
+            ! In this case, theta_t0 <= colat_90km(lpx)
+            lp_t0(1) = 1
+            lp_t0(2) = 1
+  
+          ELSEIF( lp_min == grid % NLP )THEN ! This is the most poleward flux tube
+  
+              lp_t0(1) = lp_min-1
+              lp_t0(2) = lp_min
+  
+          ELSE
+      
+            IF( theta_t0 > colat_90km(lp_min) )THEN
+              lp_t0(1) = lp_min
+              lp_t0(2) = lp_min+1
+            ELSE
+              lp_t0(1) = lp_min-1
+              lp_t0(2) = lp_min
+            ENDIF
+  
+          ENDIF
+  
+          ! Calculate the computational weights for theta_t0 at
+          ! 90 km altitude
+          IF( lp_t0(2) /= 1 )THEN ! The imaginary flux tube has moved into the pole region
+            lp_comp_weight(1) =  ( theta_t0 - colat_90km(lp_t0(2)) )/( colat_90km(lp_t0(1))-colat_90km(lp_t0(2)) )
+            lp_comp_weight(2) = -( theta_t0 - colat_90km(lp_t0(1)) )/( colat_90km(lp_t0(1))-colat_90km(lp_t0(2)) )
+          ENDIF
+  
+  
+          ! For this lp, mp, we need to loop over the flux tube points. 
+          ! For each flux tube point, we need to obtain the "q-value"
+          ! On the four points nearest the source point (phi_t0, theta_t0) 
+          ! we need to find the fluxe tube points nearest to the q-value
+          ! to do along flux tube interpolation
+          DO i = 1, grid % flux_tube_max(lp)
+  
+            q_value = grid % q_factor(i,lp,mp)
+  
+            plasma_int(1:n_ion_species) = 0.0
+  
+            DO lpx = 1, 2
+ 
+              ispecial = 1
+              isouth   = grid % flux_tube_max(lp_t0(lpx))
+              inorth   = isouth-1
+
+              DO ii = 1, grid % flux_tube_max(lp_t0(lpx))
+                IF(  grid % q_factor(ii, lp, mp) < q_value )THEN
+                  isouth   = ii
+                  inorth   = ii-1
+                  ispecial = 0
+                  EXIT
+                ENDIF
+              ENDDO
+
+              IF( isouth == 1 )THEN
+                ispecial = 2
+              ENDIF
+  
+              IF( ispecial == 0 )THEN
+
+                q_int(1) = grid % q_factor(isouth, lp_t0(lpx), mp)
+                q_int(2) = grid % q_factor(inorth, lp_t0(lpx), mp)
+           
+                i_comp_weight(1) = ( q_value - q_int(2) )/( q_int(1) - q_int(2) )
+                i_comp_weight(2) = -( q_value - q_int(1) )/( q_int(1) - q_int(2) )
+  
+                plasma_int(1:ISTOT) = plasma_int(1:ISTOT) + &
+                                      ( plasma_3d_old( 1:ISTOT, isouth, lp_t0(lpx), mp )*i_comp_weight(1) + &
+                                        plasma_3d_old( 1:ISTOT, inorth, lp_t0(lpx), mp )*i_comp_weight(2) )*&
+                                      lp_comp_weight(lpx)
+ 
+          !    ELSEIF( ispecial == 1 )THEN
+
+          !      plasma_int(1:ISTOT) = plasma_int(1:ISTOT) + plasma_3d_old(1:ISTOT,isouth, lp_t0(lpx), mp)*lp_comp_weight(lpx)
+
+          !    ELSEIF( ispecial == 2 ) THEN
+
+                ! In this case, isouth is equal to 1 and inorth is equal to 0 (
+                ! information propagates from the northern pole )
+                ! We choose to use the solution at isouth ( no gradient boundary
+                ! condition ? )
+
+          !      plasma_int(1:ISTOT) = plasma_int(1:ISTOT) + plasma_3d_old(1:ISTOT,isouth, lp_t0(lpx), mp)*lp_comp_weight(lpx)
+
+              ENDIF
+  
+            ENDDO
+
+            plasma_3d(1:ISTOT,i,lp,mp) = plasma_int(1:ISTOT)
+
+          ENDDO
+ 
+        ENDDO
+      ENDDO
+  END SUBROUTINE Cross_Flux_Tube_Transport
+
   SUBROUTINE Auroral_Precipitation( plasma, grid, neutrals, forcing, time_tracker )
   ! Previously : tiros_ionize_ipe 
     IMPLICIT NONE

@@ -7,7 +7,7 @@ USE IPE_Grid_Class
 USE IPE_Neutrals_Class
 USE IPE_Forcing_Class
 USE IPE_Plasma_Class
-!USE IPE_Electrodynamics_Class
+USE IPE_Electrodynamics_Class
 
 USE netcdf
 
@@ -29,7 +29,7 @@ IMPLICIT NONE
     TYPE( IPE_Forcing )          :: forcing
     TYPE( IPE_Neutrals )         :: neutrals
     TYPE( IPE_Plasma )           :: plasma
-    !TYPE( IPE_Eldyn )            :: eldyn
+    TYPE( IPE_Electrodynamics )  :: eldyn
 
     CONTAINS
 
@@ -66,6 +66,8 @@ CONTAINS
 
       IF( init_success )THEN
 
+        ! ////// Forcing ////// !
+
         CALL ipe % forcing % Build( ipe % parameters % solar_forcing_time_step, &
                                     ipe % parameters % f107_kp_size )
 
@@ -79,9 +81,13 @@ CONTAINS
         CALL ipe % forcing % Read_Tiros_IPE_Forcing( )
 
 
+        ! ////// grid ////// !
+
         CALL ipe % grid % Read_IPE_Grid_NetCDF( ipe % parameters % netcdf_grid_file  )
         ipe % grid % npts2d = ipe % parameters % npts2d
 
+
+        ! ////// neutrals ////// !
 
 #ifdef COUPLED_TO_WAM
         CALL ipe % neutrals % Build( nFluxtube       = ipe % grid % nFluxTube, &
@@ -95,6 +101,16 @@ CONTAINS
 #endif
 
 
+        ! ////// electric field /////// !
+
+        CALL ipe % eldyn % Build( nFluxTube = ipe % grid % nFluxTube,&
+                                  NLP       = ipe % grid % NLP, &
+                                  NMP       = ipe % grid % NMP, &
+                                  NP_dynamo = ipe % grid % NLP, &
+                                  MP_dynamo = ipe % grid % NMP ) 
+
+
+        ! ////// plasma ////// !
 
         CALL ipe % plasma % Build( nFluxTube = ipe % grid % nFluxTube, &
                                    NLP       = ipe % grid % NLP, &
@@ -123,10 +139,11 @@ CONTAINS
     IMPLICIT NONE
     CLASS( IPE_Model ), INTENT(inout) :: ipe
 
-      CALL ipe % forcing % Trash( )
-      CALL ipe % grid % Trash( )
+      CALL ipe % forcing  % Trash( )
+      CALL ipe % grid     % Trash( )
       CALL ipe % neutrals % Trash( )
-      CALL ipe % plasma % Trash( )
+      CALL ipe % plasma   % Trash( )
+      CALL ipe % eldyn    % Trash( )
 
   END SUBROUTINE Trash_IPE_Model
 !
@@ -137,7 +154,6 @@ CONTAINS
     ! Local
     INTEGER    :: i, im3hr, im6hr, im9hr, im12hr, im36hr !, num_threads
     REAL(prec) :: AP(1:7)
-    !REAL(prec) :: start_time, end_time
 
 
       CALL ipe % time_tracker % Update( t0 )
@@ -159,8 +175,6 @@ CONTAINS
       AP(6) = ipe % forcing % ap_1day_avg(im12hr)
       AP(7) = ipe % forcing % ap_1day_avg(im36hr)
 
-      !CALL CPU_TIME( start_time )
-      !start_time = omp_get_wtime()
       CALL ipe % neutrals % Update( ipe % grid, &
                                     ipe % time_tracker % utime, &
                                     ipe % time_tracker % year, &
@@ -168,19 +182,16 @@ CONTAINS
                                     ipe % forcing % f107(i) , &
                                     ipe % forcing % f107_81day_avg(i), &
                                     AP )
-      !CALL CPU_TIME( end_time )
-      !end_time = omp_get_wtime()
 
-!      !$OMP PARALLEL
-!      num_threads = omp_get_num_threads()
-!      !$OMP END PARALLEL
-!      PRINT*, 'Neutral Call Time :', end_time - start_time, num_threads
-
+      CALL ipe % eldyn % Update( ipe % grid, &
+                                 ipe % forcing, &
+                                 ipe % time_tracker )
    
       CALL ipe % plasma % Update( ipe % grid, &
                                   ipe % neutrals, &
                                   ipe % forcing, &
                                   ipe % time_tracker, &
+                                  ipe % eldyn % v_ExB_apex, &
                                   ipe % parameters % solar_forcing_time_step )
 
 

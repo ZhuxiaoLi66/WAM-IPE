@@ -70,12 +70,17 @@ IPE_Neutrals_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class
 IPE_Forcing_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Common_Routines.o IPE_Forcing_Class.F90
 	${FC} ${CPPFLAGS} ${OPT} -c IPE_Forcing_Class.F90 ${LIB} ${INC} -o $@
 
+IPE_Electrodynamics_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class.o \
+                              IPE_Time_Class.o IPE_Forcing_Class.o IPE_Electrodynamics_Class.F90
+	${FC} ${CPPFLAGS} ${OPT} -c IPE_Electrodynamics_Class.F90 ${LIB} ${INC} -o $@ 
+
 IPE_Plasma_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class.o IPE_Neutrals_Class.o \
                      IPE_Time_Class.o IPE_Forcing_Class.o IPE_Plasma_Class.F90
 	${FC} ${CPPFLAGS} ${OPT} -c IPE_Plasma_Class.F90 ${LIB} ${INC} -o $@ 
 
 IPE_Model_Class.o : IPE_Precision.o IPE_Constants_Dictionary.o IPE_Grid_Class.o IPE_Neutrals_Class.o \
-                    IPE_Time_Class.o IPE_Model_Parameters_Class.o IPE_Forcing_Class.o IPE_Model_Class.F90
+                    IPE_Plasma_Class.o IPE_Electrodynamics_Class.o IPE_Time_Class.o \
+                    IPE_Model_Parameters_Class.o IPE_Forcing_Class.o IPE_Model_Class.F90
 	${FC} ${CPPFLAGS} ${OPT} -c IPE_Model_Class.F90 ${LIB} ${INC} -o $@
 
 
@@ -111,6 +116,7 @@ OBJ = IPE_Precision.o \
       IPE_Forcing_Class.o \
       IPE_Grid_Class.o \
       IPE_Neutrals_Class.o \
+      IPE_Electrodynamics_Class.o \
       IPE_Plasma_Class.o \
       IPE_Model_Class.o \
       Test_IPE.o 
@@ -131,6 +137,7 @@ POBJ = IPE_Precision.o \
       IPE_Grid_Class.o \
       IPE_Neutrals_Class.o \
       IPE_Plasma_Class.o \
+      IPE_Electrodynamics_Class.o \
       IPE_Model_Class.o \
       Convert_LegacyPlasma_to_NetCDF.o
  
