@@ -119,7 +119,7 @@ CONTAINS
       DO mp = 1, grid % NMP
         DO lp = 1, grid % NLP
 
-          eldyn % v_ExB_apex(1,lp,mp) = 0.0_prec
+          eldyn % v_ExB_apex(1,lp,mp) = pi/4.0_prec/86400.0_prec !0.0_prec
           eldyn % v_ExB_apex(2,lp,mp) = 0.0_prec
           eldyn % v_ExB_apex(3,lp,mp) = 0.0_prec
 

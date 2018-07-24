@@ -66,7 +66,7 @@ IMPLICIT NONE
 
   END TYPE IPE_Plasma
 
-
+  INTEGER, PARAMETER , PRIVATE   :: perp_transport_max_lp = 151
   INTEGER, PARAMETER, PRIVATE    :: n_ion_species = 9
   REAL(prec), PARAMETER, PRIVATE :: safe_density_minimum = 10.0_prec**(-4)
   REAL(prec), PARAMETER, PRIVATE :: safe_temperature_minimum = 100.0_prec
@@ -332,7 +332,7 @@ CONTAINS
       colat_90km(1:grid % NLP) = grid % magnetic_colatitude(1,1:grid % NLP)
 
       DO mp = 1, grid % NMP
-        DO lp = 1, grid % NLP
+        DO lp = 1, perp_transport_max_lp
   
           theta_t0 = colat_90km(lp) - v_ExB(1,lp,mp)*time_step
           phi_t0   = grid % magnetic_longitude(mp) - v_ExB(2,lp,mp)*time_step
@@ -519,15 +519,16 @@ CONTAINS
           ELSE
       
             IF( theta_t0 > colat_90km(lp_min) )THEN
-              lp_t0(1) = lp_min
-              lp_t0(2) = lp_min+1
-            ELSE
               lp_t0(1) = lp_min-1
               lp_t0(2) = lp_min
+            ELSE
+              lp_t0(1) = lp_min
+              lp_t0(2) = lp_min+1
             ENDIF
 
             lp_comp_weight(1) =  ( theta_t0 - colat_90km(lp_t0(2)) )/( colat_90km(lp_t0(1))-colat_90km(lp_t0(2)) )
             lp_comp_weight(2) = -( theta_t0 - colat_90km(lp_t0(1)) )/( colat_90km(lp_t0(1))-colat_90km(lp_t0(2)) )
+            PRINT*, 'lp_comp_weight :',lp_comp_weight
 
             DO i = 1, grid % flux_tube_max(lp)
   
