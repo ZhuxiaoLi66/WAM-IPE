@@ -331,6 +331,14 @@ CONTAINS
 
       colat_90km(1:grid % NLP) = grid % magnetic_colatitude(1,1:grid % NLP)
 
+      !$OMP PARALLEL DEFAULT( PRIVATE )
+
+      !colat_90km, phi_t0, theta_t0, q_value,
+      !lp_comp_weight, mp_comp_weight, q_int, ion_densitites_int,
+      !ion_temperature_int, ion_velocities_int, lp_t0, lp_mp, mp_min, isouth,
+      !inorth, ii, ispecial, i, lpx, mpx, jth, i_min )
+
+      !$OMP DO
       DO mp = 1, grid % NMP
         DO lp = 1, perp_transport_max_lp
   
@@ -394,7 +402,7 @@ CONTAINS
               inorth   = isouth-1
 
               DO ii = 1, grid % flux_tube_max(1)
-                IF(  grid % q_factor(ii, lp, mp) < q_value )THEN
+                IF(  grid % q_factor(ii, 1, mp) < q_value )THEN
                   isouth   = ii
                   inorth   = ii-1
                   ispecial = 0
@@ -466,7 +474,7 @@ CONTAINS
                 inorth   = isouth-1
 
                 DO ii = 1, grid % flux_tube_max(lp_t0(lpx))
-                  IF(  grid % q_factor(ii, lp, mp) < q_value )THEN
+                  IF(  grid % q_factor(ii, lp_t0(lpx), mp) < q_value )THEN
                     isouth   = ii
                     inorth   = ii-1
                     ispecial = 0
@@ -528,7 +536,6 @@ CONTAINS
 
             lp_comp_weight(1) =  ( theta_t0 - colat_90km(lp_t0(2)) )/( colat_90km(lp_t0(1))-colat_90km(lp_t0(2)) )
             lp_comp_weight(2) = -( theta_t0 - colat_90km(lp_t0(1)) )/( colat_90km(lp_t0(1))-colat_90km(lp_t0(2)) )
-            PRINT*, 'lp_comp_weight :',lp_comp_weight
 
             DO i = 1, grid % flux_tube_max(lp)
   
@@ -545,7 +552,7 @@ CONTAINS
                 inorth   = isouth-1
 
                 DO ii = 1, grid % flux_tube_max(lp_t0(lpx))
-                  IF(  grid % q_factor(ii, lp, mp) < q_value )THEN
+                  IF(  grid % q_factor(ii, lp_t0(lpx), mp) < q_value )THEN
                     isouth   = ii
                     inorth   = ii-1
                     ispecial = 0
@@ -600,6 +607,10 @@ CONTAINS
  
         ENDDO
       ENDDO
+      !$OMP ENDDO
+
+      !$OMP END PARALLEL
+     
   END SUBROUTINE Cross_Flux_Tube_Transport
 
   SUBROUTINE Auroral_Precipitation( plasma, grid, neutrals, forcing, time_tracker )

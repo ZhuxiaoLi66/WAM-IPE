@@ -5,8 +5,7 @@ USE IPE_Precision
 USE IPE_Constants_Dictionary
 USE IPE_Grid_Class
 USE IPE_Forcing_Class
-USE IPE_Plasma_Class
-
+USE IPE_Time_Class
 
 !
 !! For the TIEGCM Wrapper
