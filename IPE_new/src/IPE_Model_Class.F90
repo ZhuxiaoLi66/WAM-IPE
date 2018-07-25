@@ -218,17 +218,24 @@ CONTAINS
     CLASS( IPE_Model ), INTENT(in) :: ipe
     CHARACTER(*), INTENT(in)       :: filename
     ! Local
+    REAL(prec) :: time
     INTEGER :: NF90_PREC
     INTEGER :: ncid
-    INTEGER :: x_dimid, y_dimid, z_dimid
+    INTEGER :: x_dimid, y_dimid, z_dimid, time_dimid, time_varid
     INTEGER :: helium_varid, oxygen_varid, molecular_oxygen_varid
     INTEGER :: molecular_nitrogen_varid, nitrogen_varid, hydrogen_varid
     INTEGER :: temperature_varid, u_varid, v_varid, w_varid
     INTEGER :: op_varid, hp_varid, hep_varid, np_varid, n2p_varid, o2p_varid, nop_varid
     INTEGER :: op2d_varid, op2p_varid, ion_temp_varid
     INTEGER :: opv_varid(1:3), hpv_varid(1:3), hepv_varid(1:3), npv_varid(1:3), n2pv_varid(1:3), o2pv_varid(1:3), nopv_varid(1:3)
+    INTEGER :: recStart(1:4), recCount(1:4)
 
 
+      recStart = (/ 1, 1, 1, 1 /)
+      recCount = (/ ipe % grid % nFluxTube, ipe % grid % NLP, ipe % grid % NMP, 1 /)
+
+
+      time = ipe % time_tracker % Calculate_Date_Difference( 2000, 1, 1, 0, 0 )
       IF( prec == sp )THEN
         NF90_PREC = NF90_FLOAT
       ELSE      
@@ -240,120 +247,129 @@ CONTAINS
       CALL Check( nf90_def_dim( ncid, "s", ipe % grid % nFluxTube, z_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "lp", ipe % grid % NLP, x_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "mp", ipe % grid % NMP, y_dimid ) ) 
+      CALL Check( nf90_def_dim( ncid, "time", NF90_UNLIMITED, time_dimid ) )
+
+
+      CALL Check( nf90_def_var( ncid, "time", NF90_PREC, time_dimid, time_varid ) )
+      CALL Check( nf90_put_att( ncid, time_varid, "long_name", "minutes since 2000-1-1 00:00 UT" ) )
+      CALL Check( nf90_put_att( ncid, time_varid, "units", "minutes" ) )
+      CALL Check( nf90_put_att( ncid, time_varid, "_FillValue", fillValue) )
+      CALL Check( nf90_put_att( ncid, time_varid, "missing_value", fillValue) )
 
       IF( ipe % parameters % write_apex_neutrals )THEN
 
         ! Neutrals
-        CALL Check( nf90_def_var( ncid, "helium", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , helium_varid ) )
+        CALL Check( nf90_def_var( ncid, "helium", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , helium_varid ) )
         CALL Check( nf90_put_att( ncid, helium_varid, "long_name", "Neutral Helium Density" ) )
         CALL Check( nf90_put_att( ncid, helium_varid, "units", "kg m^{-3}" ) )
 
-        CALL Check( nf90_def_var( ncid, "oxygen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , oxygen_varid ) )
+        CALL Check( nf90_def_var( ncid, "oxygen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , oxygen_varid ) )
         CALL Check( nf90_put_att( ncid, oxygen_varid, "long_name", "Neutral Oxygen Density" ) )
         CALL Check( nf90_put_att( ncid, oxygen_varid, "units", "kg m^{-3}" ) )
 
-        CALL Check( nf90_def_var( ncid, "molecular_oxygen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , molecular_oxygen_varid ) )
+        CALL Check( nf90_def_var( ncid, "molecular_oxygen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , molecular_oxygen_varid ) )
         CALL Check( nf90_put_att( ncid, molecular_oxygen_varid, "long_name", "Neutral Molecular Oxygen Density" ) )
         CALL Check( nf90_put_att( ncid, molecular_oxygen_varid, "units", "kg m^{-3}" ) )
 
-        CALL Check( nf90_def_var( ncid, "molecular_nitrogen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , molecular_nitrogen_varid ) )
+        CALL Check( nf90_def_var( ncid, "molecular_nitrogen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , molecular_nitrogen_varid ) )
         CALL Check( nf90_put_att( ncid, molecular_nitrogen_varid, "long_name", "Neutral Molecular Nitrogen Density" ) )
         CALL Check( nf90_put_att( ncid, molecular_nitrogen_varid, "units", "kg m^{-3}" ) )
 
-        CALL Check( nf90_def_var( ncid, "nitrogen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , nitrogen_varid ) )
+        CALL Check( nf90_def_var( ncid, "nitrogen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , nitrogen_varid ) )
         CALL Check( nf90_put_att( ncid, nitrogen_varid, "long_name", "Neutral Nitrogen Density" ) )
         CALL Check( nf90_put_att( ncid, nitrogen_varid, "units", "kg m^{-3}" ) )
 
-        CALL Check( nf90_def_var( ncid, "hydrogen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , hydrogen_varid ) )
+        CALL Check( nf90_def_var( ncid, "hydrogen", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , hydrogen_varid ) )
         CALL Check( nf90_put_att( ncid, hydrogen_varid, "long_name", "Neutral Hydrogen Density" ) )
         CALL Check( nf90_put_att( ncid, hydrogen_varid, "units", "kg m^{-3}" ) )
 
-        CALL Check( nf90_def_var( ncid, "temperature", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , temperature_varid ) )
+        CALL Check( nf90_def_var( ncid, "temperature", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , temperature_varid ) )
         CALL Check( nf90_put_att( ncid, temperature_varid, "long_name", "Thermosphere Temperature" ) )
         CALL Check( nf90_put_att( ncid, temperature_varid, "units", "K" ) )
 
-        CALL Check( nf90_def_var( ncid, "u", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , u_varid ) )
+        CALL Check( nf90_def_var( ncid, "u", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , u_varid ) )
         CALL Check( nf90_put_att( ncid, u_varid, "long_name", "Zonal Velocity" ) )
         CALL Check( nf90_put_att( ncid, u_varid, "units", "m s^{-1}" ) )
 
-        CALL Check( nf90_def_var( ncid, "v", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , v_varid ) )
+        CALL Check( nf90_def_var( ncid, "v", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , v_varid ) )
         CALL Check( nf90_put_att( ncid, v_varid, "long_name", "Meridional Velocity" ) )
         CALL Check( nf90_put_att( ncid, v_varid, "units", "m s^{-1}" ) )
 
-        CALL Check( nf90_def_var( ncid, "w", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , w_varid ) )
+        CALL Check( nf90_def_var( ncid, "w", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , w_varid ) )
         CALL Check( nf90_put_att( ncid, w_varid, "long_name", "Radial Velocity" ) )
         CALL Check( nf90_put_att( ncid, w_varid, "units", "m s^{-1}" ) )
 
       ENDIF
 
       ! Plasma
-      CALL Check( nf90_def_var( ncid, "O+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , op_varid ) )
+      CALL Check( nf90_def_var( ncid, "O+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , op_varid ) )
       CALL Check( nf90_put_att( ncid, op_varid, "long_name", "Atomic oxygen ion number density (ground state)" ) )
       CALL Check( nf90_put_att( ncid, op_varid, "units", " m^{-3}" ) )
 
-      CALL Check( nf90_def_var( ncid, "H+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , hp_varid ) )
+      CALL Check( nf90_def_var( ncid, "H+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , hp_varid ) )
       CALL Check( nf90_put_att( ncid, hp_varid, "long_name", "Hydrogen ion number density" ) )
       CALL Check( nf90_put_att( ncid, hp_varid, "units", " m^{-3}" ) )
       
-      CALL Check( nf90_def_var( ncid, "He+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , hep_varid ) )
+      CALL Check( nf90_def_var( ncid, "He+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , hep_varid ) )
       CALL Check( nf90_put_att( ncid, hep_varid, "long_name", "Helium ion number density" ) )
       CALL Check( nf90_put_att( ncid, hep_varid, "units", " m^{-3}" ) )
 
-      CALL Check( nf90_def_var( ncid, "N+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , np_varid ) )
+      CALL Check( nf90_def_var( ncid, "N+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , np_varid ) )
       CALL Check( nf90_put_att( ncid, np_varid, "long_name", "Nitrogen ion number density" ) )
       CALL Check( nf90_put_att( ncid, np_varid, "units", " m^{-3}" ) )
 
-      CALL Check( nf90_def_var( ncid, "NO+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , nop_varid ) )
+      CALL Check( nf90_def_var( ncid, "NO+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , nop_varid ) )
       CALL Check( nf90_put_att( ncid, nop_varid, "long_name", "Nitrosonium ion number density" ) )
       CALL Check( nf90_put_att( ncid, nop_varid, "units", " m^{-3}" ) )
 
-      CALL Check( nf90_def_var( ncid, "O2+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , o2p_varid ) )
+      CALL Check( nf90_def_var( ncid, "O2+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , o2p_varid ) )
       CALL Check( nf90_put_att( ncid, o2p_varid, "long_name", "Molecular Oxygen ion number density" ) )
       CALL Check( nf90_put_att( ncid, o2p_varid, "units", " m^{-3}" ) )
 
-      CALL Check( nf90_def_var( ncid, "N2+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , n2p_varid ) )
+      CALL Check( nf90_def_var( ncid, "N2+", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , n2p_varid ) )
       CALL Check( nf90_put_att( ncid, n2p_varid, "long_name", "Molecular Nitrogen ion number density" ) )
       CALL Check( nf90_put_att( ncid, n2p_varid, "units", " m^{-3}" ) )
 
-      CALL Check( nf90_def_var( ncid, "O+(2D)", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , op2d_varid ) )
+      CALL Check( nf90_def_var( ncid, "O+(2D)", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , op2d_varid ) )
       CALL Check( nf90_put_att( ncid, op2d_varid, "long_name", "Atomic oxygen ion number density (first excited state)" ) )
       CALL Check( nf90_put_att( ncid, op2d_varid, "units", " m^{-3}" ) )
 
-      CALL Check( nf90_def_var( ncid, "O+(2P)", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , op2p_varid ) )
+      CALL Check( nf90_def_var( ncid, "O+(2P)", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , op2p_varid ) )
       CALL Check( nf90_put_att( ncid, op2p_varid, "long_name", "Atomic oxygen ion number density (second excited state)" ) )
       CALL Check( nf90_put_att( ncid, op2p_varid, "units", " m^{-3}" ) )
 
-      CALL Check( nf90_def_var( ncid, "ion_temp", NF90_PREC, (/ z_dimid, x_dimid, y_dimid /) , ion_temp_varid ) )
+      CALL Check( nf90_def_var( ncid, "ion_temp", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , ion_temp_varid ) )
       CALL Check( nf90_put_att( ncid, ion_temp_varid, "long_name", "Ion temperature" ) )
       CALL Check( nf90_put_att( ncid, ion_temp_varid, "units", "K" ) )
 
       CALL Check( nf90_enddef(ncid) )
       
+      CALL Check( nf90_put_var( ncid, time_varid, time ) )
       IF( ipe % parameters % write_apex_neutrals )THEN
 
-        CALL Check( nf90_put_var( ncid, helium_varid, ipe % neutrals % helium ) )
-        CALL Check( nf90_put_var( ncid, oxygen_varid, ipe % neutrals % oxygen ) )
-        CALL Check( nf90_put_var( ncid, molecular_oxygen_varid, ipe % neutrals % molecular_oxygen ) )
-        CALL Check( nf90_put_var( ncid, molecular_nitrogen_varid, ipe % neutrals % molecular_nitrogen ) )
-        CALL Check( nf90_put_var( ncid, nitrogen_varid, ipe % neutrals % nitrogen ) )
-        CALL Check( nf90_put_var( ncid, hydrogen_varid, ipe % neutrals % hydrogen ) )
-        CALL Check( nf90_put_var( ncid, temperature_varid, ipe % neutrals % temperature ) )
-        CALL Check( nf90_put_var( ncid, u_varid, ipe % neutrals % velocity_geographic(1,:,:,:) ) )
-        CALL Check( nf90_put_var( ncid, v_varid, ipe % neutrals % velocity_geographic(2,:,:,:) ) )
-        CALL Check( nf90_put_var( ncid, w_varid, ipe % neutrals % velocity_geographic(3,:,:,:) ) )
+        CALL Check( nf90_put_var( ncid, helium_varid, ipe % neutrals % helium, recStart, recCount ) )
+        CALL Check( nf90_put_var( ncid, oxygen_varid, ipe % neutrals % oxygen, recStart, recCount ) )
+        CALL Check( nf90_put_var( ncid, molecular_oxygen_varid, ipe % neutrals % molecular_oxygen, recStart, recCount ) )
+        CALL Check( nf90_put_var( ncid, molecular_nitrogen_varid, ipe % neutrals % molecular_nitrogen, recStart, recCount ) )
+        CALL Check( nf90_put_var( ncid, nitrogen_varid, ipe % neutrals % nitrogen, recStart, recCount ) )
+        CALL Check( nf90_put_var( ncid, hydrogen_varid, ipe % neutrals % hydrogen, recStart, recCount ) )
+        CALL Check( nf90_put_var( ncid, temperature_varid, ipe % neutrals % temperature, recStart, recCount ) )
+        CALL Check( nf90_put_var( ncid, u_varid, ipe % neutrals % velocity_geographic(1,:,:,:), recStart, recCount ) )
+        CALL Check( nf90_put_var( ncid, v_varid, ipe % neutrals % velocity_geographic(2,:,:,:), recStart, recCount ) )
+        CALL Check( nf90_put_var( ncid, w_varid, ipe % neutrals % velocity_geographic(3,:,:,:), recStart, recCount ) )
 
       ENDIF
 
-      CALL Check( nf90_put_var( ncid, op_varid, ipe % plasma % ion_densities(1,:,:,:) ) )
-      CALL Check( nf90_put_var( ncid, hp_varid, ipe % plasma % ion_densities(2,:,:,:) ) )
-      CALL Check( nf90_put_var( ncid, hep_varid, ipe % plasma % ion_densities(3,:,:,:) ) )
-      CALL Check( nf90_put_var( ncid, np_varid, ipe % plasma % ion_densities(4,:,:,:) ) )
-      CALL Check( nf90_put_var( ncid, nop_varid, ipe % plasma % ion_densities(5,:,:,:) ) )
-      CALL Check( nf90_put_var( ncid, o2p_varid, ipe % plasma % ion_densities(6,:,:,:) ) )
-      CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % ion_densities(7,:,:,:) ) )
-      CALL Check( nf90_put_var( ncid, op2d_varid, ipe % plasma % ion_densities(8,:,:,:) ) )
-      CALL Check( nf90_put_var( ncid, op2p_varid, ipe % plasma % ion_densities(9,:,:,:) ) )
-      CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % ion_temperature ) )
+      CALL Check( nf90_put_var( ncid, op_varid, ipe % plasma % ion_densities(1,:,:,:), recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, hp_varid, ipe % plasma % ion_densities(2,:,:,:), recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, hep_varid, ipe % plasma % ion_densities(3,:,:,:), recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, np_varid, ipe % plasma % ion_densities(4,:,:,:), recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, nop_varid, ipe % plasma % ion_densities(5,:,:,:), recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, o2p_varid, ipe % plasma % ion_densities(6,:,:,:), recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % ion_densities(7,:,:,:), recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, op2d_varid, ipe % plasma % ion_densities(8,:,:,:), recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, op2p_varid, ipe % plasma % ion_densities(9,:,:,:), recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % ion_temperature, recStart, recCount ) )
 
       CALL Check( nf90_close( ncid ) )
 
@@ -495,7 +511,7 @@ CONTAINS
       CALL Check( nf90_def_dim( ncid, "Z", nheights_geo, z_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "longitude", nlon_geo, x_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "latitude", nlat_geo, y_dimid ) ) 
-      CALL Check( nf90_def_dim( ncid, "T", NF90_UNLIMITED, time_dimid ) )
+      CALL Check( nf90_def_dim( ncid, "time", NF90_UNLIMITED, time_dimid ) )
 
       CALL Check( nf90_def_var( ncid, "Z", NF90_PREC, z_dimid, z_varid ) )
       CALL Check( nf90_put_att( ncid, z_varid, "long_name", "Altitude" ) )
@@ -517,7 +533,7 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, x_varid, "_FillValue", fillValue) )
       CALL Check( nf90_put_att( ncid, x_varid, "missing_value", fillValue) )
 
-      CALL Check( nf90_def_var( ncid, "T", NF90_PREC, time_dimid, time_varid ) )
+      CALL Check( nf90_def_var( ncid, "time", NF90_PREC, time_dimid, time_varid ) )
       CALL Check( nf90_put_att( ncid, time_varid, "long_name", "minutes since 2000-1-1 00:00 UT" ) )
       CALL Check( nf90_put_att( ncid, time_varid, "units", "minutes" ) )
       CALL Check( nf90_put_att( ncid, time_varid, "_FillValue", fillValue) )
