@@ -5,8 +5,9 @@ AC_CONFIG_MACRO_DIRS([m4])
 
 # Detect Fortran compilers
 AC_PROG_CC
-AC_PROG_FC
-AC_PROG_F77
+AC_PROG_FC([ifort gfortran pgfortran])
+AC_PROG_F77([ifort gfortran pgfortran])
+
 
 AM_PROG_AR
 AC_PROG_RANLIB
