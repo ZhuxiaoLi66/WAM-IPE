@@ -311,13 +311,16 @@ CONTAINS
     REAL(prec) :: phi_t0 !magnetic longitude,phi[rad] at t0(previous time step)
     REAL(prec) :: theta_t0 !magnetic latitude,theta[rad] at t0
     REAL(prec) :: q_value
+    REAL(prec) :: phi_i(1:2)
     REAL(prec) :: lp_comp_weight(1:2)
+    REAL(prec) :: mp_comp_weight(1:2)
     REAL(prec) :: i_comp_weight(1:2)
     REAL(prec) :: q_int(1:2)
     REAL(prec) :: ion_densities_int(1:n_ion_species)
     REAL(prec) :: ion_temperature_int
     REAL(prec) :: ion_velocities_int(1:3,1:n_ion_species)
     INTEGER    :: lp_t0(1:2)
+    INTEGER    :: mp_t0(1:2)
     INTEGER    :: lp_min, mp_min, isouth, inorth, ii, ispecial
     INTEGER    :: mp, lp, i, lpx, mpx, jth
     INTEGER    :: i_min(1:2)
@@ -375,6 +378,38 @@ CONTAINS
             ENDIF
 
           ENDDO
+
+          mp_min = grid % NMP
+
+          DO mpx = 1, grid % NMP
+
+            IF( theta_t0 <= grid % magnetic_longitude(mpx) )THEN
+              mp_min = mpx
+              EXIT
+            ENDIF
+
+          ENDDO
+
+          IF( mp_min == 1 .OR. mp_min == grid % NMP )THEN
+
+            mp_t0(1) = grid % NMP
+            mp_t0(2) = 1
+
+            phi_i(1) = grid % magnetic_longitude(mp_t0(1)) - 2.0_prec*pi
+            phi_i(2) = grid % magnetic_longitude(mp_t0(2))
+
+          ELSE
+
+            mp_t0(1) = mp_min-1
+            mp_t0(2) = mp_min
+
+            phi_i(1) = grid % magnetic_longitude(mp_t0(1))
+            phi_i(2) = grid % magnetic_longitude(mp_t0(2))
+             
+          ENDIF
+
+          mp_comp_weight(1) =  ( phi_t0 - phi_i(2) )/( phi_i(1)-phi_i(2) )
+          mp_comp_weight(2) = -( phi_t0 - phi_i(1) )/( phi_i(1)-phi_i(2) )
   
           IF( lp_min == 1 )THEN 
 
@@ -467,6 +502,7 @@ CONTAINS
               ion_temperature_int = 0.0
               ion_velocities_int    = 0.0
   
+              DO mpx = 1, 2
               DO lpx = 1, 2
  
                 ispecial = 1
@@ -474,7 +510,7 @@ CONTAINS
                 inorth   = isouth-1
 
                 DO ii = 1, grid % flux_tube_max(lp_t0(lpx))
-                  IF(  grid % q_factor(ii, lp_t0(lpx), mp) < q_value )THEN
+                  IF(  grid % q_factor(ii, lp_t0(lpx), mp_t0(mpx)) < q_value )THEN
                     isouth   = ii
                     inorth   = ii-1
                     ispecial = 0
@@ -488,34 +524,42 @@ CONTAINS
   
                 IF( ispecial == 0 )THEN
 
-                  q_int(1) = grid % q_factor(isouth, lp_t0(lpx), mp)
-                  q_int(2) = grid % q_factor(inorth, lp_t0(lpx), mp)
+                  q_int(1) = grid % q_factor(isouth, lp_t0(lpx), mp_t0(mpx))
+                  q_int(2) = grid % q_factor(inorth, lp_t0(lpx), mp_t0(mpx))
              
                   i_comp_weight(1) = ( q_value - q_int(2) )/( q_int(1) - q_int(2) )
                   i_comp_weight(2) = -( q_value - q_int(1) )/( q_int(1) - q_int(2) )
   
                   ion_densities_int(1:n_ion_species) = ion_densities_int(1:n_ion_species) + &
-                                        ( plasma % ion_densities(1:n_ion_species, isouth, lp_t0(lpx), mp)*i_comp_weight(1) + &
-                                          plasma % ion_densities(1:n_ion_species, inorth, lp_t0(lpx), mp)*i_comp_weight(2) )*lp_comp_weight(lpx)
+                                        ( plasma % ion_densities_old(1:n_ion_species, isouth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(1) + &
+                                          plasma % ion_densities_old(1:n_ion_species, inorth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(2) )*&
+                                        lp_comp_weight(lpx)*mp_comp_weight(mpx)
 
                   ion_temperature_int = ion_temperature_int + &
-                                        ( plasma % ion_temperature(isouth, lp_t0(lpx), mp)*i_comp_weight(1) + &
-                                          plasma % ion_temperature(inorth, lp_t0(lpx), mp)*i_comp_weight(2) )*lp_comp_weight(lpx)
+                                        ( plasma % ion_temperature_old(isouth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(1) + &
+                                          plasma % ion_temperature_old(inorth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(2) )*&
+                                        lp_comp_weight(lpx)*mp_comp_weight(mpx)
 
                   ion_velocities_int(1:3,1:n_ion_species) = ion_velocities_int(1:3,1:n_ion_species) + &
-                                        ( plasma % ion_velocities(1:3,1:n_ion_species, isouth, lp_t0(lpx), mp)*i_comp_weight(1) + &
-                                          plasma % ion_velocities(1:3,1:n_ion_species, inorth, lp_t0(lpx), mp)*i_comp_weight(2) )*lp_comp_weight(lpx)
+                                        ( plasma % ion_velocities_old(1:3,1:n_ion_species, isouth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(1) + &
+                                          plasma % ion_velocities_old(1:3,1:n_ion_species, inorth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(2) )*&
+                                        lp_comp_weight(lpx)*mp_comp_weight(mpx)
  
                 ELSEIF( ispecial == 1 .OR. ispecial == 2 )THEN
 
-                  ion_densities_int(1:n_ion_species) = ion_densities_int(1:n_ion_species) + plasma % ion_densities(1:n_ion_species, isouth, lp_t0(lpx), mp)*lp_comp_weight(lpx)
+                  ion_densities_int(1:n_ion_species) = ion_densities_int(1:n_ion_species) + plasma % ion_densities_old(1:n_ion_species, isouth, lp_t0(lpx), mp_t0(mpx))*&
+                                                       lp_comp_weight(lpx)*mp_comp_weight(mpx)
 
-                  ion_temperature_int = ion_temperature_int + plasma % ion_temperature(isouth, lp_t0(lpx), mp)*lp_comp_weight(lpx)
+                  ion_temperature_int = ion_temperature_int + plasma % ion_temperature_old(isouth, lp_t0(lpx), mp_t0(mpx))*&
+                                        lp_comp_weight(lpx)*mp_comp_weight(mpx)
 
-                  ion_velocities_int(1:3,1:n_ion_species) = ion_velocities_int(1:3,1:n_ion_species) + plasma % ion_velocities(1:3,1:n_ion_species, isouth, lp_t0(lpx), mp)*lp_comp_weight(lpx)
+                  ion_velocities_int(1:3,1:n_ion_species) = ion_velocities_int(1:3,1:n_ion_species) + &
+                                                            plasma % ion_velocities_old(1:3,1:n_ion_species, isouth, lp_t0(lpx), mp_t0(mpx))*&
+                                                            lp_comp_weight(lpx)*mp_comp_weight(mpx)
 
                 ENDIF
   
+              ENDDO
               ENDDO
 
               plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)
@@ -545,6 +589,7 @@ CONTAINS
               ion_temperature_int = 0.0
               ion_velocities_int    = 0.0
   
+              DO mpx = 1, 2
               DO lpx = 1, 2
  
                 ispecial = 1
@@ -552,7 +597,7 @@ CONTAINS
                 inorth   = isouth-1
 
                 DO ii = 1, grid % flux_tube_max(lp_t0(lpx))
-                  IF(  grid % q_factor(ii, lp_t0(lpx), mp) < q_value )THEN
+                  IF(  grid % q_factor(ii, lp_t0(lpx), mp_t0(mpx)) < q_value )THEN
                     isouth   = ii
                     inorth   = ii-1
                     ispecial = 0
@@ -566,34 +611,44 @@ CONTAINS
   
                 IF( ispecial == 0 )THEN
 
-                  q_int(1) = grid % q_factor(isouth, lp_t0(lpx), mp)
-                  q_int(2) = grid % q_factor(inorth, lp_t0(lpx), mp)
+                  q_int(1) = grid % q_factor(isouth, lp_t0(lpx), mp_t0(mpx))
+                  q_int(2) = grid % q_factor(inorth, lp_t0(lpx), mp_t0(mpx))
              
                   i_comp_weight(1) = ( q_value - q_int(2) )/( q_int(1) - q_int(2) )
                   i_comp_weight(2) = -( q_value - q_int(1) )/( q_int(1) - q_int(2) )
   
                   ion_densities_int(1:n_ion_species) = ion_densities_int(1:n_ion_species) + &
-                                        ( plasma % ion_densities(1:n_ion_species, isouth, lp_t0(lpx), mp)*i_comp_weight(1) + &
-                                          plasma % ion_densities(1:n_ion_species, inorth, lp_t0(lpx), mp)*i_comp_weight(2) )*lp_comp_weight(lpx)
+                                        ( plasma % ion_densities_old(1:n_ion_species, isouth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(1) + &
+                                          plasma % ion_densities_old(1:n_ion_species, inorth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(2) )*&
+                                        lp_comp_weight(lpx)*mp_comp_weight(mpx)
 
                   ion_temperature_int = ion_temperature_int + &
-                                        ( plasma % ion_temperature(isouth, lp_t0(lpx), mp)*i_comp_weight(1) + &
-                                          plasma % ion_temperature(inorth, lp_t0(lpx), mp)*i_comp_weight(2) )*lp_comp_weight(lpx)
+                                        ( plasma % ion_temperature_old(isouth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(1) + &
+                                          plasma % ion_temperature_old(inorth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(2) )*&
+                                        lp_comp_weight(lpx)*mp_comp_weight(mpx)
 
                   ion_velocities_int(1:3,1:n_ion_species) = ion_velocities_int(1:3,1:n_ion_species) + &
-                                        ( plasma % ion_velocities(1:3,1:n_ion_species, isouth, lp_t0(lpx), mp)*i_comp_weight(1) + &
-                                          plasma % ion_velocities(1:3,1:n_ion_species, inorth, lp_t0(lpx), mp)*i_comp_weight(2) )*lp_comp_weight(lpx)
+                                        ( plasma % ion_velocities_old(1:3,1:n_ion_species, isouth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(1) + &
+                                          plasma % ion_velocities_old(1:3,1:n_ion_species, inorth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(2) )*&
+                                        lp_comp_weight(lpx)*mp_comp_weight(mpx)
  
                 ELSEIF( ispecial == 1 .OR. ispecial == 2 )THEN
 
-                  ion_densities_int(1:n_ion_species) = ion_densities_int(1:n_ion_species) + plasma % ion_densities(1:n_ion_species, isouth, lp_t0(lpx), mp)*lp_comp_weight(lpx)
+                  ion_densities_int(1:n_ion_species) = ion_densities_int(1:n_ion_species) + &
+                                                       plasma % ion_densities_old(1:n_ion_species, isouth, lp_t0(lpx), mp_t0(mpx))*&
+                                                       lp_comp_weight(lpx)*mp_comp_weight(mpx)
 
-                  ion_temperature_int = ion_temperature_int + plasma % ion_temperature(isouth, lp_t0(lpx), mp)*lp_comp_weight(lpx)
+                  ion_temperature_int = ion_temperature_int + &
+                                        plasma % ion_temperature_old(isouth, lp_t0(lpx), mp_t0(mpx))*&
+                                        lp_comp_weight(lpx)*mp_comp_weight(mpx)
 
-                  ion_velocities_int(1:3,1:n_ion_species) = ion_velocities_int(1:3,1:n_ion_species) + plasma % ion_velocities(1:3,1:n_ion_species, isouth, lp_t0(lpx), mp)*lp_comp_weight(lpx)
+                  ion_velocities_int(1:3,1:n_ion_species) = ion_velocities_int(1:3,1:n_ion_species) + &
+                                                            plasma % ion_velocities_old(1:3,1:n_ion_species, isouth, lp_t0(lpx), mp_t0(mpx))*&
+                                                            lp_comp_weight(lpx)*mp_comp_weight(mpx)
 
                 ENDIF
   
+              ENDDO
               ENDDO
 
               plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)
