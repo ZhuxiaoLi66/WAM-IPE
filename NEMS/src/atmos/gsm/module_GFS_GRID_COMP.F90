@@ -1195,8 +1195,8 @@
       rtim1           = rtc()
       total_integ_tim = (rtc()-btim0)
 !
-      IF(gfs_int_state%MYPE == 0 )  &
-          WRITE(0, *) ' GFS_init_tim=', total_integ_tim, (rtim1-rtim0)
+!     IF(gfs_int_state%MYPE == 0 )  &
+!         WRITE(0, *) ' GFS_init_tim=', total_integ_tim, (rtim1-rtim0)
 !
 !-----------------------------------------------------------------------
 !
@@ -1414,7 +1414,7 @@
 !-----------------------------------------------------------------------
 !
       IF(RC_RUN == ESMF_SUCCESS) THEN
-          WRITE(0, *) 'GFS ATM RUN STEP SUCCEEDED'
+!         WRITE(0, *) 'GFS ATM RUN STEP SUCCEEDED'
       ELSE
           WRITE(0, *) 'GFS ATM RUN STEP FAILED RC_RUN=', RC_RUN
       ENDIF
@@ -1530,7 +1530,7 @@
         write(0,*)' Finalize without physics coupling. '
        ELSE
         gfs_int_state%PHYSICS_ON = ESMF_True
-        write(0,*)' Finalize with physics coupling. '
+!       write(0,*)' Finalize with physics coupling. '
       ENDIF
 
 !-----------------------------------------------------------------------
@@ -1721,7 +1721,7 @@
 !-----------------------------------------------------------------------
 !
       IF(RC_FINAL == ESMF_SUCCESS) THEN
-        WRITE(0,*)'GFS FINALIZE STEP SUCCEEDED'
+!       WRITE(0,*)'GFS FINALIZE STEP SUCCEEDED'
       ELSE
         WRITE(0,*)'GFS FINALIZE STEP FAILED'
       ENDIF

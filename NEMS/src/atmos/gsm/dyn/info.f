@@ -20,7 +20,7 @@ c
         write(6,9110) NODES
 cjfe    write(6,9115) NUM_PARTHDS()
         write(6,9120) LEVS,LATG,LONF
-        print *,' levh levm1 levp1 ',levh,levm1,levp1
+!       print *,' levh levm1 levp1 ',levh,levm1,levp1
         write(6,9140) dt
 c        write(6,9130)
       ENDIF

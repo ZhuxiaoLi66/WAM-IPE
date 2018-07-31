@@ -296,7 +296,7 @@
       call esmf_logwrite("getting the start time",                      &
                           ESMF_LOGMSG_INFO, rc = rc1)
 
-      if (int_state%me == 0) print *,'nemsio_in=',int_state%nemsio_in
+!     if (int_state%me == 0) print *,'nemsio_in=',int_state%nemsio_in
       if(int_state%nemsio_in) then
         cfile  = trim(int_state%nam_gfs_dyn%grid_ini)
         cfile2 = trim(int_state%nam_gfs_dyn%grid_ini2)
@@ -601,7 +601,7 @@
             int_state%iniauinterval=.false.
             call getiauforcing(grid_gr_iau,int_state%phour*3600.,int_state,rc)
             IF (rc == 0) THEN
-               IF (me == 0) print*,'applying IAU forcing'
+!              IF (me == 0) print*,'applying IAU forcing'
                int_state%iniauinterval=.true.
                call applyiauforcing(grid_gr_iau,imp_gfs_dyn,int_state,dtiau,rc)
             ENDIF         

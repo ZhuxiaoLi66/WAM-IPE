@@ -186,17 +186,17 @@
         ipsd0 = 17*idate(1)+43*idate(2)+37*idate(3)+23*idate(4)
       endif
 
-      if ( me == 0 ) then
-        print *,'  In rad_initialize, before calling radinit'
-        print *,' si =',si
-        print *,' levr=',levr,' ictm=',ictm,' isol=',isol,' ico2=',ico2,&
-     &          ' iaer=',iaer,' ialb=',ialb,' iems=',iems,' ntcw=',ntcw
-        print *,' np3d=',num_p3d,' ntoz=',ntoz,' iovr_sw=',iovr_sw,     &
-     &          ' iovr_lw=',iovr_lw,' isubc_sw=',isubc_sw,              &
-     &          ' isubc_lw=',isubc_lw,' iflip=',iflip,'  me=',me
-        print *,' crick_proof=',crick_proof,                            &
-     &          ' ccnorm=',ccnorm,' norad_precip=',norad_precip
-      endif
+!     if ( me == 0 ) then
+!       print *,'  In rad_initialize, before calling radinit'
+!       print *,' si =',si
+!       print *,' levr=',levr,' ictm=',ictm,' isol=',isol,' ico2=',ico2,&
+!    &          ' iaer=',iaer,' ialb=',ialb,' iems=',iems,' ntcw=',ntcw
+!       print *,' np3d=',num_p3d,' ntoz=',ntoz,' iovr_sw=',iovr_sw,     &
+!    &          ' iovr_lw=',iovr_lw,' isubc_sw=',isubc_sw,              &
+!    &          ' isubc_lw=',isubc_lw,' iflip=',iflip,'  me=',me
+!       print *,' crick_proof=',crick_proof,                            &
+!    &          ' ccnorm=',ccnorm,' norad_precip=',norad_precip
+!     endif
 
       call radinit                                                      &
 !  ---  inputs:
@@ -204,11 +204,11 @@
 !  ---  outputs:
 !          ( none )
 
-      if ( me == 0 ) then
-        print *,'  Radiation sub-cloud initial seed =',ipsd0,           &
-     &          ' IC-idate =',idate
-        print *,' return from rad_initialize - after calling radinit'
-      endif
+!     if ( me == 0 ) then
+!       print *,'  Radiation sub-cloud initial seed =',ipsd0,           &
+!    &          ' IC-idate =',idate
+!       print *,' return from rad_initialize - after calling radinit'
+!     endif
 !
       return
 !...................................

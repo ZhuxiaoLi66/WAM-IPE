@@ -130,7 +130,7 @@
         kkze = p_ze
         kkrq = p_rq
       else
-        print *,' **** error in twrites_rst: unknown step=',step
+!       print *,' **** error in twrites_rst: unknown step=',step
       endif
         
       do j=1,len_trie_ls
@@ -197,8 +197,8 @@
 !WY bug fix.
 !-----------
       if ( me .eq. ioproc ) then
-        write(0,*)'ALLOC PARMS TWRITE ',len_trie_ls_max+len_trio_ls_max,
-     &      2, lots_rst, nodes,1
+!       write(0,*)'ALLOC PARMS TWRITE ',len_trie_ls_max+len_trio_ls_max,
+!    &      2, lots_rst, nodes,1
  
          allocate ( trieo_ls_nodes ( len_trie_ls_max+len_trio_ls_max,
      &                               2, lots_rst, nodes ),
@@ -307,7 +307,7 @@
 !-- write out data
       IF (me.eq.ioproc) THEN
  
-        print *,' in TWRITES fhour=',fhour
+!       print *,' in TWRITES fhour=',fhour
 !
         if (first) then
 !

@@ -64,8 +64,8 @@
 !-- collect data to ioproc
 !-----------
       if ( me .eq. ioproc ) then
-        write(0,*)'ALLOC PARMS TWRITE ',len_trie_ls_max+len_trio_ls_max,
-     &      2, lotls, nodes,1
+!       write(0,*)'ALLOC PARMS TWRITE ',len_trie_ls_max+len_trio_ls_max,
+!    &      2, lotls, nodes,1
 !
          allocate ( trieo_ls_nodes ( len_trie_ls_max+len_trio_ls_max,
      &                               2, lotls, nodes ),
@@ -74,7 +74,7 @@
          allocate (trieo_ls_nodes(1, 1, 1, 1), stat = ierr)
       endif
       if (ierr .ne. 0) then
-        write (0,*) ' GWX trieo_ls_nodes allocate failed'
+!       write (0,*) ' GWX trieo_ls_nodes allocate failed'
         call mpi_abort(mpi_comm_all,ierr,i)
        endif
 !

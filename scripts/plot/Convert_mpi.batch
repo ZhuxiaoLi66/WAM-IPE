@@ -8,15 +8,15 @@ TAG='V0.1'
 # Set the path to the base WAM-IPE directory (containing IPELIB)
 WAMIPEDIR=${1:-`pwd`/../..}
 # Set the path to the directory where your IPE output can be found
-IPE_RUNDIR="/scratch4/NCEPDEV/stmp3/Adam.Kubaryk/march2013_nrf/"
+IPE_RUNDIR="/scratch4/NCEPDEV/stmp3/George.Millward/rhlw_1hr_1hr/baseline_T2/"
 # Set the path to where you want the NetCDF output.
-OUTDIR="$IPE_RUNDIR/netcdf/"
+OUTDIR="$IPE_RUNDIR/netcdf2/"
 # Set the path to where you want the eps files and the Latex file.
-PLOTDIR="$OUTDIR/plots/"
+PLOTDIR="$OUTDIR/plots2/"
 # Set the full path to the restart directory with the grid files can be found.
 RESDIR="/scratch3/NCEPDEV/swpc/noscrub/ipe_initial_conditions/2013160300/grid_80x170/"
 # Set to "-p" or "--polar" for polar orthographic projection, leave blank as "" for global cylinder.
-PLOTTYPE="-p"
+PLOTTYPE=""
 # *************************************************** #
 
 # //////////////////////////////////////////////////////////////////////// #

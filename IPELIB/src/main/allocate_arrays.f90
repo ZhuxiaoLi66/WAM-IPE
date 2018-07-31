@@ -27,10 +27,9 @@
 
 ! (0) ALLOCATE arrays
       IF ( switch==0 ) THEN
-        print *,'ALLOCATing ARRAYS',ISTOT,MaxFluxTube,NLP,NMP
         allocate( plasma_grid_3d(MaxFluxTube,NLP,NMP,6    ) &
      &,           plasma_grid_Z (MaxFluxTube,NLP          ) &
-     &,           plasma_grid_GL(MaxFluxTube,NLP          ) &
+     &,           plasma_grid_mag_colat(MaxFluxTube,NLP          ) &
      &,           r_meter2D     (MaxFluxTube,NLP          ) &
      &,           plasma_3d     (MaxFluxTube,NLP,NMP,ISTOT) &
      &,           plasma_3d_old (MaxFluxTube,NLP,NMP,ISTOT) &
@@ -67,11 +66,6 @@
         auroral_heating_rate        = 0.0
         o2_dissociation_rate        = 0.0
 
-!SMS$ignore begin                                                                  
-print*, mype,'allocate_arrays:  size=',size(tn_k)
-print*, mype,'q shape=',shape(tn_k)
-!SMS$ignore end
-
 
 !nm20170424 wind output corrected
 !t        if ( sw_neutral==0.or.sw_neutral==1 ) then
@@ -80,12 +74,6 @@ print*, mype,'q shape=',shape(tn_k)
 
         IF ( sw_neutral_heating_flip==1 ) THEN
           ALLOCATE(hrate_mks3d(MaxFluxTube,NLP,NMP,7),STAT=stat_alloc)
-          IF ( stat_alloc==0 ) THEN
-            print *,' hrate_mks3d ALLOCATION SUCCESSFUL!!!'
-          ELSE !stat_alloc/=0
-            print *,"!STOP hrate_mks3d ALLOCATION FAILED!:NHEAT",stat_alloc
-            STOP
-          END IF
         END IF !( sw_neutral_heating_flip==1 )
 
         ALLOCATE ( Be3     (  NLP,NMP  ) &
@@ -99,21 +87,9 @@ print*, mype,'q shape=',shape(tn_k)
 !     &,            mlon_rad(      NMP+1) &
      &,            mlon_rad(1-mpHaloSize:NMP+mpHaloSize) &
      &,            STAT=stat_alloc       )
-        IF ( stat_alloc==0 ) THEN
-           print *,'ALLOCATION Be3 etc. SUCCESSFUL!!!'
-        ELSE !stat_alloc/=0
-           print *,switch,"!STOP! ALLOCATION Be3 etc. FAILED!:",stat_alloc
-           STOP
-        END IF
 
        allocate ( DISPLS(nprocs),MPends(nprocs),recvCounts(nprocs) &
      &,            STAT=stat_alloc ) 
-       IF ( stat_alloc==0 ) THEN
-          print *,'ALLOCATION using nprocs SUCCESSFUL!!!'
-       ELSE !stat_alloc/=0
-          print *,switch,"!STOP! ALLOCATION using nprocs FAILD!:",stat_alloc
-          STOP
-       END IF
 
 !SMS$IGNORE BEGIN
        VEXBup = 0.0
@@ -122,21 +98,15 @@ print*, mype,'q shape=',shape(tn_k)
 
 ! (1) DEALLOCATE arrays
     ELSE IF ( switch==1 ) THEN
-       print *,'DE-ALLOCATing ARRAYS'
 ! field line grid
        DEALLOCATE ( &
      &    plasma_grid_3d &
-!---
      &,        apexD     &
-!dbg20110923     &,        apexE &
-!---
      &,          Be3     &
      &,       Pvalue     &
      &,      JMIN_IN     &
      &,      JMAX_IS     &
-!---
      &,      mlon_rad    &
-!---plasma
      &,  plasma_3d       &
      &,  plasma_3d_old   &
      &,  poleVal         &
@@ -161,10 +131,7 @@ print*, mype,'q shape=',shape(tn_k)
                   joule_heating_rate, &          
                   auroral_heating_rate, &        
                   o2_dissociation_rate  )
-!nm20170424 wind output corrected
-!t       if ( sw_neutral==0.or.sw_neutral==1 ) then 
           DEallocate( WamField )
-!t       end if
 
 !---neutral heating
        IF ( sw_neutral_heating_flip==1 ) THEN

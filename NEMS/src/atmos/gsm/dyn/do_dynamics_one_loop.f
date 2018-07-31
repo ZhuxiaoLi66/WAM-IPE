@@ -456,7 +456,7 @@ c idea add 1
         endif                                                     ! hmhj
 !
         if (me.eq.me_l_0) then
-          print *,' pdryini pdryg pcorr = ',pdryini,pdryg,pcorr
+!         print *,' pdryini pdryg pcorr = ',pdryini,pdryg,pcorr
           trie_ls(1,1,p_zq)=trie_ls(1,1,p_zq)+pcorr/dt2
           do k=p_dpn,p_dpn+levs-1
             n=k-p_dpn+1
@@ -705,7 +705,7 @@ c coefficients
 
         if( lsidea ) then
 
-        print *,' ndslfv and lsidea are on '
+!       print *,' ndslfv and lsidea are on '
 !
 !$omp parallel do shared(TRIE_LS,TRIO_LS)
 !$omp+shared(dt,SL,LS_NODE,coef00,hybrid,gen_coord_hybrid)
@@ -722,7 +722,7 @@ c coefficients
      &                gen_coord_hybrid,visc,cond,diff)
         enddo
         else
-        print *,' ndslfv is on and lsidea is off '
+!       print *,' ndslfv is on and lsidea is off '
 !
 !$omp parallel do shared(TRIE_LS,TRIO_LS)
 !$omp+shared(dt,SL,LS_NODE,coef00,hybrid,gen_coord_hybrid)
@@ -744,7 +744,7 @@ c coefficients
 
 
         if( lsidea ) then
-        print *,' ndslfv is off and lsidea is on '
+!       print *,' ndslfv is off and lsidea is on '
 !
 !$omp parallel do shared(TRIE_LS,TRIO_LS)
 !$omp+shared(dt,SL,LS_NODE,coef00,hybrid,gen_coord_hybrid)
@@ -761,7 +761,7 @@ c coefficients
         enddo
 
         else
-        print *,' ndslfv is off and lsidea is off '
+!       print *,' ndslfv is off and lsidea is off '
 
 
 !$omp parallel do shared(TRIE_LS,TRIO_LS)
@@ -993,8 +993,8 @@ c
 !
 !  dfi end step, return to dfi routine
 !------------------------------------
-       if(me==0) 
-     &     print *,'in dyn one step, return aft dfi,kdt=',kdt
+!      if(me==0) 
+!    &     print *,'in dyn one step, return aft dfi,kdt=',kdt
           RETURN
       END IF
 ! run for Cpl_flag == .true.
@@ -1456,16 +1456,16 @@ c
             spdmax(k)=sqrt(spdmax(k))
          enddo
 !
-         print*,'in do_dynamics_one_loop for spdmx at kdt=',kdt
-         print 100,(spdmax(k),k=1,levs)
-100      format(' spdmx(001:010)=',10f5.0,:/' spdmx(011:020)=',10f5.0,
-     &        :/' spdmx(021:030)=',10f5.0,:/' spdmx(031:040)=',10f5.0,
-     &        :/' spdmx(041:050)=',10f5.0,:/' spdmx(051:060)=',10f5.0,
-     &        :/' spdmx(061:070)=',10f5.0,:/' spdmx(071:080)=',10f5.0,
-     &        :/' spdmx(081:090)=',10f5.0,:/' spdmx(091:100)=',10f5.0,
-     &        :/' spdmx(101:110)=',10f5.0,:/' spdmx(111:120)=',10f5.0,
-     &        :/' spdmx(121:130)=',10f5.0,:/' spdmx(131:140)=',10f5.0,
-     &        :/' spdmx(141:150)=',10f5.0,:/' spdmx(151:160)=',10f5.0)
+!        print*,'in do_dynamics_one_loop for spdmx at kdt=',kdt
+!        print 100,(spdmax(k),k=1,levs)
+!100      format(' spdmx(001:010)=',10f5.0,:/' spdmx(011:020)=',10f5.0,
+!    &        :/' spdmx(021:030)=',10f5.0,:/' spdmx(031:040)=',10f5.0,
+!    &        :/' spdmx(041:050)=',10f5.0,:/' spdmx(051:060)=',10f5.0,
+!    &        :/' spdmx(061:070)=',10f5.0,:/' spdmx(071:080)=',10f5.0,
+!    &        :/' spdmx(081:090)=',10f5.0,:/' spdmx(091:100)=',10f5.0,
+!    &        :/' spdmx(101:110)=',10f5.0,:/' spdmx(111:120)=',10f5.0,
+!    &        :/' spdmx(121:130)=',10f5.0,:/' spdmx(131:140)=',10f5.0,
+!    &        :/' spdmx(141:150)=',10f5.0,:/' spdmx(151:160)=',10f5.0)
 !
 !--------------------------------------------
       endif

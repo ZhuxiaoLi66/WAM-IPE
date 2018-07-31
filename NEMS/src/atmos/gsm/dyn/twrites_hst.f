@@ -360,7 +360,7 @@
           call sigio_rwdati(nsig,head,dati,iret)
         end do
 !
-        print *,' twriteeo fhour=',fhour,' idate=',idate,' nsig=',nsig
+!       print *,' twriteeo fhour=',fhour,' idate=',idate,' nsig=',nsig
 !
       endif   !me.eq.ioproc
       deallocate ( trieo_ls_nodes )

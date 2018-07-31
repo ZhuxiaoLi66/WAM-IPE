@@ -200,17 +200,17 @@
 !         ndfih  = nint(fhdfi*3600./deltim)
 !         kdtdfi = kdt + ndfih
 
-          if (me == 0) 
-     &     print *,' start step from internal state (grid and spectral)'
-     &,            ' ldfi_spect=',ldfi_spect
+!         if (me == 0) 
+!    &     print *,' start step from internal state (grid and spectral)'
+!    &,            ' ldfi_spect=',ldfi_spect
 
 ! dfi.
           if (ldfi_spect) then
             ndfih  = nint(fhdfi*3600./deltim)
             kdtdfi = kdt + ndfih
  
-            if ( me == 0 ) print *,' calling spectdfini with ndfih=',
-     &                             ndfih
+!           if ( me == 0 ) print *,' calling spectdfini with ndfih=',
+!    &                             ndfih
             if (ndfih /= 0 ) then
               call do_dynamics_spectdfini_slg(-ndfih-1,ndfih,trie_ls,
      &                                     trio_ls)
@@ -228,7 +228,7 @@
 !         if (me == 0) write(0,*)' in reset_step option'
 
           if (ldfi_spect) then
-            if( me == 0 ) print *,' finialize spectdfini '
+!           if( me == 0 ) print *,' finialize spectdfini '
             call do_dynamics_spectdfini_slg(ndfih+1,ndfih,
      &                                      trie_ls,trio_ls)
             call do_dynamics_spectc2n(trie_ls,trio_ls)
@@ -407,7 +407,7 @@
 ! --------------------------------------------------------------
         else if( restart_step ) then   ! restart from history file
 ! --------------------------------------------------------------
-          if(me == 0) print *,'in restart step'
+!         if(me == 0) print *,'in restart step'
 
 !         call get_cd_hyb(deltim)
           call get_cd_hyb_slg(deltim,batah)
@@ -416,8 +416,8 @@
             ndfih  = nint(fhdfi*3600./deltim)
             kdtdfi = kdt + ndfih
 
-            if ( me == 0 ) print *,' calling spectdfini with ndfih=',
-     &        ndfih
+!           if ( me == 0 ) print *,' calling spectdfini with ndfih=',
+!    &        ndfih
             if (ndfih /= 0 ) then
               call do_dynamics_spectdfini_slg(-ndfih-1,ndfih,trie_ls,
      &                                     trio_ls)
@@ -665,8 +665,8 @@
 
              pcorr = (pdryini-pdryg)/sumto*sqrt(2.)
 !
-             if (me == 0) write(0,*)'pcorr pdryini pdryg ',pcorr,
-     &                    pdryini,pdryg,' kdt=',kdt,' fhour=',fhour
+!            if (me == 0) write(0,*)'pcorr pdryini pdryg ',pcorr,
+!    &                    pdryini,pdryg,' kdt=',kdt,' fhour=',fhour
 
              if (glbsum .and. me == me_l_0) then                            !glbsum
                write(70,111) kdt,fhour,idate                                !glbsum
@@ -1015,8 +1015,8 @@
          call do_dynamics_spectdfini_slg
      &                      (kdt-kdtdfi,ndfih,trie_ls,trio_ls)
          if( kdt-kdtdfi == ndfih ) reset_step=.true.
-         if( me == 0 ) print *,' do spectdfini at kdt=',kdt,
-     &    'reset_step=',reset_step,kdt,kdtdfi,ndfih
+!        if( me == 0 ) print *,' do spectdfini at kdt=',kdt,
+!    &    'reset_step=',reset_step,kdt,kdtdfi,ndfih
        END IF
 !
 ! =====================================================================

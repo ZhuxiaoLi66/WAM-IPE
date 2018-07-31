@@ -1245,9 +1245,11 @@ fi
 # Mostly IDEA-related stuff in this section
 #--------------------------------------------------------------
 if [ $NEMS = .true. ] ; then # grids for mediator
-  $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew2.nc .
-  $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew_20160427.nc .
   $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/ipe3dgrid2.nc .
+  $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew2.nc .
+  # Copy both for now, when fully switched get rid of wam3dgridnew_20160427.nc
+  $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew_20160427.nc .
+  $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/WAMFixedHgtGrid_20180312.nc .
 fi
 
 if [ $IDEA = .true. ]; then
@@ -1298,7 +1300,7 @@ if [ $IDEA = .true. ]; then
 
   # RT_WAM
   ${NLN} $RT_WAM/* $DATA
-  # grids
+  # IPE section
   if [ $IPE = .true. ]; then
    $NLN $IPEGRID ${DATA}/ipe_grid
 
@@ -1450,7 +1452,7 @@ cat  > IPE.inp <<EOF
   sw_pcp=0
   sw_perp_transport=2
   sw_record_number=1
-  sw_th_or_r=0
+  sw_convection_footpoint_0_or_apex_1=1
   ut_start_perp_trans=${START_UT_SEC}
   utime0LPI=${START_UT_SEC}
   barriersOn=f

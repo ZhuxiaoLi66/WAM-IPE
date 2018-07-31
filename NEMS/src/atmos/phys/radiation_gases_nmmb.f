@@ -390,17 +390,17 @@
                 enddo
               enddo
 
-              if ( me == 0 ) then
-                print *,' - Using co2 monthly 2-d data from user',        &
-     &                ' provided data set:',co2usr_file
-                print *, iyr,cline(1:94),co2g1,'  GROWTH RATE =', co2g2
+!             if ( me == 0 ) then
+!               print *,' - Using co2 monthly 2-d data from user',        &
+!    &                ' provided data set:',co2usr_file
+!               print *, iyr,cline(1:94),co2g1,'  GROWTH RATE =', co2g2
 
-                print *,' CHECK: Sample of selected months of CO2 data'
-                do imo = 1, 12, 3
-                  print *,'        Month =',imo
-                  print *, co2vmr_sav(1,:,imo)
-                enddo
-              endif
+!               print *,' CHECK: Sample of selected months of CO2 data'
+!               do imo = 1, 12, 3
+!                 print *,'        Month =',imo
+!                 print *, co2vmr_sav(1,:,imo)
+!               enddo
+!             endif
             else
               print *,' ICO2=',ico2flg,' is not a valid selection',        &
      &                ' - Stoped in subroutine gas_init!!!'
@@ -632,10 +632,10 @@
           read (NICO2CN, 24) iyr1, iyr2, cline
   24      format(i4,4x,i4,a48)
 
-          if ( me == 0 ) then
-            print *,'   Opened co2 data file: ',co2gbl_file
+!         if ( me == 0 ) then
+!           print *,'   Opened co2 data file: ',co2gbl_file
 !check      print *, iyr1, iyr2, cline(1:48)
-          endif
+!         endif
 
           if ( idyr < iyr1 ) then
             iyr = iyr1
@@ -731,10 +731,10 @@
         read (NICO2CN, 36) iyr, cline, co2g1, co2g2
   36    format(i4,a94,f7.2,16x,f5.2)
 
-        if ( me == 0 ) then
-          print *,'   Opened co2 data file: ',cfile1
-          print *, iyr, cline(1:94), co2g1,'  GROWTH RATE =', co2g2
-        endif
+!       if ( me == 0 ) then
+!         print *,'   Opened co2 data file: ',cfile1
+!         print *, iyr, cline(1:94), co2g1,'  GROWTH RATE =', co2g2
+!       endif
 
 !  --- ...  add growth rate if needed
         if ( lextpl ) then
@@ -746,10 +746,10 @@
         endif
 
         co2_glb = (co2g1 + rate) * 1.0e-6
-        if ( me == 0 ) then
-          print *,'   Global annual mean CO2 data for year',            &
-     &              iyear, co2_glb
-        endif
+!       if ( me == 0 ) then
+!         print *,'   Global annual mean CO2 data for year',            &
+!    &              iyear, co2_glb
+!       endif
 
         if ( ictmflg == -2 ) then     ! need to calc ic time annual mean first
 
@@ -787,17 +787,17 @@
               enddo
             enddo
 
-            if ( me==0 ) then
-              print *,' CHECK: Sample of 2-d annual mean of CO2 ',      &
-     &                'data used for year:',iyear
-              print *, co2ann(1,:)
-              print *,' CHECK: AFTER adding seasonal cycle, Sample ',   &
-     &                'of selected months of CO2 data for year:',iyear
-              do imo = 1, 12, 3
-                print *,'        Month =',imo
-                print *, co2vmr_sav(1,:,imo)
-              enddo
-            endif
+!           if ( me==0 ) then
+!             print *,' CHECK: Sample of 2-d annual mean of CO2 ',      &
+!    &                'data used for year:',iyear
+!             print *, co2ann(1,:)
+!             print *,' CHECK: AFTER adding seasonal cycle, Sample ',   &
+!    &                'of selected months of CO2 data for year:',iyear
+!             do imo = 1, 12, 3
+!               print *,'        Month =',imo
+!               print *, co2vmr_sav(1,:,imo)
+!             enddo
+!           endif
           endif   ! endif_icl2flg_block
 
         else                  ! no need to calc ic time annual mean first
@@ -814,14 +814,14 @@
               enddo
             enddo
 
-            if ( me == 0 ) then
-              print *,' CHECK: Sample of selected months of CO2 ',      &
-     &                'data used for year:',iyear
-              do imo = 1, 12, 3
-                print *,'        Month =',imo
-                print *, co2vmr_sav(1,:,imo)
-              enddo
-            endif
+!           if ( me == 0 ) then
+!             print *,' CHECK: Sample of selected months of CO2 ',      &
+!    &                'data used for year:',iyear
+!             do imo = 1, 12, 3
+!               print *,'        Month =',imo
+!               print *, co2vmr_sav(1,:,imo)
+!             enddo
+!           endif
           endif   ! endif_ico2flg_block
 
           do imo = 1, 12

@@ -1492,7 +1492,7 @@
 !WY bug fixed.
       MYPE = int_state%ME
 
-      IF(MYPE == 0) WRITE(0,*)' PHYSICS_OUTPUT: Number of 2-D Real Fields=',NUM_2D_FIELDS_R
+!     IF(MYPE == 0) WRITE(0,*)' PHYSICS_OUTPUT: Number of 2-D Real Fields=',NUM_2D_FIELDS_R
 !
       END SUBROUTINE ADD_BUNDLE_TO_WRITE
 !

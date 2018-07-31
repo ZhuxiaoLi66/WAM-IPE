@@ -29,11 +29,11 @@ CONTAINS
   SUBROUTINE plasma ( utime )
     USE module_input_parameters,ONLY:mpSTOP,ip_freq_output,start_time,STOP_time,&
     &     sw_neutral_heating_flip,sw_perp_transport,lpmin_perp_trans,lpmax_perp_trans,&
-    &     sw_para_transport,sw_debug,sw_dbg_perp_trans,sw_exb_up,nprocs,mype,         &
+    &     sw_para_transport,sw_dbg_perp_trans,sw_exb_up,nprocs,mype,         &
     &     HPEQ_flip,barriersOn, solar_forcing_time_step, &
     &     perp_transport_time_step
     USE module_physical_constants,ONLY:rtd,zero
-    USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,plasma_grid_3d,plasma_grid_GL,  &
+    USE module_FIELD_LINE_GRID_MKS,ONLY:JMIN_IN,plasma_grid_3d,plasma_grid_mag_colat,  &
     &     plasma_grid_Z,JMAX_IS,hrate_mks3d,poleVal
     USE module_PLASMA,ONLY:utime_save,plasma_1d
     USE module_perpendicular_transport,ONLY:perpendicular_transport
@@ -47,22 +47,12 @@ CONTAINS
     INTEGER :: utime_perp_transport, time_loop
     REAL :: t1, t2
 
-!SMS$SERIAL BEGIN
-    CALL CPU_TIME( t1 )
-!SMS$SERIAL END
-    
-
 ! save ut so that other SUBROUTINEs can refer to it
     utime_save=utime
 
     IF ( sw_neutral_heating_flip==1 )  THEN
       hrate_mks3d(:,:,:,:)=zero!0.0_REAL_prec
     ENDIF
-
-
-!SMS$SERIAL (<plasma_3d,IN> :DEFAULT=IGNORE)BEGIN
-    PRINT*, 'min/max plasma : ',MINVAL(plasma_3d), MAXVAL(plasma_3d), utime
-!SMS$SERIAL END
 
 
     IF ( utime > 0 ) THEN
@@ -115,11 +105,6 @@ CONTAINS
       ENDDO
     ENDDO
 !SMS$PARALLEL END
-
-!SMS$SERIAL BEGIN
-    CALL CPU_TIME( t2 )
-    PRINT*, "PLASMA_TIME :", t2-t1
-!SMS$SERIAL END
 
   END SUBROUTINE plasma
 

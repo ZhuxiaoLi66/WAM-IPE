@@ -90,6 +90,6 @@
   sw_pcp=0
   sw_perp_transport=1
   sw_record_number=0
-  sw_th_or_r=1
+  sw_convection_footpoint_0_or_apex_1=1
   ut_start_perp_trans=432000
 /

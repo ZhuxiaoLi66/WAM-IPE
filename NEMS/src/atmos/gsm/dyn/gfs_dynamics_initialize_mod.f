@@ -533,9 +533,9 @@
          len_trie_ls = len_trie_ls+(jcap+3-l)/2
          len_trio_ls = len_trio_ls+(jcap+2-l)/2
       enddo
-      if (me == 0) print *,'ls_node=',gis_dyn%ls_node(1:ls_dim),'2dim=',  &
-                            gis_dyn%ls_node(ls_dim+1:2*ls_dim),'3dim=',   &
-                            gis_dyn%ls_node(2*ls_dim+1:3*ls_dim)
+!     if (me == 0) print *,'ls_node=',gis_dyn%ls_node(1:ls_dim),'2dim=',  &
+!                           gis_dyn%ls_node(ls_dim+1:2*ls_dim),'3dim=',   &
+!                           gis_dyn%ls_node(2*ls_dim+1:3*ls_dim)
 !c
 !c
       allocate ( gis_dyn%epse  (len_trie_ls) )
@@ -559,9 +559,9 @@
       gis_dyn%maxstp = 36
 
  
-      if(me == 0) 							&
-        print*,'from compns_dynamics : iret=',gis_dyn%iret		&
-       ,' nsout=',nsout,' nsres=',nsres
+!     if(me == 0) 							&
+!       print*,'from compns_dynamics : iret=',gis_dyn%iret		&
+!      ,' nsout=',nsout,' nsres=',nsres
 
       if(gis_dyn%iret /= 0) then
         if(me == 0) print *,' incompatible namelist - aborted in main'
@@ -685,11 +685,11 @@
       allocate (      gis_dyn%fhour_idate(1,5) )
 !      write(0,*)'after allocate fhour_idate'
 !
-      if (me == 0) then
-        print*, ' lats_dim_a=', lats_dim_a, ' lats_node_a=', lats_node_a
-        print*, ' lats_dim_ext=', lats_dim_ext,                           &
-                ' lats_node_ext=', lats_node_ext
-      endif
+!     if (me == 0) then
+!       print*, ' lats_dim_a=', lats_dim_a, ' lats_node_a=', lats_node_a
+!       print*, ' lats_dim_ext=', lats_dim_ext,                           &
+!               ' lats_node_ext=', lats_node_ext
+!     endif
 !     write(150+me,*)' lats_dim_a=', lats_dim_a, ' lats_node_a=',lats_node_a
 !c
       gis_dyn%grid_gr  = 0.0
@@ -726,10 +726,10 @@
         end if
       end if
 
-      if (me == 0) then
-        print *,' grid_ini=',trim(gis_dyn%nam_gfs_dyn%grid_ini),'fhrot=',fhrot, &
-        'fhini=',fhini,'restart_run=',gis_dyn%restart_run
-      endif
+!     if (me == 0) then
+!       print *,' grid_ini=',trim(gis_dyn%nam_gfs_dyn%grid_ini),'fhrot=',fhrot, &
+!       'fhini=',fhini,'restart_run=',gis_dyn%restart_run
+!     endif
 
       if( .not. gis_dyn%restart_run) then
         if(nemsio_in) then
@@ -752,11 +752,11 @@
           gis_dyn% reset_step   = .false.
           gis_dyn% restart_step = .false.
       else
-        if (me == 0) then
-          print *,'restart,filename=',trim(gis_dyn%nam_gfs_dyn%grid_ini),       &
-          trim(gis_dyn%nam_gfs_dyn%grid_ini2),trim(gis_dyn%nam_gfs_dyn%sig_ini),&
-          trim(gis_dyn%nam_gfs_dyn%sig_ini2)
-        endif
+!       if (me == 0) then
+!         print *,'restart,filename=',trim(gis_dyn%nam_gfs_dyn%grid_ini),       &
+!         trim(gis_dyn%nam_gfs_dyn%grid_ini2),trim(gis_dyn%nam_gfs_dyn%sig_ini),&
+!         trim(gis_dyn%nam_gfs_dyn%sig_ini2)
+!       endif
         call input_fields_rst(gis_dyn%nam_gfs_dyn%grid_ini,                  &
           gis_dyn%nam_gfs_dyn%grid_ini2,gis_dyn%nam_gfs_dyn%sig_ini,         &
           gis_dyn%nam_gfs_dyn%sig_ini2, gis_dyn%pdryini,                     &

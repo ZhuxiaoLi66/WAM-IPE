@@ -400,11 +400,11 @@
 !           read (NIRADSF, 24) iyr1,iyr2,icy1,icy2,smean,cline
 ! 24        format(4i5,f8.2,a60)
 
-            if ( me == 0 ) then
-              print *,'  Updating solar constant with cycle approx'
-              print *,'   Opened solar constant data file: ',solar_fname
+!           if ( me == 0 ) then
+!             print *,'  Updating solar constant with cycle approx'
+!             print *,'   Opened solar constant data file: ',solar_fname
 !check        print *, iyr1, iyr2, icy1, icy2, smean, cline
-            endif
+!           endif
 
 !  --- ...  check if there is a upper year limit put on the data table
 
@@ -477,10 +477,10 @@
                 if ( i == iyr .and. iyr == jyr ) then
                   solc0  = smean + solc1
 
-                  if (me == 0) then
-                    print *,' CHECK: Solar constant data used for year',&
-     &                       iyr, solc1, solc0
-                  endif
+!                 if (me == 0) then
+!                   print *,' CHECK: Solar constant data used for year',&
+!    &                       iyr, solc1, solc0
+!                 endif
                   exit Lab_dowhile3
                 else
 !check            if(me == 0) print *,'  Skip solar const data for yr',i
@@ -500,10 +500,10 @@
                   enddo
                   solc0  = smean + smon(imon)
 
-                  if (me == 0) then
-                    print *,' CHECK: Solar constant data used for year',&
-     &                      iyr,' and month',imon
-                  endif
+!                 if (me == 0) then
+!                   print *,' CHECK: Solar constant data used for year',&
+!    &                      iyr,' and month',imon
+!                 endif
                   exit Lab_dowhile4
                 else
 !check            if(me == 0) print *,'  Skip solar const data for yr',i
@@ -579,10 +579,10 @@
 
       anginc = pid12 * dtswh / float(nstp-1)          ! solar angle inc during each calc step
 
-      if ( me == 0 ) then
-        print *,'   for cosz calculations: nswr,deltim,deltsw,dtswh =', &
-     &          nswr,deltim,deltsw,dtswh,'  anginc,nstp =',anginc,nstp
-      endif
+!     if ( me == 0 ) then
+!       print *,'   for cosz calculations: nswr,deltim,deltsw,dtswh =', &
+!    &          nswr,deltim,deltsw,dtswh,'  anginc,nstp =',anginc,nstp
+!     endif
 
 !     if (me == 0) print*,'in sol_update completed sr solar'
 !

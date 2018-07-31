@@ -51,8 +51,8 @@
       n1    = 11
       n2    = 12
  
-      if (me == 0) print *,' dyn_start_time,grib_inp=',grib_inp,' cfile=',cfile,  &
-    &          'nemsio_in=',nemsio_in
+!     if (me == 0) print *,' dyn_start_time,grib_inp=',grib_inp,' cfile=',cfile,  &
+!   &          'nemsio_in=',nemsio_in
 !        write(0,*)'in dyn_start_time'
 
       if(nemsio_in .or. restart_run) then
@@ -78,11 +78,11 @@
           sec    = 0
         endif
        else
-         if (me == 0) print *,'in start_time,sigio input option,n1=',n1
+!        if (me == 0) print *,'in start_time,sigio input option,n1=',n1
          call sigio_rropen(n1,cfile,iret)
-         if (me == 0) print *,'open cfile=',trim(cfile),' iret=',iret
+!        if (me == 0) print *,'open cfile=',trim(cfile),' iret=',iret
          call sigio_rrhead(n1,head,iret)
-         if (me == 0) print *,'rhead cfile=',trim(cfile),' iret=',iret
+!        if (me == 0) print *,'rhead cfile=',trim(cfile),' iret=',iret
 !
         idate = head%idate
         yy    = idate(4)
@@ -106,7 +106,7 @@
 
       if (iret /= 0) call mpi_quit(5555)
 
-      if (me == 0) print *,' idate=',idate,' kfhour=',kfhour
+!     if (me == 0) print *,' idate=',idate,' kfhour=',kfhour
 
       rc = rc1
 

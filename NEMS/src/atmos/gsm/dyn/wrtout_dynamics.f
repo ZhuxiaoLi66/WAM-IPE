@@ -227,9 +227,9 @@ cc
       else
         CFHOUR = CFHOUR(1:nfill(CFHOUR)) // ens_nam(1:nfill(ens_nam))
       endif
-      if (me == ioproc)
-     &print *,' in wrtout_dynamics cfhour=',cfhour,' ens_nam=',
-     &  ens_nam,'fhour=',fhour,'lfnhr=',lfnhr
+!     if (me == ioproc)
+!    &print *,' in wrtout_dynamics cfhour=',cfhour,' ens_nam=',
+!    &  ens_nam,'fhour=',fhour,'lfnhr=',lfnhr
 !
       nosig = 61
 !!
@@ -426,8 +426,8 @@ c then (only if liope)  flux state.
 !
 !        filename = sigf//trim(CFHOUR)
          filename = sigf//CFHOUR
-         if (me == ioproc) print *,'in twrites_hst,filename=',
-     &                            trim(filename)
+!        if (me == ioproc) print *,'in twrites_hst,filename=',
+!    &                            trim(filename)
 
 
          if( .not. ndslfv ) then
@@ -472,8 +472,8 @@ c then (only if liope)  flux state.
 
          endif
 
-         if (me == ioproc) print *,'finished end of sigio output for ',
-     &     trim(filename)
+!        if (me == ioproc) print *,'finished end of sigio output for ',
+!    &     trim(filename)
 !
 !        if (runenthalpy) then
 !! te
@@ -559,7 +559,7 @@ c then (only if liope)  flux state.
         endif
       endif
 !
-      if (me == ioproc) print *,'in restart,lonsperlat=',lonsperlat
+!     if (me == ioproc) print *,'in restart,lonsperlat=',lonsperlat
 ! n-1 time step spectral file
 !
         step = -1
@@ -585,8 +585,8 @@ c then (only if liope)  flux state.
 
         endif
 
-        if (me == ioproc) print *,'1 end of twritero_rst,',
-     &                             trim(filename)
+!       if (me == ioproc) print *,'1 end of twritero_rst,',
+!    &                             trim(filename)
 !
 ! n time step spectral file
 !
@@ -613,8 +613,8 @@ c then (only if liope)  flux state.
 
         endif
 
-        if (me == ioproc) print *,'2 end of twritero_rst for ',
-     &                             trim(filename)
+!        if (me == ioproc) print *,'2 end of twritero_rst for ',
+!     &                             trim(filename)
 
         CALL TWRITES_rst_idea('fort.1051',ioproc,FHOUR,idate,
      &              SI,LS_NODES,MAX_LS_NODES,trie_ls,trio_ls)
@@ -630,7 +630,7 @@ c then (only if liope)  flux state.
      &                grid_gr(1,1,g_uum),grid_gr(1,1,g_vvm),
      &                grid_gr(1,1,g_rm),grid_gr(1,1,g_gz),
      &    kdt,nfcstdate7 )
-       if (me == ioproc) print *,'1 end twriteg_rst,',trim(filename)
+!      if (me == ioproc) print *,'1 end twriteg_rst,',trim(filename)
 !
 ! n time step grid file
 !
@@ -643,7 +643,7 @@ c then (only if liope)  flux state.
      &                grid_gr(1,1,g_uu),grid_gr(1,1,g_vv),
      &                grid_gr(1,1,g_rq),grid_gr(1,1,g_gz),
      &    kdt,nfcstdate7 )
-      if (me == ioproc) print *,'2 end twriteg_rst,',trim(filename)
+!     if (me == ioproc) print *,'2 end twriteg_rst,',trim(filename)
       call mpi_barrier(mpi_comm_all,iret)
 !
       return

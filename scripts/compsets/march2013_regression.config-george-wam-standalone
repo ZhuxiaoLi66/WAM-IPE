@@ -3,7 +3,7 @@
 ## user/job configuration (must be set here)
 export ACCOUNT=swpc  # computational account
 export QUEUE=debug      # computational queue
-export JOBNAME=march2013_1hr # used to name ptmp (ROTDIR) and stmp (RUNDIR) directories, and the job run name
+export JOBNAME=rhlw_1hr_1hr # used to name ptmp (ROTDIR) and stmp (RUNDIR) directories, and the job run name
 export CDATE=2013031600   # initialization date (idate) for atmospheric/surface input (do not include the forecast hour for restarts!)
 
 ## note that initial conditions (WAM and IPE) should already exist in ROTDIR and be named appropriately.
@@ -30,7 +30,8 @@ export IC_DIR=/scratch3/NCEPDEV/swpc/noscrub/Adam.Kubaryk/ICS/WAM-IPE/$CDATE
 
 ## general model options (must be set here)
 export IDEA=.true.             # .true. for WAM, .false. for standalone IPE
-export WAM_IPE_COUPLING=.true. # coupled system, only used if IDEA=.true.
+#export WAM_IPE_COUPLING=.true. # coupled system, only used if IDEA=.true.
+export WAM_IPE_COUPLING=.false. # coupled system, only used if IDEA=.true.
 
 ## specific model configuration options (wam.config/exglobal)
 export DELTIM=180 # model timestep
@@ -42,7 +43,7 @@ export FHOUT=1 # frequency of standard history file output (hours)
 export FHDFI=0 # half number of hours of digital filter initialization
 # IPE output (ipe.config)
 # IPEFREQ will default to DELTIM if unset but is required to be <=FHMAX and a multiple of DELTIM
-export IPEFREQ=3600 # seconds between IPE output
+export IPEFREQ=900 # seconds between IPE output
 
 ## computational configuration (compute.config)
 export WALLCLOCK=30:00 # minutes
@@ -53,21 +54,8 @@ export IPEDECOMP="58 8"
 export NPROCMED=8
 
 export med_model=swpc
-## FIXED INPUT PARAMETERS
-# INPUT_PARAMETERS options (default: timederive, FIX_F107=120.0, FIX_KP=3.0):
-# timeobs    - read all geomagnetic and solar input parameters from database files
-# timederive - read from database for F10.7, F10.7d, Kp, and 24h Avg Kp; derive solar wind parameters from F10.7/Kp
-# fixderive  - specify constant F10.7 (used for F10.7d) and Kp (used for 24h Avg Kp); derive as above
-# fixall     - fix all fields
-# realtime   - read from the .xml data if available, or use wam_input_f107_kp.txt provided in IC_DIR otherwise
-export INPUT_PARAMETERS=fixderive
-## if you are using fixderive or fixall, uncomment the following and set your fixed values
-export FIX_F107=120.0     # F10.7 and F10.7d
-export FIX_KP=3.0         # Kp and 24hr average Kp
-# export FIX_SWBT=1.0       # total solar wind
-# export FIX_SWANG=0.0      # solar wind angle
-# export FIX_SWVEL=400.0    # solar wind velocity
-# export FIX_SWBZ=1.0       # z-component of solar wind
-# export FIX_GWATTS=4.5     # gigawatts
-# export FIX_HPI=2          # hemispheric power index
 
+## namelist settings
+# "compset" will use the OldCompsetRun defaults. otherwise it'll use a
+# blend that leans toward Valery/Houjun's parallel scripts.
+export NAMELIST_VER=compset

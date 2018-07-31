@@ -31,17 +31,14 @@ def swden_calc(): # this isn't used?
 def swvel_calc(kp):
   return 317.0+55.84*kp-2.71*kp**2
 
-def swang_calc(bz):
-  if bz >= 0.0:
-    return 0.0
-  else:
-    return 180.0
+def swang_calc(by,bz):
+  return math.atan2(by,bz)/math.pi*180
 
 def swby_calc():
   return 0.0
 
 def swbz_calc(kp,f107):
-  return -0.85*kp**2 - 0.081*kp + 0.434 + 0.0079 * f107 + 0.0022 * kp * f107
+  return -0.085*kp**2 - 0.08104*kp + 0.4337 + 0.00794 * f107 - 0.00219 * kp * f107
 
 def hemi_pow_calc(kp):
   return 1.29 + 15.60*kp - 4.93*kp**2 + 0.64*kp**3
@@ -57,7 +54,7 @@ def calc_solar_data(kp,f107):
     swbz.append(    swbz_calc(kp[i],f107[i]))
     swbt.append(    swbt_calc(swbz[i],swby_calc()))
     hemi_pow.append(hemi_pow_calc(kp[i]))
-    swangle.append( swang_calc(swbz[i]))
+    swangle.append( swang_calc(swby_calc(),swbz[i]))
     swvel.append(   swvel_calc(kp[i]))
     hemi_pow_idx.append(hpi_from_gw(hemi_pow[i]))
   return swbt,swangle,swvel,swbz,hemi_pow,hemi_pow_idx

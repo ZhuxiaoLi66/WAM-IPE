@@ -59,7 +59,7 @@
 !     write(iulog,*) 'read_acoef: open file ',trim(locfn),
 !    &' unit ',unit
 !dbg20110906
-      print *,'unit',unit
+!     print *,'unit',unit
       open(unit=unit,file=trim(locfn),status = 'old',iostat = ios)
 !     if(ios.gt.0) then
 !     write(iulog,*) 

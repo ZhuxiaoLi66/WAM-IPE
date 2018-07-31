@@ -336,17 +336,17 @@
             call random_setseed(seed0)
             call random_number(wrk)
             seed0 = seed0 + nint(wrk(1)*thousnd)
-            if (me == 0) print *,' seed0=',seed0,' idate=',idate,
-     &                           ' wrk=',wrk
+!           if (me == 0) print *,' seed0=',seed0,' idate=',idate,
+!    &                           ' wrk=',wrk
 !
             if (.not. allocated(rannum_tank))
      &                allocate (rannum_tank(lonr,maxran,lats_node_r))
 !           if (.not. allocated(rannum)) allocate (rannum(lonr*maxrs))
                                          allocate (rannum(lonr*maxrs))
             lonrbm = lonr / maxsub
-            if (me == 0) write(0,*)' maxran=',maxran,' maxrs=',maxrs,
-     &          'maxsub=',maxsub,' lonrbm=',lonrbm,
-     &          ' lats_node_r=',lats_node_r
+!           if (me == 0) write(0,*)' maxran=',maxran,' maxrs=',maxrs,
+!    &          'maxsub=',maxsub,' lonrbm=',lonrbm,
+!    &          ' lats_node_r=',lats_node_r
             do j=1,lats_node_r
               iseedl = global_lats_r(ipt_lats_node_r-1+j) + seed0
               call random_setseed(iseedl)
@@ -369,13 +369,13 @@
           endif
         endif
 !
-        if (me  ==  0) then
+!       if (me  ==  0) then
 !         write(0,*)' seed0=',seed0,' idate=',idate,' wrk=',wrk
-          if (num_p3d == 3)
-     &        write(0,*)' USING Ferrier-MICROPHYSICS'
-          if (num_p3d == 4)
-     &        write(0,*)' USING ZHAO-MICROPHYSICS'
-        endif
+!         if (num_p3d == 3)
+!    &        write(0,*)' USING Ferrier-MICROPHYSICS'
+!         if (num_p3d == 4)
+!    &        write(0,*)' USING ZHAO-MICROPHYSICS'
+!       endif
         if (fhour == 0.0) then
 !$omp parallel do private(i,j)
           do j=1,lats_node_r
@@ -409,10 +409,10 @@
 !***************************************idea below*****************************************
         if ( lsidea ) then
 
-           print*, 'in gloopb, kdt, ipe_to_wam_coupling=',
-     &         kdt, ipe_to_wam_coupling
+!          print*, 'in gloopb, kdt, ipe_to_wam_coupling=',
+!    &         kdt, ipe_to_wam_coupling
 
-       if (me==0) write(6,*) 'VAY WAM SPW_DRIVERS:',trim(SPW_DRIVERS)
+!      if (me==0) write(6,*) 'VAY WAM SPW_DRIVERS:',trim(SPW_DRIVERS)
 
          if (trim(SPW_DRIVERS)=='swpc_fst') then
 ! read the f10.7 and kp multi-time input data.
@@ -430,19 +430,19 @@
           IF(.NOT.ALLOCATED(swvel_wy)) ALLOCATE(swvel_wy(f107_kp_size))
           IF(.NOT.ALLOCATED(swbz_wy )) ALLOCATE(swbz_wy (f107_kp_size))
           call read_wam_f107_kp_txt
-          if (me==0) write(6,*) 
-     & ' SPW_DRIVERS => swpc_fst, 3-day forecasts:', trim(SPW_DRIVERS)
+!         if (me==0) write(6,*) 
+!    & ' SPW_DRIVERS => swpc_fst, 3-day forecasts:', trim(SPW_DRIVERS)
          endif
 !
-         if (trim(SPW_DRIVERS)=='cires_wam' .or.
-     &       trim(SPW_DRIVERS)=='sair_wam') then
-          if (me==0) write(6,*) 
-     &  ' SPW_DRIVERS => with YYYYMMDD REAL DATA:', trim(SPW_DRIVERS)
-         endif
+!        if (trim(SPW_DRIVERS)=='cires_wam' .or.
+!    &       trim(SPW_DRIVERS)=='sair_wam') then
+!         if (me==0) write(6,*) 
+!    &  ' SPW_DRIVERS => with YYYYMMDD REAL DATA:', trim(SPW_DRIVERS)
+!        endif
 !
-         if (trim(SPW_DRIVERS)=='climate_wam') then
-          if (me==0) write(6,*)'climate_wam with fixed F107/Kp '
-         endif 
+!        if (trim(SPW_DRIVERS)=='climate_wam') then
+!         if (me==0) write(6,*)'climate_wam with fixed F107/Kp '
+!        endif 
 !---------------------------------------------
 !
 !find PE with lat 1
@@ -453,27 +453,27 @@
             if(lat == 1) then
               pelat1  = me
               lanlat1 = lan
-               print *,'pelat1=',pelat1
+!              print *,'pelat1=',pelat1
               exit findlat1pe
             endif
           enddo findlat1pe
           call mpi_reduce(pelat1,pelatall,1,mpi_integer,MPI_MAX,0,
      &                    mpi_comm_all,info)
           if(me == 0) then
-            print *,'pelatall=',pelatall
+!           print *,'pelatall=',pelatall
             pelat1 = pelatall
           endif
           call mpi_bcast(pelat1,1,mpi_integer,0,mpi_comm_all,info)
-          print *,'pelat1=',pelat1,'lanlat1=',lanlat1,
-     &            'gen_coord_hybrid=',gen_coord_hybrid,
-     &            'thermodyn_id=',thermodyn_id
+!         print *,'pelat1=',pelat1,'lanlat1=',lanlat1,
+!    &            'gen_coord_hybrid=',gen_coord_hybrid,
+!    &            'thermodyn_id=',thermodyn_id
 !
 ! set plyr from lat1 pe
           if(me == pelat1) then
             do k=1,levs
               plyr(k) = grid_fld%p(1,lanlat1,k)
             enddo
-            print *,' plyr in gloopb ',(plyr(k),k=1,levs)
+!           print *,' plyr in gloopb ',(plyr(k),k=1,levs)
           endif
           call mpi_bcast(plyr,levs,mpi_r_io_r,pelat1,mpi_comm_all,info)
           call idea_composition_init(levs,plyr)
@@ -482,8 +482,8 @@
           call idea_tracer_init(levs)
           call idea_ion_init(levs)
 !h2ocin
-          print *,'in gloopb,nlevc_h2o=',nlevc_h2o,'k71=',k71,
-     &            'levs=',levs,levs-k71+1
+!         print *,'in gloopb,nlevc_h2o=',nlevc_h2o,'k71=',k71,
+!    &            'levs=',levs,levs-k71+1
           allocate(prpa(nlevc_h2o))
           prpa(1:nlevc_h2o) = 100.*pr_idea(k71:levs)
           call h2ocin(prpa,nlevc_h2o,me,mpi_r_io_r,mpi_comm_all)
@@ -543,8 +543,8 @@
         first = .false.
 
         gb_ini_time = gb_ini_time + (timef() - btime)
-        write(0,*)' gb_ini_time=',gb_ini_time*1.0e-3,' me=',me
-        print *, 'VAY finished WAM-init on me=', me
+!       write(0,*)' gb_ini_time=',gb_ini_time*1.0e-3,' me=',me
+!       print *, 'VAY finished WAM-init on me=', me
       endif
 !
       if (semilag) then
@@ -558,8 +558,8 @@
         if(lsfwd) dtf = dtp
       endif
 
-      if (kdt == 1 .and. me == 0) write(0,*)' in gloopb nsphys=',nsphys
-     &,' dtp=',dtp,' tstep=',tstep,' dtf=',dtf
+!     if (kdt == 1 .and. me == 0) write(0,*)' in gloopb nsphys=',nsphys
+!    &,' dtp=',dtp,' tstep=',tstep,' dtf=',dtf
 
 !
       solhr = mod(phour+idate(1),cons_24)
@@ -1221,9 +1221,9 @@
 !     &                   mdl_parm, tbddata, dyn_parm)
 !              end if
 
-              if (me == 0) then
-                print *, 'NUOPC WRAPPER : Calling nuopc_phys_run...'
-              end if
+!             if (me == 0) then
+!               print *, 'NUOPC WRAPPER : Calling nuopc_phys_run...'
+!             end if
 
               call nuopc_phys_run(state_fldin, state_fldout, sfc_prop,
      &                   diags, intrfc_fld, cld_prop, rad_tend,
