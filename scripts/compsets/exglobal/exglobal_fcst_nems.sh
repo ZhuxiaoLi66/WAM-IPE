@@ -1020,14 +1020,23 @@ if [[ $ENS_NUM -le 1 ]] ; then
 # IPE
   if [[ $IPE = .true. ]] ; then
     CIPEDATE=${CIPEDATE:-$CDATE${IPEMINUTES:-00}}
-    STEPS=$((FHMAX*60*60/IPEFREQ))
-    STEP=1
-    while [[ $STEP -le $STEPS ]] ; do
-      TIMESTAMP=`$MDATE $((STEP*IPEFREQ/60)) $CIPEDATE`
-      eval $NLN ${COMOUT}/${PLASO} ${PLASO}
-      eval $NLN ${COMOUT}/${NEUTO} ${NEUTO}
-      STEP=$((STEP+1))
-    done
+    if [[ $NEMS = .true. ]] ; then # coupled output
+      STEPS=$(((10#$FHMAX-10#$FHINI)*60*60/IPEFREQ))
+      STEP=1
+      while [[ $STEP -le $STEPS ]] ; do
+        TIMESTAMP=`$MDATE $((STEP*IPEFREQ/60)) $CIPEDATE`
+        eval $NLN ${COMOUT}/${PLASO} ${PLASO}
+        eval $NLN ${COMOUT}/${NEUTO} ${NEUTO}
+        STEP=$((STEP+1))
+      done
+    else # standalone output
+      DURATION=$(((10#$FHMAX-10#$FHINI)*3600))
+      for i in `eval echo {0..$DURATION..$IPEFREQ}` ; do
+        TIMESTAMP=iter_`printf %08d $i`
+        eval $NLN ${COMOUT}/${PLASO} ${PLASO}
+        eval $NLN ${COMOUT}/${NEUTO} ${NEUTO}
+      done
+    fi
   fi
   eval ln -fs $FORT1051 fort.1051
   eval ln -fs $GRDR1 GRDR1
