@@ -1032,7 +1032,7 @@ if [[ $ENS_NUM -le 1 ]] ; then
     else # standalone output
       DURATION=$(((10#$FHMAX-10#$FHINI)*3600))
       for i in `eval echo {0..$DURATION..$IPEFREQ}` ; do
-        TIMESTAMP=iter_`printf %08d $i`
+        TIMESTAMP=iter`printf %08d $i`
         eval $NLN ${COMOUT}/${PLASO} ${PLASO}
         eval $NLN ${COMOUT}/${NEUTO} ${NEUTO}
       done

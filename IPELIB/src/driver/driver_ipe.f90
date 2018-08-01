@@ -68,10 +68,10 @@ PROGRAM  test_plasma
 ! initialise the flux tubes from previous runs
     WRITE( iterChar, '(I8.8)' )start_time
      IF ( HPEQ_flip==0.0 ) THEN
-       CALL io_plasma_bin ( 2, start_time, 'iter_'//iterChar  )
+       CALL io_plasma_bin ( 2, start_time, 'iter'//iterChar  )
      END IF
 
-    CALL io_plasma_bin ( 1, start_time, 'iter_'//iterChar )
+    CALL io_plasma_bin ( 1, start_time, 'iter'//iterChar )
 
 
 ! initialization of electrodynamic module:
@@ -104,7 +104,7 @@ PROGRAM  test_plasma
 
        IF( MOD(utime_driver,ip_freq_output)==0)THEN
           WRITE( iterChar, '(I8.8)' )utime_driver
-          CALL io_plasma_bin ( 1, utime_driver, 'iter_'//iterChar )
+          CALL io_plasma_bin ( 1, utime_driver, 'iter'//iterChar )
        ENDIF
        CALL output ( utime_driver )
 
