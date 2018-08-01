@@ -652,7 +652,7 @@ export GB=${GB:-0}
 export gfsio_in=${gfsio_in:-.false.}
 if [ $gfsio_in = .true. ] ; then export GB=1 ; fi
 
-#        WAM related namelist variables
+#        WAM-IPE related namelist variables
 #        ------------------------------
 export IDEA=${IDEA:-.false.}
 export WAM_IPE_COUPLING=${WAM_IPE_COUPLING:-.false.}
@@ -664,7 +664,7 @@ export F107_KP_SIZE=${F107_KP_SIZE:-$((60*37+1))}
 export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-$((60*37+1))}
 export F107_KP_SKIP_SIZE=${F107_KP_SKIP_SIZE:-0}
 export F107_KP_INTERVAL=${F107_KP_INTERVAL:-10800}
-
+export IPEFREQ=${IPEFREQ:-3600}
 
 ## for post
 export WRITE_DOPOST=${WRITE_DOPOST:-.false.}
