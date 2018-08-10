@@ -176,7 +176,7 @@ CONTAINS
     INTEGER        :: i, lp, mp
     INTEGER        :: iyd
     REAL(prec)     :: slt, lat, lon, alt
-    REAL(prec)     :: densities(1:8), temperatures(1:2)
+    REAL(prec)     :: densities(1:9), temperatures(1:2)
     REAL(4)        :: w(1:2), ap_msis(1:2)
 
       iyd = 99000 + day

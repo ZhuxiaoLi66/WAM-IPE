@@ -73,6 +73,12 @@ CONTAINS
     LOGICAL :: write_geographic_neutrals 
     REAL(prec) :: file_output_frequency
    
+
+      NAMELIST / SpaceManagement / netcdf_grid_file, NLP, NMP, NPTS2D, nFluxTube
+      NAMELIST / TimeStepping / time_step, start_time, end_time, year, day, initial_timestamp
+      NAMELIST / Forcing / solar_forcing_time_step, f107_kp_size, f107_kp_interval, f107_kp_skip_size, f107_kp_data_size, use_f107_kp_file, f107_kp_file
+      NAMELIST / FileIO / write_apex_neutrals, write_geographic_neutrals, file_output_frequency
+
       read_success = .FALSE.
 
       ! Default Parameters !
@@ -104,10 +110,6 @@ CONTAINS
       file_output_frequency     = 180.0_prec
 
 
-      NAMELIST/SpaceManagement/ netcdf_grid_file, NLP, NMP, NPTS2D, nFluxTube
-      NAMELIST/TimeStepping/ time_step, start_time, end_time, year, day, initial_timestamp
-      NAMELIST/Forcing/ solar_forcing_time_step, f107_kp_size, f107_kp_interval, f107_kp_skip_size, f107_kp_data_size, use_f107_kp_file, f107_kp_file
-      NAMELIST/FileIO/ write_apex_neutrals, write_geographic_neutrals, file_output_frequency
 
       INQUIRE( FILE = 'IPE.inp', EXIST = fileExists )
   

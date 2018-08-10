@@ -8,6 +8,9 @@ AC_PROG_CC
 AC_PROG_FC([ifort gfortran pgfortran])
 AC_PROG_F77([ifort gfortran pgfortran])
 
+AS_IF([test "x$FC" = "xgfortran"],[
+  FCFLAGS+=" -ffree-line-length-none"
+])
 
 AM_PROG_AR
 AC_PROG_RANLIB
