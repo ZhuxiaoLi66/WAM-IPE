@@ -37,12 +37,12 @@ IMPLICIT NONE
       PROCEDURE :: Trash => Trash_IPE_Model
 
       PROCEDURE :: Update => Update_IPE_Model
-
-      PROCEDURE :: Geographic_Interpolation
       PROCEDURE :: Write_NetCDF_IPE
       PROCEDURE :: Read_NetCDF_IPE
-
       PROCEDURE :: Write_Geographic_NetCDF_IPE
+
+      ! PRIVATE Routines
+      PROCEDURE, PRIVATE :: Geographic_Interpolation
    
   END TYPE IPE_Model
 
@@ -152,35 +152,20 @@ CONTAINS
     CLASS( IPE_Model ), INTENT(inout) :: ipe
     REAL(prec), INTENT(in)            :: t0, t1
     ! Local
-    INTEGER    :: i, im3hr, im6hr, im9hr, im12hr, im36hr !, num_threads
     REAL(prec) :: AP(1:7)
 
 
       CALL ipe % time_tracker % Update( t0 )
       
-      ! This call to update the neutrals is "diagnostic" and returns neutral
-      ! parameter at the time t0
-      i       = ipe % forcing % current_index
-      im3hr   = MAX( 1, ipe % forcing % current_index-INT(3.0_prec*3600.0_prec/ipe % forcing % dt ) )
-      im6hr   = MAX( 1, ipe % forcing % current_index-INT(6.0_prec*3600.0_prec/ipe % forcing % dt ) )
-      im9hr   = MAX( 1, ipe % forcing % current_index-INT(9.0_prec*3600.0_prec/ipe % forcing % dt ) )
-      im12hr  = MAX( 1, ipe % forcing % current_index-INT(12.0_prec*3600.0_prec/ipe % forcing % dt ) )
-      im36hr  = MAX( 1, ipe % forcing % current_index-INT(36.0_prec*3600.0_prec/ipe % forcing % dt ) )
-
-      AP(1) = ipe % forcing % ap_1day_avg(i)
-      AP(2) = ipe % forcing % ap(i)
-      AP(3) = ipe % forcing % ap(im3hr)
-      AP(4) = ipe % forcing % ap(im6hr)
-      AP(5) = ipe % forcing % ap(im9hr)
-      AP(6) = ipe % forcing % ap_1day_avg(im12hr)
-      AP(7) = ipe % forcing % ap_1day_avg(im36hr)
+      ! Need to add a call to update the index for capturing AP
+      AP = ipe % forcing % GetAP( t0 )
 
       CALL ipe % neutrals % Update( ipe % grid, &
                                     ipe % time_tracker % utime, &
                                     ipe % time_tracker % year, &
                                     ipe % time_tracker % day_of_year,  & 
-                                    ipe % forcing % f107(i) , &
-                                    ipe % forcing % f107_81day_avg(i), &
+                                    ipe % forcing % f107( ipe % forcing % current_index ) , &
+                                    ipe % forcing % f107_81day_avg( ipe % forcing % current_index ), &
                                     AP )
 
       CALL ipe % eldyn % Update( ipe % grid, &
@@ -584,6 +569,22 @@ CONTAINS
 
       ENDIF
 
+      IF( ipe % parameters % write_geographic_eldyn )THEN
+
+        CALL Check( nf90_def_var( ncid, "hc", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) , hc_varid ) )
+        CALL Check( nf90_put_att( ncid, hc_varid, "long_name", "Hall Conductivity" ) )
+        CALL Check( nf90_put_att( ncid, hc_varid, "units", "[Unknown]" ) )
+
+        CALL Check( nf90_def_var( ncid, "pc", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) , pc_varid ) )
+        CALL Check( nf90_put_att( ncid, pc_varid, "long_name", "Pedersen Conductivity" ) )
+        CALL Check( nf90_put_att( ncid, pc_varid, "units", "[Unknown]" ) )
+
+        CALL Check( nf90_def_var( ncid, "bc", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) , bc_varid ) )
+        CALL Check( nf90_put_att( ncid, bc_varid, "long_name", "Magnetic Field Aligned Conductivity" ) )
+        CALL Check( nf90_put_att( ncid, bc_varid, "units", "[Unknown]" ) )
+
+      ENDIF
+
       ! Plasma
       CALL Check( nf90_def_var( ncid, "O+", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , op_varid ) )
       CALL Check( nf90_put_att( ncid, op_varid, "long_name", "Atomic oxygen ion number density (ground state)" ) )
@@ -629,18 +630,6 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, e_varid, "long_name", "Electron number density" ) )
       CALL Check( nf90_put_att( ncid, e_varid, "units", " m^{-3}" ) )
 
-      CALL Check( nf90_def_var( ncid, "hc", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , hc_varid ) )
-      CALL Check( nf90_put_att( ncid, hc_varid, "long_name", "Hall Conductivity" ) )
-      CALL Check( nf90_put_att( ncid, hc_varid, "units", "[Unknown]" ) )
-
-      CALL Check( nf90_def_var( ncid, "pc", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , pc_varid ) )
-      CALL Check( nf90_put_att( ncid, pc_varid, "long_name", "Pedersen Conductivity" ) )
-      CALL Check( nf90_put_att( ncid, pc_varid, "units", "[Unknown]" ) )
-
-      CALL Check( nf90_def_var( ncid, "bc", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , bc_varid ) )
-      CALL Check( nf90_put_att( ncid, bc_varid, "long_name", "Magnetic Field Alligned Conductivity" ) )
-      CALL Check( nf90_put_att( ncid, bc_varid, "units", "[Unknown]" ) )
-
       CALL Check( nf90_def_var( ncid, "aur_precip", NF90_PREC, (/ x_dimid, y_dimid, z_dimid, time_dimid /) , ion_rate_varid ) )
       CALL Check( nf90_put_att( ncid, ion_rate_varid, "long_name", "Total Ionization Rate from Auroral Precipitation" ) )
       CALL Check( nf90_put_att( ncid, ion_rate_varid, "units", "[Unknown]" ) )
@@ -677,6 +666,14 @@ CONTAINS
 
       ENDIF
 
+      IF( ipe % parameters % write_geographic_eldyn )THEN
+
+        CALL Check( nf90_put_var( ncid, hc_varid, ipe % eldyn % geo_hall_conductivity ) )
+        CALL Check( nf90_put_var( ncid, pc_varid, ipe % eldyn % geo_pedersen_conductivity ) )
+        CALL Check( nf90_put_var( ncid, bc_varid, ipe % eldyn % geo_b_parallel_conductivity ) )
+
+      ENDIF
+
       CALL Check( nf90_put_var( ncid, op_varid,  ipe % plasma % geo_ion_densities(1,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, hp_varid,  ipe % plasma % geo_ion_densities(2,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, hep_varid, ipe % plasma % geo_ion_densities(3,:,:,:) ) )
@@ -688,9 +685,6 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, op2p_varid,  ipe % plasma % geo_ion_densities(9,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % geo_ion_temperature ) )
       CALL Check( nf90_put_var( ncid, e_varid, ipe % plasma % geo_electron_density ) )
-      CALL Check( nf90_put_var( ncid, hc_varid, ipe % plasma % geo_hall_conductivity ) )
-      CALL Check( nf90_put_var( ncid, pc_varid, ipe % plasma % geo_pedersen_conductivity ) )
-      CALL Check( nf90_put_var( ncid, bc_varid, ipe % plasma % geo_b_parallel_conductivity ) )
       CALL Check( nf90_put_var( ncid, ion_rate_varid, ipe % plasma % geo_ionization_rates(1,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, O_rate_varid, ipe % plasma % geo_ionization_rates(2,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, O2_rate_varid, ipe % plasma % geo_ionization_rates(3,:,:,:) ) )

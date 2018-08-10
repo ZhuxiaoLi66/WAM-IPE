@@ -46,11 +46,13 @@ IMPLICIT NONE
       PROCEDURE :: Build => Build_IPE_Forcing
       PROCEDURE :: Trash => Trash_IPE_Forcing
 
+      PROCEDURE :: GetAP 
+      PROCEDURE :: GetKP
 
       PROCEDURE :: Read_F107KP_IPE_Forcing
       PROCEDURE :: Read_Tiros_IPE_Forcing
  
-      PROCEDURE :: Estimate_AP_from_KP
+      PROCEDURE, PRIVATE :: Estimate_AP_from_KP
 
   END TYPE IPE_Forcing
 
@@ -141,6 +143,54 @@ CONTAINS
 
   END SUBROUTINE Trash_IPE_Forcing
 !
+  FUNCTION GetAP( forcing, t ) RESULT( AP )
+    CLASS( IPE_Forcing ) :: forcing
+    REAL(prec)           :: AP(1:7)
+    REAL(prec)           :: t
+    ! Local
+    INTEGER    :: i, im3hr, im6hr, im9hr, im12hr, im36hr
+
+      i       = forcing % current_index
+      im3hr   = MAX( 1, forcing % current_index-INT(3.0_prec*3600.0_prec/forcing % dt ) )
+      im6hr   = MAX( 1, forcing % current_index-INT(6.0_prec*3600.0_prec/forcing % dt ) )
+      im9hr   = MAX( 1, forcing % current_index-INT(9.0_prec*3600.0_prec/forcing % dt ) )
+      im12hr  = MAX( 1, forcing % current_index-INT(12.0_prec*3600.0_prec/forcing % dt ) )
+      im36hr  = MAX( 1, forcing % current_index-INT(36.0_prec*3600.0_prec/forcing % dt ) )
+
+      AP(1) = forcing % ap_1day_avg(i)
+      AP(2) = forcing % ap(i)
+      AP(3) = forcing % ap(im3hr)
+      AP(4) = forcing % ap(im6hr)
+      AP(5) = forcing % ap(im9hr)
+      AP(6) = forcing % ap_1day_avg(im12hr)
+      AP(7) = forcing % ap_1day_avg(im36hr)
+
+  END FUNCTION GetAP
+
+  FUNCTION GetKP( forcing, t ) RESULT( KP )
+    CLASS( IPE_Forcing ) :: forcing
+    REAL(prec)           :: KP(1:7)
+    REAL(prec)           :: t
+    ! Local
+    INTEGER    :: i, im3hr, im6hr, im9hr, im12hr, im36hr
+
+      i       = forcing % current_index
+      im3hr   = MAX( 1, forcing % current_index-INT(3.0_prec*3600.0_prec/forcing % dt ) )
+      im6hr   = MAX( 1, forcing % current_index-INT(6.0_prec*3600.0_prec/forcing % dt ) )
+      im9hr   = MAX( 1, forcing % current_index-INT(9.0_prec*3600.0_prec/forcing % dt ) )
+      im12hr  = MAX( 1, forcing % current_index-INT(12.0_prec*3600.0_prec/forcing % dt ) )
+      im36hr  = MAX( 1, forcing % current_index-INT(36.0_prec*3600.0_prec/forcing % dt ) )
+
+      KP(1) = forcing % kp_1day_avg(i)
+      KP(2) = forcing % kp(i)
+      KP(3) = forcing % kp(im3hr)
+      KP(4) = forcing % kp(im6hr)
+      KP(5) = forcing % kp(im9hr)
+      KP(6) = forcing % kp_1day_avg(im12hr)
+      KP(7) = forcing % kp_1day_avg(im36hr)
+
+  END FUNCTION GetKP
+
   SUBROUTINE Read_F107KP_IPE_Forcing( forcing, skip_size, filename )
     IMPLICIT NONE
     CLASS( IPE_Forcing ), INTENT(inout) :: forcing

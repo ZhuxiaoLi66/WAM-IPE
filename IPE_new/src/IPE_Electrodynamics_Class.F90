@@ -36,6 +36,15 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: b_parallel_conductivity(:,:)
     REAL(prec), ALLOCATABLE :: neutral_apex_velocity(:,:,:) ! Components are apex directions
 
+
+    ! Geographic interpolated attributes
+    REAL(prec), ALLOCATABLE :: geo_electric_potential(:,:)
+    REAL(prec), ALLOCATABLE :: geo_v_ExB_geographic(:,:,:)    ! ExB transport velocity with geographic components
+    REAL(prec), ALLOCATABLE :: geo_hall_conductivity(:,:)
+    REAL(prec), ALLOCATABLE :: geo_pedersen_conductivity(:,:)
+    REAL(prec), ALLOCATABLE :: geo_b_parallel_conductivity(:,:)
+    
+
     CONTAINS 
 
       PROCEDURE :: Build => Build_IPE_Electrodynamics
@@ -83,6 +92,12 @@ CONTAINS
       eldyn % neutral_apex_velocity   = 0.0_prec
 
 
+      ALLOCATE( eldyn % geo_electric_potential(1:nlon_geo,1:nlat_geo), &
+                eldyn % geo_v_ExB_geographic(1:3,1:nlon_geo,1:nlat_geo), &
+                eldyn % geo_hall_conductivity(1:nlon_geo,1:nlat_geo), &
+                eldyn % geo_pedersen_conductivity(1:nlon_geo,1:nlat_geo), &
+                eldyn % geo_b_parallel_conductivity(1:nlon_geo,1:nlat_geo) )
+
       ! When building the Electrodynamics data structure, we set this
       ! module-private switch to true to ensure that the appropriate 
       ! initialization is executed for the tiegcm model.
@@ -102,6 +117,12 @@ CONTAINS
                   eldyn % pedersen_conductivity, &
                   eldyn % b_parallel_conductivity, &
                   eldyn % neutral_apex_velocity )
+
+      DEALLOCATE( eldyn % geo_electric_potential, &
+                  eldyn % geo_v_ExB_geographic, &
+                  eldyn % geo_hall_conductivity, &
+                  eldyn % geo_pedersen_conductivity, &
+                  eldyn % geo_b_parallel_conductivity )
  
   END SUBROUTINE Trash_IPE_Electrodynamics
 

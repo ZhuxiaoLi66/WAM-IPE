@@ -30,10 +30,6 @@ IMPLICIT NONE
 
     REAL(prec), ALLOCATABLE :: ionization_rates(:,:,:,:)
 
-    REAL(prec), ALLOCATABLE :: hall_conductivity(:,:,:) 
-    REAL(prec), ALLOCATABLE :: pedersen_conductivity(:,:,:) 
-    REAL(prec), ALLOCATABLE :: b_parallel_conductivity(:,:,:) 
-
     ! Interpolated Fields
     REAL(prec), ALLOCATABLE :: geo_ion_densities(:,:,:,:)
     REAL(prec), ALLOCATABLE :: geo_ion_velocities(:,:,:,:,:)
@@ -42,9 +38,6 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: geo_electron_velocity(:,:,:,:)
     REAL(prec), ALLOCATABLE :: geo_electron_temperature(:,:,:)
     REAL(prec), ALLOCATABLE :: geo_ionization_rates(:,:,:,:) 
-    REAL(prec), ALLOCATABLE :: geo_hall_conductivity(:,:,:) 
-    REAL(prec), ALLOCATABLE :: geo_pedersen_conductivity(:,:,:) 
-    REAL(prec), ALLOCATABLE :: geo_b_parallel_conductivity(:,:,:) 
     
 
     CONTAINS
@@ -111,10 +104,7 @@ CONTAINS
                 plasma % electron_density_old(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_velocity_old(1:3,1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_temperature_old(1:nFluxTube,1:NLP,1:NMP), &
-                plasma % ionization_rates(1:4,1:nFluxTube,1:NLP,1:NMP), &
-                plasma % hall_conductivity(1:nFluxTube,1:NLP,1:NMP), &
-                plasma % pedersen_conductivity(1:nFluxTube,1:NLP,1:NMP), &
-                plasma % b_parallel_conductivity(1:nFluxTube,1:NLP,1:NMP) )
+                plasma % ionization_rates(1:4,1:nFluxTube,1:NLP,1:NMP) )
              
       plasma % ion_densities           = safe_density_minimum 
       plasma % ion_velocities          = 0.0_prec
@@ -123,9 +113,6 @@ CONTAINS
       plasma % electron_velocity       = 0.0_prec
       plasma % electron_temperature    = safe_temperature_minimum
       plasma % ionization_rates        = 0.0_prec
-      plasma % hall_conductivity       = 0.0_prec
-      plasma % pedersen_conductivity   = 0.0_prec
-      plasma % b_parallel_conductivity = 0.0_prec
 
       ALLOCATE( plasma % geo_ion_densities(1:n_ion_species,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_ion_velocities(1:3,1:n_ion_species,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
@@ -133,10 +120,7 @@ CONTAINS
                 plasma % geo_electron_density(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_electron_velocity(1:3,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_electron_temperature(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
-                plasma % geo_ionization_rates(1:4,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
-                plasma % geo_hall_conductivity(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
-                plasma % geo_pedersen_conductivity(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
-                plasma % geo_b_parallel_conductivity(1:nlon_geo,1:nlat_geo,1:nheights_geo)  )
+                plasma % geo_ionization_rates(1:4,1:nlon_geo,1:nlat_geo,1:nheights_geo) )
 
       plasma % geo_ion_densities           = 0.0_prec
       plasma % geo_ion_velocities          = 0.0_prec
@@ -145,9 +129,6 @@ CONTAINS
       plasma % geo_electron_temperature    = 0.0_prec
       plasma % geo_electron_velocity       = 0.0_prec
       plasma % geo_ionization_rates        = 0.0_prec
-      plasma % geo_hall_conductivity       = 0.0_prec
-      plasma % geo_pedersen_conductivity   = 0.0_prec
-      plasma % geo_b_parallel_conductivity = 0.0_prec
 
 
       flip_time_avg = 0.0_prec
@@ -175,18 +156,12 @@ CONTAINS
                 plasma % electron_velocity_old, &
                 plasma % electron_temperature_old, &
                 plasma % ionization_rates, &
-                plasma % hall_conductivity, & 
-                plasma % pedersen_conductivity, & 
-                plasma % b_parallel_conductivity, &
                 plasma % geo_ion_velocities, &
                 plasma % geo_ion_temperature, &
                 plasma % geo_electron_density, &
                 plasma % geo_electron_velocity, &
                 plasma % geo_electron_temperature, &
-                plasma % geo_ionization_rates, &
-                plasma % geo_hall_conductivity, & 
-                plasma % geo_pedersen_conductivity, & 
-                plasma % geo_b_parallel_conductivity )
+                plasma % geo_ionization_rates )
 
      PRINT*, 'Auroral_Precipitation ', aur_precip_time_avg/aur_precip_count
      PRINT*, 'FLIP_Wrapper ', flip_time_avg/flip_count
@@ -216,20 +191,20 @@ CONTAINS
 
  
 !      CALL CPU_TIME( t1 )
-!      CALL plasma % Auroral_Precipitation( grid, &
-!                                           neutrals, &
-!                                           forcing, &
-!                                           time_tracker )
+      CALL plasma % Auroral_Precipitation( grid, &
+                                           neutrals, &
+                                           forcing, &
+                                           time_tracker )
 !      CALL CPU_TIME( t2 )
 !      aur_precip_time_avg = aur_precip_time_avg + t2 - t1
 !      aur_precip_count    = aur_precip_count + 1
 !
 !      CALL CPU_TIME( t1 )
-!      CALL plasma % FLIP_Wrapper( grid, & 
-!                                  neutrals, &
-!                                  forcing, &
-!                                  time_tracker, &
-!                                  time_step )
+      CALL plasma % FLIP_Wrapper( grid, & 
+                                  neutrals, &
+                                  forcing, &
+                                  time_tracker, &
+                                  time_step )
 !      CALL CPU_TIME( t2 )
 !      flip_time_avg = flip_time_avg + t2 - t1
 !      flip_count    = flip_count + 1
@@ -1160,10 +1135,6 @@ CONTAINS
      CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_velocity(1,:,:,:), plasma % geo_electron_velocity(1,:,:,:) )
      CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_velocity(2,:,:,:), plasma % geo_electron_velocity(2,:,:,:) )
      CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_velocity(3,:,:,:), plasma % geo_electron_velocity(3,:,:,:) )
-
-     CALL grid % Interpolate_to_Geographic_Grid( plasma % hall_conductivity, plasma % geo_hall_conductivity )
-     CALL grid % Interpolate_to_Geographic_Grid( plasma % pedersen_conductivity, plasma % geo_pedersen_conductivity )
-     CALL grid % Interpolate_to_Geographic_Grid( plasma % b_parallel_conductivity, plasma % geo_b_parallel_conductivity )
 
      CALL grid % Interpolate_to_Geographic_Grid( plasma % ionization_rates(1,:,:,:), plasma % geo_ionization_rates(1,:,:,:) )
      CALL grid % Interpolate_to_Geographic_Grid( plasma % ionization_rates(2,:,:,:), plasma % geo_ionization_rates(2,:,:,:) )
