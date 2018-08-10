@@ -25,7 +25,6 @@ IMPLICIT NONE
         CALL ipe % Write_NetCDF_IPE( "IPE_State.apex."//ipe % time_tracker % DateStamp( )//".nc" ) 
         
         ! Interpolate to the Geographic Fixed Height Grid and write to file
-        CALL ipe % Geographic_Interpolation( ) 
         CALL ipe % Write_Geographic_NetCDF_IPE( "IPE_State.geo."//ipe % time_tracker % DateStamp( )//".nc" ) 
 
       ENDDO

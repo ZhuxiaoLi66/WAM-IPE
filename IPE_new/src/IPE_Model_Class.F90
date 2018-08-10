@@ -466,9 +466,9 @@ CONTAINS
 
   SUBROUTINE Write_Geographic_NetCDF_IPE( ipe, filename )
     IMPLICIT NONE
-    CLASS( IPE_Model ), INTENT(in) :: ipe
-    CHARACTER(*), INTENT(in)       :: filename
-    ! Local
+    CLASS( IPE_Model ), INTENT(inout) :: ipe
+    CHARACTER(*), INTENT(in)          :: filename
+    ! Local 
     REAL(prec) :: time
     INTEGER :: NF90_PREC
     INTEGER :: ncid
@@ -482,6 +482,8 @@ CONTAINS
     INTEGER :: ion_temp_varid, e_varid, hc_varid, pc_varid, bc_varid
     INTEGER :: ion_rate_varid, O_rate_varid, O2_rate_varid, N2_rate_varid
 
+
+      CALL ipe % Geographic_Interpolation( ) 
 
       ! Time from reference time is calculated here
       time = ipe % time_tracker % Calculate_Date_Difference( 2000, 1, 1, 0, 0 )

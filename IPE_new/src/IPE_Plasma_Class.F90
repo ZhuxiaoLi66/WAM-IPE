@@ -351,9 +351,6 @@ CONTAINS
           lp_t0(1) = lp_min-1
           lp_t0(2) = lp_min
 
-          lp_comp_weight(1) =  ( theta_t0 - colat_90km(lp_t0(2)) )/( colat_90km(lp_t0(1))-colat_90km(lp_t0(2)) )
-          lp_comp_weight(2) = -( theta_t0 - colat_90km(lp_t0(1)) )/( colat_90km(lp_t0(1))-colat_90km(lp_t0(2)) )
-
           mp_min = grid % NMP
 
           DO mpx = 1, grid % NMP
@@ -414,6 +411,10 @@ CONTAINS
                 ENDIF
               ENDDO
 
+              IF( isouth == 1 )THEN
+                ispecial = 2
+              ENDIF
+
               IF( ispecial == 0 )THEN
 
                 q_int(1) = grid % q_factor(isouth, 1, mp)
@@ -455,6 +456,9 @@ CONTAINS
           ELSEIF( lp_min == grid % NLP )THEN
   
  
+
+            lp_comp_weight(1) =  ( theta_t0 - colat_90km(lp_t0(2)) )/( colat_90km(lp_t0(1))-colat_90km(lp_t0(2)) )
+            lp_comp_weight(2) = -( theta_t0 - colat_90km(lp_t0(1)) )/( colat_90km(lp_t0(1))-colat_90km(lp_t0(2)) )
             ! In this case, information is propagating from beyond the NLPth
             ! flux tube, which just around the magnetic equator. In this case
             ! use the last solution in the lp direction for the lp interpolation
@@ -482,6 +486,10 @@ CONTAINS
                    EXIT
                  ENDIF
                ENDDO
+
+               IF( isouth == 1 )THEN
+                 ispecial = 2
+               ENDIF
 
                IF( ispecial == 0 )THEN
 
@@ -544,6 +552,9 @@ CONTAINS
   
           ELSE
       
+            lp_comp_weight(1) =  ( theta_t0 - colat_90km(lp_t0(2)) )/( colat_90km(lp_t0(1))-colat_90km(lp_t0(2)) )
+            lp_comp_weight(2) = -( theta_t0 - colat_90km(lp_t0(1)) )/( colat_90km(lp_t0(1))-colat_90km(lp_t0(2)) )
+
             DO i = 1, grid % flux_tube_max(lp)
   
               q_value = grid % q_factor(i,lp,mp)
@@ -568,6 +579,10 @@ CONTAINS
                       EXIT
                     ENDIF
                   ENDDO
+
+                  IF( isouth == 1 )THEN
+                    ispecial = 2
+                  ENDIF
 
                   IF( ispecial == 0 )THEN
 
@@ -623,8 +638,6 @@ CONTAINS
               ELSE
                 ksi_fac = grid % magnetic_field_strength(i,lp,mp)/B_int
               ENDIF
-
-              PRINT*, 'ksi:', ksi_fac
 
               plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)*( ksi_fac**2 )
               plasma % ion_temperature(i,lp,mp) = ion_temperature_int*( ksi_fac**(4.0_prec/3.0_prec) )
