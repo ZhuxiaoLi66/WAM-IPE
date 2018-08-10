@@ -53,16 +53,15 @@ IMPLICIT NONE
       PROCEDURE :: Trash => Trash_IPE_Plasma
 
       PROCEDURE :: Update => Update_IPE_Plasma
+      PROCEDURE :: Interpolate_to_GeographicGrid => Interpolate_to_GeographicGrid_IPE_Plasma
+      PROCEDURE :: Read_Legacy_Input => Read_Legacy_Input_IPE_Plasma
 
+      ! PRIVATE Routines
       PROCEDURE, PRIVATE :: Buffer_Old_State
       PROCEDURE, PRIVATE :: Calculate_Pole_Values 
       PROCEDURE, PRIVATE :: Cross_Flux_Tube_Transport
       PROCEDURE, PRIVATE :: Auroral_Precipitation
       PROCEDURE, PRIVATE :: FLIP_Wrapper     
-
-      PROCEDURE :: Interpolate_to_GeographicGrid => Interpolate_to_GeographicGrid_IPE_Plasma
-
-      PROCEDURE :: Read_Legacy_Input => Read_Legacy_Input_IPE_Plasma
 
   END TYPE IPE_Plasma
 
@@ -264,7 +263,7 @@ CONTAINS
     INTEGER    :: i, lp, mp, j
 
       ion_densities_pole_value      = 0.0_prec
-      ion_temperature_pole_value  = 0.0_prec
+      ion_temperature_pole_value    = 0.0_prec
       ion_velocities_pole_value     = 0.0_prec
 
       electron_density_pole_value     = 0.0_prec
@@ -279,16 +278,16 @@ CONTAINS
 
           ENDDO
 
-          ion_temperature_pole_value(i)  = ion_temperature_pole_value(i) + plasma % ion_temperature(i,1,mp)
+          ion_temperature_pole_value(i)       = ion_temperature_pole_value(i) + plasma % ion_temperature(i,1,mp)
           electron_density_pole_value(i)      = electron_density_pole_value(i) + plasma % electron_density(i,1,mp)
           electron_temperature_pole_value(i)  = electron_temperature_pole_value(i) + plasma % electron_temperature(i,1,mp)
 
         ENDDO
       ENDDO
 
-      ion_densities_pole_value          = ion_densities_pole_value/REAL( plasma % NMP )
+      ion_densities_pole_value        = ion_densities_pole_value/REAL( plasma % NMP )
       ion_temperature_pole_value      = ion_temperature_pole_value/REAL( plasma % NMP )
-      ion_velocities_pole_value         = ion_velocities_pole_value/REAL( plasma % NMP )
+      ion_velocities_pole_value       = ion_velocities_pole_value/REAL( plasma % NMP )
       electron_density_pole_value     = electron_density_pole_value/REAL( plasma % NMP )
       electron_temperature_pole_value = electron_temperature_pole_value/REAL( plasma % NMP )
 
@@ -319,7 +318,7 @@ CONTAINS
     REAL(prec) :: ion_densities_int(1:n_ion_species)
     REAL(prec) :: ion_temperature_int
     REAL(prec) :: ion_velocities_int(1:3,1:n_ion_species)
-    REAL(prec) :: B_int, R_int, max_phi
+    REAL(prec) :: B_int, max_phi, ksi_fac
     INTEGER    :: lp_t0(1:2)
     INTEGER    :: mp_t0(1:2)
     INTEGER    :: lp_min, mp_min, isouth, inorth, ii, ispecial
@@ -336,14 +335,7 @@ CONTAINS
       colat_90km(1:grid % NLP) = grid % magnetic_colatitude(1,1:grid % NLP)
 
       max_phi = MAXVAL( grid % magnetic_longitude )
-      !$OMP PARALLEL DEFAULT( PRIVATE )
 
-      !colat_90km, phi_t0, theta_t0, q_value,
-      !lp_comp_weight, mp_comp_weight, q_int, ion_densitites_int,
-      !ion_temperature_int, ion_velocities_int, lp_t0, lp_mp, mp_min, isouth,
-      !inorth, ii, ispecial, i, lpx, mpx, jth, i_min )
-
-      !$OMP DO
       DO mp = 1, grid % NMP
         DO lp = 1, perp_transport_max_lp
   
@@ -455,6 +447,7 @@ CONTAINS
                 i_comp_weight(1) = ( q_value - q_int(2) )/( q_int(1) - q_int(2) )
                 i_comp_weight(2) = -( q_value - q_int(1) )/( q_int(1) - q_int(2) )
 
+ 
                 ion_densities_int(1:n_ion_species) = ion_densities_int(1:n_ion_species) + &
                                       ( ion_densities_pole_value(1:n_ion_species, isouth)*i_comp_weight(1) + &
                                         ion_densities_pole_value(1:n_ion_species, inorth)*i_comp_weight(2) )
@@ -495,9 +488,10 @@ CONTAINS
   
               q_value = grid % q_factor(i,lp,mp)
   
-              ion_densities_int   = 0.0
-              ion_temperature_int = 0.0
-              ion_velocities_int  = 0.0
+              ion_densities_int   = 0.0_prec
+              ion_temperature_int = 0.0_prec
+              ion_velocities_int  = 0.0_prec
+              B_int               = 0.0_prec
   
               DO mpx = 1, 2
 
@@ -522,6 +516,10 @@ CONTAINS
                  i_comp_weight(1) = ( q_value - q_int(2) )/( q_int(1) - q_int(2) )
                  i_comp_weight(2) = -( q_value - q_int(1) )/( q_int(1) - q_int(2) )
   
+                 B_int = B_int + ( grid % magnetic_field_strength(isouth, grid % NLP, mp_t0(mpx))*i_comp_weight(1) + &
+                                   grid % magnetic_field_strength(inorth, grid % NLP, mp_t0(mpx))*i_comp_weight(2) )*&
+                                 mp_comp_weight(mpx)
+
                  ion_densities_int(1:n_ion_species) = ion_densities_int(1:n_ion_species) + &
                                        ( plasma % ion_densities_old(1:n_ion_species, isouth, grid % NLP, mp_t0(mpx))*i_comp_weight(1) + &
                                          plasma % ion_densities_old(1:n_ion_species, inorth, grid % NLP, mp_t0(mpx))*i_comp_weight(2) )*&
@@ -539,6 +537,8 @@ CONTAINS
  
                ELSE
 
+                 B_int = B_int + grid % magnetic_field_strength(isouth, grid % NLP, mp_t0(mpx))*mp_comp_weight(mpx)
+
                  ion_densities_int(1:n_ion_species) = ion_densities_int(1:n_ion_species) + &
                                                       plasma % ion_densities_old(1:n_ion_species, isouth, grid % NLP, mp_t0(mpx))*&
                                                       mp_comp_weight(mpx)
@@ -555,8 +555,14 @@ CONTAINS
   
               ENDDO
 
-              plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)
-              plasma % ion_temperature(i,lp,mp) = ion_temperature_int
+              IF( lp <= 17 )THEN
+                ksi_fac = 1.0_prec
+              ELSE
+                ksi_fac = grid % magnetic_field_strength(i,lp,mp)/B_int
+              ENDIF
+
+              plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)*( ksi_fac )**2
+              plasma % ion_temperature(i,lp,mp) = ion_temperature_int*( ksi_fac**(4.0_prec/3.0_prec) )
               plasma % ion_velocities(1:3,1:n_ion_species,i,lp,mp) = ion_velocities_int(1:3,1:n_ion_species)
 
             ENDDO
@@ -567,9 +573,10 @@ CONTAINS
   
               q_value = grid % q_factor(i,lp,mp)
   
-              ion_densities_int     = 0.0
-              ion_temperature_int = 0.0
-              ion_velocities_int    = 0.0
+              ion_densities_int   = 0.0_prec
+              ion_temperature_int = 0.0_prec
+              ion_velocities_int  = 0.0_prec
+              B_int               = 0.0_prec
   
               DO mpx = 1, 2
                 DO lpx = 1, 2
@@ -594,6 +601,10 @@ CONTAINS
              
                     i_comp_weight(1) = ( q_value - q_int(2) )/( q_int(1) - q_int(2) )
                     i_comp_weight(2) = -( q_value - q_int(1) )/( q_int(1) - q_int(2) )
+
+                    B_int = B_int + ( grid % magnetic_field_strength(isouth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(1) + &
+                                     grid % magnetic_field_strength(inorth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(2) )*&
+                                   lp_comp_weight(lpx)*mp_comp_weight(mpx)
   
                     ion_densities_int(1:n_ion_species) = ion_densities_int(1:n_ion_species) + &
                                           ( plasma % ion_densities_old(1:n_ion_species, isouth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(1) + &
@@ -612,6 +623,9 @@ CONTAINS
  
                   ELSE
 
+                    B_int = B_int + grid % magnetic_field_strength(isouth, lp_t0(lpx), mp_t0(mpx))*&
+                                    lp_comp_weight(lpx)*mp_comp_weight(mpx)
+
                     ion_densities_int(1:n_ion_species) = ion_densities_int(1:n_ion_species) + &
                                                          plasma % ion_densities_old(1:n_ion_species, isouth, lp_t0(lpx), mp_t0(mpx))*&
                                                          lp_comp_weight(lpx)*mp_comp_weight(mpx)
@@ -629,8 +643,16 @@ CONTAINS
                 ENDDO
               ENDDO
 
-              plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)
-              plasma % ion_temperature(i,lp,mp) = ion_temperature_int
+              IF( lp <= 17 )THEN
+                ksi_fac = 1.0_prec
+              ELSE
+                ksi_fac = grid % magnetic_field_strength(i,lp,mp)/B_int
+              ENDIF
+
+              PRINT*, 'ksi:', ksi_fac
+
+              plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)*( ksi_fac**2 )
+              plasma % ion_temperature(i,lp,mp) = ion_temperature_int*( ksi_fac**(4.0_prec/3.0_prec) )
               plasma % ion_velocities(1:3,1:n_ion_species,i,lp,mp) = ion_velocities_int(1:3,1:n_ion_species)
 
             ENDDO
@@ -640,9 +662,6 @@ CONTAINS
  
         ENDDO
       ENDDO
-      !$OMP ENDDO
-
-      !$OMP END PARALLEL
      
   END SUBROUTINE Cross_Flux_Tube_Transport
 

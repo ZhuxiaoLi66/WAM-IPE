@@ -103,6 +103,13 @@ C------ light sources instead of using subroutine NYTE.
           IF(TAU.GT.70.0) TAU=70.0
           IF(TAUN.GT.70.0) TAUN=70.0
           !.. evaluate nighttime flux and daytime flux
+!nm20120304: For the case that doesn't converge, try increasing values of nighttime production.
+!Nighttime production is not well known. So long as the density in the
+!E-region around 110 km does not exceed about 1.0E4 /cc it should be OK.
+!If the densities were larger than 1.0E4 /cc at 110 km, they would be
+!observed by ionosondes, which they are not. In any case, I don't think
+!anyone knows what the E-region densities are at night. 
+          !FNFAC=FNFAC_flip
           FLUXN=FNFAC*(F107/75.0)*FNITE(L)*EXP(-TAUN)
           FLUX=EUVFLUX(L)*EXP(-TAU) + FLUXN
 
@@ -220,32 +227,38 @@ C.... P. Richards March 2011
       END
 C:::::::::::::::::::::::::: SUMPRD :::::::::::::::::::::::::
 C..... Sum the EUV, PE, and AUR production
-      SUBROUTINE SUMPRD(JMIN,JMAX,AUR_PROD)
+      SUBROUTINE SUMPRD(JMIN,JMAX
+     &,qiont !units number/m3/s
+     &)
       !..EUVION PEXCIT PEPION OTHPR1 OTHPR2 SUMION SUMEXC PAUION PAUEXC NPLSPRD
       USE PRODUCTION !.. EUV, photoelectron, and auroral production
-      INTEGER, INTENT(in) :: JMIN, JMAX
-      REAL(8), INTENT(in) :: AUR_PROD(1:3,JMIN:JMAX)
-      !--- Branching ratios for ion states were updated Sep 91 by P.
-      !Richards
-      !--- N2+ from Doering and Goembel, JGR 1991, page 16025. fraction
-      !of
-      !--- N+ from Richards and Torr JGR 1985, page 9917. fraction of O+
-      !from
-      !--- O2 dissociation is from Rapp and Englander Golden J. Chem
-      !Phys, 1965
-      !--- We still need to find cross sections for the higher levels of
-      !O+
+      INTEGER,INTENT(IN) :: JMIN,JMAX
+      REAL*8,dimension(3,JMIN:JMAX),INTENT(IN) :: qiont !1:O,2:O2,3:N2 !units number/m3/s
+      INTEGER :: J,IS,IK
+      !--- Branching ratios for ion states were updated Sep 91 by P. Richards
+      !--- N2+ from Doering and Goembel, JGR 1991, page 16025. fraction of
+      !--- N+ from Richards and Torr JGR 1985, page 9917. fraction of O+ from
+      !--- O2 dissociation is from Rapp and Englander Golden J. Chem Phys, 1965
+      !--- We still need to find cross sections for the higher levels of O+
       REAL ASPRD(3,6)
       DATA ASPRD/.4,.47,.42, .4,.28,.34, .2,.15,.08,0.0,.05,0.0,0.0,
      &   .05,0.0,0.0,0.0,0.16/
 
+!...
       DO 30 J=JMIN,JMAX
 
+      !nm20151031... Calculate aurora ionization rate.
+        DO IS=1,3 !o,o2,n2
          DO IK=1,6
-          DO IS=1,3
-           PAUION(IS,IK,J)=PAUION(IS,IK,J)+AUR_PROD(IS,J)*ASPRD(IS,IK)*1.E-6
-          ENDDO
-         ENDDO
+          PAUION(IS,IK,J)=PAUION(IS,IK,J)+qiont(IS,J)*ASPRD(IS,IK)*1.E-6 !convert from m-3 to cm-3
+         END DO                  !IK
+        END DO                    !IS
+!d      if (j==16) then
+!d      print *,'PAUION1',pauion(1,1:6,j)
+!d      print *,'PAUION2',pauion(2,1:6,j)
+!d      print *,'PAUION3',pauion(3,1:6,j)
+!d      endif
+
       !..    add contributions from 2 highest O+ metastables to 3 lowest
          EUVION(1,7,J) = EUVION(1,1,J) + EUVION(1,4,J)
          EUVION(1,8,J) = EUVION(1,2,J) + EUVION(1,5,J)/1.3
@@ -408,6 +421,7 @@ C.... the MSIS model at grazing incidence
         !.. Bates-Walker temperature
         XI=(ZG-120.0)*(6357.0+120.0)/(6357.0+ZG)
         !.. GTN is the temperature at grazing incidence
+!nm20110126: modified due to ibm xlf compiling error
         GTN=MAX(TINF-(TINF-300.0)*EXP(-0.025*XI),180.0D0)
 
         !.. Neutral densities are extrapolated from altitude to grazing
@@ -419,8 +433,9 @@ C.... the MSIS model at grazing incidence
      >      ((1.38E-16*(TNIN+GTN*2)/3)/(EM*M(I)*GR)))
         ENDDO
         IF(CHI.GE.1.75.AND.CHI.LT.-1.8)
-     >   WRITE(88,'(7F8.2,1P,22E10.2)') Z/1.0E5,ZG,CHI*180/3.1416,
-     >      TNIN,TINF,GTN,TNJ,(XN(I),I=1,3),(GN(I),I=1,3)
+     .  WRITE(88,'(7F8.2,1P,22E10.2)') Z/1.0E5,ZG,CHI*180/3.1416,
+     >      TNIN,TINF,GTN,TNJ
+     >,(XN(I),GN(I),I=1,3)  !nm110210
         !.. Make sure that grazing incidence density is not lower than MSIS
         !.. This is for using non MSIS densities like CTIPe
         TNJ=GTN

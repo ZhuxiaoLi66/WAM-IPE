@@ -56,7 +56,7 @@ C.... Consult file RSLPST-Algorithm.doc for detailed explanation
       ENDDO
 
       !.. Use Tn for Te and Ti if flux tube apex height < lower boundary.
-      IF(Z(JEQ).LE.ZTBDY) THEN 
+	IF(Z(JEQ).LE.ZTBDY) THEN 
         DO J=JMIN,JMAX
           TI(1,J)=TN(J)
           TI(2,J)=TN(J)
@@ -77,7 +77,7 @@ C.... Consult file RSLPST-Algorithm.doc for detailed explanation
       MIT=JBTS-JBTN+1       !.. Number of points on field line
       IEQ=2*(MIT-2)         !.. Number of equations to set up      
 
-      !.. OUTER LOOP: Return here on Non-Convergence with reduced time step
+C*** OUTER LOOP: Return here on Non-Convergence with reduced time step
   10  CONTINUE
         !.. Main loop: On each iteration the Jacobian is formed and solved for
         !.. the increments of to add to TI. 
@@ -103,7 +103,7 @@ C.... Consult file RSLPST-Algorithm.doc for detailed explanation
             CALL HOEQ(FLDIM,J,N,TI)
          ENDDO
 
-          !.. Compute FIJ values to use in calculating dN/dh
+          !.. Compute FIJ values to use in calculating dF/dT
           DO J=2,MIT-1
             KR=2*(J-2)
             JC=J+JBTN-1
@@ -149,7 +149,7 @@ C.... Consult file RSLPST-Algorithm.doc for detailed explanation
           !. add iterative increment to the array 'TI' and test for
           !. convergence when idiv=0. 
           DO I=1,NTI
-            ION=3         !.. same for both ions
+            ION=3
             IF(I.EQ.NTI) ION=2
             DO J=2,MIT-1
               JC=JBTN+J-1
@@ -176,7 +176,7 @@ C.... Consult file RSLPST-Algorithm.doc for detailed explanation
           IF(ITER.LT.5.AND.DTINC+2*DT.LE.DTIN) DT=2*DT
           IF(ITER.LT.5.AND.DTINC+2*DT.GT.DTIN) DT=DTIN-DTINC
 
-          !-- Save current temperatures for dT/dt. 
+          !-- Save current temperatures for dt/dt. 
           DO J=JMIN,JMAX
             TISAV(1,J)=TI(1,J)
             TISAV(2,J)=TI(2,J)

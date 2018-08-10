@@ -47,6 +47,16 @@ C.. Reference  Torr, et al., J. Geophys. Res., 95, 21,147-21,168, 1990.
       DO I=1,ION
         TINCR(I)=(PM(I)-ANM(I))/DT      !.. dn/dt
         FGR=(FLU(I)/BU-FLL(I)/BL)       !.. flux
+
+!nm20150516(3): production=0
+!      q(i)=0.0
+!nm20150516(4): loss=0
+!      L(I)=0.0
+!nm20150516(5): flux=0
+!       FGR=0.0
+!nm20150516(5): flux=0
+!       TINCR(I)=0.0
+
         F(I)=Q(I)-L(I)-TINCR(I)-FGR     !.. continuity equation
 
         !.. Store velocity for use in other routines on call from DLOOPS 
@@ -134,11 +144,15 @@ C-------------------------------------------------------------------
         QION(I)=QSIGN(I)*(GAMMA(I)*GRADTE(J)-PP(K)*ALPP)
         Q1(I)=DLNI+GRA+GRADTI(J)+GRADNE+GRADTE(J)+QION(I)
         Q2=UNJ(J)*B(I,K)          !.. neutral wind term
+!nm20110815: should do the test for collision term with He+: 
+!2nd step: take out "*0.000" to have nonzero value or Q3
         Q3=(XIONV(3,J+1)+XIONV(3,J))*B(I,3)*00.000   !.. He+ term
         F(I)=-D(I)*Q1(I)+Q2+Q3       !.. Momentum equation
       ENDDO
 
       !.. Add He+ collisions to neutral wind collisions
+!nm20110815: should do the test for collision term with He+: 
+!1st step: UNcomment the following two lines:
 c      B(1,2)=B(1,2)+B(1,3)
 c      B(2,1)=B(2,1)+B(2,3)
       !-- now calculate the velocities and fluxes 
@@ -344,7 +358,7 @@ C.. .....................................................................
         HPROD(J)=RTS(2)*HN(J)
 
         !.. Printing diagnostics
-        IF(JSJ.EQ.4.AND.Z(J).LT.ZLO.AND.Z(J).GT.ZHI) THEN
+        IF(JSJ.EQ.-4.AND.Z(J).LT.ZLO.AND.Z(J).GT.ZHI) THEN
           IUN=34
           WRITE(IUN,99) J,Z(J),OA,HA,N2A,O2A,TIJ(J),TNJ,TR,RHPH,ROPO,
      >      RHPO

@@ -44,14 +44,15 @@ IMPLICIT NONE
       PROCEDURE :: Trash => Trash_IPE_Neutrals
     
       PROCEDURE :: Update => Update_IPE_Neutrals
-
-#ifdef COUPLED
-      PROCEDURE :: Copy_WAM_to_IPE_CouplingFields
-#endif
-
-      PROCEDURE :: Geographic_to_Apex_Velocity
-
       PROCEDURE :: Interpolate_to_GeographicGrid => Interpolate_to_GeographicGrid_IPE_Neutrals
+
+
+      ! PRIVATE Routines
+#ifdef COUPLED
+      PROCEDURE, PRIVATE :: Copy_WAM_to_IPE_CouplingFields
+#endif
+      PROCEDURE, PRIVATE :: Geographic_to_Apex_Velocity
+
 
   END TYPE IPE_Neutrals
 

@@ -14,11 +14,13 @@ C--- Consult file RSLPSD-Algorithm.doc for detailed explanation
      >                    TI,   !.. Ion and electron temperatures
      >                  DTIN,   !.. Time step from calling program
      >                 DTMIN,   !.. Minimum time step
-     >                 EFLAG)   !.. OUTPUT: Error flag array
+     >                 EFLAG,mp,lp)   !.. OUTPUT: Error flag array
       USE SOLVARR       !... DELTA RHS WORK S, Variables for solver
       USE THERMOSPHERE  !.. ON HN N2N O2N HE TN UN EHT COLFAC
       USE ION_DEN_VEL   !.. O+ H+ He+ N+ NO+ O2+ N2+ O+(2D) O+(2P)
+!dbg20120301: N+ problem: "IN BDSLV &&&&&&& BANDWIDTH IS TOO LARGE "
       IMPLICIT NONE
+      integer,intent(in)::mp,lp
       INTEGER FLDIM                      !.. Field line grid array dimension
       INTEGER NFLAG,EFLAG(11,11)         !.. error flags
       INTEGER I,J,JC,ITER                !.. Loop control variables
@@ -46,11 +48,28 @@ C--- Consult file RSLPSD-Algorithm.doc for detailed explanation
       JEQ=(JMIN+JMAX)/2 !.. Equatorial point
       EFLAG(2,1)=0      !.. Initialize error flag
       EFLAG(2,1)=0      !.. Initialize error flag
+!dbg20121130:debug note 
+!i vaguely remembered ZLBDY_flip=115 caused crash (or at least very bad results!)
+!i can't remember introducing ZLBDY_flip was the cause of the problem? 
+! or the bad value, 115???
+!therefore, the use of ZLBDY_flip is pending.
+!dbg20121130      ZLBDY=115.!ZLBDY_flip        !.. Lower boundary altitude
       ZLBDY=120.        !.. Lower boundary altitude
 
-      !.. Use local equilibrium for densities if flux tube 
+!dbg20120301: this part was commented out on 20110815, but un-comment again to solve for N+ problem: "IN BDSLV &&&&&&& BANDWIDTH IS TOO LARGE " i don't remember why we decided to comment out here and i cannot find a program to setup the local chem equil anywhere else???
+!dbg20110815      !.. Use local equilibrium for densities if flux tube apex height < 200 km
+!	IF(sw_LCE.AND.Z(JEQ).LT.ht_LCE) THEN !ht_LCE=200.
+         DO J=JMIN,JMAX
+           CALL HOEQ(FLDIM,J,N,TI)
+           XIONV(1,J)=0.0
+           XIONV(2,J)=0.0
+         ENDDO
+         RETURN
+!	ENDIF 
+!dbg20110815:
+      !.. Use local equilibrium for densities if flux tube
       !.. apex height < ZLBDY + some increment (1.0 km?)
-      IF(Z(JEQ).LE.ZLBDY+1.0) THEN 
+      IF(Z(JEQ).LE.ZLBDY+1.0) THEN
          DO J=JMIN,JMAX
            CALL HOEQ(FLDIM,J,N,TI)
            XIONN(1,J)=N(1,J)
@@ -60,6 +79,8 @@ C--- Consult file RSLPSD-Algorithm.doc for detailed explanation
          ENDDO
          RETURN
       ENDIF 
+
+
 
       !-- Save current densities for dn/dt.
       !-- scaling FLIP to the IRI nmF2.
@@ -87,6 +108,10 @@ C*** OUTER LOOP: Return here on Non-Convergence with reduced time step
 
         MIT=JBNS-JBNN+1       !.. Number of points on field line
         IEQ=2*(MIT-2)         !.. Number of equations to set up      
+!dbg20120304:
+      if ( IEQ<=2 ) then
+        STOP 'STOP! sub-DLOOPS:MIT'
+      end if
 
         !.. Main loop: On each iteration the Jacobian is formed and solved for
         !.. the increments of to add to N. 
@@ -99,7 +124,7 @@ C*** OUTER LOOP: Return here on Non-Convergence with reduced time step
             CALL HOEQ(FLDIM,J,N,TI)
           ENDDO
 
-          !.. Compute current FIJ values to use in calculating dN/dh
+          !.. Compute current FIJ values to use in calculating dF/dn
           DO J=2,MIT-1
             KR=2*(J-2)
             JC=J+JBNN-1
@@ -118,8 +143,6 @@ C*** OUTER LOOP: Return here on Non-Convergence with reduced time step
           CALL BDSLV(IEQ,3,S,0,RHS,DELTA,WORK,NFLAG)
 
           IF(NFLAG.NE.0) THEN
-            IF(EFLAG(11,11).EQ.1) WRITE(6,'(/A,I5,A,I5)')
-     >       '  ITERATION =',ITER,'  RETURN FROM BDSLV =',NFLAG
             EFLAG(2,2)=-1   !.. Report problem to calling routine
             RETURN
           ENDIF
@@ -188,7 +211,7 @@ C*** OUTER LOOP: Return here on Non-Convergence with reduced time step
                XIONN(1,J)=N(1,J)
                XIONN(2,J)=N(2,J)
             ENDDO
-            !..CALL DFIJ(40,4,DT,N,TI,F,NSAVE)  !.. diagnostic call
+            !.. CALL DFIJ(40,4,DT,N,TI,F,NSAVE) !diagnostic
             RETURN
           ENDIF
           !.. increase time step if convergence is easy
@@ -216,9 +239,15 @@ C*** OUTER LOOP: Return here on Non-Convergence with reduced time step
           DO J=JMIN,JMAX
             N(1,J)=NSAVE(1,J)
             N(2,J)=NSAVE(2,J)
-            !.. Try a different initial guess. Could use random increment
-            !IF(DT.LT.600) N(1,J)=0.9*NSAVE(1,J)
-            !IF(DT.LT.600) N(2,J)=0.9*NSAVE(2,J)
+!20121130 Phil suggested to try this! it might help in finding a solution for convergence error...
+!            if ( sw_init_guess_flip ) then
+           !.. Try a different initial guess. Could use random increment
+               IF(DT .LT. 60) THEN
+                  N(1,J)=0.9*NSAVE(1,J)
+                  N(2,J)=0.9*NSAVE(2,J) 
+               END IF
+!            end if !( sw_init_guess_flip ) then
+!20121130
           ENDDO
           !.. Raise lower boundary if the problem is only below 200 km
           IF(DT.LE.DTIN/4.0.AND.DCUPP.EQ.1.AND.DCLON*DCLOS.EQ.0)
@@ -267,7 +296,7 @@ C.....  of O+ and H+ at point j
       LOPLS=(RTS(3)*N2N(J)+RTS(4)*O2N(J))
       LOPLS2=+RTS(2)*HN(J)
       LHPLS=RTS(1)*ON(J)
-      N(1,J)=PHION(J)/LOPLS + 1.0   !.. stops O+ density going to zero
+      N(1,J)=PHION(J)/LOPLS
       N(2,J)=N(1,J)*LOPLS2/LHPLS
        RETURN
        END

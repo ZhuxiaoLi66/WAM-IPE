@@ -9,6 +9,7 @@ C.... Rates updated by P. Richards in May 2009
       IMPLICIT REAL(A-H,L,N-Z)
       DOUBLE PRECISION TE,TI,TN,RTS,T13,TOT_NP_O2_RATE
       DIMENSION RTS(99)
+      integer ret
 
       !.. zero out array
       DO 898 ITJS=1,99
@@ -22,22 +23,14 @@ C.... Rates updated by P. Richards in May 2009
       !.. O+ + H -> O + H+    Anicich et al. [1993]
       RTS(2)=6.4E-10
 
-      !.. O+ + N2 --> NO+ + N St. Maurice and Torr JGR ,1978, p969
-      !.. Hierl et al. [1997] rate not used because rates are 
-      !.. contaminated by N2(v) for T > 1300K. FLIP includes N2(v).
-      !.. Therefore the Fox and Sung parameterization is not appropriate
-      T13=(4.*TN+7.*TI)/11.0/300.0
-      IF(T13.LE.5.67) RTS(3)=1.533E-12-5.92E-13*T13+8.60E-14*T13*T13
-      IF(T13.GT.5.67) RTS(3)=2.73E-12-1.155E-12*T13+1.483E-13*T13*T13
-      RTS(3)=1.3*RTS(3) !.. gives better fit to Hierl et al. at 1000K
-      
-      !.. Alternative modification of the rate for N2 vibrational excitation
-      !.. using the Hierl et al. rate when FLIP does not solve for N2(v).
-      !.. Above 1000 K the Hierl power is increased from 2.12 to 2.5 to 
-      !.. mimic the FLIP model 
+      !.. O+ + N2 --> NO+ + N,   Hierl et al.[1997] 
+      !.. The Hierl et al. [1997] lab rate is contaminated by N2(v) 
+      !.. for T > 1300K. Therefore, the Hierl et al. rate is not really 
+      !.. appropriate  in the ionosphere. This model version uses the Hierl et  
+      !.. al. rate because it does not solve for N2(v). Above 1000 K the Hierl
+      !.. power is increased from 2.12 to 2.5 to mimic the FLIP model 
       IF(TI.LE.1000) RTS(3)=1.2E-12*(300/TI)**0.45  
       IF(TI.GT.1000) RTS(3)=7.0E-13*(TI/1000)**2.5  
-
 
       !.. O+ + O2 -> O2+ + O,   Lindinger et al. [1974] 
       !.. Hierl et al. lists different rates. Hierl et al. [1997] not 
@@ -45,8 +38,8 @@ C.... Rates updated by P. Richards in May 2009
       !.. T > 1000K. We don't know the vibrational state in the 
       !.. thermosphere. This fit was done by PGR May 2009. It is similar 
       !.. to Fox and Sung but does not increase sharply above 1000K.
-      IF(TI.LE.1600) RTS(4)=1.6E-11*(300/TI)**(0.52)
-      IF(TI.GT.1600) RTS(4)=6.7E-12*(TI/1600)**(0.6) 
+      IF(TI.LE.1600) RTS(4)=1.6E-11*(300/TI)**0.52
+      IF(TI.GT.1600) RTS(4)=6.7E-12*(TI/1600)**0.6 
     
       !.. NO+ + e -> N + O    Walls and Dunn [1974)
       !.. Vejby-Christensen et al [1998] gives 4.0E-7*(300/TE)**0.5
@@ -402,6 +395,7 @@ C.. Modified in April 20008 to write warnings in multiple files
      > ,8.65E-11,1.00E-11,3.60E-10,3.54E-10,6.24E-11,1.20E-09,1.50E-10  ! 84
      > ,1.30E-10,1.30E-10,1.00E-11,1.20E-09,3.80E-09,1.90E-09,2.39E-11  ! 91
      > ,6.04E-10,4.60E-11,1.35E-09,1.00E-10,5.67E-10,9.50E-09,8.58E-10/ ! 98
+
 
       JRTS=0
       !.. call RATS with standard temperature TSTAND = 999

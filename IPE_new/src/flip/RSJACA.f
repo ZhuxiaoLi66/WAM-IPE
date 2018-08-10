@@ -21,8 +21,9 @@ C:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
       IBW=2*M+1
 C ...... modification here by PR Aug 91
       IF(M.GT.N-1) THEN
-         WRITE(6,918)
-918      FORMAT('    IN BDSLV &&&&&&& BANDWIDTH IS TOO LARGE')
+!dbg20120306         WRITE(6,918)
+         WRITE(*,918) 1
+918      FORMAT('    IN BDSLV &&&&&&& BANDWIDTH IS TOO LARGE',i10)
          NFLAG=3
          RETURN
       ENDIF
@@ -54,9 +55,13 @@ C
 110   BIG=ABS(S(I,J))
 111   CONTINUE
       IF(BIG) 114,112,114
-  112 WRITE(6,919)I
-919   FORMAT('    IN BDSLV, ROW',I6,' IS ZERO IN INPUT MATRIX')
+!dbg20120306  112 WRITE(6,919)I
+  112 WRITE(*,919)I,1
+919   FORMAT('    IN BDSLV, ROW',I6,' IS ZERO IN INPUT MATRIX1=',i10)
       NFLAG=2
+!dbg20140610: code must stop if this error happens!
+!nm20170111: commented out to get WAM-IPE keep going at the initial trial stage by loosening error stop.
+!t      sw_ERSTOP_flip=1
       RETURN
 114   SCALE(I)=1./BIG
 115   CONTINUE
@@ -99,8 +104,9 @@ C
 C
       IF(S(N,1)) 126,118,126
 C  ..... PR mod in Aug 91
-118   WRITE(6,917)
-917   FORMAT('  IN BDSLV &&&&&&&&   ZERO PIVOT ELEMENT')
+!dbg20120306: 118   WRITE(6,917)
+118   WRITE(*,917) 1
+917   FORMAT('  IN BDSLV &&&&&&&&   ZERO PIVOT ELEMENT',i10)
       NFLAG=1
       RETURN
 C

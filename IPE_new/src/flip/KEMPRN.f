@@ -1044,6 +1044,7 @@ C...... Written by P. Richards in February 2004
       !..Total source term used in main program to calculate [e]
       P1=PR(1)+PR(2)+PR(3)+PR(4)+PR(5)+PR(6)+PR(7)+PR(8)
      >    +PR(9)+PR(10)+PR(11)+PR(12)
+      PRINT*, 'CNOP', P1, LR(1)
       IF(I.LE.0) NOP=P1/LR(1)         !.. NO+ density
 
       DO IJ=1,INV

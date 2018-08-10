@@ -9,18 +9,16 @@ C... TI= temperature of H+, O+, electrons
 C... FRPAS= fraction of flux lost in plasmasphere
 C... ZWR= altitude for printing spectrum.
       SUBROUTINE PE2S(F107,F107A,N,TI,FRPAS,ZWR,EDEN,UVFAC,COLUM,
-     > IHEPLS,INPLS,INNO)
-        !.. IPEcode     &,mp,lp,utime)
+     > IHEPLS,INPLS,INNO
+     &,mp,lp,utime)
       USE FIELD_LINE_GRID    !.. FLDIM JMIN JMAX FLDIM Z BM GR SL GL SZA
       !..EUVION PEXCIT PEPION OTHPR1 OTHPR2 SUMION SUMEXC PAUION PAUEXC NPLSPRD
       USE THERMOSPHERE  !.. ON HN N2N O2N HE TN UN EHT COLFAC
       USE PRODUCTION !.. EUV, photoelectron, and auroral production
       USE MINORNEUT !.. N4S N2D NNO N2P N2A O1D O1S EQN2D
       IMPLICIT NONE
-        !.. IPEcodeinclude "gptl.inc"
-        !.. IPEcode!dbg20141209
-        !.. IPEcodeINTEGER, INTENT(IN):: mp,lp,utime
-      INTEGER mp,lp,utime
+!dbg20141209
+      INTEGER, INTENT(IN):: mp,lp,utime
       INTEGER J,IE,IK,IS  !.. altitude, energy, species loop control variables
       INTEGER IDGE(201),JOE(201),JN2E(201) !.. indices for degraded electrons
       INTEGER IPAS,IPASC    !.. grid indices for pitch angle trapping
@@ -54,7 +52,7 @@ C... ZWR= altitude for printing spectrum.
      >  FD(9),EDEN(FLDIM),COLUM(3,FLDIM)
 
       DATA M, ZLB ,ZPROD,AVMU,EMIN, EMAX,IU9,IU8,ZPAS
-     >  / 41, 120., 999.,.577,1.0 , 800.,166,169,1000./
+     >  / 41, 120., 999.,.577,1.0 , 800.,166,167,1000./
       DATA IWRC /0/,IEMAX/0/,EBSCX/0.0/
       DATA M2/0/,IWR/0/,JN2E/201*0/,SIGEX/3*0.0D0/
       DATA DELTE/201*0.0/
@@ -75,22 +73,17 @@ C... ZWR= altitude for printing spectrum.
 
       !.. Setting up energy cell boundaries first time thru only
       !.. If Printing, go to 1 eV resolution  
-        !.. IPEcoderet = gptlstart ('PE2S')
-        !.. IPEcoderet = gptlstart ('PE2S IF1')
       IF(IEMAX.LE.0)  THEN
-        !.. IPEcode   ret = gptlstart ('PE2S ECELLS')
          IF(ZWR.LT.80) THEN
-           !.. can use lower resolution for the FLIP run
+	     !.. can use lower resolution for the FLIP run
            CALL ECELLS(35.0,800.0,1.0,50.0,EMAX,IEMAX,EB,E,DELTE)
            !CALL ECELLS(30.0,800.0,3.0,99.0,EMAX,IEMAX,EB,E,DELTE)
          ELSE
-           !.. use high resolution for printing
+	     !.. use high resolution for printing
            CALL ECELLS(65.0,800.0,1.0,20.0,EMAX,IEMAX,EB,E,DELTE)
          ENDIF
-        !.. IPEcode   ret = gptlstop  ('PE2S ECELLS')
          !.. set up bins for degraded primaries from ionizations
-        !.. IPEcode   ret = gptlstart ('PE2S FNDBIN')
-         IE_LOOP1:DO IE=IEMAX,2,-1
+         DO IE=IEMAX,2,-1
            !.. Calculate the average energy of the secondaries.
            ELIM=0.5*(E(IE)-EPOT)  !.. Maximum secondary energy
            !.. normalize secondary distribution
@@ -103,36 +96,29 @@ C... ZWR= altitude for printing spectrum.
            IF(E(IE).GT.ELOSS) CALL FNDBIN(IE,IEMAX,ELOSS,E,IDGE)
            IF(E(IE).GT.ELOSSOX) CALL FNDBIN(IE,IEMAX,ELOSSOX,E,JOE)
            IF(E(IE).GT.ELOSSN2) CALL FNDBIN(IE,IEMAX,ELOSSN2,E,JN2E)
-        ENDDO IE_LOOP1
-        !.. IPEcode   ret = gptlstop  ('PE2S FNDBIN')
+         ENDDO
 
          !.. proportion of total secondary ions in energy bin E(IE). Note that 
-         !.. a running sum of secondary electrons is kept but only distributed
-         !.. immediately prior to calculating the flux at the next lowest energy. 
+	   !.. a running sum of secondary electrons is kept but only distributed
+	   !.. immediately prior to calculating the flux at the next lowest energy. 
          !.. The apportionment is based on an empirical calculation using the 
          !.. full Opal et al. [1971] distributions
-        !.. IPEcode   ret = gptlstart ('PE2S calc1')
-         IE_LOOP2: DO IE=1,IEMAX
+         DO IE=1,IEMAX
            PROB(IE)=0.2526*EXP(-0.2526*E(IE))
-         ENDDO IE_LOOP2
-        !.. IPEcode   ret = gptlstop  ('PE2S calc1')
-      ENDIF                     !      IF(IEMAX.LE.0)  THEN
-        !.. IPEcoderet = gptlstop ('PE2S IF1')
+         ENDDO
+      ENDIF
 
-        !nm20110923      JTI=JTI+1
+!nm20110923      JTI=JTI+1
 
-      !..IF(JTI.EQ.2) ZWR=300
+	!..IF(JTI.EQ.2) ZWR=300
 
       !.. Get production frequencies (RJOX,RJN2,RJO2,RJHE) for the energy cells
-        !.. IPEcoderet = gptlstart ('PE2S CONVF_EUVAC')
       IF(ABS((F107-F107SV)/F107).GE.0.05) THEN
         F107SV=F107
         CALL CONVF_EUVAC(IEMAX,F107,F107A,E,DELTE,UVFAC,
      >   RJOX,RJN2,RJO2,RJHE)
       ENDIF  !.. Endif F107
-        !.. IPEcoderet = gptlstop  ('PE2S CONVF_EUVAC')
 
-        !.. IPEcoderet = gptlstart ('PE2S calc2')
       IEQ=(JMAX+1)/2
 
       !.. Set pitch angle trapping factor. FPAS is controlled by input
@@ -141,10 +127,10 @@ C... ZWR= altitude for printing spectrum.
       FPAS=0.0
       !.. Standard - user specifies 0.0 <= FPAS <= 1.0 
       IF(FRPAS.GE.0.0.AND.FRPAS.LE.1.0) THEN
-        FPAS=FRPAS
+	  FPAS=FRPAS
       !.. If FRPAS<0, adjust fraction of trapping according to TEC
       ELSEIF(FRPAS.LT.0) THEN
-        FPAS=DMIN1(DABS(FRPAS),6.0E-6*DABS(FRPAS)*N(2,IEQ)*
+	  FPAS=DMIN1(DABS(FRPAS),6.0E-6*DABS(FRPAS)*N(2,IEQ)*
      >     ((1+Z(IEQ)/6370.)**4-(1+ZPAS/6370.)**4))
       !.. If FRPAS > 1 Stop electrons in plasmasphere but no extra heating
       ELSEIF(FRPAS.GT.1.0) THEN
@@ -182,9 +168,6 @@ C... ZWR= altitude for printing spectrum.
         !.. EHT(3,J)=0.0D0 !.. zeroed for CTIPe 2011-09-30
       ENDDO
 
-      !.. Pitch angle scattering altitude >= production altitude
-      IF(ZPAS.LT.ZPROD) ZPAS=ZPROD   
-      
       !.. Calculate arc length between between points DS and bounday indices
       DO J=JMIN,JMAX
         IF(J.GT.1) DS(J)=SL(J)-SL(J-1)
@@ -206,9 +189,9 @@ C... ZWR= altitude for printing spectrum.
 
       IF(ZWR.GE.Z(1)) WRITE(IU9,319) 
       IF(ZWR.GE.Z(1)) WRITE(IU8,319) 
- 319  FORMAT('    E   SIGEXO  SIGIONO  SIGEXN2  SIGION2  SIGEL'
-     > '    PRED     FYSUM    TSIGNE    PHIUP    PHIDWN   PRODUP'
-     > '   PRODWN   EHEAT')
+ 319  FORMAT('  E      SIGEXO  SIGIONO  SIGEXN2  SIGION2  SIGEL'
+     > '    PRED     FYSUM    TSIGNE   PHIUP    PHIDWN   PRODUP'
+     > '   PRODWN')
 
       !.. Determine tube volume for heating due to pitch angle trapping
       VTOT=0.0
@@ -221,7 +204,6 @@ C... ZWR= altitude for printing spectrum.
       IE=IEMAX
 
 C////////////main calculations  begin here ////////////
-        !.. IPEcoderet = gptlstop ('PE2S calc2')
  23   CONTINUE
 
       !-- Pitch angle trapping from Khazanov et al. 1992
@@ -233,17 +215,12 @@ C////////////main calculations  begin here ////////////
       ENDIF
 
       !.. Evaluate ionization branching ratios for O+
-        !.. IPEcoderet = gptlstart ('PE2S OXRAT')
       CALL OXRAT(E(IE),SPRD(1,1),SPRD(1,2),SPRD(1,3))
-        !.. IPEcoderet = gptlstop  ('PE2S OXRAT')
 
       !.. O, O2, and N2 elastic cross sections
-        !.. IPEcoderet = gptlstart ('PE2S ELASTC')
       CALL ELASTC(E(IE),PEBSC,SIGEL)
-        !.. IPEcoderet = gptlstop  ('PE2S ELASTC')
 
       !.. Loop for calculating primary and cascade production
-        !.. IPEcoderet = gptlstart ('PE2S loop1')
       DO J=JMIN,JMAX
         PRED(J)=0.0D0
         IF(Z(J).LE.ZPROD) THEN
@@ -253,25 +230,20 @@ C////////////main calculations  begin here ////////////
           IF(E(IE).LE.3.AND.E(IE).GT.2) THEN
             !.. Needed for updated electron heating in CTIPe
             CALL CMINOR(0,J,0,IHEPLS,INPLS,INNO,FD,7,N,TI,Z,EFLAG)
+            PRINT*, 'RSPE2B :', J, PRED(J), EQN2D(J)
             PRED(J)=PRED(J)+EQN2D(J)
           ENDIF
           !.. Total energy deposition to photoelectrons
           EUVION(1,11,J)=EUVION(1,11,J)+PRED(J)*E(IE)*DELTE(IE)
         ENDIF
       ENDDO
-        !.. IPEcoderet = gptlstop  ('PE2S loop1')
 
       !.. Get total cross sections
-        !.. IPEcoderet = gptlstart ('PE2S SIGEXS')
       CALL SIGEXS(E(IE),SIGEX,SIGION,SIGO1D) !.. PGR cross sections
-        !.. IPEcoderet = gptlstop  ('PE2S SIGEXS')
 
       !.. Get OX partial cross sections
-        !.. IPEcoderet = gptlstart ('PE2S OXSIGS')
       CALL OXSIGS(E(IE),PARSIG,TSIG)
-        !.. IPEcoderet = gptlstop  ('PE2S OXSIGS')
 
-        !.. IPEcoderet = gptlstart ('PE2S calc3')
       !.. energy loss to thermal electrons by coulomb collisions
       DO J=JMIN,JMAX
         ET=8.618E-5*TI(3,J)
@@ -281,7 +253,7 @@ C////////////main calculations  begin here ////////////
       ENDDO
 
       !.. See if energy loss exceeds bin size
-        SUMTSE=0.0
+	SUMTSE=0.0
       DE=0.0
       DO J=JMIN,JMAX
         TEST=TSIGNE(J)*DS(J)
@@ -310,61 +282,38 @@ C////////////main calculations  begin here ////////////
         PHIUP(ICN)=PHIDWN(ICN)
         PHIUP(ICF)=PHIDWN(ICF)
       ENDDO
-      
-        !.. IPEcoderet = gptlstop  ('PE2S calc3')
 
       !.. take the adiabatic variation of pitch angle into account
-        !.. IPEcoderet = gptlstart ('PE2S PITCH')
       CALL PITCH(FLDIM,IE,0,M,JMIN,JMAX,T1,T2,PRED,PRODUP,PRODWN,BM,Z)
-        !.. IPEcoderet = gptlstop  ('PE2S PITCH')
 
-      !.. Calculate interhemispheric fluxes. The iteration is to adjust 
+      !.. calculate interhemispheric fluxes. The iteration is to adjust 
       !.. for interhemispheric fluxes.Used to be 4 times
       DO ITS=1,2
-        !.. IPEcode  ret = gptlstart ('PE2S TRIS1')
-        !.. --- Northern Hemisphere ---
-        !.. For reflection, make up and down fluxes equal between the production 
-        !.. and pitch angle scattering regions. Also sets upper boundary flux
-        IF (NINT(FRPAS).EQ.3) THEN
-          DO J=M,IPAS
-              PHIDWN(J)=PHIUP(J)
-          ENDDO
-        ENDIF
-        !.. Now solve for the North fluxes
         CALL TRIS1(FLDIM,1,M2,M,IE,M,BM,Z,JMAX,PRED,IPAS,FPAS,PHIDWN,
      >     PHIUP,T1,T2,DS,PRODUP,PRODWN
-     &     ,mp,lp,utime)
-        !.. IPEcode  ret = gptlstop  ('PE2S TRIS1')
-        !.. IPEcode  ret = gptlstart ('PE2S TRISM1')      
-
-        !.. --- Southern Hemisphere ---
-        !.. For reflection, make up and down fluxes equal between the production 
-        !.. and pitch angle scattering regions. Also sets upper boundary flux
-        IF (NINT(FRPAS).EQ.3) THEN
-          DO J=IPASC,JMAXM-1
-              PHIUP(J)=PHIDWN(J)
-          ENDDO
-        ENDIF
-        !.. Now solve for the South fluxes
+     &,mp,lp,utime)
         CALL TRISM1(FLDIM,-1,JMAXM,JMAX1,IE,M,BM,Z,JMAX,PRED,IPASC,FPAS,
-     >    PHIDWN,PHIUP,T1,T2,DS,PRODUP,PRODWN
-     &    ,mp,lp,utime)
-        !.. IPEcode  ret = gptlstop  ('PE2S TRISM1')
+     >     PHIDWN,PHIUP,T1,T2,DS,PRODUP,PRODWN
+     &,mp,lp,utime)
       ENDDO
-      
       !.. reset the fluxes
-        !.. IPEcoderet = gptlstart ('PE2S PITCH')
       CALL PITCH(FLDIM,IE,1,M,JMIN,JMAX,T1,T2,PRED,PRODUP,PRODWN,BM,Z)
-        !.. IPEcoderet = gptlstop  ('PE2S PITCH')
 
       !.. EHPAS=heating due to pitch angle trapping: DE= normal loss in the
       !.. protonosphere to electrons. Modification made 1/29/1996 ->
       !.. EHPAS= Energy * (FPAS/VOL) * flux * delta E * area at PAS alt.
 
-        !.. IPEcoderet = gptlstart ('PE2S calc4')
       EHPAS=E(IE)*PASK*(PHIUP(IPAS)+PHIDWN(IPASC))*DELTE(IE)*
      >       BM(M2)/BM(IPAS)
       IF(DE.GT.E(IE).OR.NINT(FRPAS).EQ.2) EHPAS=0.0
+
+!dbg20141209
+!d      if ( utime>=434250.and.mp==10.and.lp==14 ) then
+!d      WRITE(6,*)'dbgEHT0:'
+!d      WRITE(6,*) IE,IPAS,IPASC,M2,EHPAS,E(IE),PASK,PHIUP(IPAS),
+!d     & PHIDWN(IPASC),DELTE(IE),
+!d     & BM(M2),BM(IPAS)
+!d      endif
 
       !.. cross section for O(1S) Jackman et al. 1977
       SIGO1S=0.0
@@ -387,13 +336,18 @@ C////////////main calculations  begin here ////////////
 c        IF(IABS(J-IEQ).LT.Z(IPAS)) EHT(3,J)=EHT(3,J)+EHPAS
 
 
+!dbg20141209
+!d      if ( utime>=434250.and.mp==10.and.lp==14 ) then
+!d      WRITE(6,*)'dbgEHT1:'
+!d      WRITE(6,*) PHIUP(J), PHIDWN(J)
+!d      WRITE(6,*)j,IE,EHT(3,J),FYSUM(J),DELTE(IE),TSIGNE(J)
+!d     &,EHPAS
+!d      endif
 
 
       ENDDO !DO J=JMIN,JMAX
-        !.. IPEcoderet = gptlstop ('PE2S calc4')
 
       !.. Calculate thermal electron heating and ion production rates
-        !.. IPEcoderet = gptlstart ('PE2S loop2')
       DO J=JMIN,JMAX
         PHISUM=FYSUM(J)*DELTE(IE)
         IF(Z(J).LE.Z(M)) THEN
@@ -420,22 +374,18 @@ c        IF(IABS(J-IEQ).LT.Z(IPAS)) EHT(3,J)=EHT(3,J)+EHPAS
           ENDDO
         ENDIF
       ENDDO
-        !.. IPEcoderet = gptlstop ('PE2S loop2')
 
       !.. printing fluxes
-        !.. IPEcoderet = gptlstart ('PE2S prints')
       IF(ZWR.GT.80) THEN
         WRITE(IU9,313) E(IE),SIGEX(1),SIGION(1),SIGEX(3),SIGION(3)
      >    ,SIGEL(1),PRED(IWR),FYSUM(IWR),TSIGNE(IWR),PHIUP(IWR)
-     >    ,PHIDWN(IWR),PRODUP(IE,IWR),PRODWN(IE,IWR),EHT(3,IWR)
+     >    ,PHIDWN(IWR),PRODUP(IE,IWR),PRODWN(IE,IWR)
         WRITE(IU8,313) E(IE),SIGEX(1),SIGION(1),SIGEX(3),SIGION(3)
      >    ,SIGEL(1),PRED(IWRC),FYSUM(IWRC),TSIGNE(IWRC),PHIUP(IWRC)
-     >    ,PHIDWN(IWRC),PRODUP(IE,IWRC),PRODWN(IE,IWRC),EHT(3,IWRC)
+     >    ,PHIDWN(IWRC),PRODUP(IE,IWRC),PRODWN(IE,IWRC)
       ENDIF
-        !.. IPEcoderet = gptlstop  ('PE2S prints')
 
       !.. Calculate Cascade production ....
-        !.. IPEcoderet = gptlstart ('PE2S loop3')
       DO J=JMIN,JMAX
         !.. Cascade from thermal electron collisions
         TSIGNE(J)=TSIGNE(J)*DELTE(IE)/DELTE(IE-1)
@@ -477,7 +427,6 @@ c        IF(IABS(J-IEQ).LT.Z(IPAS)) EHT(3,J)=EHT(3,J)+EHPAS
      >      ,E,DELTE,SIGO1D)
         ENDIF
       ENDDO
-        !.. IPEcoderet = gptlstop ('PE2S loop3')
 
       IE=IE-1  !.. Go to next lowest energy
 
@@ -489,7 +438,6 @@ C=========================== END OF MAIN ENERGY LOOP ============
  80   CONTINUE
 
       !.. add energy from last energy bin to electron heating
-        !.. IPEcoderet = gptlstart ('PE2S loop4')
       DO J=JMIN,JMAX
          ELEFT=+(PRODUP(IE,J)+PRODWN(IE,J))*E(1)
          EHT(3,J)=EHT(3,J)+ELEFT
@@ -502,8 +450,6 @@ C=========================== END OF MAIN ENERGY LOOP ============
 
 
       ENDDO
-        !.. IPEcoderet = gptlstop  ('PE2S loop4')
-        !.. IPEcoderet = gptlstop  ('PE2S')
 
       RETURN
  313  FORMAT(F6.1,1P,22E9.2)
@@ -521,24 +467,24 @@ C...... where the energy steps are S1 and S2
       INTEGER IE,IEMAX
       REAL E1,E2,S1,S2,EMAX,GRAD,ABSC
       REAL EB(201),E(201),DELTE(201)
-      IEMAX=0
+	IEMAX=0
 
       !.. set up cell boundaries EB
       EB(1)=0.0
       DO IE=2,199
-        IF(EB(IE-1).GT.EMAX) GO TO 10
+	  IF(EB(IE-1).GT.EMAX) GO TO 10
         !.. find gradient and abscissa of linear fit for DELTE
         GRAD=(S2-S1)/(E2-E1)
         ABSC=S1-E1*GRAD
         DELTE(IE)=(GRAD*EB(IE-1)+ABSC)
-        IF(DELTE(IE).GT.S2) DELTE(IE)=S2
+	  IF(DELTE(IE).GT.S2) DELTE(IE)=S2
         IF(DELTE(IE).LT.1.0) THEN
            GRAD=0.0
            ABSC=1.0
            DELTE(IE)=1.0
         ENDIF
         
-        !.. DELTE must not be less than 1 because the frequencies are 1 eV
+	  !.. DELTE must not be less than 1 because the frequencies are 1 eV
         IF(DELTE(IE).LT.1.0) DELTE(IE)=1.0
 
         EB(IE)=(EB(IE-1)+DELTE(IE))
@@ -638,8 +584,8 @@ C..... Modified 2003-20-13 to do all 3 species
       JOEM2=JOE
       IF(DELTE(JOE).LE.ELOSS.AND.JOE.GE.2) JOEM1=JOE-1
       IF(DELTE(JOE).LE.ELOSS.AND.JOE.GE.2) JOEM2=JOE+1
-      IF(JOEM1.LT.1) JOEM1=JOE
-      IF(JOEM2.LT.1.OR.JOEM2.GE.IE) JOEM2=JOE
+	IF(JOEM1.LT.1) JOEM1=JOE
+	IF(JOEM2.LT.1.OR.JOEM2.GE.IE) JOEM2=JOE
       CORSIG=SIGEX(ISP)*ELOSS/(E(IE)-E(JOE))
       PREX=(PHIUP(IZ)*(1-BSCX)+PHIDWN(IZ)*BSCX)*DELTE(IE)/DELTE(JOE)
       !.. allocate production from bin IE in 2 adjacent bins if small bins
@@ -664,7 +610,7 @@ C....... calculate secondary and cascade production from ionizing collisions
       !.. Total production of ions at E(IE)
       PRION=SIGION(1)*XN(1,IZ)+SIGION(2)*XN(2,IZ)+SIGION(3)*XN(3,IZ)
       PEFLUP=(PHIUP*(1.0-BSCI)+PHIDWN*BSCI)*DELTE(IE)
-      !.. A running sum of secondary electrons is kept but only distributed
+	!.. A running sum of secondary electrons is kept but only distributed
       !.. immediately prior to calculating the flux at the next lowest energy. 
       !.. The apportionment is based on an empirical calculation using the 
       !.. full Opal et al. [1971] distributions
@@ -718,7 +664,7 @@ C...... al for O2, and N2, and He
      >  COLUM(3,J)*T_XS_N2(EP)
 
       AFAC=EXP(-TAU)      !.. EUV attenuation factor
-      !.. primary production rates
+	!.. primary production rates
       PRED(J)=(RJOX(IE)*XN(1,J)+RJN2(IE)*XN(3,J)+RJO2(IE)*XN(2,J)
      > +1.0*RJHE(IE)*HE)*1.0E-9*AFAC*FLXFAC
 
@@ -899,12 +845,10 @@ C......  In the array DELTA. This routine comes from Carnahan, Luther,
 C......  And Wilkes, Applied Numerical Methods, Wiley, 1969, page 446
       SUBROUTINE TRIDAG(FLDIM,DELTA,FIRST,LAST,A,B,C,D)
       IMPLICIT NONE
-        !.. IPEcodeinclude "gptl.inc"
       INTEGER J,FLDIM,K,NUM,LAST,FIRST,FIRSTP1,ret
       REAL A(FLDIM),B(FLDIM),C(FLDIM),D(FLDIM)
       REAL ALPHA(FLDIM),DELTA(FLDIM),GAMMA(FLDIM)
       !..  COMPUTE INTERMEDIATE ARRAYS ALPHA & GAMMA
-        !.. IPEcoderet = gptlstart ('TRIDAG')
       ALPHA(FIRST)=B(FIRST)
       GAMMA(FIRST)=D(FIRST)/ALPHA(FIRST)
       FIRSTP1=FIRST+1
@@ -920,86 +864,85 @@ C......  And Wilkes, Applied Numerical Methods, Wiley, 1969, page 446
         J=LAST-K
         DELTA(J)=GAMMA(J)-C(J)*DELTA(J+1)/ALPHA(J)
       ENDDO
-        !.. IPEcoderet = gptlstop  ('TRIDAG')
         RETURN
         END
 C::::::::::::::::::::: T_XS_N2 :::::::::::::::::::::::::::
 C.... This function calculates the N2 total photoionization
 C.... cross section. P. Richards 2003-10-04
       REAL FUNCTION T_XS_N2(EP)
-      IMPLICIT NONE
-      REAL EP   !.. photon energy
-      REAL ESAVE
-      DATA ESAVE/0.0/
+	IMPLICIT NONE
+	REAL EP   !.. photon energy
+	REAL ESAVE
+	DATA ESAVE/0.0/
 
       !.. Wavelength < 20 A, Auger ionization
-      IF(EP.GE.600.0) THEN              
+	IF(EP.GE.600.0) THEN              
         T_XS_N2=0.5E-18
       !.. Wavelength < 31 A, Auger ionization
-      ELSEIF(EP.GE.400.0) THEN              
+	ELSEIF(EP.GE.400.0) THEN              
         T_XS_N2=1.0E-18
       !.. Wavelength 31.62 to 23.70 A
-      ELSEIF(EP.GE.392.0) THEN
+	ELSEIF(EP.GE.392.0) THEN
         T_XS_N2=EXP(7.9864*ALOG(EP)-91.6604)
-      !.. Wavelength 225 to 125 A
-      ELSEIF(EP.GE.55.09) THEN
+	!.. Wavelength 225 to 125 A
+	ELSEIF(EP.GE.55.09) THEN
         T_XS_N2=EXP(-2.3711*ALOG(EP)-29.8142) 
       !.. Wavelength > 225 A
-      ELSE
+	ELSE
         T_XS_N2=EXP(-1.1077*ALOG(EP)-34.8787)  
-      ENDIF
+	ENDIF
 
       !..IF(NINT(10*EP).NE.NINT(10*ESAVE)) WRITE(6,'(2F8.1,1P,2E10.2)') 
       !..> 12394.224/EP,EP, T_XS_N2/(3.39E-17*EXP(-0.0263*EP)), T_XS_N2
-       ESAVE=EP
+	 ESAVE=EP
 
       !.. old parameterization
       !..T_XS_N2=3.39E-17*EXP(-0.0263*EP)
 
-      RETURN
-      END
+	RETURN
+	END
 C::::::::::::::::::::: T_XS_OX :::::::::::::::::::::::::::
 C.... This function calculates the OX total photoionization
 C.... cross section. P. Richards 2003-10-04
 C.... Samson and Pareek Phys. Rev. A, 31, 1470, 1985
 
       REAL FUNCTION T_XS_OX(EP)
-      IMPLICIT NONE
-      REAL EP   !.. photon energy
-      REAL ESAVE
-      DATA ESAVE/0.0/
+	IMPLICIT NONE
+	REAL EP   !.. photon energy
+	REAL ESAVE
+	DATA ESAVE/0.0/
 
       !.. NEW parameterization
-      IF(EP.GE.500.0) THEN                 
+	IF(EP.GE.500.0) THEN                 
         !.. Wavelength shorter than 25 A, Auger ionization
         T_XS_OX=0.5E-18
-      ELSEIF(EP.GE.165.26) THEN                 
+	ELSEIF(EP.GE.165.26) THEN                 
         !.. Wavelength shorter than 75 A
         T_XS_OX=EXP(-2.5209*ALOG(EP)-28.8855)
-      ELSEIF(EP.GE.55.09) THEN              
+	ELSEIF(EP.GE.55.09) THEN              
         !.. Wavelength between 78 and 256.26 A
         T_XS_OX=EXP(-1.7871*ALOG(EP)-32.6335)
-      ELSE
+	ELSE
         !.. Wavelength longer than 256.26 A
         T_XS_OX=EXP(-1.3077*ALOG(EP)-34.5556)   
-      ENDIF
+	ENDIF
 
       !..IF(NINT(10*EP).NE.NINT(10*ESAVE)) WRITE(6,'(2F8.1,1P,2E10.2)') 
       !..> 12394.224/EP,EP, T_XS_OX/(27.2E-18*EXP(-3.09E-2*EP)), T_XS_OX
-       ESAVE=EP
+	 ESAVE=EP
 
       !.. old parameterization
       !.. T_XS_OX=27.2E-18*EXP(-3.09E-2*EP)
 
-      RETURN
-      END
+	RETURN
+	END
 C::::::::::::::::::::::::::::HE10830XS(EP)::::::::::
 C.....Function to calculate the He 10830 cross section
 C..... Cross section from Lara Waldrup
       REAL FUNCTION HE10830XS(EP)
-      IMPLICIT NONE
-      REAL EP   !.. photon energy
-      REAL pc(0:7)
+	IMPLICIT NONE
+	REAL EP   !.. photon energy
+	REAL pc(0:7)
 
       !.. fitting coefficients
       data pc/-2.4466E-16,3.2766E-17,-1.7520E-18,5.0229E-20,
@@ -1014,5 +957,5 @@ C..... Cross section from Lara Waldrup
         HE10830XS=7.75E-19*exp(-(EP-100.)/44.)
       endif
 
-      RETURN
-      END
+	RETURN
+	END

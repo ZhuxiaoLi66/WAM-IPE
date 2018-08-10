@@ -26,6 +26,7 @@ C.... Cleaned up and commented by P. Richards in April 2000
       DOUBLE PRECISION ZLBHE,ZLBNP         !.. He+ & N+ lower boundary
       DOUBLE PRECISION XMAS,XMASS(9)       !.. Ion mass
       DOUBLE PRECISION NMORIG(2,FLDIM)     !.. Original density at previous time step
+      integer ret
       DATA XMASS/23.4164D-24,26.7616D-24,6.6904D-24,6*0.0/
       DATA NION/1/      ! # species: do not change
 
@@ -60,8 +61,19 @@ C.... Cleaned up and commented by P. Richards in April 2000
          DCRQ(2,J)=1.0
       ENDDO
 
+!dbg20120301: this part was commented out on 20110815, but un-comment again to solve for N+ problem: "IN BDSLV &&&&&&& BANDWIDTH IS TOO LARGE " i don't remember why we decided to comment out here and i cannot find a program to setup the local chem equil anywhere else???
+!dbg20110815      !.. Use local equilibrium for densities if flux tube apex height < 200 km
+!      IF(Z(JEQ).LT.200.0) THEN 
+!        DO J=JMIN,JMAX
+!          IF(IABS(IHEPNP).EQ.9) CALL MCHEMQ(J,DUM,N,TI,FLDIM)
+!          IF(IABS(IHEPNP).EQ.11) CALL NCHEMQ(J,DUM,N,TI,FLDIM)
+!          N(1,J)=DUM(1)
+!        ENDDO
+!        RETURN
+!      ENDIF
+!dbg20110815
       !.. Use local equilibrium for He+ densities if apex height < ZLBHE
-      IF(IHEPNP.EQ.9.AND.Z(JEQ).LE.ZLBHE) THEN 
+      IF(IHEPNP.EQ.9.AND.Z(JEQ).LE.ZLBHE) THEN
         DO J=JMIN,JMAX
           CALL MCHEMQ(J,DUM,N,TI,FLDIM)
           XIONN(3,J)=DUM(1)      !.. He+
@@ -70,13 +82,15 @@ C.... Cleaned up and commented by P. Richards in April 2000
       ENDIF
 
       !.. Use local equilibrium for N+ densities if apex height < ZLBNP
-      IF(IHEPNP.EQ.11.AND.Z(JEQ).LE.ZLBNP) THEN 
+      IF(IHEPNP.EQ.11.AND.Z(JEQ).LE.ZLBNP) THEN
         DO J=JMIN,JMAX
           CALL NCHEMQ(J,DUM,N,TI,FLDIM)
           XIONN(4,J)=DUM(1)      !.. N+
         ENDDO
         RETURN
-      ENDIF
+      ENDIF 
+!dbg20110815
+
 
       !... calculate average values for quantities that don't
       !... change in Newton iteration
@@ -124,19 +138,21 @@ C- OUTER LOOP Return here on Non-Convergence with reduced time step
             ENDDO
           ENDDO
           !.. Now set up the Jacobian Matrix dFij/dn
-          IF(IABS(IHEPNP).EQ.9) 
-     >      CALL HMATRX(FLDIM,S,RHS,IEQ,DT,N,TI,JBNN,JBNS,MIT,IHEPNP,
-     >       XMAS,NION,NMSAVE)
-          IF(IABS(IHEPNP).EQ.11) 
-     >      CALL NMATRX(FLDIM,S,RHS,IEQ,DT,N,TI,JBNN,JBNS,MIT,IHEPNP,
-     >       XMAS,NION,NMSAVE)
+!nm20130111: distinguished he+ v.s. n+ according to phil's suggestion
+          IF(IABS(IHEPNP).EQ.9) !he+  
+     >     CALL HMATRX(FLDIM,S,RHS,IEQ,DT,N,TI,JBNN,JBNS,MIT,IHEPNP,
+     >      XMAS,NION,NMSAVE)
+          IF(IABS(IHEPNP).EQ.11)  !n+ 
+     >     CALL NMATRX(FLDIM,S,RHS,IEQ,DT,N,TI,JBNN,JBNS,MIT,IHEPNP,
+     >      XMAS,NION,NMSAVE)
+
 
           !.. invert the jacobian matriX *s* in the inversion routine *bdslv*.
           !.. the increments are stored in array delta in this order
           !.. X(1...n,j),X(1...n,j+1),X(1...n,j+2),....X(1...n,jmaX-1)
           IBW=2*NION-1
           CALL BDSLV(IEQ,IBW,S,0,RHS,DELTA,WORK,NFLAG)
-     
+
           !.. Check for problems in band solver
           EFLAG(3,2)=0     
           EFLAG(4,2)=0     
@@ -195,7 +211,7 @@ C- OUTER LOOP Return here on Non-Convergence with reduced time step
      >       ' He+ N+ ',ITER,DTINC,DTIN,DT
           IF(DTINC.GE.DTIN-1) THEN
             DO J=JMIN,JMAX
-              IF(IABS(IHEPNP).EQ.9) XIONN(3,J)=N(1,J)   ! He+
+              IF(IABS(IHEPNP).EQ. 9) XIONN(3,J)=N(1,J)  ! He+
               IF(IABS(IHEPNP).EQ.11) XIONN(4,J)=N(1,J)  ! N+
             ENDDO
             RETURN
@@ -216,20 +232,18 @@ C- OUTER LOOP Return here on Non-Convergence with reduced time step
           IF(IHEPNP.EQ.9.AND.DT.LT.DTIN/3.0)  ZLBHE=(ZLBHE+350)/2   
           IF(IHEPNP.EQ.11.AND.DT.LT.DTIN/3.0)  ZLBNP=(ZLBNP+350)/2   
           IF(EFLAG(11,11).EQ.1) WRITE(6,'(A,2I5,9F14.2)')  
-     >       ' He+ N+ 2nd ',-IHEPNP,ITER,DTINC,DTIN,DT,ZLBHE
+     >       ' He+ N+ 2nd ',-IHEPNP,ITER,DTINC,DTIN,DT,ZLBHE,ZLBNP
           DO J=JMIN,JMAX
             N(1,J)=NMSAVE(1,J)
           ENDDO
 
-          !.. Modified 2017-03-12
           !.. Check that DT is not too small
           IF(DT.LT.DTMIN) THEN
             IF(IABS(IHEPNP).EQ.9) EFLAG(3,1)=-1    !.. Report problem to calling routine
             IF(IABS(IHEPNP).EQ.11) EFLAG(4,1)=-1   !.. Report problem to calling routine
             IF(EFLAG(11,11).EQ.1) WRITE(6,'(A,9I5)') 
      >        '  ERR FLAGS MINA',IHEPNP
-            !.. Restore density to original input value 
-            !.. Modified 2017-03-12
+            !.. Restore density to original input value
             DO J=JMIN,JMAX
               IF(IABS(IHEPNP).EQ.9) XIONN(3,J)=NMORIG(1,J)
               IF(IABS(IHEPNP).EQ.11) XIONN(4,J)=NMORIG(1,J)
@@ -691,7 +705,7 @@ C........For N+
       RETURN
       END
 C::::::::::::::::::::::: HMATRX ::::::::::::::::::::::::::::::::::::
-C.... HMATRX evaluates df/dn using Stephansons method for He+.
+C.... HMATRX evaluates df/dn using Stephansons method for He+ and N+.
 C.... S(L,M) = DEL(FIJ) / DEL(N)
 C.... where N is the density of ion IV at grid point JV. L and M
 C.... are computed from JF...IV. the array RHS contains values of
@@ -717,6 +731,8 @@ C.... Consult file RSLPSD-Algorithm.doc for detailed explanation
       DOUBLE PRECISION F(20)   !.. Function values at time t + delt
       DOUBLE PRECISION RHS(INEQ),S(INEQ,8),N(4,FLDIM),TI(3,FLDIM),XMA
       DOUBLE PRECISION NMSAVE(2,FLDIM),DT,H
+!nm20130111
+      integer ret
 
       DO JZS=1,INEQ        !.. loop over # of equations
       DO KZS=1,4*NSPC-1    !.. loop over band width
@@ -757,10 +773,12 @@ C.... Consult file RSLPSD-Algorithm.doc for detailed explanation
           ENDDO
         ENDDO
       ENDDO
+
       RETURN
       END
+Cnm20130111: copied from HMATRX to distinguish between he+ v.s. n+
 C::::::::::::::::::::::: NMATRX ::::::::::::::::::::::::::::::::::::
-C.... HMATRX evaluates df/dn using Stephansons method for N+.
+C.... NMATRX evaluates df/dn using Stephansons method for He+ and N+.
 C.... S(L,M) = DEL(FIJ) / DEL(N)
 C.... where N is the density of ion IV at grid point JV. L and M
 C.... are computed from JF...IV. the array RHS contains values of
@@ -828,6 +846,7 @@ C.... Consult file RSLPSD-Algorithm.doc for detailed explanation
       ENDDO
       RETURN
       END
+Cnm20130111
 C::::::::::::::::::::::::::: DENAVE :::::::::::::::::::::::::::::::::::::
 C   this program evaluates the interpolated densities at the midpoints
 C   it also evaluates the ion-neutral collision frequencies nux(i,j)
