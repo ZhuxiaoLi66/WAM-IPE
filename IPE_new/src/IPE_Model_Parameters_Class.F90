@@ -37,6 +37,7 @@ IMPLICIT NONE
     LOGICAL :: write_apex_neutrals 
     LOGICAL :: write_geographic_neutrals 
     LOGICAL :: write_geographic_eldyn 
+    LOGICAL :: write_apex_eldyn 
     REAL(prec) :: file_output_frequency
 
 
@@ -72,14 +73,15 @@ CONTAINS
     CHARACTER(200) :: f107_kp_file
     LOGICAL :: write_apex_neutrals 
     LOGICAL :: write_geographic_neutrals 
-    LOGICAL :: write_geographic_eldyn 
+    LOGICAL :: write_geographic_eldyn
+    LOGICAL :: write_apex_eldyn
     REAL(prec) :: file_output_frequency
    
 
       NAMELIST / SpaceManagement / netcdf_grid_file, NLP, NMP, NPTS2D, nFluxTube
       NAMELIST / TimeStepping / time_step, start_time, end_time, year, day, initial_timestamp
       NAMELIST / Forcing / solar_forcing_time_step, f107_kp_size, f107_kp_interval, f107_kp_skip_size, f107_kp_data_size, use_f107_kp_file, f107_kp_file
-      NAMELIST / FileIO / write_apex_neutrals, write_geographic_neutrals, write_geographic_eldyn, file_output_frequency
+      NAMELIST / FileIO / write_apex_neutrals, write_geographic_neutrals, write_geographic_eldyn, write_apex_eldyn, file_output_frequency
 
       read_success = .FALSE.
 
@@ -110,6 +112,7 @@ CONTAINS
       write_apex_neutrals       = .TRUE.
       write_geographic_neutrals = .TRUE.
       write_geographic_eldyn    = .TRUE.
+      write_apex_eldyn          = .TRUE.
       file_output_frequency     = 180.0_prec
 
 
@@ -153,6 +156,7 @@ CONTAINS
         params % write_apex_neutrals       = write_apex_neutrals
         params % write_geographic_neutrals = write_geographic_neutrals
         params % write_geographic_eldyn    = write_geographic_eldyn
+        params % write_apex_eldyn          = write_apex_eldyn
         params % file_output_frequency     = file_output_frequency
         
         params % n_model_updates = INT( ( end_time - start_time )/file_output_frequency )
