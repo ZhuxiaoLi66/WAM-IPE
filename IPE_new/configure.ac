@@ -38,5 +38,6 @@ AC_CONFIG_FILES([
  src/Makefile
  src/flip/Makefile
  src/msise00/Makefile
+ src/empirical_efield/Makefile
 ])
 AC_OUTPUT

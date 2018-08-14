@@ -70,14 +70,14 @@ IMPLICIT NONE
   REAL(dp), PARAMETER, PRIVATE :: COLFACX  = 1.7D0 
   REAL(dp), PARAMETER, PRIVATE :: HPEQ     = 0.0D0 
   ! IHEPLS,INPLS turn on diffusive solutions if > 0. no solution if 0, chemical equilibrium if < 0
-  INTEGER, PARAMETER, PRIVATE  :: IHEPLS   = 0 
-  INTEGER, PARAMETER, PRIVATE  :: INPLS    = 0 
+  INTEGER, PARAMETER, PRIVATE  :: IHEPLS   = 1 
+  INTEGER, PARAMETER, PRIVATE  :: INPLS    = 1 
   INTEGER, PARAMETER, PRIVATE  :: INNO     = -1
 
 
 ! Temporary Timers
-  REAL(prec) :: flip_time_avg, aur_precip_time_avg
-  REAL(prec) :: flip_count, aur_precip_count
+  REAL(prec) :: flip_time_avg, aur_precip_time_avg, transport_time_avg, buffer_time_avg
+  REAL(prec) :: flip_count, aur_precip_count, transport_count, buffer_count
 
 CONTAINS
 
@@ -133,8 +133,13 @@ CONTAINS
 
       flip_time_avg = 0.0_prec
       aur_precip_time_avg = 0.0_prec
+      transport_time_avg = 0.0_prec
+      buffer_time_avg = 0.0_prec
       flip_count = 0.0_prec
       aur_precip_count = 0.0_prec
+      transport_count = 0.0_prec
+      buffer_count = 0.0_prec
+
 
   END SUBROUTINE Build_IPE_Plasma
 !
@@ -163,6 +168,8 @@ CONTAINS
                 plasma % geo_electron_temperature, &
                 plasma % geo_ionization_rates )
 
+     PRINT*, 'Buffer ', buffer_time_avg/buffer_count
+     PRINT*, 'Transport ', transport_time_avg/transport_count
      PRINT*, 'Auroral_Precipitation ', aur_precip_time_avg/aur_precip_count
      PRINT*, 'FLIP_Wrapper ', flip_time_avg/flip_count
 
@@ -183,31 +190,39 @@ CONTAINS
     REAL(prec) :: t2, t1
 
          
+      CALL CPU_TIME( t1 )
       CALL plasma % Buffer_Old_State( )
+      CALL CPU_TIME( t2 )
+      buffer_time_avg = buffer_time_avg + t2 - t1
+      buffer_count    = buffer_count + 1
 
 
+      CALL CPU_TIME( t1 )
       CALL plasma % Cross_Flux_Tube_Transport( grid, v_ExB, time_step )
+      CALL CPU_TIME( t2 )
+      transport_time_avg = transport_time_avg + t2 - t1
+      transport_count    = transport_count + 1
 
 
  
-!      CALL CPU_TIME( t1 )
+      CALL CPU_TIME( t1 )
       CALL plasma % Auroral_Precipitation( grid, &
                                            neutrals, &
                                            forcing, &
                                            time_tracker )
-!      CALL CPU_TIME( t2 )
-!      aur_precip_time_avg = aur_precip_time_avg + t2 - t1
-!      aur_precip_count    = aur_precip_count + 1
-!
-!      CALL CPU_TIME( t1 )
+      CALL CPU_TIME( t2 )
+      aur_precip_time_avg = aur_precip_time_avg + t2 - t1
+      aur_precip_count    = aur_precip_count + 1
+
+      CALL CPU_TIME( t1 )
       CALL plasma % FLIP_Wrapper( grid, & 
                                   neutrals, &
                                   forcing, &
                                   time_tracker, &
                                   time_step )
-!      CALL CPU_TIME( t2 )
-!      flip_time_avg = flip_time_avg + t2 - t1
-!      flip_count    = flip_count + 1
+      CALL CPU_TIME( t2 )
+      flip_time_avg = flip_time_avg + t2 - t1
+      flip_count    = flip_count + 1
 
 
   END SUBROUTINE Update_IPE_Plasma

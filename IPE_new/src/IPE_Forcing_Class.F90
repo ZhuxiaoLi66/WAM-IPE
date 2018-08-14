@@ -28,7 +28,7 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: shemi_power(:)
     INTEGER, ALLOCATABLE    :: shemi_power_index(:)
     ! Solar wind drivers
-    REAL(prec), ALLOCATABLE :: solarwind_dBdt(:)
+    REAL(prec), ALLOCATABLE :: solarwind_Bt(:)
     REAL(prec), ALLOCATABLE :: solarwind_angle(:)
     REAL(prec), ALLOCATABLE :: solarwind_velocity(:)
     REAL(prec), ALLOCATABLE :: solarwind_Bz(:)
@@ -83,7 +83,7 @@ CONTAINS
                 forcing % nhemi_power_index(1:n_time_levels), &
                 forcing % shemi_power(1:n_time_levels), &
                 forcing % shemi_power_index(1:n_time_levels), &
-                forcing % solarwind_dBdt(1:n_time_levels), &
+                forcing % solarwind_Bt(1:n_time_levels), &
                 forcing % solarwind_angle(1:n_time_levels), &
                 forcing % solarwind_velocity(1:n_time_levels), &
                 forcing % solarwind_Bz(1:n_time_levels), &
@@ -105,7 +105,7 @@ CONTAINS
       forcing % shemi_power       = 21.0_prec
       forcing % shemi_power_index = 6
 
-      forcing % solarwind_dBdt     = 1.0_prec
+      forcing % solarwind_Bt     = 1.0_prec
       forcing % solarwind_angle    = 0.0_prec
       forcing % solarwind_velocity = 400.0_prec
       forcing % solarwind_Bz       = 1.0_prec
@@ -135,7 +135,7 @@ CONTAINS
                 forcing % nhemi_power_index, &
                 forcing % shemi_power, &
                 forcing % shemi_power_index, &
-                forcing % solarwind_dBdt, &
+                forcing % solarwind_Bt, &
                 forcing % solarwind_angle, &
                 forcing % solarwind_velocity, &
                 forcing % solarwind_Bz )
@@ -238,7 +238,7 @@ CONTAINS
                        forcing % nhemi_power_index(i), &
                        forcing % shemi_power(i), &
                        forcing % shemi_power_index(i), &
-                       forcing % solarwind_dBdt(i), &
+                       forcing % solarwind_Bt(i), &
                        forcing % solarwind_angle(i), &
                        forcing % solarwind_velocity(i), &
                        forcing % solarwind_Bz(i)
@@ -257,7 +257,7 @@ CONTAINS
           forcing % nhemi_power_index(i)  = forcing % nhemi_power_index(read_in_size)
           forcing % shemi_power(i)        = forcing % shemi_power(read_in_size)
           forcing % shemi_power_index(i)  = forcing % shemi_power_index(read_in_size)
-          forcing % solarwind_dbdt(i)     = forcing % solarwind_dbdt(read_in_size)
+          forcing % solarwind_Bt(i)     = forcing % solarwind_Bt(read_in_size)
           forcing % solarwind_angle(i)    = forcing % solarwind_angle(read_in_size)
           forcing % solarwind_velocity(i) = forcing % solarwind_velocity(read_in_size)
           forcing % solarwind_Bz(i)       = forcing % solarwind_Bz(read_in_size)

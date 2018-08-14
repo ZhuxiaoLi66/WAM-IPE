@@ -105,9 +105,7 @@ CONTAINS
 
         CALL ipe % eldyn % Build( nFluxTube = ipe % grid % nFluxTube,&
                                   NLP       = ipe % grid % NLP, &
-                                  NMP       = ipe % grid % NMP, &
-                                  NP_dynamo = ipe % grid % NLP, &
-                                  MP_dynamo = ipe % grid % NMP ) 
+                                  NMP       = ipe % grid % NMP )
 
 
         ! ////// plasma ////// !
