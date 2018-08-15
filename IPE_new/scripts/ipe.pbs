@@ -1,0 +1,26 @@
+#!/bin/sh --login
+#
+#PBS -l nodes=1:ppn=8
+#
+#PBS -l walltime=30:00
+#
+#PBS -A swpc
+#
+#PBS -q debug
+#
+#PBS -N ipe_test
+
+# change directory to the working directory of the job
+# Use the if clause so that this script stays portable
+#
+
+if [ x$PBS_O_WORKDIR != x ]; then
+   cd $PBS_O_WORKDIR
+fi
+
+
+module load intel netcdf
+
+export OMP_NUM_THREADS=8
+./ipe
+#valgrind --track-origins=yes ./ipe_test
