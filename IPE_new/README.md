@@ -13,17 +13,20 @@ source code to a library( libipe.a ) and executables ( ipe ).
 To build the code, from the head directory do
 
 ```
-autoreconf --install
-./configure --prefix=</path/to/install>
-make
-make install
+./build_ipe_fromscratch.sh
 ```
 
 These instructions create the following directories : 
 ```
-</path/to/install>/bin
-</path/to/install>/share
+$ IPE_new/install/bin
+$ IPE_new/install/share
+$ IPE_new/run
 ```
+and sets up a symbolic linke from `IPE_new/install/bin/ipe` to
+`IPE_new/run/ipe`.
+
+You only need to run this script once. If you modify code and want to update the
+executable, simply from `make install` from the `IPE_new` directory.
 
 ## Running the model
 If you're on a system that can access https://storage.googleapis.com, downloading the
