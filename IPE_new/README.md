@@ -1,5 +1,11 @@
 # Ionosphere Plasmasphere Electrodynamics (IPE) Model
 
+# Reporting Issues
+Issues should be reported to
+
+https://github.com/SWPC-IPE/WAM-IPE/issues
+
+
 # Getting started
 
 ## Dependencies
