@@ -53,6 +53,8 @@ IMPLICIT NONE
 
       PROCEDURE :: Update => Update_IPE_Electrodynamics
 
+      PROCEDURE, PRIVATE :: Empirical_E_Field_Wrapper
+
   END TYPE IPE_Electrodynamics
 
   LOGICAL, PRIVATE :: setup_efield_empirical
@@ -139,16 +141,7 @@ CONTAINS
     ! Local
     INTEGER :: lp, mp
 
-
-      DO mp = 1, grid % NMP
-        DO lp = 1, grid % NLP
-
-          eldyn % v_ExB_apex(1,lp,mp) = 0.0_prec !pi/4.0_prec/86400.0_prec !0.0_prec
-          eldyn % v_ExB_apex(2,lp,mp) = 0.0_prec
-          eldyn % v_ExB_apex(3,lp,mp) = 0.0_prec
-
-        ENDDO
-      ENDDO
+      CALL eldyn % Empirical_E_Field_Wrapper( grid, forcing, time_tracker )
 
   END SUBROUTINE Update_IPE_Electrodynamics
  
@@ -161,7 +154,7 @@ CONTAINS
     ! Local
     INTEGER :: i, j, year
     REAL(prec) :: theta90_rad(0:nmlat)
-    REAL(prec) :: mlon130_rad(0:nmlon)
+    REAL(prec) :: mlon90_rad(0:nmlon)
     REAL(prec) :: theta130_rad, utime, sunlons
      
 
@@ -196,15 +189,13 @@ CONTAINS
 
         ! Map magnetic local time to magnetic longitude
         CALL sunloc( year, time_tracker % day_of_year, utime, sunlons ) !iyr,iday,secs)        
-
         DO i=0,nmlon
 
-          mlon130_rad(i)=(ylonm(i)-180.0_prec)*pi/180.0_prec+sunlons
-          IF( mlon130_rad(i) < 0.0_prec   ) mlon130_rad(i)=mlon130_rad(i)+pi*2.0
-          IF( mlon130_rad(i) >= pi*2.0_prec ) mlon130_rad(i)=mlon130_rad(i)-pi*2.0
+          mlon90_rad(i)=(ylonm(i)-180.0_prec)*pi/180.0_prec+sunlons
+          IF( mlon90_rad(i) < 0.0_prec   ) mlon90_rad(i)=mlon90_rad(i)+pi*2.0
+          IF( mlon90_rad(i) >= pi*2.0_prec ) mlon90_rad(i)=mlon90_rad(i)-pi*2.0
 
         END DO
-
 
         ! Interpolate the potential to the IPE grid
 
