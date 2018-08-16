@@ -735,6 +735,7 @@ enable_option_checking
 enable_silent_rules
 enable_dependency_tracking
 with_netcdf4
+enable_debug
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1370,6 +1371,8 @@ Optional Features:
                           do not reject slow dependency extractors
   --disable-dependency-tracking
                           speeds up one-time build
+  --enable-debug, default:no
+
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -4156,11 +4159,7 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-if test "x$FC" = "xgfortran"; then :
 
-  FCFLAGS+=" -ffree-line-length-none"
-
-fi
 
 
 if test -n "$ac_tool_prefix"; then
@@ -5326,7 +5325,149 @@ else
   as_fn_error $? "Unable to find NetCDF4-Fortran, we need NetCDF4-Fortran." "$LINENO" 5
 fi
 
+ac_ext=${ac_fc_srcext-f}
+ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
+
+# Add the free-line-length-none flag for GCC compilers
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether Fortran compiler accepts -ffree-line-length-none" >&5
+$as_echo_n "checking whether Fortran compiler accepts -ffree-line-length-none... " >&6; }
+if ${ax_cv_check_fcflags___ffree_line_length_none+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$FCFLAGS
+  FCFLAGS="$FCFLAGS  -ffree-line-length-none"
+  cat > conftest.$ac_ext <<_ACEOF
+      program main
+
+      end
+_ACEOF
+if ac_fn_fc_try_compile "$LINENO"; then :
+  ax_cv_check_fcflags___ffree_line_length_none=yes
+else
+  ax_cv_check_fcflags___ffree_line_length_none=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  FCFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_fcflags___ffree_line_length_none" >&5
+$as_echo "$ax_cv_check_fcflags___ffree_line_length_none" >&6; }
+if test "x$ax_cv_check_fcflags___ffree_line_length_none" = xyes; then :
+  FCFLAGS+=" -ffree-line-length-none"
+else
+  :
+fi
+
+
+# Check for debug request
+# Set --enable-debug yes turns on the -DHAVE_CUDA CPP-flag if the PGI compilers are used.
+# Check whether --enable-debug was given.
+if test "${enable_debug+set}" = set; then :
+  enableval=$enable_debug;
+fi
+
+if test "x$enable_debug" = "xyes"; then :
+
+
+  FCFLAGS="-O0 -g"
+  # GCC
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether Fortran compiler accepts -fbacktrace" >&5
+$as_echo_n "checking whether Fortran compiler accepts -fbacktrace... " >&6; }
+if ${ax_cv_check_fcflags___fbacktrace+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$FCFLAGS
+  FCFLAGS="$FCFLAGS  -fbacktrace"
+  cat > conftest.$ac_ext <<_ACEOF
+      program main
+
+      end
+_ACEOF
+if ac_fn_fc_try_compile "$LINENO"; then :
+  ax_cv_check_fcflags___fbacktrace=yes
+else
+  ax_cv_check_fcflags___fbacktrace=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  FCFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_fcflags___fbacktrace" >&5
+$as_echo "$ax_cv_check_fcflags___fbacktrace" >&6; }
+if test "x$ax_cv_check_fcflags___fbacktrace" = xyes; then :
+  FCFLAGS+=" -fbacktrace"
+else
+  :
+fi
+
+  # Intel
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether Fortran compiler accepts -traceback" >&5
+$as_echo_n "checking whether Fortran compiler accepts -traceback... " >&6; }
+if ${ax_cv_check_fcflags___traceback+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$FCFLAGS
+  FCFLAGS="$FCFLAGS  -traceback"
+  cat > conftest.$ac_ext <<_ACEOF
+      program main
+
+      end
+_ACEOF
+if ac_fn_fc_try_compile "$LINENO"; then :
+  ax_cv_check_fcflags___traceback=yes
+else
+  ax_cv_check_fcflags___traceback=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  FCFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_fcflags___traceback" >&5
+$as_echo "$ax_cv_check_fcflags___traceback" >&6; }
+if test "x$ax_cv_check_fcflags___traceback" = xyes; then :
+  FCFLAGS+=" -traceback"
+else
+  :
+fi
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether Fortran compiler accepts -ftrapuv" >&5
+$as_echo_n "checking whether Fortran compiler accepts -ftrapuv... " >&6; }
+if ${ax_cv_check_fcflags___ftrapuv+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$FCFLAGS
+  FCFLAGS="$FCFLAGS  -ftrapuv"
+  cat > conftest.$ac_ext <<_ACEOF
+      program main
+
+      end
+_ACEOF
+if ac_fn_fc_try_compile "$LINENO"; then :
+  ax_cv_check_fcflags___ftrapuv=yes
+else
+  ax_cv_check_fcflags___ftrapuv=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  FCFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_fcflags___ftrapuv" >&5
+$as_echo "$ax_cv_check_fcflags___ftrapuv" >&6; }
+if test "x$ax_cv_check_fcflags___ftrapuv" = xyes; then :
+  FCFLAGS+=" -ftrapuv"
+else
+  :
+fi
+
+
+
+fi
+
+FFLAGS="$FCFLAGS"
 
 ac_config_files="$ac_config_files Makefile src/Makefile src/flip/Makefile src/msise00/Makefile src/empirical_efield/Makefile"
 

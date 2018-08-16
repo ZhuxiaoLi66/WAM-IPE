@@ -3,7 +3,7 @@
 IPE_PATH=$(pwd)
 
 autoreconf --install
-./configure --prefix="${IPE_PATH}/install"
+./configure --enable-debug --prefix="${IPE_PATH}/install"
 make
 make install
 
