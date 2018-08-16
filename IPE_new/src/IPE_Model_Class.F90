@@ -160,6 +160,8 @@ CONTAINS
       ! Need to add a call to update the index for capturing AP
       AP = ipe % forcing % GetAP( t0 )
 
+      print *, 'GHGM calling neutrals'
+
       CALL ipe % neutrals % Update( ipe % grid, &
                                     ipe % time_tracker % utime, &
                                     ipe % time_tracker % year, &
@@ -168,10 +170,14 @@ CONTAINS
                                     ipe % forcing % f107_81day_avg( ipe % forcing % current_index ), &
                                     AP )
 
+      print *, 'GHGM calling eldyn'
+
       CALL ipe % eldyn % Update( ipe % grid, &
                                  ipe % forcing, &
                                  ipe % time_tracker )
    
+      print *, 'GHGM calling plasma'
+
       CALL ipe % plasma % Update( ipe % grid, &
                                   ipe % neutrals, &
                                   ipe % forcing, &
@@ -181,7 +187,12 @@ CONTAINS
 
 
       ! Update the timer
+
+      print *, 'GHGM calling time tracker'
+
       CALL ipe % time_tracker % Update( t1 )
+
+      print *, 'GHGM done time tracker'
 
   END SUBROUTINE Update_IPE_Model
 !

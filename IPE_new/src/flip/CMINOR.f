@@ -92,8 +92,8 @@ C....... Sep 1989
       !.. calculation of [e] analytically for first guess in Newton
       B=N(1,J)+N(2,J)+N2PLUS
       C=PNOP/RTS(5)+PO2P/RTS(6)
-      PRINT*, 'ZNE-C :', PNOP, RTS(5), PO2P, RTS(6)
-      PRINT*, 'ZNE :', B, C
+      PRINT*, 'PNOP :', PNOP 
+!     PRINT*, 'ZNE :', B, C
       ZNE=(B+DSQRT(B**2+4.0*C))/2.0
 
       !.. Loop through chemistry twice to evaluate dF/dh for Newton
@@ -201,7 +201,7 @@ C....... Sep 1989
       IF(INPLS.LE.0) XIONN(4,J)=NPLUS
 
       !.. EQN2D(J) used in PE2S only
-      PRINT*, 'CMINOR :', J, N2D(J), RTS(8),ZNE
+!     PRINT*, 'CMINOR :', J, N2D(J), RTS(8),ZNE
       EQN2D(J)=N2D(J)*RTS(8)*ZNE
 
       !... calc o+ prod. from minor ions      !$$$

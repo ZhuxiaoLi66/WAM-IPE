@@ -56,7 +56,8 @@ C
 111   CONTINUE
       IF(BIG) 114,112,114
 !dbg20120306  112 WRITE(6,919)I
-  112 WRITE(*,919)I,1
+!112   WRITE(*,919)I,1
+112   continue
 919   FORMAT('    IN BDSLV, ROW',I6,' IS ZERO IN INPUT MATRIX1=',i10)
       NFLAG=2
 !dbg20140610: code must stop if this error happens!

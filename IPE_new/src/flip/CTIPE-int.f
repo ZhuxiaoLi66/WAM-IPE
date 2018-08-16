@@ -475,6 +475,8 @@ C.... Written by P. Richards June-September 2010.
         O2N(J)=O2X(J)*M3_to_CM3
         HE(J)=HEX(J)*M3_to_CM3
         TN(J)=TNX(J)
+!       print *, ' GHGM YAGGA ', tn
+!       print *, ' GHGM YAGGA2 ', tnx
         TINF(J)=TINFX(J)
         N4S(J)=N4SX(J)*M3_to_CM3
         NNO(J)=NNOX(J)*M3_to_CM3

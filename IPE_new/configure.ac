@@ -7,6 +7,7 @@ AC_CONFIG_MACRO_DIRS([m4])
 AC_PROG_CC
 AC_PROG_FC([ifort gfortran pgfortran])
 AC_PROG_F77([ifort gfortran pgfortran])
+#FCFLAGS+=" -ftrapuv -traceback "
 
 AS_IF([test "x$FC" = "xgfortran"],[
   FCFLAGS+=" -ffree-line-length-none"
@@ -40,3 +41,4 @@ AC_CONFIG_FILES([
  src/msise00/Makefile
 ])
 AC_OUTPUT
+

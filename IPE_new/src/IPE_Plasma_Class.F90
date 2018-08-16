@@ -64,7 +64,8 @@ IMPLICIT NONE
   REAL(prec), PARAMETER, PRIVATE :: safe_temperature_minimum = 100.0_prec
   
   ! Flip Parameters
-  REAL(dp), PARAMETER, PRIVATE :: DTMIN    = 1.0D1
+! REAL(dp), PARAMETER, PRIVATE :: DTMIN    = 1.0D1
+  REAL(dp), PARAMETER, PRIVATE :: DTMIN    = 3.0D1
   REAL(dp), PARAMETER, PRIVATE :: FPAS     = 0.0D0 
   REAL(dp), PARAMETER, PRIVATE :: HEPRAT   = 9.0D-2 
   REAL(dp), PARAMETER, PRIVATE :: COLFACX  = 1.7D0 
@@ -183,23 +184,24 @@ CONTAINS
     REAL(prec) :: t2, t1
 
          
-      CALL plasma % Buffer_Old_State( )
+!     CALL plasma % Buffer_Old_State( )
 
 
-      CALL plasma % Cross_Flux_Tube_Transport( grid, v_ExB, time_step )
+!     CALL plasma % Cross_Flux_Tube_Transport( grid, v_ExB, time_step )
 
 
  
 !      CALL CPU_TIME( t1 )
-      CALL plasma % Auroral_Precipitation( grid, &
-                                           neutrals, &
-                                           forcing, &
-                                           time_tracker )
+!     CALL plasma % Auroral_Precipitation( grid, &
+!                                          neutrals, &
+!                                          forcing, &
+!                                          time_tracker )
 !      CALL CPU_TIME( t2 )
 !      aur_precip_time_avg = aur_precip_time_avg + t2 - t1
 !      aur_precip_count    = aur_precip_count + 1
 !
 !      CALL CPU_TIME( t1 )
+!     print *, 'GHGM YAH ', neutrals
       CALL plasma % FLIP_Wrapper( grid, & 
                                   neutrals, &
                                   forcing, &
@@ -933,7 +935,7 @@ CONTAINS
     TYPE( IPE_Time ), INTENT(in)       :: time_tracker
     REAL(prec), INTENT(in)             :: flip_time_step
     ! Local
-    INTEGER  :: i, lp, mp
+    INTEGER  :: i, lp, mp, istop
     INTEGER  :: JMINX, JMAXX
     INTEGER  :: EFLAG(11,11)
     REAL(dp) :: PCO, UTHR
@@ -965,8 +967,16 @@ CONTAINS
       F107A = forcing % f107_81day_avg( forcing % current_index )   
       UTHR  = time_tracker % hour
 
+      print*, 'GHGM into plasma'
+
       DO mp = 1, plasma % NMP    
+!     DO mp = 1, 1    
+      print*, 'GHGM mp here ', mp
         DO lp = 1, plasma % NLP    
+!       DO lp = 1, 1    
+!     print*, 'GHGM lp here ', lp
+
+
 
           ! Copy over the grid information (for now)
           ZX(1:grid % flux_tube_max(lp))  = grid % altitude(1:grid % flux_tube_max(lp),lp)/1000.0_prec !convert from m to km
@@ -984,6 +994,13 @@ CONTAINS
           HEX(1:grid % flux_tube_max(lp))   = neutrals % helium(1:grid % flux_tube_max(lp),lp,mp)
           N4SX(1:grid % flux_tube_max(lp))  = neutrals % nitrogen(1:grid % flux_tube_max(lp),lp,mp)
           TNX(1:grid % flux_tube_max(lp))   = neutrals % temperature(1:grid % flux_tube_max(lp),lp,mp)
+!         print *, 'GHGM TEMP ', TNX(1:grid % flux_tube_max(lp))
+          print *, 'GHGM TEMP ', neutrals % temperature(1:grid % flux_tube_max(lp),lp,mp)              
+          print *, 'GHGM OXYGEN ', neutrals % oxygen(1:grid % flux_tube_max(lp),lp,mp)              
+          istop = 0
+          if (istop == 1) then
+           stop
+          endif
           TINFX(1:grid % flux_tube_max(lp)) = neutrals % temperature_inf(1:grid % flux_tube_max(lp),lp,mp)
           UNX(1:grid % flux_tube_max(lp))   = -neutrals % velocity_apex(3,1:grid % flux_tube_max(lp),lp,mp)
 
@@ -1019,7 +1036,7 @@ CONTAINS
           JMINX = 1
           JMAXX = grid % flux_tube_max(lp)
  
-          PRINT*, lp, mp
+!         print*, 'GHGM ', mp, lp
           CALL CTIPINT( JMINX, & !.. index of the first point on the field line
                         JMAXX, & !.. index of the last point on the field line
                         grid % flux_tube_max(lp), & !.. CTIPe array dimension, must equal to FLDIM

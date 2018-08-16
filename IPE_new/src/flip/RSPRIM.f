@@ -85,6 +85,8 @@ C------ light sources instead of using subroutine NYTE.
         !.. LY_a=2.5E11 (Lean), sigi(NO)=2.0E-18 (Brasseur & Solomon page 329)
         DATA O2LYXS,O2SRXS,FREQSR /1.0E-20,1.0E-21,5.0E-6/
         FREQLY=5.0E-7*(1+4.0E-3*(0.5*(F107+F107A)-80.0))
+        print *, 'GHGM THIIS ', FREQLY, F107 , F107A , O2LYXS, COLUMN(2)
+     >  ,CLNITE(2)           
         OTHPR2(1,IJ)=FREQLY*(EXP(-O2LYXS*COLUMN(2))
      >    +0.001*EXP(-O2LYXS*CLNITE(2)))
         OTHPR2(2,IJ)=FREQSR*(EXP(-O2SRXS*COLUMN(2))
@@ -463,6 +465,7 @@ C.... the MSIS model at grazing incidence
       CHAPFN=SQRT(0.5*3.1416*XP)*ERFY2
 
       COLUMN(I)=XN(I)*SH*CHAPFN
+      print *, 'GHGM column 1', XP,ERFY2,TNJ,EM,M(I),GR
         GO TO 10
     2 RG=RP*SIN(3.1416-CHI)
       HG=1.38E-16*TNJ/

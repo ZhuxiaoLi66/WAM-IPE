@@ -20,12 +20,16 @@ IMPLICIT NONE
         t0_ipe = ipe % parameters % start_time + REAL(i-1,prec)*ipe % parameters % file_output_frequency
         t1_ipe = ipe % parameters % start_time + REAL(i,prec)*ipe % parameters % file_output_frequency
 
+        print *, 'GHGM before update ', i, t0_ipe, t1_ipe
+
         CALL ipe % Update( t0_ipe, t1_ipe )
 
-        CALL ipe % Write_NetCDF_IPE( "IPE_State.apex."//ipe % time_tracker % DateStamp( )//".nc" ) 
+        print *, 'GHGM after update ', i, t0_ipe, t1_ipe
+
+!       CALL ipe % Write_NetCDF_IPE( "IPE_State.apex."//ipe % time_tracker % DateStamp( )//".nc" ) 
         
         ! Interpolate to the Geographic Fixed Height Grid and write to file
-        CALL ipe % Write_Geographic_NetCDF_IPE( "IPE_State.geo."//ipe % time_tracker % DateStamp( )//".nc" ) 
+!       CALL ipe % Write_Geographic_NetCDF_IPE( "IPE_State.geo."//ipe % time_tracker % DateStamp( )//".nc" ) 
 
       ENDDO
 

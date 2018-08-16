@@ -230,7 +230,7 @@ C////////////main calculations  begin here ////////////
           IF(E(IE).LE.3.AND.E(IE).GT.2) THEN
             !.. Needed for updated electron heating in CTIPe
             CALL CMINOR(0,J,0,IHEPLS,INPLS,INNO,FD,7,N,TI,Z,EFLAG)
-            PRINT*, 'RSPE2B :', J, PRED(J), EQN2D(J)
+!           PRINT*, 'RSPE2B :', J, PRED(J), EQN2D(J)
             PRED(J)=PRED(J)+EQN2D(J)
           ENDIF
           !.. Total energy deposition to photoelectrons
