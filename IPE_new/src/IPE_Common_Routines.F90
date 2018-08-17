@@ -76,4 +76,56 @@ CONTAINS
      ENDIF
   END SUBROUTINE Check 
 
+  SUBROUTINE Hat_Weights( x_grid, x_interp, weights, indices, N )
+    INTEGER, INTENT(in)     :: N
+    REAL(prec), INTENT(in)  :: x_grid(0:N)
+    REAL(prec), INTENT(in)  :: x_interp
+    REAL(prec), INTENT(out) :: weights(1:2)
+    INTEGER, INTENT(out)    :: indices(1:2)
+    ! Local
+    INTEGER :: i, j
+
+      weights = 0.0_prec
+      indices = 0
+
+      j = 0
+      IF( x_interp >= x_grid(0) .AND. x_interp < x_grid(1) )THEN
+        j = j + 1
+        weights(j) = ( x_interp - x_grid(1) )/( x_grid(0) - x_grid(1) )
+        indices(j) = 0
+      ENDIF
+
+
+      DO i = 1, N-1
+
+        IF( x_interp >= x_grid(i-1) .AND. x_interp < x_grid(i) )THEN
+
+          j = j+1
+          weights(j) = ( x_interp - x_grid(i-1) )/( x_grid(i) - x_grid(i-1) )
+          indices(j) = i
+
+        ELSEIF( x_interp >= x_grid(i) .AND. x_interp < x_grid(i+1) )THEN
+
+          j = j+1
+          weights(j) = ( x_interp - x_grid(i+1) )/( x_grid(i) - x_grid(i+1) )
+          indices(j) = i
+
+        ENDIF
+
+        IF( j == 2 )THEN
+          RETURN
+        ENDIF
+
+      ENDDO
+     
+      IF( x_interp >= x_grid(N-1) .AND. x_interp < x_grid(N) )THEN
+
+        j = j+1
+        weights(j) = ( x_interp - x_grid(N-1) )/( x_grid(N) - x_grid(N-1) )
+        indices(j) = N
+
+      ENDIF
+
+  END SUBROUTINE Hat_Weights
+
 END MODULE IPE_Common_Routines

@@ -56,7 +56,7 @@ C.... Written by P. Richards June 2010.
         IMPLICIT NONE
         !... Check dimensions are the same in all FLIP modules
         INTEGER, PARAMETER :: AVDIM = 1115  !.. Field line grid dimension
-        DOUBLE PRECISION TEJ(AVDIM),TIJ(AVDIM),NUX(2,AVDIM) !$$$,RBM(AVDIM)
+        DOUBLE PRECISION TEJ(AVDIM),TIJ(AVDIM),NUX(2,AVDIM), RBM(AVDIM)
         DOUBLE PRECISION UNJ(AVDIM),DS(AVDIM)
         DOUBLE PRECISION GRADTE(AVDIM),GRADTI(AVDIM),GRAV(AVDIM)
         DOUBLE PRECISION OLOSS(AVDIM),HLOSS(AVDIM),HPROD(AVDIM)
@@ -329,6 +329,10 @@ C.... Written by P. Richards June-September 2010.
       USE ION_DEN_VEL        !.. O+ H+ He+ N+ NO+ O2+ N2+ O+(2D) O+(2P)
       !..EUVION PEXCIT PEPION OTHPR1 OTHPR2 SUMION SUMEXC PAUION PAUEXC NPLSPRD
       USE PRODUCTION         !.. EUV, photoelectron, and auroral production
+      USE SOLVARR
+      USE AVE_PARAMS
+      USE PRODUCTION
+
       IMPLICIT NONE
       INTEGER CTIPDIM         !.. CTIPe array dimension, must equal to FLDIM
       INTEGER JTI             !.. Dummy variable to count the number of calls to this routine
@@ -379,56 +383,64 @@ C.... Written by P. Richards June-September 2010.
       DATA JTI/0/
       JTI=JTI+1
 
-        Z(:)=0.0               !(FLDIM)
-        SZA(:)=0.0
-        BM(:)=0.0
-        SL(:)=0.0
-        GR(:)=0.0
-        GL(:)=0.0
+        Z(:)=0.0D0               !(FLDIM)
+        SZA(:)=0.0D0
+        BM(:)=0.0D0
+        SL(:)=0.0D0
+        GR(:)=0.0D0
+        GL(:)=0.0D0
 
 !ION_DEN_VEL
-        XIONN(:,:)=0.0!(ISPEC,IDIM)
-        XIONV(:,:)=0.0
+        XIONN(:,:)=0.0D0!(ISPEC,IDIM)
+        XIONV(:,:)=0.0D0
 
 !(2) SOLVARR
-        !DELTA(:)=0.0 !(10*SDIM)
-        !RHS(:)=0.0   !(10*SDIM)
-        !WORK(:)=0.0   !(50*SDIM)
-        !S(:)=0.0   !(50*SDIM)
+        DELTA(:)=0.0D0 !(10*SDIM)
+        RHS(:)=0.0D0   !(10*SDIM)
+        WORK(:)=0.0D0   !(50*SDIM)
+        S(:)=0.0D0   !(50*SDIM)
 
 !THERMOSPHERE
-        ON(:)=0.0              !(TDIM)
-        HN(:)=0.0
-        N2N(:)=0.0
-        O2N(:)=0.0
-        HE(:)=0.0
-        TN(:)=0.0
-        UN(:)=0.0
-        TINF(:)=0.0
-        EHT(:,:)=0.0           !(3,TDIM)
-        COLFAC=0.0 
+        ON(:)=0.0D0              !(TDIM)
+        HN(:)=0.0D0
+        N2N(:)=0.0D0
+        O2N(:)=0.0D0
+        HE(:)=0.0D0
+        TN(:)=0.0D0
+        UN(:)=0.0D0
+        TINF(:)=0.0D0
+        EHT(:,:)=0.0D0           !(3,TDIM)
+        COLFAC=0.0D0 
 
 !(3)AVE_PARAMS
-      !TEJ(:)=0.0 !(AVDIM)
-      !TIJ(:)=0.0 !(AVDIM)
-      !NUX(:,:)=0.0 !(2,AVDIM)
-      !RBM(:)=0.0 !(AVDIM)
-      !UNJ(:)=0.0 !(AVDIM)
-      !DS(:)=0.0 !(AVDIM)
-      !GRADTE(:)=0.0 !(AVDIM)
-      !GRADTI(:)=0.0 !(AVDIM)
-      !GRAV(:)=0.0 !(AVDIM)
-      !OLOSS(:)=0.0 !(AVDIM)
-      !HLOSS(:)=0.0 !(AVDIM)
-      !HPROD(:)=0.0 !(AVDIM)
+      TEJ(:)=0.0D0 !(AVDIM)
+      TIJ(:)=0.0D0 !(AVDIM)
+      NUX(:,:)=0.0D0 !(2,AVDIM)
+      RBM(:)=0.0D0 !(AVDIM)
+      UNJ(:)=0.0D0 !(AVDIM)
+      DS(:)=0.0D0 !(AVDIM)
+      GRADTE(:)=0.0D0 !(AVDIM)
+      GRADTI(:)=0.0D0 !(AVDIM)
+      GRAV(:)=0.0D0 !(AVDIM)
+      OLOSS(:)=0.0D0 !(AVDIM)
+      HLOSS(:)=0.0D0 !(AVDIM)
+      HPROD(:)=0.0D0 !(AVDIM)
 
 !(1) production
-      EUVION(:,:,:)=0.0
-      PEXCIT(:,:,:)=0.0
-      PEPION(:,:,:)=0.0
-      OTHPR1(:,:)=0.0
-      OTHPR2(:,:)=0.0
-      SUMION(:,:,:)=0.0 !(3,12,PDIM)
+      EUVION(:,:,:)=0.0D0
+      PEXCIT(:,:,:)=0.0D0
+      PEPION(:,:,:)=0.0D0
+      OTHPR1(:,:)=0.0D0
+      OTHPR2(:,:)=0.0D0
+      SUMION(:,:,:)=0.0D0 !(3,12,PDIM)
+
+!(4)MINORNEUT
+      N2D(:)=0.0D0 !(NDIM)
+      N2P(:)=0.0D0 !(NDIM),
+      N2A(:)=0.0D0 !(NDIM)
+      O1D(:)=0.0D0 !(NDIM)
+      O1S(:)=0.0D0 !(NDIM)
+      EQN2D(:)=0.0D0 !(NDIM)
       !.. Load debug flag into EFLAG for sending to subroutines
       EFLAG(11,11) =  0 !DEBUG 
 

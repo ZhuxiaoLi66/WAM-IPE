@@ -14,7 +14,8 @@ files = ['dwm07b104i.dat',
          'IPE_State.apex.201303160000.nc',
          'IPE.inp',
          'ipe.pbs',
-         'tiros_spectra']
+         'tiros_spectra',
+         'wei96.cofcnts']
 
 files = [bucket + f  for f in files]
 for f in files:
