@@ -25,11 +25,15 @@ IMPLICIT NONE
 
   TYPE IPE_Electrodynamics
     INTEGER    :: nFluxTube, NLP, NMP
-    INTEGER    :: NP_dynamo, MP_dynamo
     REAL(prec), ALLOCATABLE :: electric_potential(:,:)   
     REAL(prec), ALLOCATABLE :: electric_field(:,:,:) 
     REAL(prec), ALLOCATABLE :: v_ExB_geographic(:,:,:)  ! "zonal" and "meridional" direction on the geographic grid
     REAL(prec), ALLOCATABLE :: v_ExB_apex(:,:,:) ! "zonal" and "meridional" direction ( VEXBth, VEXBe ) on the apex grid
+
+    REAL(prec), ALLOCATABLE, PRIVATE :: lat_interp_weights(:,:) ! Weights for interpolating from magnetic longitude to ipe longitude
+    REAL(prec), ALLOCATABLE, PRIVATE :: lon_interp_weights(:,:) ! Weights for interpolating from magnetic longitude to ipe longitude
+    INTEGER, ALLOCATABLE, PRIVATE    :: lat_interp_index(:,:) ! Weights for interpolating from magnetic longitude to ipe longitude
+    INTEGER, ALLOCATABLE, PRIVATE    :: lon_interp_index(:,:) ! Weights for interpolating from magnetic longitude to ipe longitude
 
     ! Inputs for the potential solver (on the dynamo grid)
     REAL(prec), ALLOCATABLE :: hall_conductivity(:,:)
@@ -54,11 +58,13 @@ IMPLICIT NONE
       PROCEDURE :: Update => Update_IPE_Electrodynamics
 
       PROCEDURE, PRIVATE :: Empirical_E_Field_Wrapper
+      PROCEDURE, PRIVATE :: Interpolate_Potential
 
   END TYPE IPE_Electrodynamics
 
   LOGICAL, PRIVATE :: setup_efield_empirical
 
+  REAL(prec), PRIVATE :: theta90_rad(0:nmlat)
 
 CONTAINS
 
@@ -74,8 +80,6 @@ CONTAINS
       eldyn % nFluxTube = nFluxTube
       eldyn % NLP       = NLP
       eldyn % NMP       = NMP
-      eldyn % NP_dynamo = nmlon
-      eldyn % MP_dynamo = nmlat
 
       ALLOCATE( eldyn % electric_potential(1:NLP,1:NMP), &
                 eldyn % electric_field(1:3,1:NLP,1:NMP), &
@@ -84,7 +88,11 @@ CONTAINS
                 eldyn % hall_conductivity(1:NLP,1:NMP), &
                 eldyn % pedersen_conductivity(1:NLP,1:NMP), &
                 eldyn % b_parallel_conductivity(1:NLP,1:NMP), &
-                eldyn % neutral_apex_velocity(1:3,1:NLP,1:NMP) )
+                eldyn % neutral_apex_velocity(1:3,1:NLP,1:NMP), &
+                eldyn % lat_interp_weights(1:2,1:NLP), &
+                eldyn % lon_interp_weights(1:2,1:NMP), &
+                eldyn % lat_interp_index(1:2,1:NLP), &
+                eldyn % lon_interp_index(1:2,1:NMP) )
 
       eldyn % electric_potential      = 0.0_prec
       eldyn % electric_field          = 0.0_prec
@@ -94,6 +102,10 @@ CONTAINS
       eldyn % pedersen_conductivity   = 0.0_prec
       eldyn % b_parallel_conductivity = 0.0_prec
       eldyn % neutral_apex_velocity   = 0.0_prec
+      eldyn % lat_interp_weights      = 0.0_prec
+      eldyn % lon_interp_weights      = 0.0_prec
+      eldyn % lat_interp_index        = 0
+      eldyn % lon_interp_index        = 0
 
 
       ALLOCATE( eldyn % geo_electric_potential(1:nlon_geo,1:nlat_geo), &
@@ -122,7 +134,11 @@ CONTAINS
                   eldyn % hall_conductivity, &
                   eldyn % pedersen_conductivity, &
                   eldyn % b_parallel_conductivity, &
-                  eldyn % neutral_apex_velocity )
+                  eldyn % neutral_apex_velocity, &
+                  eldyn % lat_interp_weights, &
+                  eldyn % lon_interp_weights, & 
+                  eldyn % lat_interp_index, & 
+                  eldyn % lon_interp_index )
 
       DEALLOCATE( eldyn % geo_electric_potential, &
                   eldyn % geo_v_ExB_geographic, &
@@ -153,14 +169,33 @@ CONTAINS
     TYPE( IPE_Time ), INTENT(in)                :: time_tracker
     ! Local
     INTEGER :: i, j, year
-    REAL(prec) :: theta90_rad(0:nmlat)
     REAL(prec) :: mlon90_rad(0:nmlon)
-    REAL(prec) :: theta130_rad, utime, sunlons
+    REAL(prec) :: theta130_rad, utime, sunlons, lat
      
 
         IF( setup_efield_empirical )THEN
           CALL efield_init
           setup_efield_empirical = .FALSE.
+
+          ! Maps latitude from 130km to 90km along flux tube.
+          DO j=0,nmlat
+
+            theta130_rad   = ( 90.0_prec - (ylatm(j)-90.0_prec) ) * dtr
+            theta90_rad(j) = ASIN(SIN( theta130_rad )*SQRT((earth_radius+90000.0_prec)/(earth_radius+130000.0_prec)))
+            IF ( theta130_rad > pi*0.50_prec ) theta90_rad(j) = pi-theta90_rad(j)
+
+          END DO 
+
+          ! Use CommonRoutines HatFunction to build interpolation weights from
+          ! theta90_rad to grid % magnetic_latitude
+          DO i = 1, grid % NLP
+            lat = 0.5_prec*pi - grid % magnetic_colatitude(1,i)
+            CALL Hat_Weights( theta90_rad, lat, &
+                              eldyn % lat_interp_weights(1:2,i), &
+                              eldyn % lat_interp_index(1:2,i), &
+                              nmlat )
+          ENDDO
+
         ENDIF
 
         CALL time_tracker % Get_Date( year, imo, iday_m )
@@ -178,14 +213,6 @@ CONTAINS
          
         CALL  get_efield
 
-        ! Maps latitude from 130km to 90km along flux tube.
-        DO j=0,nmlat
-
-          theta130_rad   = ( 90.0_prec - (ylatm(j)-90.0_prec) ) * dtr
-          theta90_rad(j) = ASIN(SIN( theta130_rad )*SQRT((earth_radius+90000.0_prec)/(earth_radius+130000.0_prec)))
-          IF ( theta130_rad > pi*0.50_prec ) theta90_rad(j) = pi-theta90_rad(j)
-
-        END DO 
 
         ! Map magnetic local time to magnetic longitude
         CALL sunloc( year, time_tracker % day_of_year, utime, sunlons ) !iyr,iday,secs)        
@@ -197,12 +224,58 @@ CONTAINS
 
         END DO
 
-        ! Interpolate the potential to the IPE grid
+        DO i = 1, grid % NMP
+          CALL Hat_Weights( mlon90_rad, lat, &
+                            eldyn % lon_interp_weights(1:2,i), &
+                            eldyn % lon_interp_index(1:2,i), &
+                            nmlon )
+        ENDDO
 
+        PRINT*,'Weights Range :', MAXVAL( eldyn % lon_interp_weights ), MINVAL( eldyn % lon_interp_weights )
+        PRINT*,'Weights Range :', MAXVAL( eldyn % lat_interp_weights ), MINVAL( eldyn % lat_interp_weights )
+
+        ! Interpolate the potential to the IPE grid
+        CALL eldyn % Interpolate_Potential( grid )
+        
         ! Calculate the potential gradient in IPE coordinates.
 
 
   END SUBROUTINE Empirical_E_Field_Wrapper
+
+  SUBROUTINE Interpolate_Potential( eldyn, grid )
+    CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn 
+    TYPE( IPE_Grid ), INTENT(in)                :: grid
+    ! Local
+    INTEGER :: i, j, ii, jj, i_e, j_e
+ 
+    DO j = 1, grid % NMP
+      DO i = 1, grid % NLP
+
+
+        eldyn % electric_potential(i,j) = 0.0_prec
+        DO jj = 1, 2
+          DO ii = 1, 2
+
+            i_e = eldyn % lat_interp_index(ii,i) 
+            j_e = eldyn % lon_interp_index(jj,j) 
+
+            eldyn % electric_potential = eldyn % electric_potential + &
+                                         potent(i_e,j_e)*&
+                                         eldyn % lat_interp_weights(ii,i)*&
+                                         eldyn % lon_interp_weights(jj,j)
+
+          ENDDO
+        ENDDO
+
+      ENDDO
+    ENDDO
+          
+    ! should interpolate from (mlon90_rad, theta90_rad) to ( grid %
+    ! magnetic_longitude, grid % magnetic_latitude )
+    !
+    ! magnetic_latitude = pi/2 - magnetic_colatitude
+
+  END SUBROUTINE Interpolate_Potential
 
   SUBROUTINE sunloc(iyr,iday,secs,sunlons)
     integer, intent(in) :: iyr, iday ! day of year
