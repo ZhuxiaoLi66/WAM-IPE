@@ -230,8 +230,9 @@ C////////////main calculations  begin here ////////////
           IF(E(IE).LE.3.AND.E(IE).GT.2) THEN
             !.. Needed for updated electron heating in CTIPe
             CALL CMINOR(0,J,0,IHEPLS,INPLS,INNO,FD,7,N,TI,Z,EFLAG)
-            PRINT*, 'RSPE2B :', J, PRED(J), EQN2D(J)
+            PRINT*, 'GHGM RSPE2B :', JMIN, JMAX, J, PRED(J), EQN2D(J)
             PRED(J)=PRED(J)+EQN2D(J)
+            PRINT*, 'GHGM RSPE2B  2 :', JMIN, JMAX, J, PRED(J), EQN2D(J)
           ENDIF
           !.. Total energy deposition to photoelectrons
           EUVION(1,11,J)=EUVION(1,11,J)+PRED(J)*E(IE)*DELTE(IE)
@@ -725,6 +726,7 @@ C..... of Nagy and Banks. This is for the Northern Hemisphere
      &                  -BM(J)/(DS(J+1)*DS(J)))/BM(J) ! (d^2B)/(B*ds^2)
         DLT1=(T1(J+1)-T1(J-1))/(T1(J)*DELZ)           ! (dT1)/(T1*ds)
         DTS2=(T2(J+1)-T2(J-1))/DELZ                   ! (dT2)/(ds)
+        print *, 'GHGM YAGGA 1', m2, m, PRED
         DPR1=(PRED(J+1)-PRED(J-1))/(2*DELZ)           ! 0.5*(dq)/(ds)
         DPR2=(PRODWN(IE,J+1)-PRODWN(IE,J-1))/DELZ       ! (dq-)/(ds)
         PHI = 1.

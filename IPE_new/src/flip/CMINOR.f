@@ -169,7 +169,9 @@ C....... Sep 1989
       CALL CN2D(J,0,0,Z(J),RTS,ON(J),O2N(J),N2N(J),NOPLUS,ZNE,PROD(1)
      > ,LOSS(1),N2PLUS,DISN2D,UVDISN,NPLUS,N2P(J)
      > ,N2D(J),N(1,J),NNO(J),N2A(J))
+      print *, 'GHGM prod loss ', PROD(1),LOSS(1)
       IF(LOSS(1).GT.0) N2D(J)=PROD(1)/LOSS(1)
+      print *, 'GHGM prod loss n2d', PROD(1),LOSS(1), n2d(j)
 
       !.... NO density
       CALL CNO(J,0,0,Z(J),RTS,ON(J),O2N(J),N2N(J),ZNE,PROD(3),LOSS(3)
@@ -203,6 +205,7 @@ C....... Sep 1989
       !.. EQN2D(J) used in PE2S only
       PRINT*, 'CMINOR :', J, N2D(J), RTS(8),ZNE
       EQN2D(J)=N2D(J)*RTS(8)*ZNE
+      print *, 'GHGM eqn2d ', EQN2D
 
       !... calc o+ prod. from minor ions      !$$$
       FD(5)=OP2P*(RTS(26)*ON(J)+RTS(14)*ZNE+0.047)
