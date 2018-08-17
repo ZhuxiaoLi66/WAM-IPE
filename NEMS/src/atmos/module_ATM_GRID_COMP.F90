@@ -313,7 +313,7 @@
 
     ! conditionally realize or remove Fields from States ...
 
-    do n = 1,nImportFields
+    do n = 1,nImportFields+6
       call realizeConnectedInternCplField(importState, &
         field=importFields(n), standardName=trim(importFieldsList(n)), &
         grid=gridIn, rc=rc)
@@ -323,7 +323,7 @@
         return  ! bail out
     enddo
 
-    do n = 1,nExportFields
+    do n = 1,nExportFields+2
       call realizeConnectedInternCplField(exportState, &
         field=exportFields(n), standardName=trim(exportFieldsList(n)), &
         grid=gridOut, rc=rc)
@@ -360,6 +360,8 @@
              fieldName == "O_Density" .or. &
              fieldName == "O2_Density" .or. &
              fieldName == "N2_Density" .or. &
+             fieldName == "test_constant" .or. &
+             fieldName == "test_zero" .or. &
              fieldName == "height")  then
            call ESMF_ArraySpecSet(arrayspec,2,ESMF_TYPEKIND_R8, rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -962,8 +964,11 @@
         line=__LINE__, &
         file=__FILE__)) &
         return  ! bail out
+
+      print *,'ATM_ADVANCE: write_diagnostics = ',write_diagnostics
       
       if(write_diagnostics) then
+#if 0
         ! for testing write all of the Fields in the importState to file
         call NUOPC_Write(importState, fileNamePrefix="field_atm_import_", &
           timeslice=slice, relaxedFlag=.true., rc=rc)
@@ -974,6 +979,19 @@
         ! for testing write all of the Fields in the exportState to file
         call NUOPC_Write(exportState, fileNamePrefix="field_atm_export_", &
           timeslice=slice, relaxedFlag=.true., rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+#endif
+      print *,'ATM_ADVANCE: calling atm_field_diag()'
+        call atm_field_diag(importState, slice, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+      print *,'ATM_ADVANCE: calling atm_field_diag()'
+        call atm_field_diag(exportState, slice, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
           file=__FILE__)) &
@@ -1176,6 +1194,310 @@
 !-----------------------------------------------------------------------
 !
       END SUBROUTINE ATM_FINALIZE
+!
+!-----------------------------------------------------------------------
+!
+!
+!-----------------------------------------------------------------------
+!
+      subroutine atm_field_diag(state, slice, rc)
+        type(ESMF_State),  intent(in)  :: state
+        integer,           intent(in)  :: slice
+        integer, optional, intent(out) :: rc
+
+        ! -- local variables
+        integer :: localrc
+        integer :: item, itemCount
+        type(ESMF_RouteHandle), save :: rh
+        type(ESMF_Grid),  save :: grid
+        type(ESMF_Field), save :: dstField
+        type(ESMF_Field)       :: srcField
+        type(ESMF_StateIntent_flag) :: stateIntent
+        type(ESMF_StateItem_Flag), dimension(:), allocatable :: itemTypeList
+        character(ESMF_MAXSTR),    dimension(:), allocatable :: itemNameList
+        character(ESMF_MAXSTR) :: baseName
+        real(ESMF_KIND_R8), pointer     :: fptr(:,:)
+
+        ! -- begin
+        if (present(rc)) rc = ESMF_SUCCESS
+
+        ! -- get state intent
+        call ESMF_StateGet(state, stateintent=stateIntent, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__,  &
+          file=__FILE__,  &
+          rcToReturn=rc)) &
+          return  ! bail out
+
+        if (stateIntent == ESMF_STATEINTENT_IMPORT) then
+          baseName = "atm_field_import_"
+        else if (stateIntent == ESMF_STATEINTENT_EXPORT) then
+          baseName = "atm_field_export_"
+        else
+          write(6,'(" - atm_field_diag: state intent is UNKNOWN")')
+          if (present(rc)) rc = ESMF_FAILURE
+          return
+        end if
+
+        ! -- get state intent
+!       call ESMF_StateGet(state, itemCount=itemCount, rc=localrc)
+!       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+!         line=__LINE__,  &
+!         file=__FILE__,  &
+!         rcToReturn=rc)) &
+!         return  ! bail out
+
+!       itemCount = 4
+        itemCount = 2
+
+        allocate(itemNameList(itemCount), itemTypeList(itemCount))
+
+        itemNameList = (/ &
+          "test_constant                          ", &
+          "test_zero                              " /)
+
+!       itemNameList = (/  &
+!         "northward_wind_neutral                 ", &
+!         "eastward_wind_neutral                  ", &
+!         "upward_wind_neutral                    ", &
+!         "temp_neutral                           " /)
+
+        do item = 1, itemCount
+          call ESMF_StateGet(state, itemName=itemNameList(item), &
+            field=srcField, rc=localrc)
+          if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+
+          if (stateIntent == ESMF_STATEINTENT_EXPORT) then
+            if (trim(itemNameList(item)) == "test_zero") then
+              call ESMF_FieldGet(srcField, farrayPtr=fptr, rc=localrc)
+              if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+              fptr = 0._ESMF_KIND_R8
+            else if (trim(itemNameList(item)) == "test_constant") then
+              call ESMF_FieldGet(srcField, farrayPtr=fptr, rc=localrc)
+              if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+              fptr = 100._ESMF_KIND_R8
+            end if
+          end if
+
+          call FieldPrintMinMax(srcField, &
+            label="SRC: "//trim(baseName)//trim(itemNameList(item))//".nc", rc=localrc)
+          if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+
+          call ESMF_FieldWrite(srcField, &
+            fileName=trim(baseName)//trim(itemNameList(item))//".nc", &
+            timeSlice=slice, rc=localrc)
+          if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+        end do
+
+#if 0
+
+        do item = 1, itemCount
+          print *,"DIAG: ",item,trim(itemNameList(item))
+!         if (itemTypeList(item) == ESMF_STATEITEM_FIELD) then
+          if (.true.) then
+!           if (NUOPC_IsConnected(state, fieldName=itemNameList(item))) then
+            if (.true.) then
+
+              call ESMF_StateGet(state, itemName=itemNameList(item), &
+                field=srcField, rc=localrc)
+              if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+
+              if (.not.ESMF_RouteHandleIsCreated(rh)) then
+                ! -- create regular grid
+                call WAMGridCreateReg(grid, rc=localrc)
+                if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                  line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+                ! -- compute route handle
+                ! -- create dstField on grid
+                dstField = ESMF_FieldCreate(grid, ESMF_TYPEKIND_R8, &
+                  ungriddedLBound=(/1/), ungriddedUBound=(/wamlevels/), rc=localrc)
+                if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                  line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+
+                call ESMF_FieldRegridStore(srcField, dstField, &
+                  regridmethod   = ESMF_REGRIDMETHOD_BILINEAR, &
+                  unmappedaction = ESMF_UNMAPPEDACTION_IGNORE, &
+                  polemethod     = ESMF_POLEMETHOD_NONE,       &
+                  lineType       = ESMF_LINETYPE_GREAT_CIRCLE, &
+                  routehandle=rh, rc=localrc)
+                if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                  line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+
+              end if
+
+              ! -- perform regrid
+              call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
+                zeroregion=ESMF_REGION_SELECT, &
+                routehandle=rh, rc=localrc)
+              if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+
+              ! -- write field on regular grid
+              call ESMF_FieldWrite(dstField, &
+                fileName=trim(baseName)//trim(itemNameList(item))//".nc", &
+                timeSlice=slice, rc=localrc)
+              if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+
+              call FieldPrintMinMax(srcField, &
+                label="SRC: "//trim(baseName)//trim(itemNameList(item))//".nc", rc=localrc)
+              if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+
+              call FieldPrintMinMax(dstField, &
+                label="DST: "//trim(baseName)//trim(itemNameList(item))//".nc", rc=localrc)
+              if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+                line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+
+            end if
+          end if
+        end do
+
+#endif
+
+        deallocate(itemNameList, itemTypeList)
+
+!       call ESMF_FieldDestroy(dstField, noGarbage=.true., rc=localrc)
+!       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+!         line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+
+!       call ESMF_GridDestroy(grid, noGarbage=.true., rc=localrc)
+!       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+!         line=__LINE__, file=__FILE__, rcToReturn=rc)) return  ! bail out
+
+      end subroutine atm_field_diag
+
+      subroutine WAMGridCreateReg(grid, rc)
+
+        type(ESMF_Grid) :: grid
+        integer, optional, intent(out) :: rc
+
+        ! -- local variables
+        integer :: i, n, localrc
+        integer, dimension(1) :: lbnd, ubnd
+        real(ESMF_KIND_R8), dimension(:), pointer :: coordPtr
+
+        integer, parameter :: NLONG = 360
+        integer, parameter :: NLATS = 180
+
+        real(ESMF_KIND_R8), dimension(2), parameter :: coordIncr = (/ &
+          360._ESMF_KIND_R8/(NLONG-1), 180._ESMF_KIND_R8/(NLATS-1) /)
+        real(ESMF_KIND_R8), dimension(2), parameter :: coordBase = (/ &
+          0._ESMF_KIND_R8, -90._ESMF_KIND_R8 /)
+
+        ! -- begin
+        if (present(rc)) rc = ESMF_SUCCESS
+
+        ! -- create 2D grid
+        grid = ESMF_GridCreate1PeriDim( &
+                 maxIndex = (/ NLONG, NLATS /), &
+                 coordSys  = ESMF_COORDSYS_SPH_DEG, &
+                 coordDep1 = (/ 1 /), &
+                 coordDep2 = (/ 2 /), &
+                 indexflag = ESMF_INDEX_GLOBAL, &
+                 rc = localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        ! -- add coordinates
+        call ESMF_GridAddCoord(grid, &
+          staggerloc = ESMF_STAGGERLOC_CENTER, rc = localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        do n = 1, size(coordIncr)
+          nullify(coordPtr)
+          call ESMF_GridGetCoord(grid, coordDim = n, localDE = 0, &
+            staggerloc = ESMF_STAGGERLOC_CENTER, &
+            computationalLBound = lbnd, computationalUBound = ubnd, &
+            farrayPtr = coordPtr, rc = localrc)
+          if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+          do i = lbnd(1), ubnd(1)
+            coordPtr(i) = (i-1)*coordIncr(n) + coordBase(n)
+          end do
+        end do
+
+        nullify(coordPtr)
+
+      end subroutine WAMGridCreateReg
+
+  subroutine FieldPrintMinMax(field, label, rc)
+    type(ESMF_Field)                        :: field
+    character(len=*), optional,  intent(in) :: label
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc, rank
+    integer :: localDe, localDeCount
+    character(len=ESMF_MAXSTR) :: name
+    real(ESMF_KIND_R8), pointer :: fptr1d(:), fptr2d(:,:), fptr3d(:,:,:)
+    real(ESMF_KIND_R8) :: fmin, fmax, fieldMin, fieldMax
+
+    ! -- begin
+    if (present(rc)) rc = ESMF_SUCCESS
+
+    fieldMin = huge(0._ESMF_KIND_R8)
+    fieldMax = -fieldMin
+
+    call ESMF_FieldGet(field, name=name, rank=rank, &
+      localDeCount=localDeCount, rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__,  &
+      rcToReturn=rc)) &
+      return  ! bail out
+
+    do localDe = 0, localDeCount - 1
+      select case (rank)
+      case(1)
+        call ESMF_FieldGet(field, farrayPtr=fptr1d, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)) return  ! bail out
+        fmin = minval(fptr1d)
+        fmax = maxval(fptr1d)
+      case(2)
+        call ESMF_FieldGet(field, farrayPtr=fptr2d, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)) return  ! bail out
+        fmin = minval(fptr2d)
+        fmax = maxval(fptr2d)
+      case(3)
+        call ESMF_FieldGet(field, farrayPtr=fptr3d, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__,  &
+          rcToReturn=rc)) return  ! bail out
+        fmin = minval(fptr3d)
+        fmax = maxval(fptr3d)
+      case default
+        call ESMF_LogSetError(ESMF_RC_OBJ_BAD, &
+          msg="Rank must be 1, 2, or 3 for field "//trim(name), &
+          line=__LINE__, &
+          file=__FILE__, &
+          rcToReturn=rc)
+        return ! bail out
+      end select
+      fieldMin = min(fieldMin, fmin)
+      fieldMax = max(fieldMax, fmax)
+    end do
+
+    write(6,'("FieldPrintMinMax: ",a,1x,a," min = ",g14.6," max = ",g14.6)') &
+      trim(label), trim(name), fieldMin, fieldMax
+
+  end subroutine FieldPrintMinMax
+
+
 !
 !-----------------------------------------------------------------------
 !

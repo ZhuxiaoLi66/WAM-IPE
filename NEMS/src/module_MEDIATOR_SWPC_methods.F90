@@ -3648,7 +3648,7 @@ contains
         rcToReturn=rc)) return  ! bail out
 
       ! -- print diagnostic info
-!     call FieldPrintMinMax(srcFieldComp(comp), "pre  - src:" // trim(compNames(comp)), rc)
+      call FieldPrintMinMax(srcFieldComp(comp), "pre  - src:" // trim(compNames(comp)), rc)
 
       dstFieldComp(comp) = StateGetField(rh % dstState, compNames(comp), component=comp, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -3699,7 +3699,7 @@ contains
 
     do comp = 1, compCount
       ! -- print diagnostic info
-!     call FieldPrintMinMax(dstFieldComp(comp), "post - dst:" // trim(compNames(comp)), rc)
+      call FieldPrintMinMax(dstFieldComp(comp), "post - dst:" // trim(compNames(comp)), rc)
 
       call StateStoreField(rh % srcState, srcFieldComp(comp), compNames(comp), rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -4494,8 +4494,8 @@ contains
       fieldMax = max(fieldMax, fmax)
     end do
 
-!   write(6,'("FieldPrintMinMax: ",a,1x,a," min = ",g14.6," max = ",g14.6)') &
-!     trim(label), trim(name), fieldMin, fieldMax
+    write(6,'("FieldPrintMinMax: ",a,1x,a," min = ",g14.6," max = ",g14.6)') &
+      trim(label), trim(name), fieldMin, fieldMax
 
   end subroutine FieldPrintMinMax
 
@@ -4805,13 +4805,13 @@ contains
       rh => rhList
     end if
 
-!   print *, 'RouteHandle Table'
-!   print *, '================='
+    print *, 'RouteHandle Table'
+    print *, '================='
     item = 0
     do while (associated(rh))
       item = item + 1
-!     write(6,'(i4,2x,a,2x,l5)') item, trim(rh % label), &
-!       ESMF_RouteHandleIsCreated(rh % rh, rc=localrc)
+      write(6,'(i4,2x,a,2x,l5)') item, trim(rh % label), &
+        ESMF_RouteHandleIsCreated(rh % rh, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__, &
@@ -4825,7 +4825,7 @@ contains
       end if
       rh => rh % next
     end do
-!   print *, '================='
+    print *, '================='
     
   end subroutine RouteHandlePrint
 

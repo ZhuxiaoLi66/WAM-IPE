@@ -1494,6 +1494,7 @@ ATM_model:                      gsm
 ATM_petlist_bounds:             $atm_petlist_bounds
 ATM_attributes::
   Verbosity = max
+  DumpFields = true
 ::
 
 # IPM #
@@ -1507,8 +1508,10 @@ IPM_attributes::
 runSeq::
   @$coupling_interval_fast_sec
     ATM -> MED :remapMethod=redist
+    IPM -> MED :remapMethod=redist
     MED
     MED -> IPM :remapMethod=redist
+    MED -> ATM :remapMethod=redist
     ATM
     IPM
   @

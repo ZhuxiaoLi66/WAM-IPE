@@ -22,6 +22,7 @@ ATM_model:                      @[atm_model]
 ATM_petlist_bounds:             @[atm_petlist_bounds]
 ATM_attributes::
   Verbosity = max
+  DumpFields = true
 ::
 
 # IPM #
@@ -36,7 +37,9 @@ IPM_attributes::
 runSeq::
   @@[coupling_interval_sec]
     ATM -> MED :remapMethod=redist
+    IPM -> MED :remapMethod=redist
     MED
+    MED -> ATM :remapMethod=redist
     MED -> IPM :remapMethod=redist
     ATM
     IPM

@@ -105,6 +105,21 @@ module module_MED_SWPC
       file=__FILE__)) &
       return  ! bail out
     
+    ! checking the import fields is a bit more complex because of coldstart
+    ! option
+    call ESMF_MethodRemove(mediator, mediator_label_CheckImport, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+    call NUOPC_CompSpecialize(mediator, specLabel=mediator_label_CheckImport, &
+      specRoutine=NUOPC_NoOp, rc=rc)  !TODO: replace this with a real method
+      !TODO: for now just disable all timestamp checking of import fields
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+
   end subroutine SetServices
   
   !-----------------------------------------------------------------------------
@@ -140,8 +155,12 @@ module module_MED_SWPC
 
     call NamespaceAdd("ATM",importState, &
       (/ &
+        "test_constant                               ", &
+        "test_zero                                   ", &
         "height                                      ", &
-        "eastward_wind_neutral:northward_wind_neutral", &
+!       "eastward_wind_neutral:northward_wind_neutral", &
+        "eastward_wind_neutral                       ", &
+        "northward_wind_neutral                      ", &
         "upward_wind_neutral                         ", &
         "temp_neutral                                ", &
         "O_Density                                   ", &
@@ -157,9 +176,36 @@ module module_MED_SWPC
       file=__FILE__)) &
       return  ! bail out
 
-    call NamespaceAdd("IPM",exportState, &
+    call NamespaceAdd("ATM",exportState, &
       (/ &
-        "eastward_wind_neutral:northward_wind_neutral", &
+        "test_constant                               ", &
+        "test_zero                                   ", &
+!       "height                                      ", &
+!       "eastward_wind_neutral:northward_wind_neutral", &
+        "eastward_wind_neutral                       ", &
+        "northward_wind_neutral                      ", &
+        "upward_wind_neutral                         ", &
+        "temp_neutral                                "  &
+!       "O_Density                                   ", &
+!       "O2_Density                                  ", &
+!       "N2_Density                                  "  &
+      /), &
+      "cannot provide", &
+      ungriddedVerticalDim=.true., &
+      fieldSep=":", &
+      rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+
+    call NamespaceAdd("IPM",importState, &
+      (/ &
+        "test_constant                               ", &
+        "test_zero                                   ", &
+!       "eastward_wind_neutral:northward_wind_neutral", &
+        "eastward_wind_neutral                       ", &
+        "northward_wind_neutral                      ", &
         "upward_wind_neutral                         ", &
         "temp_neutral                                ", &
         "O_Density                                   ", &
@@ -168,6 +214,41 @@ module module_MED_SWPC
       /), &
       "cannot provide", &
       fieldOptions=(/ &
+        "none", &
+        "none", &
+        "none", &
+        "none", &
+        "none", &
+        "none", &
+        "16.0", &
+        "32.0", &
+        "28.0"  &
+      /), &
+      fieldSep=":", &
+      rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+
+    call NamespaceAdd("IPM",exportState, &
+      (/ &
+        "test_constant                               ", &
+        "test_zero                                   ", &
+!       "eastward_wind_neutral:northward_wind_neutral", &
+        "eastward_wind_neutral                       ", &
+        "northward_wind_neutral                      ", &
+        "upward_wind_neutral                         ", &
+        "temp_neutral                                ", &
+        "O_Density                                   ", &
+        "O2_Density                                  ", &
+        "N2_Density                                  "  &
+      /), &
+      "cannot provide", &
+      fieldOptions=(/ &
+        "none", &
+        "none", &
+        "none", &
         "none", &
         "none", &
         "none", &
@@ -543,14 +624,23 @@ module module_MED_SWPC
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail out
-!           call FieldPrintMinMax(srcField, "orig - src:" // trim(rh % dstState % fieldNames(item)), rc)
-!           print *, 'MED: regridding ',trim(rh % dstState % fieldNames(item)), &
-!             ' with ', trim(rh % label)
+            call FieldPrintMinMax(srcField, "RH - src:" // trim(rh % dstState % fieldNames(item)), rc)
+            print *, 'MED: regridding ',trim(rh % dstState % fieldNames(item)), &
+              ' with ', trim(rh % label)
             call FieldRegrid(rh, trim(rh % dstState % fieldNames(item)), rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail out
+            call ESMF_StateGet(rh % dstState % self, field=srcField, &
+              itemName=trim(rh % dstState % fieldNames(item)), rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail out
+            call FieldPrintMinMax(srcField, "RH - dst:" // trim(rh % dstState % fieldNames(item)), rc)
+            print *, 'MED: regridding ',trim(rh % dstState % fieldNames(item)), &
+              ' with ', trim(rh % label)
           end do
 
         end if

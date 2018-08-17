@@ -42,7 +42,7 @@ module ipeCap
 
   implicit none
 
-  integer, parameter :: importFieldCount = 7
+  integer, parameter :: importFieldCount = 9
   character(len=*), dimension(importFieldCount), parameter :: &
     importFieldNames = (/ &
       "temp_neutral          ", &
@@ -51,7 +51,23 @@ module ipeCap
       "upward_wind_neutral   ", &
       "O_Density             ", &
       "O2_Density            ", &
-      "N2_Density            "  &
+      "N2_Density            ", &
+      "test_constant         ", &
+      "test_zero             "  &
+      /)
+
+  integer, parameter :: exportFieldCount = 9
+  character(len=*), dimension(exportFieldCount), parameter :: &
+    exportFieldNames = (/ &
+      "temp_neutral          ", &
+      "eastward_wind_neutral ", &
+      "northward_wind_neutral", &
+      "upward_wind_neutral   ", &
+      "O_Density             ", &
+      "O2_Density            ", &
+      "N2_Density            ", &
+      "test_constant         ", &
+      "test_zero             "  &
       /)
   
   integer,                   parameter :: iHemiStart  = 0  ! Use Northern (0) and
@@ -236,6 +252,12 @@ module ipeCap
       ESMF_CONTEXT)) &
       return  ! bail out
 
+    ! export fields from WAM
+    call NUOPC_Advertise(exportState, StandardNames=exportFieldNames, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      ESMF_CONTEXT)) &
+      return  ! bail out
+
   end subroutine InitializeAdvertise
   
   !-----------------------------------------------------------------------------
@@ -318,6 +340,29 @@ module ipeCap
         return  ! bail out
       fptr = 0._ESMF_KIND_R8
       call NUOPC_Realize(importState, field=field, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+    end do
+
+    ! realize connected Fields in the exportState
+    do item = 1, exportFieldCount
+      if (.not.NUOPC_IsConnected(exportState, &
+        trim(exportFieldNames(item)))) cycle
+      field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, &
+        name=trim(exportFieldNames(item)), rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      call ESMF_FieldGet(field, farrayPtr=fptr, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      fptr = 0._ESMF_KIND_R8
+      call NUOPC_Realize(exportState, field=field, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
@@ -1033,7 +1078,7 @@ module ipeCap
     
     ! local variables
     type(ESMF_Clock)   :: clock
-    type(ESMF_State)   :: importState
+    type(ESMF_State)   :: importState, exportState
     type(ESMF_Field)   :: field
     type(ESMF_Mesh)    :: mesh
     type(ESMF_VM)      :: vm
@@ -1041,7 +1086,7 @@ module ipeCap
 !nm20161003: esmf timing lib
     real(ESMF_KIND_R8) :: beg_time, end_time
 !---
-    integer :: item
+    integer :: item, i
     integer :: iHemi
     integer :: kp, kpp, kpStart, kpEnd, kpStep, kpOffset
     integer :: lp, mp, mpp
@@ -1049,7 +1094,7 @@ module ipeCap
     integer :: localrc, localPet
     character(len=ESMF_MAXSTR) :: errmsg
     real(ESMF_KIND_R8)         :: dataValue
-    real(ESMF_KIND_R8), dimension(:), pointer :: dataPtr, ownedNodeCoords
+    real(ESMF_KIND_R8), dimension(:), pointer :: dataPtr, edataPtr, ownedNodeCoords
     real(ESMF_KIND_R8), dimension(:), pointer :: localMin, localMax, globalMin, globalMax
 
 
@@ -1057,7 +1102,7 @@ module ipeCap
 
     ! query the Component for its clock and importState
     call ESMF_GridCompGet(gcomp, clock=clock, importState=importState, &
-      rc=rc)
+      exportState=exportState, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       ESMF_CONTEXT)) &
       return  ! bail out
@@ -1108,6 +1153,9 @@ module ipeCap
         return  ! bail out
       end if
 
+      if ((trim(importFieldNames(item)) /= "test_constant") .and. &
+          (trim(importFieldNames(item)) /= "test_zero")) then
+
       nCount = 0
       do iHemi = iHemiStart, iHemiEnd
         do mp = mps, mpe
@@ -1124,6 +1172,27 @@ module ipeCap
             end do
           end do
         end do
+      end do
+
+      end if
+
+      ! -- reroute fields back to WAM
+      do i = 1, exportFieldCount
+        if (trim(exportFieldNames(i)) == trim(importFieldNames(item))) then
+          ! --- retrieve field
+          call ESMF_StateGet(exportState, field=field, &
+            itemName=trim(exportFieldNames(i)), rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+            ESMF_CONTEXT)) &
+            return  ! bail out
+          ! --- get field data
+          nullify(edataPtr)
+          call ESMF_FieldGet(field, farrayPtr=edataPtr, rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+            ESMF_CONTEXT)) &
+            return  ! bail out
+          edataPtr(:) = dataPtr(:)
+        end if
       end do
 
     end do

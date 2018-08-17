@@ -2631,6 +2631,28 @@
       endif
 
       ! Dummy fields
+      if (.not. NUOPC_FieldDictionaryHasEntry( &
+        "test_constant")) then
+        call NUOPC_FieldDictionaryAddEntry( &
+          standardName="test_constant", &
+          canonicalUnits="1", &
+          rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+      endif
+      if (.not. NUOPC_FieldDictionaryHasEntry( &
+        "test_zero")) then
+        call NUOPC_FieldDictionaryAddEntry( &
+          standardName="test_zero", &
+          canonicalUnits="1", &
+          rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+      endif
 
       if (.not. NUOPC_FieldDictionaryHasEntry( &
         "dummyfield")) then

@@ -32,8 +32,8 @@ module module_CPLFIELDS
   
   ! Export Fields ----------------------------------------
   integer, public, parameter :: NexportFields = 56
-  type(ESMF_Field), public   :: exportFields(NexportFields)
-  character(len=40), public, parameter :: exportFieldsList(NexportFields) = (/ &
+  type(ESMF_Field), public   :: exportFields(NexportFields+2)
+  character(len=40), public, parameter :: exportFieldsList(NexportFields+2) = (/ &
       "mean_zonal_moment_flx                  ", &
       "mean_merid_moment_flx                  ", &
       "mean_sensi_heat_flx                    ", &
@@ -93,14 +93,16 @@ module module_CPLFIELDS
       "O_Density                              ", &
       "O2_Density                             ", &
       "N2_Density                             ", &
-      "height                                 "  &
+      "height                                 ", &
+      "test_constant                          ", &
+      "test_zero                              "  &
   /)
 
   ! Import Fields ----------------------------------------
   integer, public, parameter :: NimportFields = 16
-  type(ESMF_Field), public   :: importFields(NimportFields)
-  logical, public            :: importFieldsValid(NimportFields)
-  character(len=40), public, parameter :: importFieldsList(NimportFields) = (/ &
+  type(ESMF_Field), public   :: importFields(NimportFields+6)
+  logical, public            :: importFieldsValid(NimportFields+6)
+  character(len=40), public, parameter :: importFieldsList(NimportFields+6) = (/ &
       "land_mask                              ", &
       "surface_temperature                    ", &
       "sea_surface_temperature                ", &
@@ -116,7 +118,13 @@ module module_CPLFIELDS
       "mean_zonal_moment_flx                  ", &
       "mean_merid_moment_flx                  ", &
       "mean_ice_volume                        ", &
-      "mean_snow_volume                       "  /)
+      "mean_snow_volume                       ", &
+      "northward_wind_neutral                 ", &
+      "eastward_wind_neutral                  ", &
+      "upward_wind_neutral                    ", &
+      "temp_neutral                           ", &
+      "test_constant                          ", &
+      "test_zero                              " /)
   
   ! Utility GSM members ----------------------------------
   public            :: global_lats_ptr
