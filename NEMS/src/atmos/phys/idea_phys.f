@@ -111,8 +111,9 @@
 !
       real, intent(in)    :: prsi(ix,levs+1) ! pressure
       real, intent(in)    :: prsl(ix,levs)   ! pressure
-      real, intent(in)    :: hlw(ix,levs)    ! long wave rad (K/s)
-      real, intent(in)    :: swh(ix,levs)    ! short wave rad (K/s)
+!sk05152018
+      real, intent(inout) :: hlw(ix,levs)    ! long wave rad (K/s)
+      real, intent(inout) :: swh(ix,levs)    ! short wave rad (K/s)
 !
       real, intent(in)    :: solhr,slag,sdec,cdec ! for solar zenith angle
       real, intent(in)    :: cozen(im)       ! daytime avg cos zenith angle see radiation_astronomy.f
@@ -537,7 +538,9 @@
      &               xmu,dtrad,dtco2c,dtco2h,dth2oh,dth2oc,dto3)
       do k=1,levs
         do i=1,im
-          adt(i,k)     = adt(i,k) + dtp*wtot(i,k)
+!sk06072018  Rashid's approach
+          hlw(i,k) = wtot(i,k)
+          swh(i,k) = 0.0
 ! dt6dt
           dt6dt(i,k,2) = wtot(i,k)
 ! 

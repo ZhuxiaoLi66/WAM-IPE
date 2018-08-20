@@ -1111,15 +1111,16 @@
         enddo
 
       endif
-!
-      if (lsidea) then                       !idea jw
-        do k = 1, levs
-          do i = 1, im
-!           dtdt(i,k) = hlwd(i,k,2)
-            dtdt(i,k) = 0.
-          enddo
-        enddo
-      endif
+!sk05172018B
+!     if (lsidea) then                       !idea jw
+!       do k = 1, levs
+!         do i = 1, im
+!!          dtdt(i,k) = hlwd(i,k,2)
+!           dtdt(i,k) = 0.
+!         enddo
+!       enddo
+!     endif
+!sk05172018E
 
 !  ---  convert lw fluxes for land/ocean/sea-ice models
 !  note: for sw: adjsfcdsw and adjsfcnsw are zenith angle adjusted downward/net fluxes.

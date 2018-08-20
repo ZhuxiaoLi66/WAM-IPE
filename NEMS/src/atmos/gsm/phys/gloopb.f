@@ -152,6 +152,8 @@
 !!
       real (kind=kind_rad), dimension(ngptc,levs,nblck,lats_node_r) ::
      &                            swh, swhc, hlw, hlwc
+      real (kind=kind_rad), dimension(ngptc,levs,nblck,lats_node_r) ::
+     &                            swh_save, hlw_save
 !!
       real (kind=kind_rad)  hprime(nmtvr,lonr,lats_node_r)
 
@@ -876,6 +878,13 @@
 !*************************************idea below**************************
           if( lsidea ) then
 !
+!sk05152018 Save swh and hlw as swh_save and hlw_save
+          do k = 1, levs
+             do i = 1,ngptc
+                swh_save(i,k,iblk,lan) = swh(i,k,iblk,lan)
+                hlw_save(i,k,iblk,lan) = hlw(i,k,iblk,lan)
+             enddo
+          enddo
 !
 !
             call idea_phys(njeff,ngptc,levs,prsi,prsl,
@@ -1338,8 +1347,17 @@
      &      aoi_t2mi,       aoi_q2mi,    aoi_u10mi,    aoi_v10mi,       &
      &      aoi_tseai,      aoi_psurfi,                                 &
      &      nst_Tref, nst_z_c, nst_c_0, nst_c_d, nst_w_0, nst_w_d)
-
-
+!-----------------------------------------------------------------------
+!sk05092018 Put back swh_save and hlw_save to swh and hlw
+            if (lsidea) then
+            do k = 1, levs
+               do i = 1, ngptc
+                  swh(i,k,iblk,lan) = swh_save(i,k,iblk,lan)
+                  hlw(i,k,iblk,lan) = hlw_save(i,k,iblk,lan)
+               enddo
+            enddo
+            endif
+!-----------------------------------------------------------------------
             end if  ! use_nuopc
 
             if (nn < nsphys) then
