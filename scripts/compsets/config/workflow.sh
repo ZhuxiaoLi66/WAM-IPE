@@ -13,11 +13,11 @@ export CONFIGDIR=`pwd`/config
 # load all machine configuration logic
 . $CONFIGDIR/$FMID.config
 
-# load computational logic
-. $CONFIGDIR/compute.config
-
 # load non-machine-specific general configuration: dependent directories, executables, etc.
 . $CONFIGDIR/general.config
+
+# load computational logic
+. $CONFIGDIR/compute.config
 
 # setup input I/O. note: some values are overwritten if RESTART=.true.
 . $CONFIGDIR/coldstart.config
@@ -31,17 +31,19 @@ fi
 . $CONFIGDIR/esmf.config
 
 # load WAM-specific configuration
-. $CONFIGDIR/wam.config
+. $CONFIGDIR/nems.config
 
-if [ $WAM_IPE_COUPLING = .true. ] ; then
+if [ $IPE = .true. ] ; then
 # load IPE-specific configuration
 . $CONFIGDIR/ipe.config
 
+if [ $WAM_IPE_COUPLING = .true. ] ; then
 # load the coupled configuration
 . $CONFIGDIR/coupled.config
 
 # load the namelist options
 . $CONFIGDIR/wam-ipe_dpnamelist.config
+fi
 
 else # standalone
 . $CONFIGDIR/wam_dpnamelist.config

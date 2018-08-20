@@ -63,7 +63,9 @@
       FORM_dum ='formatted' 
       STATUS_dum ='old'
       CALL open_file ( filename, LUN_pgrid, FORM_dum, STATUS_dum ) 
+      print *,"open file completed"
       READ (UNIT=LUN_pgrid, FMT=*) JMIN_IN_all, JMAX_IS_all  !IN_2d_3d , IS_2d_3d
+      print *,"reading JMIN_IN etc completed"
       JMIN_ING = JMIN_IN_all(1,:)
       JMAX_ISG = JMAX_IS_all(1,:)
       MaxFluxTube = maxval(JMAX_ISG-JMIN_ING+1)
@@ -107,19 +109,21 @@ do mp=1,NMP
     plasma_grid_3d(JMIN_IN(lp):JMAX_IS(lp),lp,mp,IQ     ) = dum3(JMIN_ING(lp):JMAX_ISG(lp),mp) !Q
   enddo
 enddo
+print *,"reading r_meter etc completed"
 
 READ (UNIT=LUN_pgrid, FMT=*) dum0          !bcol_2d
 do lp=1,NLP
   plasma_grid_mag_colat(JMIN_IN(lp):JMAX_IS(lp),lp) = dum0(JMIN_ING(lp):JMAX_ISG(lp),1) !GL
 enddo
 
-
+print *,"reading GL_rad etc completed"
 
 READ (UNIT=LUN_pgrid, FMT=*) dum0, dum1 !integral_ds_2d, apex_BMAG_2d
 do lp=1,NLP
   plasma_grid_3d(JMIN_IN(lp):JMAX_IS(lp),lp,1:NMP,ISL) = dum0(JMIN_ING(lp):JMAX_ISG(lp),1:NMP) !SL
   plasma_grid_3d(JMIN_IN(lp):JMAX_IS(lp),lp,1:NMP,IBM) = dum1(JMIN_ING(lp):JMAX_ISG(lp),1:NMP) !BM
 enddo
+print *,"reading SL_meter etc completed"
 !SMS$SERIAL END
 !SMS$EXCHANGE(plasma_grid_3d)
 
@@ -155,6 +159,7 @@ do lp=1,NLP
   apexD(JMIN_IN(lp):JMAX_IS(lp),lp,1:NMP,north,3) =  dum6(2,JMIN_ING(lp):JMAX_ISG(lp),1:NMP)
   apexD(JMIN_IN(lp):JMAX_IS(lp),lp,1:NMP,up   ,3) =  dum6(3,JMIN_ING(lp):JMAX_ISG(lp),1:NMP)
 enddo
+      print *,"reading D1-3 etc completed"
 !SMS$SERIAL END
 
 !SMS$SERIAL(<apexE,OUT> : default=ignore) BEGIN
@@ -169,6 +174,7 @@ do lp=1,NLP
   apexE(JMIN_IN(lp):JMAX_IS(lp),lp,1:NMP,north,2) =  dum5(2,JMIN_ING(lp):JMAX_ISG(lp),1:NMP)
   apexE(JMIN_IN(lp):JMAX_IS(lp),lp,1:NMP,up   ,2) =  dum5(3,JMIN_ING(lp):JMAX_ISG(lp),1:NMP)
 enddo
+      print *,"reading E1/2 etc completed"
 !SMS$SERIAL END
 
 !JFM Be3_all1 and Be3_all2 are OUT variables to workaround an SMS limitation.
@@ -188,7 +194,9 @@ enddo
 !nm20130830          Be3(2,lp,mp)=Be3_all2(mp,lp)
         enddo
       enddo
+      print *,"reading Be3 completed"
       CLOSE(UNIT=LUN_pgrid)
+      print *,"global grid reading finished, file closed..."
 !SMS$SERIAL END
 
 !dbg20110811:

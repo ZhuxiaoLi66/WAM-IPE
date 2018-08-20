@@ -112,6 +112,9 @@ SUBROUTINE flux_tube_solver ( utime,mp,lp )
   DTMIN     = DTMIN_flip
   IF ( sw_ctip_input ) THEN
     LPI = INT( ( utime - utime0LPI ) / REAL(input_params_interval) ) + 1 + input_params_begin
+    if ( mype .eq. 0 ) then
+        PRINT*,'sub-eld: LPI=',lpi
+    end if
   else
     LPI=1
   ENDIF

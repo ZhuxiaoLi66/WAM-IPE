@@ -152,11 +152,25 @@ ELSE IF ( switch==2 ) THEN !2:RESTART:
   ENDIF
 
 
+print*, mype,' shape=',shape(tn_k)
+
   READ (unit=5996) tn_k(1:MaxFluxTube,1:NLP,1:NMP)
+
+print*,mype,'reading tn_k finished'
   READ (unit=5996) vn_ms1_4output(1:MaxFluxTube,1:NLP,1:NMP,1:3)
-  READ (unit=5996) on_m3(1:MaxFluxTube,1:NLP,1:NMP) 
-  READ (unit=5996) n2n_m3(1:MaxFluxTube,1:NLP,1:NMP) 
-  READ (unit=5996) o2n_m3(1:MaxFluxTube,1:NLP,1:NMP) 
+
+print*,mype,'reading vn_ms1_4 finished'
+
+  READ (unit=5996) on_m3(1:MaxFluxTube,1:NLP,1:NMP)
+print*,mype,'reading on_m3 finished'
+
+  READ (unit=5996) n2n_m3(1:MaxFluxTube,1:NLP,1:NMP)
+
+print*,mype,'reading n2n_m3 finished'
+
+  READ (unit=5996) o2n_m3(1:MaxFluxTube,1:NLP,1:NMP)
+print*,mype,'reading o2n_m3 finished'
+
   CLOSE(5996)
 
 !SMS$SERIAL END

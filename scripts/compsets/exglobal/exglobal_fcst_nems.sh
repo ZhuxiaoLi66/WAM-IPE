@@ -652,7 +652,7 @@ export GB=${GB:-0}
 export gfsio_in=${gfsio_in:-.false.}
 if [ $gfsio_in = .true. ] ; then export GB=1 ; fi
 
-#        WAM related namelist variables
+#        WAM-IPE related namelist variables
 #        ------------------------------
 export IDEA=${IDEA:-.false.}
 export WAM_IPE_COUPLING=${WAM_IPE_COUPLING:-.false.}
@@ -664,7 +664,7 @@ export F107_KP_SIZE=${F107_KP_SIZE:-$((60*37+1))}
 export F107_KP_DATA_SIZE=${F107_KP_DATA_SIZE:-$((60*37+1))}
 export F107_KP_SKIP_SIZE=${F107_KP_SKIP_SIZE:-0}
 export F107_KP_INTERVAL=${F107_KP_INTERVAL:-10800}
-
+export IPEFREQ=${IPEFREQ:-3600}
 
 ## for post
 export WRITE_DOPOST=${WRITE_DOPOST:-.false.}
@@ -883,7 +883,7 @@ ${NCP} $OROGRAPHY_UF              orography_uf
 ${NCP} $LONSPERLAT                lonsperlat.dat
 ${NCP} $LONSPERLAR                lonsperlar.dat
 
-
+if [ $NEMS = .true. ] ; then
 if [ $IEMS -gt 0 ] ; then
  EMMISSIVITY_FILE=${EMMISSIVITY_FILE:-global_sfc_emissivity_idx.txt}
  #ln -fs $EMISDIR/$EMMISSIVITY_FILE sfc_emissivity_idx.txt
@@ -911,6 +911,7 @@ if [ $ICO2 -gt 0 ] ; then
  done
  CO2_seasonal_cycle=${CO2_seasonal_cycle:-global_co2monthlycyc1976_2006.txt}
  ${NCP} $CO2_seasonal_cycle $DATA/co2monthlycyc.txt
+fi
 fi
 cd $DATA
 export PHYVARS="IEMS=$IEMS,ISOL=$ISOL,IAER=$IAER,ICO2=$ICO2,$PHYVARS"
@@ -978,7 +979,7 @@ if [[ $ENS_NUM -le 1 ]] ; then
   fi
 #        For output
 #        ----------
-  while [[ 10#$FH -le $FHMAX ]] ; do
+  while [[ $NEMS = .true. ]] && [[ 10#$FH -le $FHMAX ]] ; do
     if [[ $FH -le $HOUTA ]] ; then
       FNSUB=$NMSUB
     else
@@ -1017,16 +1018,25 @@ if [[ $ENS_NUM -le 1 ]] ; then
 
   done
 # IPE
-  if [[ $WAM_IPE_COUPLING = .true. ]] ; then
+  if [[ $IPE = .true. ]] ; then
     CIPEDATE=${CIPEDATE:-$CDATE${IPEMINUTES:-00}}
-    STEPS=$((FHMAX*60*60/IPEFREQ))
-    STEP=1
-    while [[ $STEP -le $STEPS ]] ; do
-      TIMESTAMP=`$MDATE $((STEP*IPEFREQ/60)) $CIPEDATE`
-      eval $NLN ${COMOUT}/${PLASO} ${PLASO}
-      eval $NLN ${COMOUT}/${NEUTO} ${NEUTO}
-      STEP=$((STEP+1))
-    done
+    if [[ $NEMS = .true. ]] ; then # coupled output
+      STEPS=$(((10#$FHMAX-10#$FHINI)*60*60/IPEFREQ))
+      STEP=1
+      while [[ $STEP -le $STEPS ]] ; do
+        TIMESTAMP=`$MDATE $((STEP*IPEFREQ/60)) $CIPEDATE`
+        eval $NLN ${COMOUT}/${PLASO} ${PLASO}
+        eval $NLN ${COMOUT}/${NEUTO} ${NEUTO}
+        STEP=$((STEP+1))
+      done
+    else # standalone output
+      DURATION=$(((10#$FHMAX-10#$FHINI)*3600))
+      for i in `eval echo {0..$DURATION..$IPEFREQ}` ; do
+        TIMESTAMP=iter`printf %08d $i`
+        eval $NLN ${COMOUT}/${PLASO} ${PLASO}
+        eval $NLN ${COMOUT}/${NEUTO} ${NEUTO}
+      done
+    fi
   fi
   eval ln -fs $FORT1051 fort.1051
   eval ln -fs $GRDR1 GRDR1
@@ -1232,8 +1242,16 @@ fi
   fi
 
 
-# Add time dependent variables F10.7 and kp into the WAM model.
+# Mostly IDEA-related stuff in this section
 #--------------------------------------------------------------
+if [ $NEMS = .true. ] ; then # grids for mediator
+  $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/ipe3dgrid2.nc .
+  $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew2.nc .
+  # Copy both for now, when fully switched get rid of wam3dgridnew_20160427.nc
+  $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew_20160427.nc .
+  $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/WAMFixedHgtGrid_20180312.nc .
+fi
+
 if [ $IDEA = .true. ]; then
   START_UT_SEC=$((10#$INI_HOUR*3600))
 
@@ -1282,15 +1300,8 @@ if [ $IDEA = .true. ]; then
 
   # RT_WAM
   ${NLN} $RT_WAM/* $DATA
-  # grids
-  $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew2.nc .
-  if [ $WAM_IPE_COUPLING = .true. ]; then
-   $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/ipe3dgrid2.nc .
-
-# Copy both for now, when fully switched get rid of wam3dgridnew_20160427.nc
-   $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/wam3dgridnew_20160427.nc .
-   $NCP ${DATADIR}/MED_SPACEWX/gsm%wam%T62_ipe%80x170/WAMFixedHgtGrid_20180312.nc .
-
+  # IPE section
+  if [ $IPE = .true. ]; then
    $NLN $IPEGRID ${DATA}/ipe_grid
 
    # IPE fix files
@@ -1302,8 +1313,6 @@ if [ $IDEA = .true. ]; then
 
    # used for ipe namelist
    export DOY=`date -d ${INI_MONTH}/${INI_DAY}/${INI_YEAR} +%j`
-   F107AVG=`grep 'F10 81 Day Avg' $DATA/wam_input_f107_kp.txt | awk '{print $5}'`
-   F107DAY=`grep ${INI_YEAR}-${INI_MONTH}-${INI_DAY}T${INI_HOUR} wam_input_f107_kp.txt | awk '{print $2}'`
 
 
 cat > SMSnamelist <<EOF
@@ -1419,21 +1428,21 @@ cat  > IPE.inp <<EOF
   sw_aurora=1
   sw_ctip_input=t
   sw_dbg_perp_trans=f
-  sw_debug=f
+  sw_debug=${sw_debug:-"f"}
   sw_debug_mpi=f
   sw_divv=0
   sw_eldyn=1
   sw_exb_up=1
   sw_grid=0
   sw_ksi=2
-  sw_neutral=1
-  swNeuPar(1)=t
-  swNeuPar(2)=t
-  swNeuPar(3)=t
-  swNeuPar(4)=t
-  swNeuPar(5)=t
-  swNeuPar(6)=t
-  swNeuPar(7)=t
+  sw_neutral=${sw_neutral:-"1"}
+  swNeuPar(1)=${sw_neu_par:-"t"}
+  swNeuPar(2)=${sw_neu_par:-"t"}
+  swNeuPar(3)=${sw_neu_par:-"t"}
+  swNeuPar(4)=${sw_neu_par:-"t"}
+  swNeuPar(5)=${sw_neu_par:-"t"}
+  swNeuPar(6)=${sw_neu_par:-"t"}
+  swNeuPar(7)=${sw_neu_par:-"t"}
   swEsmfTime=f
   sw_output_fort167=f
   sw_output_wind=t
@@ -1456,15 +1465,16 @@ cat  > IPE.inp <<EOF
 /
 EOF
 
-fi
+fi # IPE
 
 
-fi
+fi # IDEA
 
 
 #
 # jw: generate configure file
 #
+if [ $NEMS = .true. ] ; then
 
 
 if [ $WAM_IPE_COUPLING = .true. ]; then
@@ -1862,7 +1872,7 @@ export ISEED_VC=${ISEED_VC:-0}
 export VCAMP=${VCAMP:-"0.0, -999., -999., -999, -999"}
 export VC_TAU=${VC_TAU:-"4.32E4, 1.728E5, 2.592E6, 7.776E6, 3.1536E7"}
 export VC_LSCALE=${VC_LSCALE:-"1000.E3, 1000.E3, 2000.E3, 2000.E3, 2000.E3"}
-
+[[ $LEVR -gt $LEVS ]] && export LEVR=$LEVS
 
 #
 #   WARNING WARNING FILESTYLE "C" will not work for Component Ensembles!!!
@@ -1972,6 +1982,8 @@ $NLN atm_namelist.rc ./model_configure
     export FHINI_SFC=${FHINI_SFC:-$(echo fhour|$SFCHDR ${SFCI}$FM)}
     eval $CHGSFCFHREXEC $SFCI $CDATE_SIG $FHINI
  fi
+
+fi # NEMS
 
 eval $FCSTENV $PGM $REDOUT$PGMOUT $REDERR$PGMERR
 
