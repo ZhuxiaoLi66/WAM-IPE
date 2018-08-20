@@ -85,14 +85,46 @@ CONTAINS
     ! Local
     INTEGER :: i, j
 
+      
       weights = 0.0_prec
       indices = 0
-
       j = 0
+
+
+      ! ---- Check Endpoints ---- !
+      IF( x_interp < x_grid(0) .AND. x_interp < x_grid(1) )THEN
+
+        j = j+1
+        weights(j) = 1.0_prec
+        indices(j) = 0
+  
+        j = j+1
+        weights(j) = 0.0_prec
+        indices(j) = 1
+        RETURN
+
+      ENDIF
+
+      IF( x_interp >= x_grid(N) )THEN
+        j = j+1
+        weights(j) = 1.0_prec
+        indices(j) = N
+
+        j = j+1
+        weights(j) = 0.0_prec
+        indices(j) = N-1
+
+        RETURN
+
+      ENDIF
+      ! ------------------------------------- !
+  
       IF( x_interp >= x_grid(0) .AND. x_interp < x_grid(1) )THEN
+
         j = j + 1
         weights(j) = ( x_interp - x_grid(1) )/( x_grid(0) - x_grid(1) )
         indices(j) = 0
+
       ENDIF
 
 
@@ -125,6 +157,8 @@ CONTAINS
         indices(j) = N
 
       ENDIF
+
+      
 
   END SUBROUTINE Hat_Weights
 

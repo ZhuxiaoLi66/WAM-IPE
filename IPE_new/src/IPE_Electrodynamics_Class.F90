@@ -180,7 +180,7 @@ CONTAINS
           ! Maps latitude from 130km to 90km along flux tube.
           DO j=0,nmlat
 
-            theta130_rad   = ( 90.0_prec - (ylatm(j)-90.0_prec) ) * dtr
+            theta130_rad   = ( 90.0_prec - ylatm(j) ) * dtr
             theta90_rad(j) = ASIN(SIN( theta130_rad )*SQRT((earth_radius+90000.0_prec)/(earth_radius+130000.0_prec)))
             IF ( theta130_rad > pi*0.50_prec ) theta90_rad(j) = pi-theta90_rad(j)
 
@@ -189,13 +189,14 @@ CONTAINS
           ! Use CommonRoutines HatFunction to build interpolation weights from
           ! theta90_rad to grid % magnetic_latitude
           DO i = 1, grid % NLP
-            lat = 0.5_prec*pi - grid % magnetic_colatitude(1,i)
-            CALL Hat_Weights( theta90_rad, lat, &
+            CALL Hat_Weights( -theta90_rad, -grid % magnetic_colatitude(1,i), &
                               eldyn % lat_interp_weights(1:2,i), &
                               eldyn % lat_interp_index(1:2,i), &
                               nmlat )
           ENDDO
 
+          PRINT*, ' theta90 min/max : ', MINVAL( theta90_rad ), MAXVAL( theta90_rad )
+          PRINT*, ' grid mag_colat min/max : ', MINVAL( grid % magnetic_colatitude(1,:) ), MAXVAL( grid % magnetic_colatitude(1,:) )
         ENDIF
 
         CALL time_tracker % Get_Date( year, imo, iday_m )
@@ -225,7 +226,7 @@ CONTAINS
         END DO
 
         DO i = 1, grid % NMP
-          CALL Hat_Weights( mlon90_rad, lat, &
+          CALL Hat_Weights( mlon90_rad, grid % magnetic_longitude(i), &
                             eldyn % lon_interp_weights(1:2,i), &
                             eldyn % lon_interp_index(1:2,i), &
                             nmlon )
