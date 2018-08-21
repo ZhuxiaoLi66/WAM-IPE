@@ -56,6 +56,7 @@ IMPLICIT NONE
       PROCEDURE :: Trash => Trash_IPE_Electrodynamics
 
       PROCEDURE :: Update => Update_IPE_Electrodynamics
+      PROCEDURE :: Interpolate_to_GeographicGrid => Interpolate_to_GeographicGrid_IPE_Electrodynamics
 
       PROCEDURE, PRIVATE :: Empirical_E_Field_Wrapper
       PROCEDURE, PRIVATE :: Interpolate_Potential
@@ -195,8 +196,6 @@ CONTAINS
                               nmlat )
           ENDDO
 
-          PRINT*, ' theta90 min/max : ', MINVAL( theta90_rad ), MAXVAL( theta90_rad )
-          PRINT*, ' grid mag_colat min/max : ', MINVAL( grid % magnetic_colatitude(1,:) ), MAXVAL( grid % magnetic_colatitude(1,:) )
         ENDIF
 
         CALL time_tracker % Get_Date( year, imo, iday_m )
@@ -232,8 +231,6 @@ CONTAINS
                             nmlon )
         ENDDO
 
-        PRINT*,'Weights Range :', MAXVAL( eldyn % lon_interp_weights ), MINVAL( eldyn % lon_interp_weights )
-        PRINT*,'Weights Range :', MAXVAL( eldyn % lat_interp_weights ), MINVAL( eldyn % lat_interp_weights )
 
         ! Interpolate the potential to the IPE grid
         CALL eldyn % Interpolate_Potential( grid )
@@ -260,10 +257,10 @@ CONTAINS
             i_e = eldyn % lat_interp_index(ii,i) 
             j_e = eldyn % lon_interp_index(jj,j) 
 
-            eldyn % electric_potential = eldyn % electric_potential + &
-                                         potent(i_e,j_e)*&
-                                         eldyn % lat_interp_weights(ii,i)*&
-                                         eldyn % lon_interp_weights(jj,j)
+            eldyn % electric_potential(i,j) = eldyn % electric_potential(i,j) + &
+                                              potent(i_e,j_e)*&
+                                              eldyn % lat_interp_weights(ii,i)*&
+                                              eldyn % lon_interp_weights(jj,j)
 
           ENDDO
         ENDDO
@@ -312,6 +309,15 @@ CONTAINS
     sunlons = xmlon*dtr
 
   END SUBROUTINE sunloc
+
+  SUBROUTINE Interpolate_to_GeographicGrid_IPE_Electrodynamics( eldyn, grid )
+    IMPLICIT NONE
+    CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn
+    TYPE( IPE_Grid ), INTENT(in)         :: grid
+
+      CALL grid % Interpolate_2D_to_Geographic_Grid( eldyn % electric_potential, eldyn % geo_electric_potential )
+
+  END SUBROUTINE Interpolate_to_GeographicGrid_IPE_Electrodynamics
 
 !!  SUBROUTINE TIEGCM_Wrapper( eldyn )
 !!
