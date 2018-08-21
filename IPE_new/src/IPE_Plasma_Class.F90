@@ -1234,6 +1234,8 @@ CONTAINS
 
       ALLOCATE( dumm(1:grid % npts2d, 1:grid % NMP, 1:12) )      
       
+      dumm = 0.0_sp
+
       OPEN( UNIT   = NewUnit( fUnit ), &
             FILE   = TRIM( filename ), &
             FORM   = 'UNFORMATTED', &
@@ -1254,6 +1256,7 @@ CONTAINS
           DO i = 1, grid % flux_tube_max(lp)
 
             ii = ii + 1
+!            PRINT*, i, lp, mp, ii, dumm(ii,mp,11)
             plasma % ion_densities(1:9,i,lp,mp)    = dumm(ii,mp,1:9)
             plasma % electron_temperature(i,lp,mp) = dumm(ii,mp,10)
             plasma % ion_temperature(i,lp,mp)      = dumm(ii,mp,11)
