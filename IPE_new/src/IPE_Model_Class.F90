@@ -383,7 +383,7 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % ion_densities(7,:,:,:), recStart, recCount ) )
       CALL Check( nf90_put_var( ncid, op2d_varid, ipe % plasma % ion_densities(8,:,:,:), recStart, recCount ) )
       CALL Check( nf90_put_var( ncid, op2p_varid, ipe % plasma % ion_densities(9,:,:,:), recStart, recCount ) )
-      CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % ion_temperature, recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, ion_temp_varid, ipe % plasma % ion_temperature, recStart, recCount ) )
 
       CALL Check( nf90_close( ncid ) )
 
@@ -489,6 +489,7 @@ CONTAINS
       CALL Check( nf90_inq_varid( ncid, "ion_temp", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_temperature ) )
 
+      CALL Check( nf90_close( ncid ) )
 
 
   END SUBROUTINE Read_NetCDF_IPE
