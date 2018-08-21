@@ -215,11 +215,11 @@ CONTAINS
       aur_precip_count    = aur_precip_count + 1
 
       CALL CPU_TIME( t1 )
-!      CALL plasma % FLIP_Wrapper( grid, & 
-!                                  neutrals, &
-!                                  forcing, &
-!                                  time_tracker, &
-!                                  time_step )
+      CALL plasma % FLIP_Wrapper( grid, & 
+                                  neutrals, &
+                                  forcing, &
+                                  time_tracker, &
+                                  time_step )
       CALL CPU_TIME( t2 )
       flip_time_avg = flip_time_avg + t2 - t1
       flip_count    = flip_count + 1
