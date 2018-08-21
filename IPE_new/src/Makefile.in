@@ -76,7 +76,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = ipe$(EXEEXT)
+bin_PROGRAMS = ipe$(EXEEXT) legacy2netcdf$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -99,6 +99,18 @@ am_ipe_OBJECTS = IPE_Precision.$(OBJEXT) \
 	IPE_Model_Class.$(OBJEXT) IPE_Driver.$(OBJEXT)
 ipe_OBJECTS = $(am_ipe_OBJECTS)
 ipe_DEPENDENCIES = flip/libflip.a msise00/libmsise.a \
+	empirical_efield/libefield.a
+am_legacy2netcdf_OBJECTS = IPE_Precision.$(OBJEXT) \
+	IPE_Constants_Dictionary.$(OBJEXT) \
+	IPE_Common_Routines.$(OBJEXT) IPE_Forcing_Class.$(OBJEXT) \
+	IPE_Time_Class.$(OBJEXT) IPE_Grid_Class.$(OBJEXT) \
+	IPE_Model_Parameters_Class.$(OBJEXT) \
+	IPE_Electrodynamics_Class.$(OBJEXT) \
+	IPE_Neutrals_Class.$(OBJEXT) IPE_Plasma_Class.$(OBJEXT) \
+	IPE_Model_Class.$(OBJEXT) \
+	Convert_LegacyPlasma_to_NetCDF.$(OBJEXT)
+legacy2netcdf_OBJECTS = $(am_legacy2netcdf_OBJECTS)
+legacy2netcdf_DEPENDENCIES = flip/libflip.a msise00/libmsise.a \
 	empirical_efield/libefield.a
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -126,8 +138,8 @@ AM_V_FCLD = $(am__v_FCLD_@AM_V@)
 am__v_FCLD_ = $(am__v_FCLD_@AM_DEFAULT_V@)
 am__v_FCLD_0 = @echo "  FCLD    " $@;
 am__v_FCLD_1 = 
-SOURCES = $(ipe_SOURCES)
-DIST_SOURCES = $(ipe_SOURCES)
+SOURCES = $(ipe_SOURCES) $(legacy2netcdf_SOURCES)
+DIST_SOURCES = $(ipe_SOURCES) $(legacy2netcdf_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -260,8 +272,10 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ipe_SOURCES = IPE_Precision.F90 IPE_Constants_Dictionary.F90 IPE_Common_Routines.F90 IPE_Forcing_Class.F90 IPE_Time_Class.F90 IPE_Grid_Class.F90 IPE_Model_Parameters_Class.F90 IPE_Electrodynamics_Class.F90  IPE_Neutrals_Class.F90 IPE_Plasma_Class.F90  IPE_Model_Class.F90 IPE_Driver.F90
+legacy2netcdf_SOURCES = IPE_Precision.F90 IPE_Constants_Dictionary.F90 IPE_Common_Routines.F90 IPE_Forcing_Class.F90 IPE_Time_Class.F90 IPE_Grid_Class.F90 IPE_Model_Parameters_Class.F90 IPE_Electrodynamics_Class.F90  IPE_Neutrals_Class.F90 IPE_Plasma_Class.F90  IPE_Model_Class.F90 Convert_LegacyPlasma_to_NetCDF.F90
 AM_CPPFLAGS = ${NETCDF4_FFLAGS} -I flip/ -I msise00/ -I empirical_efield/
 ipe_LDADD = flip/libflip.a msise00/libmsise.a empirical_efield/libefield.a
+legacy2netcdf_LDADD = flip/libflip.a msise00/libmsise.a empirical_efield/libefield.a
 all: all-am
 
 .SUFFIXES:
@@ -342,6 +356,10 @@ clean-binPROGRAMS:
 ipe$(EXEEXT): $(ipe_OBJECTS) $(ipe_DEPENDENCIES) $(EXTRA_ipe_DEPENDENCIES) 
 	@rm -f ipe$(EXEEXT)
 	$(AM_V_FCLD)$(FCLINK) $(ipe_OBJECTS) $(ipe_LDADD) $(LIBS)
+
+legacy2netcdf$(EXEEXT): $(legacy2netcdf_OBJECTS) $(legacy2netcdf_DEPENDENCIES) $(EXTRA_legacy2netcdf_DEPENDENCIES) 
+	@rm -f legacy2netcdf$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(legacy2netcdf_OBJECTS) $(legacy2netcdf_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

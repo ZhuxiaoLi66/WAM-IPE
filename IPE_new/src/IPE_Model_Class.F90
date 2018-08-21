@@ -192,6 +192,10 @@ CONTAINS
        CALL ipe % neutrals % Interpolate_to_GeographicGrid( ipe % grid )
      ENDIF
 
+     IF( ipe % parameters % write_geographic_eldyn )THEN
+       CALL ipe % eldyn % Interpolate_to_GeographicGrid( ipe % grid )
+     ENDIF
+
      CALL ipe % plasma % Interpolate_to_GeographicGrid( ipe % grid )
 
   END SUBROUTINE Geographic_Interpolation
