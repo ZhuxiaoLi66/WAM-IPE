@@ -185,7 +185,10 @@ CONTAINS
       !$OMP PARALLEL PRIVATE( iyd, slt, lat, lon, alt, densities, temperatures, w, ap_msis )
       !$OMP DO COLLAPSE(3)
       DO mp = 1, neutrals % NMP    
+        print *, 'GHGM neutrals mp ', mp
         DO lp = 1, neutrals % NLP    
+          print *, 'GHGM neutrals   lp       ', lp
+          print *, 'GHGM flux tube size ', grid % flux_tube_max(lp)
           DO i = 1, grid % flux_tube_max(lp)
 
             lat = 90.0_prec-grid % latitude(i,lp,mp)*180.0_prec/pi
@@ -198,7 +201,9 @@ CONTAINS
             ! If the model is not coupled to an external neutral wind model that fills the
             ! neutral wind velocity, then the neutral wind velocity is obtained via the gsw5
             ! routine, defined in src/msis/hwm14.f90
-
+! GHGM only msis up to 800km) .......
+            if(alt.le.800.0) then
+            print *, 'GHGM neutrals       i           ', i, alt
             call hwm14( iyd, &           ! Input, year and day as yyddd
                         REAL(utime,4), &         ! Input, universal time ( sec )
                         REAL(alt,4), &           ! Input, altitude ( km )
@@ -240,6 +245,7 @@ CONTAINS
 
             neutrals % temperature_inf(i,lp,mp)    = temperatures(1)
             neutrals % temperature(i,lp,mp)        = temperatures(2)
+            endif  ! GHGM if(alt.le.800.0) then
      
 
           ENDDO

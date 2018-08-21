@@ -83,7 +83,9 @@ CONTAINS
 
         ! ////// grid ////// !
 
+        print *, 'GHGM - reading IPE grid file'
         CALL ipe % grid % Read_IPE_Grid_NetCDF( ipe % parameters % netcdf_grid_file  )
+        print *, 'GHGM - done reading IPE grid file'
         ipe % grid % npts2d = ipe % parameters % npts2d
 
 
@@ -127,6 +129,7 @@ CONTAINS
       IF( fileExists )THEN
         PRINT*, ' IPE_Model_Class : Build : Reading '//init_file
         CALL ipe % Read_NetCDF_IPE( init_file )
+        PRINT*, ' IPE_Model_Class : Build : done    '//init_file
       ELSE
         PRINT*, ' IPE_Model_Class : Build : File not found : '//init_file
       ENDIF
@@ -158,6 +161,7 @@ CONTAINS
       ! Need to add a call to update the index for capturing AP
       AP = ipe % forcing % GetAP( t0 )
 
+      print *, 'GHGM updating neutrals'
       CALL ipe % neutrals % Update( ipe % grid, &
                                     ipe % time_tracker % utime, &
                                     ipe % time_tracker % year, &
@@ -166,10 +170,12 @@ CONTAINS
                                     ipe % forcing % f107_81day_avg( ipe % forcing % current_index ), &
                                     AP )
 
+      print *, 'GHGM updating electrodynamics'
       CALL ipe % eldyn % Update( ipe % grid, &
                                  ipe % forcing, &
                                  ipe % time_tracker )
    
+      print *, 'GHGM updating plasma'
       CALL ipe % plasma % Update( ipe % grid, &
                                   ipe % neutrals, &
                                   ipe % forcing, &
@@ -394,6 +400,7 @@ CONTAINS
     INTEGER :: ncid
     INTEGER :: dimid, varid
     INTEGER :: nFluxtube, NLP, NMP
+    INTEGER :: istop
     CHARACTER(NF90_MAX_NAME) :: nameHolder
 
 
@@ -422,68 +429,96 @@ CONTAINS
 
       IF( ipe % parameters % write_apex_neutrals )THEN
 
+        print *, ' GHGM reading neutrals'
+        print *, ' GHGM reading n1'
         CALL Check( nf90_inq_varid( ncid, "helium", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % helium ) )
 
+        print *, ' GHGM reading n2'
         CALL Check( nf90_inq_varid( ncid, "oxygen", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % oxygen ) )
 
+        print *, ' GHGM reading n3'
         CALL Check( nf90_inq_varid( ncid, "molecular_oxygen", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % molecular_oxygen ) )
 
+        print *, ' GHGM reading n4'
         CALL Check( nf90_inq_varid( ncid, "molecular_nitrogen", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % molecular_nitrogen ) )
 
+        print *, ' GHGM reading n5'
         CALL Check( nf90_inq_varid( ncid, "nitrogen", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % nitrogen ) )
 
+        print *, ' GHGM reading n6'
         CALL Check( nf90_inq_varid( ncid, "hydrogen", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % hydrogen ) )
 
+        print *, ' GHGM reading n7'
         CALL Check( nf90_inq_varid( ncid, "temperature", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % temperature ) )
 
+        print *, ' GHGM reading n8'
         CALL Check( nf90_inq_varid( ncid, "u", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % velocity_geographic(1,:,:,:) ) )
 
+        print *, ' GHGM reading n9'
         CALL Check( nf90_inq_varid( ncid, "v", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % velocity_geographic(2,:,:,:) ) )
 
+        print *, ' GHGM reading n10'
         CALL Check( nf90_inq_varid( ncid, "w", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % velocity_geographic(3,:,:,:) ) )
+        print *, ' GHGM done reading neutrals'
 
       ENDIF
 
 
+        print *, ' GHGM reading 1'
       CALL Check( nf90_inq_varid( ncid, "O+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(1,:,:,:) ) )
 
+        print *, ' GHGM reading 2'
       CALL Check( nf90_inq_varid( ncid, "H+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(2,:,:,:) ) )
 
+        print *, ' GHGM reading 3'
       CALL Check( nf90_inq_varid( ncid, "He+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(3,:,:,:) ) )
 
+        print *, ' GHGM reading 4'
       CALL Check( nf90_inq_varid( ncid, "N+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(4,:,:,:) ) )
 
+        print *, ' GHGM reading 5'
       CALL Check( nf90_inq_varid( ncid, "NO+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(5,:,:,:) ) )
 
+        print *, ' GHGM reading 6'
       CALL Check( nf90_inq_varid( ncid, "O2+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(6,:,:,:) ) )
 
+        print *, ' GHGM reading 7'
       CALL Check( nf90_inq_varid( ncid, "N2+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(7,:,:,:) ) )
 
+        print *, ' GHGM reading 8'
       CALL Check( nf90_inq_varid( ncid, "O+(2D)", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(8,:,:,:) ) )
 
+        print *, ' GHGM reading 9'
       CALL Check( nf90_inq_varid( ncid, "O+(2P)", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(9,:,:,:) ) )
 
+        print *, ' GHGM reading 10'
       CALL Check( nf90_inq_varid( ncid, "ion_temp", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_temperature ) )
+!     print *, 'GHGM NETCDF ', ipe % plasma % ion_densities(9,:,:,:)
+!     print *, 'GHGM NETCDF ', ipe % plasma % ion_temperature
+      istop = 0
+      if(istop.eq.1) stop
+!     print *, 'GHGM setting ion_temperature to 1000.'
+!     ipe % plasma % ion_temperature = 1000.
 
 
 

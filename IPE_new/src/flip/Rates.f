@@ -29,8 +29,10 @@ C.... Rates updated by P. Richards in May 2009
       !.. appropriate  in the ionosphere. This model version uses the Hierl et  
       !.. al. rate because it does not solve for N2(v). Above 1000 K the Hierl
       !.. power is increased from 2.12 to 2.5 to mimic the FLIP model 
+!     print *, 'GHGM TI ', TI
       IF(TI.LE.1000) RTS(3)=1.2E-12*(300/TI)**0.45  
       IF(TI.GT.1000) RTS(3)=7.0E-13*(TI/1000)**2.5  
+!     print *, 'GHGM RTS3 ', RTS3
 
       !.. O+ + O2 -> O2+ + O,   Lindinger et al. [1974] 
       !.. Hierl et al. lists different rates. Hierl et al. [1997] not 

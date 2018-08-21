@@ -9,16 +9,13 @@ C... TI= temperature of H+, O+, electrons
 C... FRPAS= fraction of flux lost in plasmasphere
 C... ZWR= altitude for printing spectrum.
       SUBROUTINE PE2S(F107,F107A,N,TI,FRPAS,ZWR,EDEN,UVFAC,COLUM,
-     > IHEPLS,INPLS,INNO
-     &,mp,lp,utime)
+     > IHEPLS,INPLS,INNO)
       USE FIELD_LINE_GRID    !.. FLDIM JMIN JMAX FLDIM Z BM GR SL GL SZA
       !..EUVION PEXCIT PEPION OTHPR1 OTHPR2 SUMION SUMEXC PAUION PAUEXC NPLSPRD
       USE THERMOSPHERE  !.. ON HN N2N O2N HE TN UN EHT COLFAC
       USE PRODUCTION !.. EUV, photoelectron, and auroral production
       USE MINORNEUT !.. N4S N2D NNO N2P N2A O1D O1S EQN2D
       IMPLICIT NONE
-!dbg20141209
-      INTEGER, INTENT(IN):: mp,lp,utime
       INTEGER J,IE,IK,IS  !.. altitude, energy, species loop control variables
       INTEGER IDGE(201),JOE(201),JN2E(201) !.. indices for degraded electrons
       INTEGER IPAS,IPASC    !.. grid indices for pitch angle trapping
@@ -229,10 +226,11 @@ C////////////main calculations  begin here ////////////
           !.. add electron quenching of N(2D) to primary prod
           IF(E(IE).LE.3.AND.E(IE).GT.2) THEN
             !.. Needed for updated electron heating in CTIPe
+!           print *, 'GHGM RSPE2B TI ', TI
             CALL CMINOR(0,J,0,IHEPLS,INPLS,INNO,FD,7,N,TI,Z,EFLAG)
-            PRINT*, 'GHGM RSPE2B :', JMIN, JMAX, J, PRED(J), EQN2D(J)
+!           PRINT*, 'GHGM RSPE2B :', JMIN, JMAX, J, PRED(J), EQN2D(J)
             PRED(J)=PRED(J)+EQN2D(J)
-            PRINT*, 'GHGM RSPE2B  2 :', JMIN, JMAX, J, PRED(J), EQN2D(J)
+!           PRINT*, 'GHGM RSPE2B  2 :', JMIN, JMAX, J, PRED(J), EQN2D(J)
           ENDIF
           !.. Total energy deposition to photoelectrons
           EUVION(1,11,J)=EUVION(1,11,J)+PRED(J)*E(IE)*DELTE(IE)
@@ -291,11 +289,9 @@ C////////////main calculations  begin here ////////////
       !.. for interhemispheric fluxes.Used to be 4 times
       DO ITS=1,2
         CALL TRIS1(FLDIM,1,M2,M,IE,M,BM,Z,JMAX,PRED,IPAS,FPAS,PHIDWN,
-     >     PHIUP,T1,T2,DS,PRODUP,PRODWN
-     &,mp,lp,utime)
+     >     PHIUP,T1,T2,DS,PRODUP,PRODWN)
         CALL TRISM1(FLDIM,-1,JMAXM,JMAX1,IE,M,BM,Z,JMAX,PRED,IPASC,FPAS,
-     >     PHIDWN,PHIUP,T1,T2,DS,PRODUP,PRODWN
-     &,mp,lp,utime)
+     >     PHIDWN,PHIUP,T1,T2,DS,PRODUP,PRODWN)
       ENDDO
       !.. reset the fluxes
       CALL PITCH(FLDIM,IE,1,M,JMIN,JMAX,T1,T2,PRED,PRODUP,PRODWN,BM,Z)
@@ -307,14 +303,6 @@ C////////////main calculations  begin here ////////////
       EHPAS=E(IE)*PASK*(PHIUP(IPAS)+PHIDWN(IPASC))*DELTE(IE)*
      >       BM(M2)/BM(IPAS)
       IF(DE.GT.E(IE).OR.NINT(FRPAS).EQ.2) EHPAS=0.0
-
-!dbg20141209
-!d      if ( utime>=434250.and.mp==10.and.lp==14 ) then
-!d      WRITE(6,*)'dbgEHT0:'
-!d      WRITE(6,*) IE,IPAS,IPASC,M2,EHPAS,E(IE),PASK,PHIUP(IPAS),
-!d     & PHIDWN(IPASC),DELTE(IE),
-!d     & BM(M2),BM(IPAS)
-!d      endif
 
       !.. cross section for O(1S) Jackman et al. 1977
       SIGO1S=0.0
@@ -335,16 +323,6 @@ C////////////main calculations  begin here ////////////
         EHT(3,J)=EHT(3,J)+FYSUM(J)*DELTE(IE)*TSIGNE(J)
         IF(Z(J).GT.Z(IPAS)) EHT(3,J)=EHT(3,J)+EHPAS
 c        IF(IABS(J-IEQ).LT.Z(IPAS)) EHT(3,J)=EHT(3,J)+EHPAS
-
-
-!dbg20141209
-!d      if ( utime>=434250.and.mp==10.and.lp==14 ) then
-!d      WRITE(6,*)'dbgEHT1:'
-!d      WRITE(6,*) PHIUP(J), PHIDWN(J)
-!d      WRITE(6,*)j,IE,EHT(3,J),FYSUM(J),DELTE(IE),TSIGNE(J)
-!d     &,EHPAS
-!d      endif
-
 
       ENDDO !DO J=JMIN,JMAX
 
@@ -442,13 +420,6 @@ C=========================== END OF MAIN ENERGY LOOP ============
       DO J=JMIN,JMAX
          ELEFT=+(PRODUP(IE,J)+PRODWN(IE,J))*E(1)
          EHT(3,J)=EHT(3,J)+ELEFT
-
-!dbg20141209
-!d      if ( utime>=434250.and.mp==10.and.lp==14 ) then
-!d      WRITE(6,*)'dbgEHT2:'
-!d      WRITE(6,*)j,IE,EHT(3,J),PRODUP(IE,J),PRODWN(IE,J),E(1)
-!d      endif
-
 
       ENDDO
 
@@ -701,11 +672,8 @@ C..... solving the second order PDE derived from the 2-stream equations
 C..... of Nagy and Banks. This is for the Northern Hemisphere
       !.. where PRED = q, PRODUP = q+ and PRODWN = q-
       SUBROUTINE TRIS1(FLDIM,IDIR,M2,M,IE,MT,BM,Z,JMAX,PRED,IPAS,FPAS,
-     >  PHIDWN,PHIUP,T1,T2,DS,PRODUP,PRODWN
-     &,mp,lp,utime)
+     >  PHIDWN,PHIUP,T1,T2,DS,PRODUP,PRODWN)
       IMPLICIT NONE
-!dbg20141209
-      INTEGER, INTENT(IN):: mp,lp,utime
       INTEGER J,FLDIM,IDIR,M2,M,IE,MT,IPAS,JMAX,JMAXM1
       REAL FPAS,T2DS,PHI,R1
       REAL DELZ,DLB,DSLB,DLT1,DTS2,DPR1,DPR2,ALPHA,BETA
@@ -726,7 +694,6 @@ C..... of Nagy and Banks. This is for the Northern Hemisphere
      &                  -BM(J)/(DS(J+1)*DS(J)))/BM(J) ! (d^2B)/(B*ds^2)
         DLT1=(T1(J+1)-T1(J-1))/(T1(J)*DELZ)           ! (dT1)/(T1*ds)
         DTS2=(T2(J+1)-T2(J-1))/DELZ                   ! (dT2)/(ds)
-        print *, 'GHGM YAGGA 1', m2, m, PRED
         DPR1=(PRED(J+1)-PRED(J-1))/(2*DELZ)           ! 0.5*(dq)/(ds)
         DPR2=(PRODWN(IE,J+1)-PRODWN(IE,J-1))/DELZ       ! (dq-)/(ds)
         PHI = 1.
@@ -757,13 +724,6 @@ C..... of Nagy and Banks. This is for the Northern Hemisphere
         PHIUP(J)=BM(J)* (R1+(PHIUP(J-1)/BM(J-1)-R1)*EXP(-T2DS))
         IF(J.EQ.IPAS+1) PHIUP(J)=PHIUP(J)*(1.-FPAS)
 
-
-!dbg20141209
-!d      if ( utime>=434250.and.mp==10.and.lp==14 ) then
-!d      WRITE(6,*)'dbgEHT: TRIS1'
-!d      WRITE(6,*)j,PHIUP(J),BM(J),R1,PHIUP(J-1),BM(J-1),T2DS
-!d      endif
-
       ENDDO
  
       RETURN
@@ -775,11 +735,8 @@ C..... solving the second order PDE derived from the 2-stream equations
 C..... of Nagy and Banks. This is for the Southern Hemisphere
       !.. where PRED = q, PRODUP = q+ and PRODWN = q-
       SUBROUTINE TRISM1(FLDIM,IDIR,M2,M,IE,MT,BM,Z,JMAX,PRED,IPASC,FPAS,
-     >  PHIDWN,PHIUP,T1,T2,DS,PRODUP,PRODWN
-     &,mp,lp,utime)
+     >  PHIDWN,PHIUP,T1,T2,DS,PRODUP,PRODWN)
       IMPLICIT NONE
-!dbg20141209
-      INTEGER, INTENT(IN):: mp,lp,utime
       INTEGER J,K,FLDIM,IDIR,M2,M,IE,MT,IPASC,JMAX,JMAXM2
       REAL DELZ,DLB,DSLB,DLT1,DTS2,DPR1,DPR2,ALPHA,BETA
       REAL FPAS,T2DS,PHI,R1
@@ -825,13 +782,6 @@ C..... of Nagy and Banks. This is for the Southern Hemisphere
         IF(T2DS.GT.70.0)T2DS=70.0
         PHIDWN(K)=BM(K)*(R1+(PHIDWN(K+1)/BM(K+1)-R1)*EXP(-T2DS))
         IF(K.EQ.IPASC-1) PHIDWN(K)=PHIDWN(K)*(1-FPAS)
-
-!dbg20141209
-!d      if ( utime>=434250.and.mp==10.and.lp==14 ) then
-!d      WRITE(6,*)'dbgEHT: TRISM1'
-!d      WRITE(6,*)k,PHIDWN(K),BM(K),R1,PHIDWN(K+1),BM(K+1),R1,T2DS
-!d      endif
-
 
       ENDDO
  

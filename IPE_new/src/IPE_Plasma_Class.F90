@@ -73,6 +73,7 @@ IMPLICIT NONE
   INTEGER, PARAMETER, PRIVATE  :: IHEPLS   = 1 
   INTEGER, PARAMETER, PRIVATE  :: INPLS    = 1 
   INTEGER, PARAMETER, PRIVATE  :: INNO     = -1
+  integer :: istop
 
 
 ! Temporary Timers
@@ -980,8 +981,13 @@ CONTAINS
       F107A = forcing % f107_81day_avg( forcing % current_index )   
       UTHR  = time_tracker % hour
 
+      print *, 'GHGM ', plasma % NMP , plasma % NLP
       DO mp = 1, plasma % NMP    
+          print *, 'GHGM mp ', mp
         DO lp = 1, plasma % NLP    
+!         print *, 'GHGM lp ', lp
+!     DO mp = 1, 2    
+!       DO lp = 1, 2    
 
           ! Copy over the grid information (for now)
           ZX(1:grid % flux_tube_max(lp))  = grid % altitude(1:grid % flux_tube_max(lp),lp)/1000.0_prec !convert from m to km
@@ -1030,31 +1036,73 @@ CONTAINS
             NHEAT(i)    = 0.0_dp
        
           ENDDO
+!         print *, 'GHGM TE_TIX ', te_tix
+!         istop = 0
+!         if (istop.eq.1) stop
 
           JMINX = 1
           JMAXX = grid % flux_tube_max(lp)
  
-          PRINT*, lp, mp
+          write(66,*) mp,lp,JMINX,JMAXX
+          write(66,*) &
+                        grid % flux_tube_max(lp), & 
+                        ZX(1:JMAXX), & 
+                        PCO, & 
+                        SLX(1:JMAXX), & 
+                        GLX(1:JMAXX), & 
+                        BMX(1:JMAXX), & 
+                        GRX(1:JMAXX), &
+                        OX(1:JMAXX), & 
+                        HX(1:JMAXX), & 
+                        N2X(1:JMAXX), & 
+                        O2X(1:JMAXX), & 
+                        HEX(1:JMAXX), & 
+                        N4SX(1:JMAXX), & 
+                        INNO, &
+                        NNOX(1:JMAXX), & 
+                        TNX(1:JMAXX), & 
+                        TINFX(1:JMAXX), &
+                        UNX(1:JMAXX), & 
+                        flip_time_step, &
+                        DTMIN, & 
+                        F107D, &
+                        F107A, & 
+                        SZA, &
+                        FPAS, & 
+                        HPEQ, & 
+                        HEPRAT, &
+                        COLFACX, & 
+                        IHEPLS, & 
+                        INPLS, &
+                        UTHR, & 
+                        EHTX(1:3,1:JMAXX), & 
+                        AUR_PROD(1:3,1:JMAXX), & 
+                        TE_TIX(1:3,1:JMAXX), &
+                        XIONNX(1:9,1:JMAXX), &
+                        XIONVX(1:9,1:JMAXX), &
+                        NHEAT(1:JMAXX), & 
+                        EFLAG
+
           CALL CTIPINT( JMINX, & !.. index of the first point on the field line
                         JMAXX, & !.. index of the last point on the field line
                         grid % flux_tube_max(lp), & !.. CTIPe array dimension, must equal to FLDIM
-                        ZX(1:grid % flux_tube_max(lp)), & !.. array, altitude (km)
+                        ZX(1:JMAXX), & !.. array, altitude (km)
                         PCO, & !.. p coordinate (L-shell)
-                        SLX(1:grid % flux_tube_max(lp)), & !.. array, distance of point from northern hemisphere (meter)
-                        GLX(1:grid % flux_tube_max(lp)), & !.. array, magnetic latitude (radians)
-                        BMX(1:grid % flux_tube_max(lp)), & !.. array, magnetic field strength, (Tesla)
-                        GRX(1:grid % flux_tube_max(lp)), & !.. array, gravity, m2 s-1
-                        OX(1:grid % flux_tube_max(lp)), & !.. array, O density (m-3)
-                        HX(1:grid % flux_tube_max(lp)), & !.. array, H density (m-3)
-                        N2X(1:grid % flux_tube_max(lp)), & !.. array, N2 density (cm-3)
-                        O2X(1:grid % flux_tube_max(lp)), & !.. array, O2 density (cm-3)
-                        HEX(1:grid % flux_tube_max(lp)), & !.. array, He density (cm-3)
-                        N4SX(1:grid % flux_tube_max(lp)), & !.. array, N(4S) density (cm-3)
+                        SLX(1:JMAXX), & !.. array, distance of point from northern hemisphere (meter)
+                        GLX(1:JMAXX), & !.. array, magnetic latitude (radians)
+                        BMX(1:JMAXX), & !.. array, magnetic field strength, (Tesla)
+                        GRX(1:JMAXX), & !.. array, gravity, m2 s-1
+                        OX(1:JMAXX), & !.. array, O density (m-3)
+                        HX(1:JMAXX), & !.. array, H density (m-3)
+                        N2X(1:JMAXX), & !.. array, N2 density (cm-3)
+                        O2X(1:JMAXX), & !.. array, O2 density (cm-3)
+                        HEX(1:JMAXX), & !.. array, He density (cm-3)
+                        N4SX(1:JMAXX), & !.. array, N(4S) density (cm-3)
                         INNO, & !.. switch to turn on FLIP NO calculation IF <0
-                        NNOX(1:grid % flux_tube_max(lp)), & !.. array, NO density (cm-3)
-                        TNX(1:grid % flux_tube_max(lp)), & !.. array, Neutral temperature (K)
-                        TINFX(1:grid % flux_tube_max(lp)), & !.. array, Exospheric Neutral temperature (K)
-                        UNX(1:grid % flux_tube_max(lp)), & !.. array, Neutral wind (m/s), field aligned component, positive SOUTHward
+                        NNOX(1:JMAXX), & !.. array, NO density (cm-3)
+                        TNX(1:JMAXX), & !.. array, Neutral temperature (K)
+                        TINFX(1:JMAXX), & !.. array, Exospheric Neutral temperature (K)
+                        UNX(1:JMAXX), & !.. array, Neutral wind (m/s), field aligned component, positive SOUTHward
                         flip_time_step, & !.. CTIPe time step (secs)
                         DTMIN, & !.. Minimum time step allowed (>=10 secs?)
                         F107D, & !.. Daily F10.7
@@ -1067,12 +1115,12 @@ CONTAINS
                         IHEPLS, & !.. switches He+ dIFfusive solution on IF > 0
                         INPLS, & !.. switches N+ dIFfusive solution on IF > 0
                         UTHR, &  !.. Universal time in hours 
-                        EHTX(1:3,1:grid % flux_tube_max(lp)), & !.. IN/OUT 2D array, Electron & ion heating rate (eV cm-3 s-1)
-                        AUR_PROD(1:3,1:grid % flux_tube_max(lp)), & ! IN 2D array, ionization rates for O+, O2+, and N2+
-                        TE_TIX(1:3,1:grid % flux_tube_max(lp)), & !.. IN/OUT: 2D array, Electron and ion temperatures (K) (see below)
-                        XIONNX(1:9,1:grid % flux_tube_max(lp)), &
-                        XIONVX(1:9,1:grid % flux_tube_max(lp)), & !.. IN/OUT: 2D array, Storage for ion densities and velocities
-                        NHEAT(1:grid % flux_tube_max(lp)), & !.. OUT: array, Neutral heating rate (eV/cm^3/s)
+                        EHTX(1:3,1:JMAXX), & !.. IN/OUT 2D array, Electron & ion heating rate (eV cm-3 s-1)
+                        AUR_PROD(1:3,1:JMAXX), & ! IN 2D array, ionization rates for O+, O2+, and N2+
+                        TE_TIX(1:3,1:JMAXX), & !.. IN/OUT: 2D array, Electron and ion temperatures (K) (see below)
+                        XIONNX(1:9,1:JMAXX), &
+                        XIONVX(1:9,1:JMAXX), & !.. IN/OUT: 2D array, Storage for ion densities and velocities
+                        NHEAT(1:JMAXX), & !.. OUT: array, Neutral heating rate (eV/cm^3/s)
                         EFLAG ) !.. OUT: 2D array, Error Flags
 
 
@@ -1093,6 +1141,9 @@ CONTAINS
 
       ENDDO
     ENDDO
+
+    istop = 0
+    if(istop.eq.1) stop
 
 
   END SUBROUTINE FLIP_Wrapper

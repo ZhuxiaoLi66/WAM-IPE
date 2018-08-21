@@ -436,7 +436,9 @@ C... Schunk and Nagy Rev Geophys (1978) p366
         KN2=(2.82E-17*SQTE-3.41E-21*SQTE*TE)*N2N
         KO2=(2.2E-16+7.92E-18*SQTE)*O2N
         KO=3.4E-16*ON
+!       print *, 'GHGM HE ', HE
         KHE=5.6E-16*HE
+!       print *, 'GHGM KHE ', KHE
         KH=(5.47E-15-7.45E-19*TE)*HN
         !.. 1.0E+4 added to NE to avoid numerical problems for low NE
         KN=3.22E+4*TE**2*(KN2+KO2+KO+KHE+KH)/(NE+1.0E+4)
