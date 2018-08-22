@@ -28,11 +28,32 @@ $ IPE_new/install/bin
 $ IPE_new/install/share
 $ IPE_new/run
 ```
-and sets up a symbolic linke from `IPE_new/install/bin/ipe` to
-`IPE_new/run/ipe`.
+and sets up the following symbolic links
+```
+IPE_new/run/ipe => IPE_new/install/bin/ipe
+IPE_new/run/eregrid => IPE_new/install/bin/eregrid
+IPE_new/run/legacy2netcdf => IPE_new/install/bin/legacy2netcdf
+```
+If you modify code and want to update the executables, simply run
+`make install` from the `IPE_new` directory.
 
-You only need to run this script once. If you modify code and want to update the
-executable, simply from `make install` from the `IPE_new` directory.
+### Executables
+`ipe`
+The main executable that forward steps the IPE model based on parameters within
+the IPE.inp file
+
+
+`eregrid`
+This executable is used to convert electric potential output from other
+models to the IPE grid. Currently, this executable simply calls the
+Update routine for IPE_Electrodynamics. Tools for working with OpenGGCM
+and Geospace are currently in production.
+
+
+`legacy2netcdf`
+This executable is used to convert legacy IPE pickup files to the currently used
+NetCDF format.
+
 
 ## Running the model
 If you're on a system that can access https://storage.googleapis.com, downloading the

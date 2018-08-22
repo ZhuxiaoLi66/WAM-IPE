@@ -213,7 +213,7 @@ CONTAINS
     INTEGER :: molecular_nitrogen_varid, nitrogen_varid, hydrogen_varid
     INTEGER :: temperature_varid, u_varid, v_varid, w_varid
     INTEGER :: op_varid, hp_varid, hep_varid, np_varid, n2p_varid, o2p_varid, nop_varid
-    INTEGER :: op2d_varid, op2p_varid, ion_temp_varid, phi_varid, hc_varid, pc_varid, bc_varid
+    INTEGER :: op2d_varid, op2p_varid, ion_temp_varid, phi_varid, mhd_phi_varid, hc_varid, pc_varid, bc_varid
     INTEGER :: opv_varid(1:3), hpv_varid(1:3), hepv_varid(1:3), npv_varid(1:3), n2pv_varid(1:3), o2pv_varid(1:3), nopv_varid(1:3)
     INTEGER :: recStart(1:4), recCount(1:4)
 
@@ -294,6 +294,10 @@ CONTAINS
         CALL Check( nf90_put_att( ncid, phi_varid, "long_name", "Electric Potential" ) )
         CALL Check( nf90_put_att( ncid, phi_varid, "units", "[Unknown]" ) )
 
+        CALL Check( nf90_def_var( ncid, "mhd_phi", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) ,mhd_phi_varid ) )
+        CALL Check( nf90_put_att( ncid, mhd_phi_varid, "long_name", "Electric Potential - MHD Component" ) )
+        CALL Check( nf90_put_att( ncid, mhd_phi_varid, "units", "[Unknown]" ) )
+
         CALL Check( nf90_def_var( ncid, "hc", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) , hc_varid ) )
         CALL Check( nf90_put_att( ncid, hc_varid, "long_name", "Hall Conductivity" ) )
         CALL Check( nf90_put_att( ncid, hc_varid, "units", "[Unknown]" ) )
@@ -369,6 +373,7 @@ CONTAINS
 
       IF( ipe % parameters % write_apex_eldyn )THEN
         CALL Check( nf90_put_var( ncid, phi_varid, ipe % eldyn % electric_potential ) )
+        CALL Check( nf90_put_var( ncid, mhd_phi_varid, ipe % eldyn % mhd_electric_potential ) )
         CALL Check( nf90_put_var( ncid, hc_varid, ipe % eldyn % hall_conductivity ) )
         CALL Check( nf90_put_var( ncid, pc_varid, ipe % eldyn % pedersen_conductivity ) )
         CALL Check( nf90_put_var( ncid, bc_varid, ipe % eldyn % b_parallel_conductivity ) )
@@ -508,7 +513,7 @@ CONTAINS
     INTEGER :: molecular_nitrogen_varid, nitrogen_varid, hydrogen_varid
     INTEGER :: temperature_varid, u_varid, v_varid, w_varid
     INTEGER :: op_varid, hp_varid, hep_varid, np_varid, n2p_varid, o2p_varid, nop_varid
-    INTEGER :: op2d_varid, op2p_varid, phi_varid, exbu_varid, exbv_varid
+    INTEGER :: op2d_varid, op2p_varid, phi_varid, mhd_phi_varid, exbu_varid, exbv_varid
     INTEGER :: ion_temp_varid, e_varid, hc_varid, pc_varid, bc_varid
     INTEGER :: ion_rate_varid, O_rate_varid, O2_rate_varid, N2_rate_varid
 
@@ -606,6 +611,10 @@ CONTAINS
         CALL Check( nf90_def_var( ncid, "phi", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) , phi_varid ) )
         CALL Check( nf90_put_att( ncid, phi_varid, "long_name", "Electric Potential" ) )
         CALL Check( nf90_put_att( ncid, phi_varid, "units", "[Unknown]" ) )
+
+        CALL Check( nf90_def_var( ncid, "mhd_phi", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) , phi_varid ) )
+        CALL Check( nf90_put_att( ncid, mhd_phi_varid, "long_name", "Electric Potential - MHD Component" ) )
+        CALL Check( nf90_put_att( ncid, mhd_phi_varid, "units", "[Unknown]" ) )
 
         CALL Check( nf90_def_var( ncid, "exb_u", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) , exbu_varid ) )
         CALL Check( nf90_put_att( ncid, exbu_varid, "long_name", "Zonal component of ExB drift velocity" ) )
@@ -713,6 +722,7 @@ CONTAINS
       IF( ipe % parameters % write_geographic_eldyn )THEN
 
         CALL Check( nf90_put_var( ncid, phi_varid, ipe % eldyn % geo_electric_potential ) )
+        CALL Check( nf90_put_var( ncid, mhd_phi_varid, ipe % eldyn % geo_mhd_electric_potential ) )
         CALL Check( nf90_put_var( ncid, exbu_varid, ipe % eldyn % geo_v_ExB_geographic(1,:,:) ) )
         CALL Check( nf90_put_var( ncid, exbv_varid, ipe % eldyn % geo_v_ExB_geographic(2,:,:) ) )
         CALL Check( nf90_put_var( ncid, hc_varid, ipe % eldyn % geo_hall_conductivity ) )

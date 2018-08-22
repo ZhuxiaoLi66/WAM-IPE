@@ -26,6 +26,7 @@ IMPLICIT NONE
   TYPE IPE_Electrodynamics
     INTEGER    :: nFluxTube, NLP, NMP
     REAL(prec), ALLOCATABLE :: electric_potential(:,:)   
+    REAL(prec), ALLOCATABLE :: mhd_electric_potential(:,:)   
     REAL(prec), ALLOCATABLE :: electric_field(:,:,:) 
     REAL(prec), ALLOCATABLE :: v_ExB_geographic(:,:,:)  ! "zonal" and "meridional" direction on the geographic grid
     REAL(prec), ALLOCATABLE :: v_ExB_apex(:,:,:) ! "zonal" and "meridional" direction ( VEXBth, VEXBe ) on the apex grid
@@ -44,6 +45,7 @@ IMPLICIT NONE
 
     ! Geographic interpolated attributes
     REAL(prec), ALLOCATABLE :: geo_electric_potential(:,:)
+    REAL(prec), ALLOCATABLE :: geo_mhd_electric_potential(:,:)
     REAL(prec), ALLOCATABLE :: geo_v_ExB_geographic(:,:,:)    ! ExB transport velocity with geographic components
     REAL(prec), ALLOCATABLE :: geo_hall_conductivity(:,:)
     REAL(prec), ALLOCATABLE :: geo_pedersen_conductivity(:,:)
@@ -59,7 +61,7 @@ IMPLICIT NONE
       PROCEDURE :: Interpolate_to_GeographicGrid => Interpolate_to_GeographicGrid_IPE_Electrodynamics
 
       PROCEDURE, PRIVATE :: Empirical_E_Field_Wrapper
-      PROCEDURE, PRIVATE :: Interpolate_Potential
+      PROCEDURE, PRIVATE :: Regrid_Empirical_Potential
 
   END TYPE IPE_Electrodynamics
 
@@ -83,6 +85,7 @@ CONTAINS
       eldyn % NMP       = NMP
 
       ALLOCATE( eldyn % electric_potential(1:NLP,1:NMP), &
+                eldyn % mhd_electric_potential(1:NLP,1:NMP), &
                 eldyn % electric_field(1:3,1:NLP,1:NMP), &
                 eldyn % v_ExB_geographic(1:3,1:NLP,1:NMP), &
                 eldyn % v_ExB_apex(1:3,1:NLP,1:NMP), &
@@ -96,6 +99,7 @@ CONTAINS
                 eldyn % lon_interp_index(1:2,1:NMP) )
 
       eldyn % electric_potential      = 0.0_prec
+      eldyn % mhd_electric_potential  = 0.0_prec
       eldyn % electric_field          = 0.0_prec
       eldyn % v_ExB_geographic        = 0.0_prec
       eldyn % v_ExB_apex              = 0.0_prec
@@ -110,6 +114,7 @@ CONTAINS
 
 
       ALLOCATE( eldyn % geo_electric_potential(1:nlon_geo,1:nlat_geo), &
+                eldyn % geo_mhd_electric_potential(1:nlon_geo,1:nlat_geo), &
                 eldyn % geo_v_ExB_geographic(1:3,1:nlon_geo,1:nlat_geo), &
                 eldyn % geo_hall_conductivity(1:nlon_geo,1:nlat_geo), &
                 eldyn % geo_pedersen_conductivity(1:nlon_geo,1:nlat_geo), &
@@ -129,6 +134,7 @@ CONTAINS
     CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn
 
       DEALLOCATE( eldyn % electric_potential, &
+                  eldyn % mhd_electric_potential, &
                   eldyn % electric_field, &
                   eldyn % v_ExB_geographic, &
                   eldyn % v_ExB_apex, &
@@ -233,14 +239,14 @@ CONTAINS
 
 
         ! Interpolate the potential to the IPE grid
-        CALL eldyn % Interpolate_Potential( grid )
+        CALL eldyn % Regrid_Empirical_Potential( grid )
         
         ! Calculate the potential gradient in IPE coordinates.
 
 
   END SUBROUTINE Empirical_E_Field_Wrapper
 
-  SUBROUTINE Interpolate_Potential( eldyn, grid )
+  SUBROUTINE Regrid_Empirical_Potential( eldyn, grid )
     CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn 
     TYPE( IPE_Grid ), INTENT(in)                :: grid
     ! Local
@@ -273,7 +279,7 @@ CONTAINS
     !
     ! magnetic_latitude = pi/2 - magnetic_colatitude
 
-  END SUBROUTINE Interpolate_Potential
+  END SUBROUTINE Regrid_Empirical_Potential
 
   SUBROUTINE sunloc(iyr,iday,secs,sunlons)
     integer, intent(in) :: iyr, iday ! day of year
@@ -316,6 +322,7 @@ CONTAINS
     TYPE( IPE_Grid ), INTENT(in)         :: grid
 
       CALL grid % Interpolate_2D_to_Geographic_Grid( eldyn % electric_potential, eldyn % geo_electric_potential )
+      CALL grid % Interpolate_2D_to_Geographic_Grid( eldyn % mhd_electric_potential, eldyn % geo_mhd_electric_potential )
 
   END SUBROUTINE Interpolate_to_GeographicGrid_IPE_Electrodynamics
 

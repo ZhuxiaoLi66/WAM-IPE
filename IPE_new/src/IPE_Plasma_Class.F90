@@ -1034,7 +1034,6 @@ CONTAINS
           JMINX = 1
           JMAXX = grid % flux_tube_max(lp)
  
-          PRINT*, lp, mp
           CALL CTIPINT( JMINX, & !.. index of the first point on the field line
                         JMAXX, & !.. index of the last point on the field line
                         grid % flux_tube_max(lp), & !.. CTIPe array dimension, must equal to FLDIM

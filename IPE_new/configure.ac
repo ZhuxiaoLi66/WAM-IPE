@@ -9,7 +9,7 @@ AC_PROG_CC
 AC_PROG_FC([ifort gfortran pgfortran])
 AC_PROG_F77([ifort gfortran pgfortran])
 
-
+FCFLAGS="-O2"
 
 AM_PROG_AR
 AC_PROG_RANLIB
