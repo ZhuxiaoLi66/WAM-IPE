@@ -3,11 +3,14 @@ MODULE IPE_Electrodynamics_Class
 
 USE IPE_Precision
 USE IPE_Constants_Dictionary
+USE IPE_Common_Routines
 USE IPE_Grid_Class
 USE IPE_Forcing_Class
 USE IPE_Time_Class
 
 USE efield_ipe
+
+USE netcdf
 !
 !! For the TIEGCM Wrapper
 !USE module_init_cons
@@ -60,14 +63,20 @@ IMPLICIT NONE
       PROCEDURE :: Update => Update_IPE_Electrodynamics
       PROCEDURE :: Interpolate_to_GeographicGrid => Interpolate_to_GeographicGrid_IPE_Electrodynamics
 
+      PROCEDURE :: Read_Geospace_Potential
+
+      PROCEDURE :: Read_MHD_Potential
+      PROCEDURE :: Write_MHD_Potential
+
       PROCEDURE, PRIVATE :: Empirical_E_Field_Wrapper
-      PROCEDURE, PRIVATE :: Regrid_Empirical_Potential
+!      PROCEDURE, PRIVATE :: Regrid_Empirical_Potential
 
   END TYPE IPE_Electrodynamics
 
   LOGICAL, PRIVATE :: setup_efield_empirical
 
   REAL(prec), PRIVATE :: theta90_rad(0:nmlat)
+  REAL(prec), PRIVATE, ALLOCATABLE :: geospace_latitude(:), geospace_longitude(:), geospace_potential(:,:)
 
 CONTAINS
 
@@ -153,7 +162,121 @@ CONTAINS
                   eldyn % geo_pedersen_conductivity, &
                   eldyn % geo_b_parallel_conductivity )
  
+      IF( ALLOCATED( geospace_latitude ) )  DEALLOCATE( geospace_latitude )
+      IF( ALLOCATED( geospace_longitude ) ) DEALLOCATE( geospace_longitude )
+      IF( ALLOCATED( geospace_potential ) ) DEALLOCATE( geospace_potential )
+
   END SUBROUTINE Trash_IPE_Electrodynamics
+
+  SUBROUTINE Read_Geospace_Potential( eldyn, filename )
+    CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn
+    CHARACTER(*), INTENT(in)                    :: filename
+    ! Local
+    INTEGER :: ncid
+    INTEGER :: dimid, varid
+    INTEGER :: nFluxtube, NLP, NMP
+    CHARACTER(NF90_MAX_NAME) :: nameHolder
+    INTEGER :: n_lon_geospace, n_lat_geospace
+
+
+      CALL Check( nf90_open( TRIM(filename), NF90_NETCDF4, ncid))
+
+      ! Obtain the dimensions of the Geospace grid
+      CALL Check( nf90_inq_dimid( ncid, "lon", dimid ) )
+      CALL Check( nf90_inquire_dimension( ncid, dimid, nameHolder, n_lon_geospace ) )
+
+      CALL Check( nf90_inq_dimid( ncid, "lat", dimid ) )
+      CALL Check( nf90_inquire_dimension( ncid, dimid, nameHolder, n_lat_geospace ) )
+
+      IF( .NOT. ALLOCATED( geospace_latitude ) ) ALLOCATE( geospace_latitude(1:n_lat_geospace) )
+      IF( .NOT. ALLOCATED( geospace_longitude ) ) ALLOCATE( geospace_longitude(1:n_lat_geospace) )
+      IF( .NOT. ALLOCATED( geospace_potential ) ) ALLOCATE( geospace_potential(1:n_lon_geospace,1:n_lat_geospace) )
+
+      CALL Check( nf90_inq_varid( ncid, "lat", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, geospace_latitude ) )
+
+      CALL Check( nf90_inq_varid( ncid, "lon", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, geospace_longitude ) )
+
+      CALL Check( nf90_inq_varid( ncid, "potential", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, geospace_potential ) )
+
+      CALL Check( nf90_close( ncid ) )
+ 
+      PRINT*, MINVAL( geospace_potential )
+      PRINT*, MAXVAL( geospace_potential )
+
+    ! read input ( maybe into local variable )
+
+  END SUBROUTINE Read_Geospace_Potential
+ 
+  SUBROUTINE Write_MHD_Potential( eldyn, grid, time_tracker, filename )
+    IMPLICIT NONE
+    CLASS( IPE_Electrodynamics ), INTENT(in) :: eldyn
+    TYPE( IPE_Grid ), INTENT(in)             :: grid
+    TYPE( IPE_Time ), INTENT(in)             :: time_tracker
+    CHARACTER(*), INTENT(in)                 :: filename
+    ! Local
+    REAL(prec) :: time
+    INTEGER :: NF90_PREC
+    INTEGER :: ncid
+    INTEGER :: x_dimid, y_dimid, time_dimid, time_varid
+    INTEGER :: mhd_phi_varid
+    INTEGER :: recStart(1:3), recCount(1:3)
+
+
+      recStart = (/ 1, 1, 1 /)
+      recCount = (/ grid % NLP, grid % NMP, 1 /)
+
+
+      time = time_tracker % Calculate_Date_Difference( 2000, 1, 1, 0, 0 )
+      IF( prec == sp )THEN
+        NF90_PREC = NF90_FLOAT
+      ELSE      
+        NF90_PREC = NF90_DOUBLE
+      ENDIF
+
+      CALL Check( nf90_create( TRIM(filename), NF90_NETCDF4, ncid))
+
+      CALL Check( nf90_def_dim( ncid, "lp", grid % NLP, x_dimid ) ) 
+      CALL Check( nf90_def_dim( ncid, "mp", grid % NMP, y_dimid ) ) 
+      CALL Check( nf90_def_dim( ncid, "time", NF90_UNLIMITED, time_dimid ) )
+
+      CALL Check( nf90_def_var( ncid, "time", NF90_PREC, time_dimid, time_varid ) )
+      CALL Check( nf90_put_att( ncid, time_varid, "long_name", "minutes since 2000-1-1 00:00 UT" ) )
+      CALL Check( nf90_put_att( ncid, time_varid, "units", "minutes" ) )
+
+      CALL Check( nf90_def_var( ncid, "mhd_phi", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) ,mhd_phi_varid ) )
+      CALL Check( nf90_put_att( ncid, mhd_phi_varid, "long_name", "Electric Potential - MHD Component" ) )
+      CALL Check( nf90_put_att( ncid, mhd_phi_varid, "units", "[Unknown]" ) )
+
+      CALL Check( nf90_enddef(ncid) )
+      
+      CALL Check( nf90_put_var( ncid, time_varid, time ) )
+      CALL Check( nf90_put_var( ncid, mhd_phi_varid, eldyn % mhd_electric_potential ) )
+
+      CALL Check( nf90_close( ncid ) )
+
+  END SUBROUTINE Write_MHD_Potential
+
+  SUBROUTINE Read_MHD_Potential( eldyn, filename )
+    CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn
+    CHARACTER(*), INTENT(in)                    :: filename
+    ! Local
+    INTEGER :: ncid
+    INTEGER :: dimid, varid
+    CHARACTER(NF90_MAX_NAME) :: nameHolder
+
+
+      CALL Check( nf90_open( TRIM(filename), NF90_NETCDF4, ncid))
+
+      CALL Check( nf90_inq_varid( ncid, "mhd_phi", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, eldyn % mhd_electric_potential) )
+
+      CALL Check( nf90_close( ncid ) )
+
+
+  END SUBROUTINE Read_MHD_Potential
 
   SUBROUTINE Update_IPE_Electrodynamics( eldyn, grid, forcing, time_tracker )
     IMPLICIT NONE
@@ -165,6 +288,26 @@ CONTAINS
     INTEGER :: lp, mp
 
       CALL eldyn % Empirical_E_Field_Wrapper( grid, forcing, time_tracker )
+
+
+!      IF( geospace )THEN
+
+!        CALL  eldyn % Read_Geospace_Potential( filename )
+!        CALL  eldyn % Regrid_Geospace(  )
+!#ifdef DEBUG
+!        CALL eldyn % Write_MHD_Potential( )
+!#endif
+!        CALL eldyn % Merge_Potential
+
+!      ELSEIF( openggcm )THEN
+
+!      .....
+
+!      ENDIF
+
+!      CALL eldyn % Get_Efield_From_Potential( )
+!      CALL eldyn % Get_ExB( )
+        
 
   END SUBROUTINE Update_IPE_Electrodynamics
  
@@ -212,26 +355,225 @@ CONTAINS
          
         CALL  get_efield
 
-        ylonm_local = REAL(ylonm,prec)
-        mlon90_rad = MLT_to_MagneticLongitude( ylonm_local, year, time_tracker % day_of_year, utime, nmlon )
 
 
         ! Interpolate the potential to the IPE grid
-        CALL eldyn % Regrid_Empirical_Potential( grid )
+        !CALL eldyn % Regrid_Empirical_Potential( grid )
         
         ! Calculate the potential gradient in IPE coordinates.
 
 
   END SUBROUTINE Empirical_E_Field_Wrapper
 
-  SUBROUTINE Regrid_Empirical_Potential( eldyn, grid )
-    CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn 
-    TYPE( IPE_Grid ), INTENT(in)                :: grid
-    ! Local
-    INTEGER :: i, j, ii, jj, i_e, j_e
- 
-
-  END SUBROUTINE Regrid_Empirical_Potential
+!  SUBROUTINE Regrid_Empirical_Potential( eldyn, grid )
+!    CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn 
+!    TYPE( IPE_Grid ), INTENT(in)                :: grid
+!    ! Local
+!    INTEGER :: i, j, ii, jj, i_e, j_e
+! 
+!      Ed1_90=0.0_prec
+!      Ed2_90=0.0_prec
+!      theta90_rad = 0.0_prec
+!      coslam_m    = 0.0_prec
+!
+!      DO lp=1,NLP
+!
+!        coslam_m(1,lp) = COS( pi*0.5_prec - grid % magnetic_colatitude(1,lp) )
+!        coslam_m(2,lp) = COS( pi*0.5_prec - grid % magnetic_colatitude(grid % flux_tube_max(lp),lp) )
+!
+!        IF ( grid % magnetic_colatitude(1,lp) > theta90_rad(nmlat/2) ) THEN
+!          j0(1,lp)=nmlat/2+1   !1:NH
+!          j1(1,lp)=nmlat/2
+!          j0(2,lp)=nmlat/2     !2:SH
+!          j1(2,lp)=nmlat/2-1
+!
+!        ELSE 
+!
+!          DO j=nmlat,nmlat/2,-1
+!
+!            IF( theta90_rad(j) <= grid % magnetic_colatitude(1,lp) .AND. &
+!                grid % magnetic_colatitude(IN,lp) <= theta90_rad(j-1) ) THEN
+!
+!              j0(1,lp)=j  !1:NH
+!              j1(1,lp)=j-1
+!              j0(2,lp)=nmlat-(j-1)  !2:SH
+!              j1(2,lp)=nmlat-j
+!
+!              EXIT
+!
+!            ENDIF
+!
+!          ENDDO         
+!
+!        ENDIF
+!
+!      ENDDO 
+!
+!      d_phi_m = dlonm * dtr !constant
+!      r = earth_radius + 90000.0_prec ![m]
+!
+!      DO mp=1,NMP
+!        DO i=0,nmlon
+!
+!          i0=i
+!          i1=i+1
+!          IF ( i1>nmlon ) i1=i+1-nmlon
+!          mlon130_0=mlon130_rad(i0)
+!          IF ( mlon130_rad(i0)>mlon130_rad(i1) ) then
+!            mlon130_0=mlon130_rad(i0)-pi*2.0  
+!          ENDIF
+!          IF ( mlon_rad(mp)>=mlon130_0.AND.                             &
+!     &         mlon_rad(mp)<=mlon130_rad(i1) ) THEN
+!            EXIT mlon130_loop1
+!          ELSE
+!          END IF
+!        END DO mlon130_loop1 !: DO i=0,nmlon
+!
+!        mlat_loop90km1: DO lp=1,NLP
+!          IN = JMIN_IN(lp)
+!          IS = JMAX_IS(lp)
+!
+!!         computipng ed1_90(lp,mp)
+!!         FUNC-linearinterpolation does not work! need more debugging. temporary use the average of the two potentials.
+!!         linear interpolation of the potent at plasma_grid_3d(IN,mp) in mlat
+!!         NH
+!!         d          potent_i0 = LINEAR_INTERPOLATION(theta90_rad(j0(1,lp))
+!!         d     &   ,potent(i0(mp),j0(1,lp)),theta90_rad(j1(1,lp))
+!!         d     &   ,potent(i0(mp),j1(1,lp)),plasma_grid_3d(IN,mp)%GL)
+!!         d          potent_i1 = LINEAR_INTERPOLATION(theta90_rad(j0(1,lp))
+!!         d     &   ,potent(i1(mp),j0(1,lp)),theta90_rad(j1(1,lp))
+!!         d     &   ,potent(i1(mp),j0(1,lp)),plasma_grid_3d(IN,mp)%GL)
+!!         ii0=i0
+!!         ii1=i1
+!
+!
+!
+!
+!
+!
+!          jj0=j0(1,lp)              !1:NH
+!          jj1=j1(1,lp)
+!          pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50 
+!          pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
+!
+!          ed1_90(1,lp,mp)=-1.0/r/coslam_m(1,lp)                         &
+!     &                         *(pot_i1-pot_i0)/d_phi_m
+!!         SH
+!!         d          potent_i0=LINEAR_INTERPOLATION(theta90_rad(j0(1,lp)) 
+!!         d     &   ,potent(i0(mp),j0(1,lp)),theta90_rad(j1(1,lp))
+!!         d     &   ,potent(i0(mp),j1(1,lp)),plasma_grid_3d(IN,mp)%GL)
+!!         d          potent_i1=LINEAR_INTERPOLATION(theta90_rad(j0(1,lp))
+!!         d     &   ,potent(i1(mp),j0(1,lp)),theta90_rad(j1(1,lp))
+!!         d     &   ,potent(i1(mp),j0(1,lp)),plasma_grid_3d(IN,mp)%GL)
+!!         ii0=i0
+!!         ii1=i1
+!          jj0=j0(2,lp)              !2:SH
+!          jj1=j1(2,lp)              !2:SH
+!          pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50
+!          pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
+!          ed1_90(2,lp,mp)=-1.0/r/coslam_m(2,lp)*(pot_i1-pot_i0)/d_phi_m
+!!         computing ed2_90(lp,mp) continues
+!!         calculate sinIm !eq(3.7)
+!          cos2Lambda_m = coslam_m(2,lp) * coslam_m(2,lp)      ! 0<cos2<1
+!          sinLambda_m(1)  = + SQRT( 1.0 - cos2Lambda_m )  !>0 ---NH 
+!          sinLambda_m(2)  = - SQRT( 1.0 - cos2Lambda_m )  !<0 ---SH 
+!          sinI_m(1:2)= 2.0*sinLambda_m(1:2)/SQRT(4.0-3.0*cos2Lambda_m)
+!!         NH
+!          ihem=1
+!          jj0=j0(ihem,lp)              !1:NH
+!          jj1=j1(ihem,lp)              !1:NH
+!          d_lam_m = theta90_rad( jj1 ) - theta90_rad( jj0 )
+!          pot_j1=( potent(i0,jj1)+potent(i1,jj1) )*0.50
+!          pot_j0=( potent(i0,jj0)+potent(i1,jj0) )*0.50
+!          ed2_90(1,lp,mp)=+1.0/r/sinI_m(ihem)*(pot_j1-pot_j0)/d_lam_m   &
+!     &*(-1.) !dbg20140224
+!!         dbg20111108     &*(-1.)*sinI_m(ihem)     !E_m_lambda (5.10)
+!!         SH
+!          ihem=2
+!          jj0=j0(ihem,lp)              !2:SH
+!          jj1=j1(ihem,lp)              !2:SH
+!          d_lam_m = theta90_rad( jj1 ) - theta90_rad( jj0 )
+!          pot_j1=( potent(i0,jj1)+potent(i1,jj1) )*0.50
+!          pot_j0=( potent(i0,jj0)+potent(i1,jj0) )*0.50
+!          ed2_90(2,lp,mp)=+1.0/r/sinI_m(ihem)*(pot_j1-pot_j0) /d_lam_m  &
+!     &*(-1.) !dbg20140224
+!!         dbg20111108     &*(-1.)*sinI_m(ihem)  !E_m_lambda (5.10)
+!
+!          IF(sw_exb_up<=1.and.sw_perp_transport>=1) then
+!             if(lp>=lpmin_perp_trans.AND.lp<=lpmax_perp_trans) THEN 
+!
+!!initialization
+!                VEXBup(lp,mp)=zero
+!                VEXBe(lp,mp)=zero
+!                VEXBth(lp,mp)=zero
+!
+!!           (0) self consistent electrodynamics comming soon...
+!!           (1) WACCM E empirical model
+!!           Ed1/2[V/m] at ( phi_t1(mp), theta_t1(lp) ), Be3[T]
+!!           note: Ed1_90, Ed2_90, and Be3 are constant along magnetic field lines!!! 
+!            midpoint = JMIN_IN(lp) + (JMAX_IS(lp) - JMIN_IN(lp))/2
+!
+!!nm20130830: Ed1/2_90 should be constant along magnetic field lines!!!
+!            v_e(1) =   Ed2_90(1,lp,mp) / Be3(lp,mp) !(4.18) +mag-east(d1?) 
+!            v_e(2) = - Ed1_90(1,lp,mp) / Be3(lp,mp) !(4.19) +down/equatorward(d2?)
+!
+!! EXB in geographic frame at (midpoint,lp,mp)
+!            vexbgeo(east )=(v_e(1)*apexE(midpoint,lp,mp,east,1))        &
+!     &                    +(v_e(2)*apexE(midpoint,lp,mp,east,2))
+!            vexbgeo(north)=(v_e(1)*apexE(midpoint,lp,mp,north,1))       &
+!     &                    +(v_e(2)*apexE(midpoint,lp,mp,north,2))
+!            vexbgeo(up   )=(v_e(1)*apexE(midpoint,lp,mp,up   ,1))       &
+!     &                    +(v_e(2)*apexE(midpoint,lp,mp,up   ,2))
+!! EXB  magnetic exact upward at APEX (midpoint) 
+!!           VEXBup(lp,mp) = v_e(2) * (-1.0) !convert from down to UPward
+!            VEXBup(lp,mp) = vexbgeo(up)
+!
+!               ipts = JMIN_IN(lp) ! if ihem=1 NH
+!!               ipts = JMAX_IS(lp) ! if ihem=2 SH
+!! EXB in geographic frame at 90km NH (IN,lp,mp)
+!            vexbgeo(east )=(v_e(1)*apexE(ipts,lp,mp,east,1))            &
+!     &                    +(v_e(2)*apexE(ipts,lp,mp,east,2))
+!            vexbgeo(north)=(v_e(1)*apexE(ipts,lp,mp,north,1))           &
+!     &                    +(v_e(2)*apexE(ipts,lp,mp,north,2))
+!            vexbgeo(up   )=(v_e(1)*apexE(ipts,lp,mp,up   ,1))           &
+!     &                    +(v_e(2)*apexE(ipts,lp,mp,up   ,2))
+!! vperp at 90km NH +poleward
+!!VEXBth: horizontal component, positive EQUATORward: is calculated only for th-method
+!!dbg20150319: it might be better to estimate sinI at JMIN_IN
+!!              VEXBth(lp,mp) = v_e(2) * sinI_m(1) !if ihem=1 NH
+!               VEXBth(lp,mp) = v_e(2) / sinI_m(1) !if ihem=1 NH
+!
+!!temporary solution to test the code
+!               VEXBe(lp,mp) = 0.0
+!
+!
+!              if ( sw_perp_transport==1 )   VEXBe(lp,mp)=zero
+!
+!            else                   ! (lp<lpmin_perp_trans.or.lp>lpmax_perp_trans) THEN 
+!               VEXBup(lp,mp)=zero
+!               VEXBe(lp,mp)=zero
+!               VEXBth(lp,mp)=zero 
+!            end if              !(lp>=lpmin_perp_trans.AND.lp<=lpmax_perp_trans) THEN 
+!          END IF !( sw_exb_up<=1.and. ... ) 
+!
+!
+!        END DO mlat_loop90km1 !: DO lp=1,NLP
+!      END DO mlon_loop90km0     !: DO mp=1,nmp
+!!dbg20160408 sms debug 
+!!SMS$PARALLEL END
+!
+!
+!         IF ( MOD( (utime_local-start_time),ip_freq_output)==0 ) THEN
+!!SMS$SERIAL(<vexbup,vexbe,vexbth,IN>:default=ignore) BEGIN
+!            write(unit=2011,FMT='(20E12.4)') vexbup
+!            write(unit=2012,FMT='(20E12.4)') vexbe
+!            write(unit=2013,FMT='(E12.4)  ') sunlons(1)
+!            write(unit=2014,FMT='(20E12.4)') vexbth
+!!SMS$SERIAL END
+!         END IF                 ! ( MOD( (utime_local-start_time),ip_freq_output)==0 ) THEN
+!
+!
+!  END SUBROUTINE Regrid_Empirical_Potential
 
   FUNCTION MLT_to_MagneticLongitude( mlt, year, day_of_year, utime, nlon ) RESULT( mag_longitude )
     INTEGER    :: nlon
@@ -557,231 +899,6 @@ END MODULE IPE_Electrodynamics_Class
 !      REAL    (KIND=real_prec) :: v_e(2)   !1:ed2/be3 (4.18) ;2: -ed1/be3 (4.19)
 !      REAL    (KIND=real_prec) :: vexbgeo(east:up) !EXB in gegraphic frame
 !
-!
-!      Ed1_90=zero
-!      Ed2_90=zero
-!
-!
-!      IF ( j0(1,lps)<0 ) THEN
-!        theta90_rad = zero
-!        coslam_m    = zero
-!
-!        mlat_loop130km0: DO j=0,nmlat
-!
-!          theta130_rad = ( 90.0 - (ylatm(j)-90.0) ) * dtr
-!          CALL get_theta1_at_ht1(ht130,theta130_rad,ht90,theta90_rad(j))
-!        END DO mlat_loop130km0
-!
-!        mlat_loop90km0: DO lp=1,NLP
-!
-!          IN = JMIN_IN(lp)
-!          coslam_m(1,lp)=COS(pi*0.5-plasma_grid_mag_colat(IN,lp))
-!
-!          IS = JMAX_IS(lp)
-!          coslam_m(2,lp) = COS( pi*0.5-plasma_grid_mag_colat(IS,lp) )
-!
-!          IF ( plasma_grid_mag_colat(IN,lp)>theta90_rad(nmlat/2) ) THEN
-!            j0(1,lp)=nmlat/2+1   !1:NH
-!            j1(1,lp)=nmlat/2
-!            j0(2,lp)=nmlat/2     !2:SH
-!            j1(2,lp)=nmlat/2-1
-!
-!          ELSE ! plasma_grid_3d(IN,mp)%GL>=4.49(R130 apex)
-!
-!            mlat_loop130km1: DO j=nmlat,nmlat/2,-1 !NP(j=90)-->EQ(j=45)
-!
-!              IF (theta90_rad(j)<=plasma_grid_mag_colat(IN,lp).AND.            &
-!     &            plasma_grid_mag_colat(IN,lp)<=theta90_rad(j-1) ) THEN
-!                j0(1,lp)=j  !1:NH
-!                j1(1,lp)=j-1
-!                j0(2,lp)=nmlat-(j-1)  !2:SH
-!                j1(2,lp)=nmlat-j
-!
-!                EXIT mlat_loop130km1
-!              ELSE
-!              END IF
-!
-!            END DO mlat_loop130km1 !: DO j=0,nmlat        
-!
-!          END IF                   ! ( plasma_grid_3d(IN,mp)%GL>theta90_rad(nmlat/2) ) THEN
-!
-!        END DO mlat_loop90km0!: DO lp=1,NLP
-!
-!      END IF                    !( j0(1,lps)>0 ) THEN
-!
-!      d_phi_m = dlonm * dtr !constant
-!      r = earth_radius + ht90 ![m]
-!
-!
-!      iyr=1999 
-!      utsecs=REAL(utime_local, real_prec)
-!      CALL sunloc(iyr,NDAY,utsecs) !iyr,iday,secs)        
-!      mlon130_loop0: DO i=0,nmlon
-!        mlon130_rad(i)=(ylonm(i)-180.)*pi/180.+sunlons(1)
-!        IF( mlon130_rad(i)< 0.0   ) mlon130_rad(i)=mlon130_rad(i)+pi*2.0
-!        IF( mlon130_rad(i)>=pi*2.0) mlon130_rad(i)=mlon130_rad(i)-pi*2.0
-!      END DO mlon130_loop0 !: DO i=0,nmlon
-!
-!
-!      mlon_loop90km0: DO mp=1,NMP
-!
-!        mlon130_loop1: DO i=0,nmlon
-!          i0=i
-!          i1=i+1
-!          IF ( i1>nmlon ) i1=i+1-nmlon
-!          mlon130_0=mlon130_rad(i0)
-!          IF ( mlon130_rad(i0)>mlon130_rad(i1) ) then
-!            mlon130_0=mlon130_rad(i0)-pi*2.0  
-!          ENDIF
-!          IF ( mlon_rad(mp)>=mlon130_0.AND.                             &
-!     &         mlon_rad(mp)<=mlon130_rad(i1) ) THEN
-!            EXIT mlon130_loop1
-!          ELSE
-!          END IF
-!        END DO mlon130_loop1 !: DO i=0,nmlon
-!
-!        mlat_loop90km1: DO lp=1,NLP
-!          IN = JMIN_IN(lp)
-!          IS = JMAX_IS(lp)
-!
-!!         computipng ed1_90(lp,mp)
-!!         FUNC-linearinterpolation does not work! need more debugging. temporary use the average of the two potentials.
-!!         linear interpolation of the potent at plasma_grid_3d(IN,mp) in mlat
-!!         NH
-!!         d          potent_i0 = LINEAR_INTERPOLATION(theta90_rad(j0(1,lp))
-!!         d     &   ,potent(i0(mp),j0(1,lp)),theta90_rad(j1(1,lp))
-!!         d     &   ,potent(i0(mp),j1(1,lp)),plasma_grid_3d(IN,mp)%GL)
-!!         d          potent_i1 = LINEAR_INTERPOLATION(theta90_rad(j0(1,lp))
-!!         d     &   ,potent(i1(mp),j0(1,lp)),theta90_rad(j1(1,lp))
-!!         d     &   ,potent(i1(mp),j0(1,lp)),plasma_grid_3d(IN,mp)%GL)
-!!         ii0=i0
-!!         ii1=i1
-!
-!
-!
-!
-!
-!
-!          jj0=j0(1,lp)              !1:NH
-!          jj1=j1(1,lp)
-!          pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50 
-!          pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
-!
-!          ed1_90(1,lp,mp)=-1.0/r/coslam_m(1,lp)                         &
-!     &                         *(pot_i1-pot_i0)/d_phi_m
-!!         SH
-!!         d          potent_i0=LINEAR_INTERPOLATION(theta90_rad(j0(1,lp)) 
-!!         d     &   ,potent(i0(mp),j0(1,lp)),theta90_rad(j1(1,lp))
-!!         d     &   ,potent(i0(mp),j1(1,lp)),plasma_grid_3d(IN,mp)%GL)
-!!         d          potent_i1=LINEAR_INTERPOLATION(theta90_rad(j0(1,lp))
-!!         d     &   ,potent(i1(mp),j0(1,lp)),theta90_rad(j1(1,lp))
-!!         d     &   ,potent(i1(mp),j0(1,lp)),plasma_grid_3d(IN,mp)%GL)
-!!         ii0=i0
-!!         ii1=i1
-!          jj0=j0(2,lp)              !2:SH
-!          jj1=j1(2,lp)              !2:SH
-!          pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50
-!          pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
-!          ed1_90(2,lp,mp)=-1.0/r/coslam_m(2,lp)*(pot_i1-pot_i0)/d_phi_m
-!!         computing ed2_90(lp,mp) continues
-!!         calculate sinIm !eq(3.7)
-!          cos2Lambda_m = coslam_m(2,lp) * coslam_m(2,lp)      ! 0<cos2<1
-!          sinLambda_m(1)  = + SQRT( 1.0 - cos2Lambda_m )  !>0 ---NH 
-!          sinLambda_m(2)  = - SQRT( 1.0 - cos2Lambda_m )  !<0 ---SH 
-!          sinI_m(1:2)= 2.0*sinLambda_m(1:2)/SQRT(4.0-3.0*cos2Lambda_m)
-!!         NH
-!          ihem=1
-!          jj0=j0(ihem,lp)              !1:NH
-!          jj1=j1(ihem,lp)              !1:NH
-!          d_lam_m = theta90_rad( jj1 ) - theta90_rad( jj0 )
-!          pot_j1=( potent(i0,jj1)+potent(i1,jj1) )*0.50
-!          pot_j0=( potent(i0,jj0)+potent(i1,jj0) )*0.50
-!          ed2_90(1,lp,mp)=+1.0/r/sinI_m(ihem)*(pot_j1-pot_j0)/d_lam_m   &
-!     &*(-1.) !dbg20140224
-!!         dbg20111108     &*(-1.)*sinI_m(ihem)     !E_m_lambda (5.10)
-!!         SH
-!          ihem=2
-!          jj0=j0(ihem,lp)              !2:SH
-!          jj1=j1(ihem,lp)              !2:SH
-!          d_lam_m = theta90_rad( jj1 ) - theta90_rad( jj0 )
-!          pot_j1=( potent(i0,jj1)+potent(i1,jj1) )*0.50
-!          pot_j0=( potent(i0,jj0)+potent(i1,jj0) )*0.50
-!          ed2_90(2,lp,mp)=+1.0/r/sinI_m(ihem)*(pot_j1-pot_j0) /d_lam_m  &
-!     &*(-1.) !dbg20140224
-!!         dbg20111108     &*(-1.)*sinI_m(ihem)  !E_m_lambda (5.10)
-!
-!          IF(sw_exb_up<=1.and.sw_perp_transport>=1) then
-!             if(lp>=lpmin_perp_trans.AND.lp<=lpmax_perp_trans) THEN 
-!
-!!initialization
-!                VEXBup(lp,mp)=zero
-!                VEXBe(lp,mp)=zero
-!                VEXBth(lp,mp)=zero
-!
-!!           (0) self consistent electrodynamics comming soon...
-!!           (1) WACCM E empirical model
-!!           Ed1/2[V/m] at ( phi_t1(mp), theta_t1(lp) ), Be3[T]
-!!           note: Ed1_90, Ed2_90, and Be3 are constant along magnetic field lines!!! 
-!            midpoint = JMIN_IN(lp) + (JMAX_IS(lp) - JMIN_IN(lp))/2
-!
-!!nm20130830: Ed1/2_90 should be constant along magnetic field lines!!!
-!            v_e(1) =   Ed2_90(1,lp,mp) / Be3(lp,mp) !(4.18) +mag-east(d1?) 
-!            v_e(2) = - Ed1_90(1,lp,mp) / Be3(lp,mp) !(4.19) +down/equatorward(d2?)
-!
-!! EXB in geographic frame at (midpoint,lp,mp)
-!            vexbgeo(east )=(v_e(1)*apexE(midpoint,lp,mp,east,1))        &
-!     &                    +(v_e(2)*apexE(midpoint,lp,mp,east,2))
-!            vexbgeo(north)=(v_e(1)*apexE(midpoint,lp,mp,north,1))       &
-!     &                    +(v_e(2)*apexE(midpoint,lp,mp,north,2))
-!            vexbgeo(up   )=(v_e(1)*apexE(midpoint,lp,mp,up   ,1))       &
-!     &                    +(v_e(2)*apexE(midpoint,lp,mp,up   ,2))
-!! EXB  magnetic exact upward at APEX (midpoint) 
-!!           VEXBup(lp,mp) = v_e(2) * (-1.0) !convert from down to UPward
-!            VEXBup(lp,mp) = vexbgeo(up)
-!
-!               ipts = JMIN_IN(lp) ! if ihem=1 NH
-!!               ipts = JMAX_IS(lp) ! if ihem=2 SH
-!! EXB in geographic frame at 90km NH (IN,lp,mp)
-!            vexbgeo(east )=(v_e(1)*apexE(ipts,lp,mp,east,1))            &
-!     &                    +(v_e(2)*apexE(ipts,lp,mp,east,2))
-!            vexbgeo(north)=(v_e(1)*apexE(ipts,lp,mp,north,1))           &
-!     &                    +(v_e(2)*apexE(ipts,lp,mp,north,2))
-!            vexbgeo(up   )=(v_e(1)*apexE(ipts,lp,mp,up   ,1))           &
-!     &                    +(v_e(2)*apexE(ipts,lp,mp,up   ,2))
-!! vperp at 90km NH +poleward
-!!VEXBth: horizontal component, positive EQUATORward: is calculated only for th-method
-!!dbg20150319: it might be better to estimate sinI at JMIN_IN
-!!              VEXBth(lp,mp) = v_e(2) * sinI_m(1) !if ihem=1 NH
-!               VEXBth(lp,mp) = v_e(2) / sinI_m(1) !if ihem=1 NH
-!
-!!temporary solution to test the code
-!               VEXBe(lp,mp) = 0.0
-!
-!
-!              if ( sw_perp_transport==1 )   VEXBe(lp,mp)=zero
-!
-!            else                   ! (lp<lpmin_perp_trans.or.lp>lpmax_perp_trans) THEN 
-!               VEXBup(lp,mp)=zero
-!               VEXBe(lp,mp)=zero
-!               VEXBth(lp,mp)=zero 
-!            end if              !(lp>=lpmin_perp_trans.AND.lp<=lpmax_perp_trans) THEN 
-!          END IF !( sw_exb_up<=1.and. ... ) 
-!
-!
-!        END DO mlat_loop90km1 !: DO lp=1,NLP
-!      END DO mlon_loop90km0     !: DO mp=1,nmp
-!!dbg20160408 sms debug 
-!!SMS$PARALLEL END
-!
-!
-!         IF ( MOD( (utime_local-start_time),ip_freq_output)==0 ) THEN
-!!SMS$SERIAL(<vexbup,vexbe,vexbth,IN>:default=ignore) BEGIN
-!            write(unit=2011,FMT='(20E12.4)') vexbup
-!            write(unit=2012,FMT='(20E12.4)') vexbe
-!            write(unit=2013,FMT='(E12.4)  ') sunlons(1)
-!            write(unit=2014,FMT='(20E12.4)') vexbth
-!!SMS$SERIAL END
-!         END IF                 ! ( MOD( (utime_local-start_time),ip_freq_output)==0 ) THEN
 !
 !      END SUBROUTINE GET_EFIELD90km
 !!

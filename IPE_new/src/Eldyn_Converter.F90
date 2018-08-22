@@ -10,6 +10,7 @@ IMPLICIT NONE
   LOGICAL           :: init_success
   REAL(prec)        :: t0_ipe
   INTEGER           :: i
+  CHARACTER(50)     :: filename
 
     CALL ipe % Build( init_success )
 
@@ -25,16 +26,18 @@ IMPLICIT NONE
         ! Here is where the electrodynamics "Update" routine is called.
         ! You can feel free to comment it out, and replace it with calls
         ! to your "Read", "Regrid", and "Merge" routines.
-        CALL ipe % eldyn % Update( ipe % grid, &
-                                   ipe % forcing, &
-                                   ipe % time_tracker )
+        CALL ipe % eldyn % Read_Geospace_Potential( filename )
+       ! CALL ipe % eldyn % Regrid_Geospace(  )
+ 
+
+        ! This syntax will also work
+        !CALL Read_Geospace_Potential( ipe % eldyn, filename )
 
 
-        CALL ipe % Write_NetCDF_IPE( "IPE_State.apex."//ipe % time_tracker % DateStamp( )//".nc" ) 
+        CALL ipe % eldyn % Write_MHD_Potential( ipe % grid, &
+                                                ipe % time_tracker, &
+                                               "MHD_Potential"//ipe % time_tracker % DateStamp( )//".nc" ) 
         
-        ! Interpolate to the Geographic Fixed Height Grid and write to file
-        CALL ipe % Write_Geographic_NetCDF_IPE( "IPE_State.geo."//ipe % time_tracker % DateStamp( )//".nc" ) 
-
       ENDDO
 
     ENDIF
