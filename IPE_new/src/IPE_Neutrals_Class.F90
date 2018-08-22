@@ -176,14 +176,54 @@ CONTAINS
     ! Local
     INTEGER        :: i, lp, mp
     INTEGER        :: iyd
+    integer :: istop , iht, ilat, ilon
     REAL(prec)     :: slt, lat, lon, alt
+    REAL(4)     :: geo_longitude, geo_latitude
     REAL(prec)     :: densities(1:9), temperatures(1:2)
     REAL(4)        :: w(1:2), ap_msis(1:2)
 
       iyd = 99000 + day
+      ap_msis(1:2) = ap(1:2) 
 
-      !$OMP PARALLEL PRIVATE( iyd, slt, lat, lon, alt, densities, temperatures, w, ap_msis )
-      !$OMP DO COLLAPSE(3)
+    print *, 'GHGM Starting neutrals'
+    do ilon = 1 , 36
+      geo_longitude = (ilon - 1) * 10.
+      slt = utime/3600.0_prec + geo_longitude/15.0_prec
+      do ilat = 1 , 19
+        geo_latitude = ((ilat - 1) * 10.) - 90.0
+        do iht = 1 , 72
+          alt = 90.0 + (iht - 1) * 10.
+!         print *, geo_longitude, geo_latitude, alt
+          call hwm14( iyd, &           ! Input, year and day as yyddd
+                        REAL(utime,4), &         ! Input, universal time ( sec )
+                        REAL(alt,4), &           ! Input, altitude ( km )
+                        REAL(geo_latitude,4), &           ! Input, geodetic latitude ( degrees )
+                        REAL(geo_longitude,4), &           ! Input, geodetic longitude ( degrees )
+                        REAL(slt,4), &           ! Input, local apparent solar time ( hrs )[ not used ]
+                        REAL(f107a,4), &         ! Input, 3 month average of f10.7 flux [ not used ]
+                        REAL(f107d,4), &         ! Input, daily average of f10.7 flux for the previous day [ not used ]
+                        ap_msis, &           ! Input, magnetic index ( daily ), current 3hr ap index 
+                        hwm_path, &      
+                        w(1:2) )         ! Ouput, neutral wind velocity zonal and meridional components
+          call gtd7( iyd, &                       ! Input, year and day as yyddd
+                       utime, &                     ! Input, universal time ( sec )
+                       alt, &                       ! Input, altitude ( km )
+                       lat, &                       ! Input, geodetic latitude ( degrees )
+                       lon, &                       ! Input, geodetic longitude ( degrees )
+                       slt, &                       ! Input, local apparent solar time ( hrs )
+                       f107a, &                     ! Input, 3 month average of f10.7 flux
+                       f107d, &                     ! Input, daily average of f10.7 flux for the previous day
+                       ap(1:7), &                   ! Input, magnetic index ( daily ), current, 3,6,9hrs prior 3hr ap index, 12-33 hr prior ap average, 36-57 hr prior ap average
+                       48, &                        ! Mass number ( see src/msis/physics_msis.f90 for more details )
+                       densities(1:9), &            ! Ouput, neutral densities in cubic meters
+                       temperatures(1:2) )          ! Output, exospheric temperature and temperature at altitude
+        enddo
+      enddo
+    enddo
+    print *, 'GHGM Done neutrals'
+    istop = 1
+    if(istop.eq.1) stop
+
       DO mp = 1, neutrals % NMP    
         print *, 'GHGM neutrals mp ', mp
         DO lp = 1, neutrals % NLP    
