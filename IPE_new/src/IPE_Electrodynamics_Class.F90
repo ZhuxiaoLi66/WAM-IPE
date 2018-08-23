@@ -69,7 +69,7 @@ IMPLICIT NONE
       PROCEDURE :: Write_MHD_Potential
 
       PROCEDURE, PRIVATE :: Empirical_E_Field_Wrapper
-      PROCEDURE, PRIVATE :: Regrid_Empirical_Potential
+      PROCEDURE, PRIVATE :: Regrid_Potential
 
   END TYPE IPE_Electrodynamics
 
@@ -203,10 +203,6 @@ CONTAINS
 
       CALL Check( nf90_close( ncid ) )
  
-      PRINT*, MINVAL( geospace_potential )
-      PRINT*, MAXVAL( geospace_potential )
-
-    ! read input ( maybe into local variable )
 
   END SUBROUTINE Read_Geospace_Potential
  
@@ -320,6 +316,9 @@ CONTAINS
     ! Local
     INTEGER :: i, j, year
     REAL(prec) :: theta130_rad, utime, lat
+    REAL(prec) :: potent_local(0:nmlon,0:nmlat)
+    REAL(prec) :: mlt_local(0:nmlon)
+    REAL(prec) :: colat_local(0:nmlat)
      
 
         IF( setup_efield_empirical )THEN
@@ -357,29 +356,37 @@ CONTAINS
 
 
         ! Interpolate the potential to the IPE grid
-        CALL eldyn % Regrid_Empirical_Potential( grid, time_tracker )
+        potent_local = potent
+        mlt_local    = ylonm
+        colat_local  = ylatm
+        CALL eldyn % Regrid_Potential( grid, time_tracker, potent_local, mlt_local, colat_local, 0, nmlon, nmlat )
         
         ! Calculate the potential gradient in IPE coordinates.
 
 
   END SUBROUTINE Empirical_E_Field_Wrapper
 
-  SUBROUTINE Regrid_Empirical_Potential( eldyn, grid, time_tracker )
+  SUBROUTINE Regrid_Potential( eldyn, grid, time_tracker, potential, mlt, colat, start_index, nlon, nlat )
+  ! This subroutine regrids electric potential from a structured grid
+  ! on (magnetic local time, magnetic colatitude) to IPE's grid.
+  !
     CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn 
     TYPE( IPE_Grid ), INTENT(in)                :: grid
     TYPE( IPE_Time ), INTENT(in)                :: time_tracker
+    INTEGER, INTENT(in)                         :: start_index, nlon, nlat
+    REAL(prec), INTENT(in)                      :: potential(start_index:nlon,start_index:nlat)
+    REAL(prec), INTENT(in)                      :: mlt(start_index:nlon)
+    REAL(prec), INTENT(in)                      :: colat(start_index:nlat)
     ! Local
     INTEGER :: mp, lp, i, j, i1, i2, j1, j2
     INTEGER :: ilat(1:grid % NLP), jlon(1:grid % NMP)
-    REAL(prec) :: ylonm_local(0:nmlon)
     REAL(prec) :: lat, lon, dlon, difflon, mindiff, wsum
     REAL(prec) :: lat_weight(1:2), lon_weight(1:2)
-    REAL(prec) :: mlon90_rad(0:nmlon)
+    REAL(prec) :: mlon90_rad(start_index:nlon)
  
 
 
-      ylonm_local = ylonm
-      mlon90_rad = MLT_to_MagneticLongitude( ylonm_local, 1999, time_tracker % day_of_year, time_tracker % utime, nmlon )
+      mlon90_rad = MLT_to_MagneticLongitude( mlt, 1999, time_tracker % day_of_year, time_tracker % utime, start_index, nlon )
 
 
       ! Search for nearest grid points in the magnetic longitude/latitude grid
@@ -389,7 +396,7 @@ CONTAINS
          mindiff = 1000.0_prec ! This is just an initial guess for the minimum search algorithm
                                ! It is purposefully a large number that will
                                ! likely not be the minimum
-         DO j = 0, nmlon
+         DO j = start_index, nlon
 
             difflon = ABS(mlon90_rad(j) - lon)
             IF( difflon < mindiff )THEN
@@ -406,8 +413,8 @@ CONTAINS
 
         lat = grid % magnetic_colatitude(1,lp)        
         ! colatitude decreases with increasing lp
-        ilat(lp) = nmlat
-        DO i = 0, nmlat
+        ilat(lp) = nlat
+        DO i = start_index, nlat
 
           IF( theta90_rad(i) < lat )THEN
             ilat(lp) = i
@@ -419,12 +426,12 @@ CONTAINS
       ENDDO
 
       DO mp = 1, grid % NMP
-        DO lp = 1, grid % NLP-1
+        DO lp = 1, grid % NLP
 
           lat = grid % magnetic_colatitude(1,lp)        
           lon = grid % magnetic_longitude(mp)        
 
-          IF( ilat(lp) == 0 )THEN
+          IF( ilat(lp) == start_index )THEN
 
             i1 = ilat(lp)
             i2 = ilat(lp)
@@ -442,11 +449,11 @@ CONTAINS
 
 
 
-         IF( jlon(mp) == 0 )THEN
+         IF( jlon(mp) == start_index )THEN
 
            IF( mlon90_rad(jlon(mp)) > lon )THEN
 
-             j1 = nmlon
+             j1 = nlon
              j2 = 0
 
              dlon = mlon90_rad(j1) - mlon90_rad(j2)
@@ -474,12 +481,12 @@ CONTAINS
 
             ENDIF
 
-         ELSEIF( jlon(mp) == nmlon )THEN
+         ELSEIF( jlon(mp) == nlon )THEN
 
            IF( mlon90_rad(jlon(mp)) > lon )THEN
 
-             j1 = nmlon-1
-             j2 = nmlon
+             j1 = nlon-1
+             j2 = nlon
 
              dlon = mlon90_rad(j1) - mlon90_rad(j2)
              IF( dlon > 0.0_prec )THEN
@@ -492,7 +499,7 @@ CONTAINS
 
            ELSE
 
-             j1 = nmlon
+             j1 = nlon
              j2 = 0
 
              dlon = mlon90_rad(j1) - mlon90_rad(j2)
@@ -541,36 +548,36 @@ CONTAINS
          ENDIF
 
 
-         eldyn % electric_potential(lp,mp) = ( potent(j1,i1)*lat_weight(1)*lon_weight(1) +&
-                                               potent(j2,i1)*lat_weight(1)*lon_weight(2) +&
-                                               potent(j1,i2)*lat_weight(2)*lon_weight(1) +&
-                                               potent(j2,i2)*lat_weight(2)*lon_weight(2) )
+         eldyn % electric_potential(lp,mp) = ( potential(j1,i1)*lat_weight(1)*lon_weight(1) +&
+                                               potential(j2,i1)*lat_weight(1)*lon_weight(2) +&
+                                               potential(j1,i2)*lat_weight(2)*lon_weight(1) +&
+                                               potential(j2,i2)*lat_weight(2)*lon_weight(2) )
 
 
 
        ENDDO
 
-       eldyn % electric_potential(grid % NLP,mp) = eldyn % electric_potential(grid % NLP-1, mp)
+       !eldyn % electric_potential(grid % NLP,mp) = eldyn % electric_potential(grid % NLP-1, mp)
 
      ENDDO
 
          
          
-  END SUBROUTINE Regrid_Empirical_Potential
+  END SUBROUTINE Regrid_Potential
 
-  FUNCTION MLT_to_MagneticLongitude( mlt, year, day_of_year, utime, nlon ) RESULT( mag_longitude )
-    INTEGER    :: nlon
-    REAL(prec) :: mlt(0:nlon)
+  FUNCTION MLT_to_MagneticLongitude( mlt, year, day_of_year, utime, start_index, nlon ) RESULT( mag_longitude )
+    INTEGER    :: start_index, nlon
+    REAL(prec) :: mlt(start_index:nlon)
     INTEGER    :: year, day_of_year
     REAL(prec) :: utime
-    REAL(prec) :: mag_longitude(0:nlon)
+    REAL(prec) :: mag_longitude(start_index:nlon)
     ! Local
     INTEGER    :: i
     REAL(prec) :: sunlons
 
       ! Map magnetic local time to magnetic longitude
       CALL sunloc( year, day_of_year, utime, sunlons ) 
-      DO i=0,nmlon
+      DO i=start_index,nmlon
 
         mag_longitude(i)=(mlt(i)-180.0_prec)*pi/180.0_prec+sunlons
         IF( mag_longitude(i) < 0.0_prec   ) mag_longitude(i)=mag_longitude(i)+pi*2.0
