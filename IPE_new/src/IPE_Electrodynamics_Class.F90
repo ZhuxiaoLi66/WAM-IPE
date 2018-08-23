@@ -69,7 +69,7 @@ IMPLICIT NONE
       PROCEDURE :: Write_MHD_Potential
 
       PROCEDURE, PRIVATE :: Empirical_E_Field_Wrapper
-!      PROCEDURE, PRIVATE :: Regrid_Empirical_Potential
+      PROCEDURE, PRIVATE :: Regrid_Empirical_Potential
 
   END TYPE IPE_Electrodynamics
 
@@ -319,8 +319,7 @@ CONTAINS
     TYPE( IPE_Time ), INTENT(in)                :: time_tracker
     ! Local
     INTEGER :: i, j, year
-    REAL(prec) :: mlon90_rad(0:nmlon)
-    REAL(prec) :: theta130_rad, utime, lat, ylonm_local(0:nmlon)
+    REAL(prec) :: theta130_rad, utime, lat
      
 
         IF( setup_efield_empirical )THEN
@@ -330,7 +329,7 @@ CONTAINS
           ! Maps latitude from 130km to 90km along flux tube.
           DO j=0,nmlat
 
-            theta130_rad   = ( 90.0_prec - ylatm(j) ) * dtr
+            theta130_rad   = ( 180.0_prec - ylatm(j) ) * dtr
             theta90_rad(j) = ASIN(SIN( theta130_rad )*SQRT((earth_radius+90000.0_prec)/(earth_radius+130000.0_prec)))
             IF ( theta130_rad > pi*0.50_prec ) theta90_rad(j) = pi-theta90_rad(j)
 
@@ -358,222 +357,206 @@ CONTAINS
 
 
         ! Interpolate the potential to the IPE grid
-        !CALL eldyn % Regrid_Empirical_Potential( grid )
+        CALL eldyn % Regrid_Empirical_Potential( grid, time_tracker )
         
         ! Calculate the potential gradient in IPE coordinates.
 
 
   END SUBROUTINE Empirical_E_Field_Wrapper
 
-!  SUBROUTINE Regrid_Empirical_Potential( eldyn, grid )
-!    CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn 
-!    TYPE( IPE_Grid ), INTENT(in)                :: grid
-!    ! Local
-!    INTEGER :: i, j, ii, jj, i_e, j_e
-! 
-!      Ed1_90=0.0_prec
-!      Ed2_90=0.0_prec
-!      theta90_rad = 0.0_prec
-!      coslam_m    = 0.0_prec
-!
-!      DO lp=1,NLP
-!
-!        coslam_m(1,lp) = COS( pi*0.5_prec - grid % magnetic_colatitude(1,lp) )
-!        coslam_m(2,lp) = COS( pi*0.5_prec - grid % magnetic_colatitude(grid % flux_tube_max(lp),lp) )
-!
-!        IF ( grid % magnetic_colatitude(1,lp) > theta90_rad(nmlat/2) ) THEN
-!          j0(1,lp)=nmlat/2+1   !1:NH
-!          j1(1,lp)=nmlat/2
-!          j0(2,lp)=nmlat/2     !2:SH
-!          j1(2,lp)=nmlat/2-1
-!
-!        ELSE 
-!
-!          DO j=nmlat,nmlat/2,-1
-!
-!            IF( theta90_rad(j) <= grid % magnetic_colatitude(1,lp) .AND. &
-!                grid % magnetic_colatitude(IN,lp) <= theta90_rad(j-1) ) THEN
-!
-!              j0(1,lp)=j  !1:NH
-!              j1(1,lp)=j-1
-!              j0(2,lp)=nmlat-(j-1)  !2:SH
-!              j1(2,lp)=nmlat-j
-!
-!              EXIT
-!
-!            ENDIF
-!
-!          ENDDO         
-!
-!        ENDIF
-!
-!      ENDDO 
-!
-!      d_phi_m = dlonm * dtr !constant
-!      r = earth_radius + 90000.0_prec ![m]
-!
-!      DO mp=1,NMP
-!        DO i=0,nmlon
-!
-!          i0=i
-!          i1=i+1
-!          IF ( i1>nmlon ) i1=i+1-nmlon
-!          mlon130_0=mlon130_rad(i0)
-!          IF ( mlon130_rad(i0)>mlon130_rad(i1) ) then
-!            mlon130_0=mlon130_rad(i0)-pi*2.0  
-!          ENDIF
-!          IF ( mlon_rad(mp)>=mlon130_0.AND.                             &
-!     &         mlon_rad(mp)<=mlon130_rad(i1) ) THEN
-!            EXIT mlon130_loop1
-!          ELSE
-!          END IF
-!        END DO mlon130_loop1 !: DO i=0,nmlon
-!
-!        mlat_loop90km1: DO lp=1,NLP
-!          IN = JMIN_IN(lp)
-!          IS = JMAX_IS(lp)
-!
-!!         computipng ed1_90(lp,mp)
-!!         FUNC-linearinterpolation does not work! need more debugging. temporary use the average of the two potentials.
-!!         linear interpolation of the potent at plasma_grid_3d(IN,mp) in mlat
-!!         NH
-!!         d          potent_i0 = LINEAR_INTERPOLATION(theta90_rad(j0(1,lp))
-!!         d     &   ,potent(i0(mp),j0(1,lp)),theta90_rad(j1(1,lp))
-!!         d     &   ,potent(i0(mp),j1(1,lp)),plasma_grid_3d(IN,mp)%GL)
-!!         d          potent_i1 = LINEAR_INTERPOLATION(theta90_rad(j0(1,lp))
-!!         d     &   ,potent(i1(mp),j0(1,lp)),theta90_rad(j1(1,lp))
-!!         d     &   ,potent(i1(mp),j0(1,lp)),plasma_grid_3d(IN,mp)%GL)
-!!         ii0=i0
-!!         ii1=i1
-!
-!
-!
-!
-!
-!
-!          jj0=j0(1,lp)              !1:NH
-!          jj1=j1(1,lp)
-!          pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50 
-!          pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
-!
-!          ed1_90(1,lp,mp)=-1.0/r/coslam_m(1,lp)                         &
-!     &                         *(pot_i1-pot_i0)/d_phi_m
-!!         SH
-!!         d          potent_i0=LINEAR_INTERPOLATION(theta90_rad(j0(1,lp)) 
-!!         d     &   ,potent(i0(mp),j0(1,lp)),theta90_rad(j1(1,lp))
-!!         d     &   ,potent(i0(mp),j1(1,lp)),plasma_grid_3d(IN,mp)%GL)
-!!         d          potent_i1=LINEAR_INTERPOLATION(theta90_rad(j0(1,lp))
-!!         d     &   ,potent(i1(mp),j0(1,lp)),theta90_rad(j1(1,lp))
-!!         d     &   ,potent(i1(mp),j0(1,lp)),plasma_grid_3d(IN,mp)%GL)
-!!         ii0=i0
-!!         ii1=i1
-!          jj0=j0(2,lp)              !2:SH
-!          jj1=j1(2,lp)              !2:SH
-!          pot_i1=( potent(i1,jj0)+potent(i1,jj1) )*0.50
-!          pot_i0=( potent(i0,jj0)+potent(i0,jj1) )*0.50
-!          ed1_90(2,lp,mp)=-1.0/r/coslam_m(2,lp)*(pot_i1-pot_i0)/d_phi_m
-!!         computing ed2_90(lp,mp) continues
-!!         calculate sinIm !eq(3.7)
-!          cos2Lambda_m = coslam_m(2,lp) * coslam_m(2,lp)      ! 0<cos2<1
-!          sinLambda_m(1)  = + SQRT( 1.0 - cos2Lambda_m )  !>0 ---NH 
-!          sinLambda_m(2)  = - SQRT( 1.0 - cos2Lambda_m )  !<0 ---SH 
-!          sinI_m(1:2)= 2.0*sinLambda_m(1:2)/SQRT(4.0-3.0*cos2Lambda_m)
-!!         NH
-!          ihem=1
-!          jj0=j0(ihem,lp)              !1:NH
-!          jj1=j1(ihem,lp)              !1:NH
-!          d_lam_m = theta90_rad( jj1 ) - theta90_rad( jj0 )
-!          pot_j1=( potent(i0,jj1)+potent(i1,jj1) )*0.50
-!          pot_j0=( potent(i0,jj0)+potent(i1,jj0) )*0.50
-!          ed2_90(1,lp,mp)=+1.0/r/sinI_m(ihem)*(pot_j1-pot_j0)/d_lam_m   &
-!     &*(-1.) !dbg20140224
-!!         dbg20111108     &*(-1.)*sinI_m(ihem)     !E_m_lambda (5.10)
-!!         SH
-!          ihem=2
-!          jj0=j0(ihem,lp)              !2:SH
-!          jj1=j1(ihem,lp)              !2:SH
-!          d_lam_m = theta90_rad( jj1 ) - theta90_rad( jj0 )
-!          pot_j1=( potent(i0,jj1)+potent(i1,jj1) )*0.50
-!          pot_j0=( potent(i0,jj0)+potent(i1,jj0) )*0.50
-!          ed2_90(2,lp,mp)=+1.0/r/sinI_m(ihem)*(pot_j1-pot_j0) /d_lam_m  &
-!     &*(-1.) !dbg20140224
-!!         dbg20111108     &*(-1.)*sinI_m(ihem)  !E_m_lambda (5.10)
-!
-!          IF(sw_exb_up<=1.and.sw_perp_transport>=1) then
-!             if(lp>=lpmin_perp_trans.AND.lp<=lpmax_perp_trans) THEN 
-!
-!!initialization
-!                VEXBup(lp,mp)=zero
-!                VEXBe(lp,mp)=zero
-!                VEXBth(lp,mp)=zero
-!
-!!           (0) self consistent electrodynamics comming soon...
-!!           (1) WACCM E empirical model
-!!           Ed1/2[V/m] at ( phi_t1(mp), theta_t1(lp) ), Be3[T]
-!!           note: Ed1_90, Ed2_90, and Be3 are constant along magnetic field lines!!! 
-!            midpoint = JMIN_IN(lp) + (JMAX_IS(lp) - JMIN_IN(lp))/2
-!
-!!nm20130830: Ed1/2_90 should be constant along magnetic field lines!!!
-!            v_e(1) =   Ed2_90(1,lp,mp) / Be3(lp,mp) !(4.18) +mag-east(d1?) 
-!            v_e(2) = - Ed1_90(1,lp,mp) / Be3(lp,mp) !(4.19) +down/equatorward(d2?)
-!
-!! EXB in geographic frame at (midpoint,lp,mp)
-!            vexbgeo(east )=(v_e(1)*apexE(midpoint,lp,mp,east,1))        &
-!     &                    +(v_e(2)*apexE(midpoint,lp,mp,east,2))
-!            vexbgeo(north)=(v_e(1)*apexE(midpoint,lp,mp,north,1))       &
-!     &                    +(v_e(2)*apexE(midpoint,lp,mp,north,2))
-!            vexbgeo(up   )=(v_e(1)*apexE(midpoint,lp,mp,up   ,1))       &
-!     &                    +(v_e(2)*apexE(midpoint,lp,mp,up   ,2))
-!! EXB  magnetic exact upward at APEX (midpoint) 
-!!           VEXBup(lp,mp) = v_e(2) * (-1.0) !convert from down to UPward
-!            VEXBup(lp,mp) = vexbgeo(up)
-!
-!               ipts = JMIN_IN(lp) ! if ihem=1 NH
-!!               ipts = JMAX_IS(lp) ! if ihem=2 SH
-!! EXB in geographic frame at 90km NH (IN,lp,mp)
-!            vexbgeo(east )=(v_e(1)*apexE(ipts,lp,mp,east,1))            &
-!     &                    +(v_e(2)*apexE(ipts,lp,mp,east,2))
-!            vexbgeo(north)=(v_e(1)*apexE(ipts,lp,mp,north,1))           &
-!     &                    +(v_e(2)*apexE(ipts,lp,mp,north,2))
-!            vexbgeo(up   )=(v_e(1)*apexE(ipts,lp,mp,up   ,1))           &
-!     &                    +(v_e(2)*apexE(ipts,lp,mp,up   ,2))
-!! vperp at 90km NH +poleward
-!!VEXBth: horizontal component, positive EQUATORward: is calculated only for th-method
-!!dbg20150319: it might be better to estimate sinI at JMIN_IN
-!!              VEXBth(lp,mp) = v_e(2) * sinI_m(1) !if ihem=1 NH
-!               VEXBth(lp,mp) = v_e(2) / sinI_m(1) !if ihem=1 NH
-!
-!!temporary solution to test the code
-!               VEXBe(lp,mp) = 0.0
-!
-!
-!              if ( sw_perp_transport==1 )   VEXBe(lp,mp)=zero
-!
-!            else                   ! (lp<lpmin_perp_trans.or.lp>lpmax_perp_trans) THEN 
-!               VEXBup(lp,mp)=zero
-!               VEXBe(lp,mp)=zero
-!               VEXBth(lp,mp)=zero 
-!            end if              !(lp>=lpmin_perp_trans.AND.lp<=lpmax_perp_trans) THEN 
-!          END IF !( sw_exb_up<=1.and. ... ) 
-!
-!
-!        END DO mlat_loop90km1 !: DO lp=1,NLP
-!      END DO mlon_loop90km0     !: DO mp=1,nmp
-!!dbg20160408 sms debug 
-!!SMS$PARALLEL END
-!
-!
-!         IF ( MOD( (utime_local-start_time),ip_freq_output)==0 ) THEN
-!!SMS$SERIAL(<vexbup,vexbe,vexbth,IN>:default=ignore) BEGIN
-!            write(unit=2011,FMT='(20E12.4)') vexbup
-!            write(unit=2012,FMT='(20E12.4)') vexbe
-!            write(unit=2013,FMT='(E12.4)  ') sunlons(1)
-!            write(unit=2014,FMT='(20E12.4)') vexbth
-!!SMS$SERIAL END
-!         END IF                 ! ( MOD( (utime_local-start_time),ip_freq_output)==0 ) THEN
-!
-!
-!  END SUBROUTINE Regrid_Empirical_Potential
+  SUBROUTINE Regrid_Empirical_Potential( eldyn, grid, time_tracker )
+    CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn 
+    TYPE( IPE_Grid ), INTENT(in)                :: grid
+    TYPE( IPE_Time ), INTENT(in)                :: time_tracker
+    ! Local
+    INTEGER :: mp, lp, i, j, i1, i2, j1, j2
+    INTEGER :: ilat(1:grid % NLP), jlon(1:grid % NMP)
+    REAL(prec) :: ylonm_local(0:nmlon)
+    REAL(prec) :: lat, lon, dlon, difflon, mindiff, wsum
+    REAL(prec) :: lat_weight(1:2), lon_weight(1:2)
+    REAL(prec) :: mlon90_rad(0:nmlon)
+ 
+
+
+      ylonm_local = ylonm
+      mlon90_rad = MLT_to_MagneticLongitude( ylonm_local, 1999, time_tracker % day_of_year, time_tracker % utime, nmlon )
+
+
+      ! Search for nearest grid points in the magnetic longitude/latitude grid
+      DO mp = 1, grid % NMP
+         lon = grid % magnetic_longitude(mp)        
+
+         mindiff = 1000.0_prec ! This is just an initial guess for the minimum search algorithm
+                               ! It is purposefully a large number that will
+                               ! likely not be the minimum
+         DO j = 0, nmlon
+
+            difflon = ABS(mlon90_rad(j) - lon)
+            IF( difflon < mindiff )THEN
+              jlon(mp) = j
+              mindiff = difflon
+            ENDIF
+
+         ENDDO
+
+
+      ENDDO
+
+      DO lp = 1, grid % NLP
+
+        lat = grid % magnetic_colatitude(1,lp)        
+        ! colatitude decreases with increasing lp
+        ilat(lp) = nmlat
+        DO i = 0, nmlat
+
+          IF( theta90_rad(i) < lat )THEN
+            ilat(lp) = i
+            EXIT
+          ENDIF
+
+        ENDDO
+
+      ENDDO
+
+      DO mp = 1, grid % NMP
+        DO lp = 1, grid % NLP-1
+
+          lat = grid % magnetic_colatitude(1,lp)        
+          lon = grid % magnetic_longitude(mp)        
+
+          IF( ilat(lp) == 0 )THEN
+
+            i1 = ilat(lp)
+            i2 = ilat(lp)
+            lat_weight(1) = 1.0_prec
+            lat_weight(2) = 0.0_prec 
+
+          ELSE
+
+            i1 = ilat(lp)-1
+            i2 = ilat(lp)
+            lat_weight(1) =  ( lat - theta90_rad(i2) )/( theta90_rad(i1) - theta90_rad(i2) )
+            lat_weight(2) = -( lat - theta90_rad(i1) )/( theta90_rad(i1) - theta90_rad(i2) )
+
+          ENDIF
+
+
+
+         IF( jlon(mp) == 0 )THEN
+
+           IF( mlon90_rad(jlon(mp)) > lon )THEN
+
+             j1 = nmlon
+             j2 = 0
+
+             dlon = mlon90_rad(j1) - mlon90_rad(j2)
+             IF( dlon > 0.0_prec )THEN
+               mlon90_rad(j1) = mlon90_rad(j1) - 2.0_prec*pi
+               dlon = mlon90_rad(j1) - mlon90_rad(j2)
+             ENDIF
+ 
+             lon_weight(1) =  ( lon - mlon90_rad(j2) )/dlon
+             lon_weight(2) = -( lon - mlon90_rad(j1) )/dlon
+
+           ELSE
+
+             j1 = 0
+             j2 = 1
+
+             dlon = mlon90_rad(j1) - mlon90_rad(j2)
+             IF( dlon > 0.0_prec )THEN
+               mlon90_rad(j1) = mlon90_rad(j1) - 2.0_prec*pi
+               dlon = mlon90_rad(j1) - mlon90_rad(j2)
+             ENDIF
+ 
+             lon_weight(1) =  ( lon - mlon90_rad(j2) )/dlon
+             lon_weight(2) = -( lon - mlon90_rad(j1) )/dlon
+
+            ENDIF
+
+         ELSEIF( jlon(mp) == nmlon )THEN
+
+           IF( mlon90_rad(jlon(mp)) > lon )THEN
+
+             j1 = nmlon-1
+             j2 = nmlon
+
+             dlon = mlon90_rad(j1) - mlon90_rad(j2)
+             IF( dlon > 0.0_prec )THEN
+               mlon90_rad(j1) = mlon90_rad(j1) - 2.0_prec*pi
+               dlon = mlon90_rad(j1) - mlon90_rad(j2)
+             ENDIF
+ 
+             lon_weight(1) =  ( lon - mlon90_rad(j2) )/dlon
+             lon_weight(2) = -( lon - mlon90_rad(j1) )/dlon
+
+           ELSE
+
+             j1 = nmlon
+             j2 = 0
+
+             dlon = mlon90_rad(j1) - mlon90_rad(j2)
+             IF( dlon > 0.0_prec )THEN
+               mlon90_rad(j1) = mlon90_rad(j1) - 2.0_prec*pi
+               dlon = mlon90_rad(j1) - mlon90_rad(j2)
+             ENDIF
+ 
+             lon_weight(1) =  ( lon - mlon90_rad(j2) )/dlon
+             lon_weight(2) = -( lon - mlon90_rad(j1) )/dlon
+
+            ENDIF
+
+         ELSE
+
+           IF( mlon90_rad(jlon(mp)) > lon )THEN
+
+             j1 = jlon(mp)-1
+             j2 = jlon(mp)
+
+             dlon = mlon90_rad(j1) - mlon90_rad(j2)
+             IF( dlon > 0.0_prec )THEN
+               mlon90_rad(j1) = mlon90_rad(j1) - 2.0_prec*pi
+               dlon = mlon90_rad(j1) - mlon90_rad(j2)
+             ENDIF
+ 
+             lon_weight(1) =  ( lon - mlon90_rad(j2) )/dlon
+             lon_weight(2) = -( lon - mlon90_rad(j1) )/dlon
+
+           ELSE
+
+             j1 = jlon(mp)
+             j2 = jlon(mp)+1
+
+             dlon = mlon90_rad(j1) - mlon90_rad(j2)
+             IF( dlon > 0.0_prec )THEN
+               mlon90_rad(j1) = mlon90_rad(j1) - 2.0_prec*pi
+               dlon = mlon90_rad(j1) - mlon90_rad(j2)
+             ENDIF
+ 
+             lon_weight(1) =  ( lon - mlon90_rad(j2) )/dlon 
+             lon_weight(2) = -( lon - mlon90_rad(j1) )/dlon
+
+            ENDIF
+
+         ENDIF
+
+
+         eldyn % electric_potential(lp,mp) = ( potent(j1,i1)*lat_weight(1)*lon_weight(1) +&
+                                               potent(j2,i1)*lat_weight(1)*lon_weight(2) +&
+                                               potent(j1,i2)*lat_weight(2)*lon_weight(1) +&
+                                               potent(j2,i2)*lat_weight(2)*lon_weight(2) )
+
+
+
+       ENDDO
+
+       eldyn % electric_potential(grid % NLP,mp) = eldyn % electric_potential(grid % NLP-1, mp)
+
+     ENDDO
+
+         
+         
+  END SUBROUTINE Regrid_Empirical_Potential
 
   FUNCTION MLT_to_MagneticLongitude( mlt, year, day_of_year, utime, nlon ) RESULT( mag_longitude )
     INTEGER    :: nlon
