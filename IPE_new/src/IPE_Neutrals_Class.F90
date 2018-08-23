@@ -177,8 +177,8 @@ CONTAINS
     INTEGER        :: i, lp, mp
     INTEGER        :: iyd
     integer :: istop , iht, ilat, ilon
-    REAL(prec)     :: slt, lat, lon, alt
-    REAL(4)     :: geo_longitude, geo_latitude
+    REAL(prec)     :: slt, alt
+    REAL(prec)     :: geo_longitude, geo_colatitude, geo_latitude
     REAL(prec)     :: densities(1:9), temperatures(1:2)
     REAL(4)        :: w(1:2), ap_msis(1:2)
     INTEGER, PARAMETER :: N_heights=72
@@ -186,7 +186,7 @@ CONTAINS
     INTEGER, PARAMETER :: N_Longitudes=36
 
     REAL(kind=8) :: geo_grid_longitudes_degrees(N_Longitudes)
-    REAL(kind=8) :: geo_grid_latitudes_degrees(N_Latitudes)
+    REAL(kind=8) :: geo_grid_colatitudes_degrees(N_Latitudes)
     REAL(kind=8) :: fixed_hts_in_km(N_heights)
     REAL(kind=8) :: O_density_geo(N_heights,N_Latitudes,N_longitudes)
     REAL(kind=8) :: O2_density_geo(N_heights,N_Latitudes,N_longitudes)
@@ -214,14 +214,15 @@ CONTAINS
 
       do ilat = 1 , 19
 
-        geo_latitude = ((ilat - 1) * 10.) - 90.0
-        geo_grid_latitudes_degrees(ilat) = geo_latitude
+        geo_colatitude = ((ilat - 1) * 10.)
+        geo_latitude = 90.0 - geo_colatitude
+        geo_grid_colatitudes_degrees(ilat) = geo_colatitude
 
         do iht = 1 , 72
           alt = 90.0 + (iht - 1) * 10.
           fixed_hts_in_km(iht) = alt
 
-!         print *, geo_longitude, geo_latitude, alt
+!         print *, geo_longitude, geo_colatitude, geo_latitude, alt
 
           call hwm14( iyd, &           ! Input, year and day as yyddd
                         REAL(utime,4), &         ! Input, universal time ( sec )
@@ -238,8 +239,8 @@ CONTAINS
           call gtd7( iyd, &                       ! Input, year and day as yyddd
                        utime, &                     ! Input, universal time ( sec )
                        alt, &                       ! Input, altitude ( km )
-                       lat, &                       ! Input, geodetic latitude ( degrees )
-                       lon, &                       ! Input, geodetic longitude ( degrees )
+                       geo_latitude, &           ! Input, geodetic latitude ( degrees )
+                       geo_longitude, &           ! Input, geodetic longitude ( degrees )
                        slt, &                       ! Input, local apparent solar time ( hrs )
                        f107a, &                     ! Input, 3 month average of f10.7 flux
                        f107d, &                     ! Input, daily average of f10.7 flux for the previous day
@@ -268,8 +269,27 @@ CONTAINS
     istop = 0
     if(istop.eq.1) stop
 
+!   print *, ' GHGM fixed heights ',  fixed_hts_in_km
+!   print *, ' GHGM longitudes ',  geo_grid_longitudes_degrees
+!   print *, ' GHGM latitudes ',  geo_grid_colatitudes_degrees
+!   do i = 1 , 1115
+!   print *, ' GHGM grid altitude ', grid % altitude(i,1) / 1000.0
+!   enddo
+!   do i = 1 , 80
+!   print *, ' GHGM grid longitude ', grid % longitude(1,20,i) * 180.0 / 3.14159, grid % longitude(1,100,i) * 180.0 / 3.14159                     
+!   enddo
+!   do i = 2 , 170
+!   print *, ' GHGM grid colatitude ',i,  grid % latitude(1,i,1) * 180.0 / 3.14159 , &
+!    (grid % latitude(1,i,1) * 180.0 / 3.14159) - (grid % latitude(1,i-1,1) * 180.0 / 3.14159)                                
+!   enddo
+
+    istop = 0
+    if(istop.eq.1) stop
+
+
+
   CALL INTERFACE__FIXED_GEO_to_MID_LAT_IONOSPHERE ( &
-        fixed_hts_in_km,geo_grid_longitudes_degrees,geo_grid_latitudes_degrees, &
+        fixed_hts_in_km,geo_grid_longitudes_degrees,geo_grid_colatitudes_degrees, &
         O_density_geo,O2_density_geo,N2_density_geo, &
         H_density_geo,HE_density_geo,N_density_geo, &
         Neutral_temp_geo,Neutral_temp_inf_geo, &
@@ -508,11 +528,11 @@ CONTAINS
 
 
   SUBROUTINE INTERFACE__FIXED_GEO_to_MID_LAT_IONOSPHERE ( &
-        fixed_hts_in_km,geo_grid_longitudes_degrees,geo_grid_latitudes_degrees, &
+        fixed_hts_in_km,geo_grid_longitudes_degrees,geo_grid_colatitudes_degrees, &
         O_density_geo,O2_density_geo,N2_density_geo, &
         H_density_geo,HE_density_geo,N_density_geo, &
         Neutral_temp_geo,Neutral_temp_inf_geo, &
-        pz_3d,glat_3d,glond_3d, &
+        pz_3d,gcolat_3d,glond_3d, &
         helium,oxygen,molecular_nitrogen,molecular_oxygen, &
         hydrogen,nitrogen,temperature_inf,temperature, &
         iflux_tube_max) 
@@ -529,15 +549,13 @@ CONTAINS
   INTEGER, DIMENSION(170) :: iflux_tube_max
 
   REAL(kind=8) ::  geo_grid_longitudes_degrees(N_Longitudes)
-  REAL(kind=8) ::  geo_grid_latitudes_degrees(N_Latitudes)
+  REAL(kind=8) ::  geo_grid_colatitudes_degrees(N_Latitudes)
   REAL(kind=8) ::  fixed_hts_in_km(N_heights)
 
-  REAL(kind=8) ::  glat(nFluxTube)
-  REAL(kind=8) ::  glond(nFluxTube)
-  REAL(kind=8) ::  pz(nFluxTube)
-  REAL(kind=8) ::  param_on_tube(nFluxTube)
-  REAL(kind=8) ::  pz_1000(nFluxTube)
-  REAL(kind=8) ::  glat_3d(nFluxTube,NLP,NMP)
+  REAL(kind=8) ::  gcolat_deg(nFluxTube)
+  REAL(kind=8) ::  glon_deg(nFluxTube)
+  REAL(kind=8) ::  pz_km(nFluxTube)
+  REAL(kind=8) ::  gcolat_3d(nFluxTube,NLP,NMP)
   REAL(kind=8) ::  glond_3d(nFluxTube,NLP,NMP)
 !ghgm pz_3d is actually 2d......(won't be for long)
   REAL(kind=8) ::  pz_3d(nFluxTube,NLP)
@@ -557,9 +575,8 @@ CONTAINS
                   param_11 , param_12 , param_21 , param_22 , param_1 , param_2
 
   INTEGER :: i , ih , ihl , ihu, ii , ilat , ilat1 , ilat2 , ilon , ilon1 , ilon2
-  INTEGER :: ispecial , l , m , n , istop
+  INTEGER :: ispecial , l , m , n , istop , ilog10 , n_params , iparam
 
-  REAL(kind=8) :: pzh(N_heights)
   REAL(kind=8) :: O_density_geo(N_heights,N_Latitudes,N_longitudes)
   REAL(kind=8) :: O2_density_geo(N_heights,N_Latitudes,N_longitudes)
   REAL(kind=8) :: N2_density_geo(N_heights,N_Latitudes,N_longitudes)
@@ -579,29 +596,31 @@ CONTAINS
   REAL(kind=8) :: nitrogen(nFluxTube,NLP,NMP)
   REAL(kind=8) :: temperature_inf(nFluxTube,NLP,NMP)
   REAL(kind=8) :: temperature(nFluxTube,NLP,NMP)
+  REAL(kind=8) small_power,small_number
+  small_power = -20.
+  small_number = 1.d-20
 
   iwrite = 1
   istop = 0
   if (istop == 1) stop
-  do i = 1, N_heights
-    pzh(i) = fixed_hts_in_km(i)
-  enddo
 !g
 !g  Big loop over all flux tubes (nmp and nlp).....
 !g
-! do mp = 1 , nmp
-!     do lp = 1 , nlp
-  do mp = 1 , 1
-      do lp = 1 , 1
+
+print *, " GHGM starting MSIS interpolation "
+
+  do mp = 1 , nmp
+      do lp = 1 , nlp
+! do mp = 40 , 40
+!     do lp = 50 , 50
       !g
       !g  calculate the 1D geographic inputs......
       !g
           do i=1,iflux_tube_max(lp)
 
-              glat(i) = glat_3d(i,lp,mp)
-              glond(i) = glond_3d(i,lp,mp)
-              pz(i) = pz_3d(i,lp)
-              pz_1000(i) = pz(i)*1000.
+              gcolat_deg(i) = gcolat_3d(i,lp,mp) * 180.0 / 3.14159
+              glon_deg(i) = glond_3d(i,lp,mp) * 180.0 / 3.14159
+              pz_km(i) = pz_3d(i,lp) / 1000.
 
           enddo
       !g
@@ -610,7 +629,7 @@ CONTAINS
 
           DO 900 i = 1 , iflux_tube_max(lp)
 
-              glond2 = GLOnd(i)
+              glond2 = glon_deg(i)
               IF ( glond2 > 360. ) glond2 = glond2 - 360.
               IF ( glond2 < 0. ) glond2 = glond2 + 360.
 
@@ -621,22 +640,30 @@ CONTAINS
                       IF ( geo_grid_longitudes_degrees(ilon) > glond2 ) THEN
                           ilon2 = ilon
                           ilon1 = ilon - 1
-                          IF ( IWRite == 1 ) WRITE(6,99001) i , glond2 , &
-                          geo_grid_longitudes_degrees(ilon2) , geo_grid_longitudes_degrees(ilon1)
-                          99001 FORMAT ('this 1 ',i3,3(2x,f10.1))
                           GOTO 250
                       ENDIF
                   200 ENDDO
                   ilon2 = 1
                   ilon1 = N_longitudes
                   ispecial = 1
+                  250 continue
 
-                  250 DO 300 ilat = 1 , N_Latitudes
-                      IF ( geo_grid_latitudes_degrees(ilat) > GLAt(i) ) THEN
+!                   if (i.eq.1) then
+!                   IF ( IWRite == 1 ) WRITE(6,99001) mp, i , glond2 , &
+!                   geo_grid_longitudes_degrees(ilon2) , geo_grid_longitudes_degrees(ilon1)
+!                   endif
+!                   99001 FORMAT (2i5,3(2x,f7.1))
+
+                  DO 300 ilat = 1 , N_Latitudes
+                      IF ( geo_grid_colatitudes_degrees(ilat) > gcolat_deg(i) ) THEN
                           ilat2 = ilat
                           ilat1 = ilat - 1
-                          IF ( IWRite == 1 ) WRITE(6,99001) i , GLAt(i) , &
-                          geo_grid_latitudes_degrees(ilat2) , geo_grid_latitudes_degrees(ilat1)
+!                         if (i.eq.1) then
+!                         if (i.eq.iflux_tube_max(lp)) then
+!                         IF ( IWRite == 1 ) WRITE(6,99002) lp , gcolat_deg(i) , &
+!                         geo_grid_colatitudes_degrees(ilat2) , geo_grid_colatitudes_degrees(ilat1)
+!                         endif
+!                   99002 FORMAT (i5,3(2x,f7.1))
                           GOTO 350
                       ENDIF
                   300 ENDDO
@@ -650,25 +677,25 @@ CONTAINS
               !g
 
                   DO 400 ih = 1 , N_heights
-                      pzh(ih) = fixed_hts_in_km(ih)
-                      IF ( pzh(ih) > PZ(i) ) THEN
+                      fixed_hts_in_km(ih) = fixed_hts_in_km(ih)
+                      IF ( fixed_hts_in_km(ih) > PZ_km(i) ) THEN
                           ihu = ih
                           ihl = ih - 1
-!                         IF ( IWRite == 1 ) WRITE(6,99001) i , PZ(i) , &
-!                         pzh(ihu) , pzh(ihl)
+!                         IF ( IWRite == 1 ) WRITE(6,99003) i , PZ_km(i) , fixed_hts_in_km(ihu) , fixed_hts_in_km(ihl)                           
+!                   99003 FORMAT (i5,3(2x,f8.1))
                           GOTO 450
                       ENDIF
                   400 ENDDO
                   ihu = N_heights
                   ihl = N_heights - 1
-!                 IF ( IWRite == 1 ) WRITE(6,99001) i , PZ(i) , pzh(ihu) , &
-!                 pzh(ihl)
-                  450 IF ( ihu == 1 ) THEN
-                      WRITE(6,*) 'ihu ' , ihu , pzh(ihu) , pzh(ihl)
-                      DO 460 ii = 1 , iflux_tube_max(lp)
-                          WRITE(6,*) ii , PZ(ii)
-                      460 ENDDO
-                  ENDIF
+!                 IF ( IWRite == 1 ) WRITE(6,99003) i , PZ_km(i) , fixed_hts_in_km(ihu) , fixed_hts_in_km(ihl)                 
+                  450 continue
+!                 IF ( ihu == 1 ) THEN
+!                     WRITE(6,*) 'ihu ' , ihu , fixed_hts_in_km(ihu) , fixed_hts_in_km(ihl)
+!                     DO 460 ii = 1 , iflux_tube_max(lp)
+!                         WRITE(6,*) ii , PZ_km(ii)
+!                     460 ENDDO
+!                 ENDIF
 
               ! thus pont lies in a box surrounded by the 8 points...
 
@@ -701,19 +728,119 @@ CONTAINS
 !                   write(6,*) 'arggh ',ilon1,ilon2,ilat1,ilat2,ispecial,ihl,ihu
 
 !             endif
+! Interpolation factors.......
 
-              param_u11 = O_density_geo(ihu,ilat1,ilon1)
-              param_l11 = O_density_geo(ihl,ilat1,ilon1)
-              param_u12 = O_density_geo(ihu,ilat1,ilon2)
-              param_l12 = O_density_geo(ihl,ilat1,ilon2)
-              param_u21 = O_density_geo(ihu,ilat2,ilon1)
-              param_l21 = O_density_geo(ihl,ilat2,ilon1)
-              param_u22 = O_density_geo(ihu,ilat2,ilon2)
-              param_l22 = O_density_geo(ihl,ilat2,ilon2)
+              fac_height = (PZ_km(i)-fixed_hts_in_km(ihl))/(fixed_hts_in_km(ihu)-fixed_hts_in_km(ihl))
+
+              IF ( ispecial == 0 ) THEN
+                  faclon = (glond2-geo_grid_longitudes_degrees(ilon1)) / &
+                           (geo_grid_longitudes_degrees(ilon2)-geo_grid_longitudes_degrees(ilon1))
+              ELSEIF ( ispecial == 1 ) THEN
+                  faclon = (glond2-geo_grid_longitudes_degrees(ilon1)) &
+                  /(geo_grid_longitudes_degrees(ilon2)+360.-geo_grid_longitudes_degrees(ilon1))
+              ENDIF
+
+              faclat = (gcolat_deg(i)-geo_grid_colatitudes_degrees(ilat1)) / &
+                       (geo_grid_colatitudes_degrees(ilat2)-geo_grid_colatitudes_degrees(ilat1))
+
+              n_params = 8
+
+              do iparam = 1 , n_params
+
+              SELECT CASE (iparam)
+
+              CASE(1)
+              ilog10 = 1
+              param_u11 = log10(O_density_geo(ihu,ilat1,ilon1))
+              param_l11 = log10(O_density_geo(ihl,ilat1,ilon1))
+              param_u12 = log10(O_density_geo(ihu,ilat1,ilon2))
+              param_l12 = log10(O_density_geo(ihl,ilat1,ilon2))
+              param_u21 = log10(O_density_geo(ihu,ilat2,ilon1))
+              param_l21 = log10(O_density_geo(ihl,ilat2,ilon1))
+              param_u22 = log10(O_density_geo(ihu,ilat2,ilon2))
+              param_l22 = log10(O_density_geo(ihl,ilat2,ilon2))
+
+              CASE(2)
+              ilog10 = 1
+              param_u11 = log10(O2_density_geo(ihu,ilat1,ilon1))
+              param_l11 = log10(O2_density_geo(ihl,ilat1,ilon1))
+              param_u12 = log10(O2_density_geo(ihu,ilat1,ilon2))
+              param_l12 = log10(O2_density_geo(ihl,ilat1,ilon2))
+              param_u21 = log10(O2_density_geo(ihu,ilat2,ilon1))
+              param_l21 = log10(O2_density_geo(ihl,ilat2,ilon1))
+              param_u22 = log10(O2_density_geo(ihu,ilat2,ilon2))
+              param_l22 = log10(O2_density_geo(ihl,ilat2,ilon2))
+
+              CASE(3)
+              ilog10 = 1
+              param_u11 = log10(N2_density_geo(ihu,ilat1,ilon1))
+              param_l11 = log10(N2_density_geo(ihl,ilat1,ilon1))
+              param_u12 = log10(N2_density_geo(ihu,ilat1,ilon2))
+              param_l12 = log10(N2_density_geo(ihl,ilat1,ilon2))
+              param_u21 = log10(N2_density_geo(ihu,ilat2,ilon1))
+              param_l21 = log10(N2_density_geo(ihl,ilat2,ilon1))
+              param_u22 = log10(N2_density_geo(ihu,ilat2,ilon2))
+              param_l22 = log10(N2_density_geo(ihl,ilat2,ilon2))
+
+              CASE(4)
+              ilog10 = 0
+              param_u11 = H_density_geo(ihu,ilat1,ilon1)
+              param_l11 = H_density_geo(ihl,ilat1,ilon1)
+              param_u12 = H_density_geo(ihu,ilat1,ilon2)
+              param_l12 = H_density_geo(ihl,ilat1,ilon2)
+              param_u21 = H_density_geo(ihu,ilat2,ilon1)
+              param_l21 = H_density_geo(ihl,ilat2,ilon1)
+              param_u22 = H_density_geo(ihu,ilat2,ilon2)
+              param_l22 = H_density_geo(ihl,ilat2,ilon2)
+
+              CASE(5)
+              ilog10 = 0
+              param_u11 = HE_density_geo(ihu,ilat1,ilon1)
+              param_l11 = HE_density_geo(ihl,ilat1,ilon1)
+              param_u12 = HE_density_geo(ihu,ilat1,ilon2)
+              param_l12 = HE_density_geo(ihl,ilat1,ilon2)
+              param_u21 = HE_density_geo(ihu,ilat2,ilon1)
+              param_l21 = HE_density_geo(ihl,ilat2,ilon1)
+              param_u22 = HE_density_geo(ihu,ilat2,ilon2)
+              param_l22 = HE_density_geo(ihl,ilat2,ilon2)
+
+              CASE(6)
+              ilog10 = 0
+              param_u11 = N_density_geo(ihu,ilat1,ilon1)
+              param_l11 = N_density_geo(ihl,ilat1,ilon1)
+              param_u12 = N_density_geo(ihu,ilat1,ilon2)
+              param_l12 = N_density_geo(ihl,ilat1,ilon2)
+              param_u21 = N_density_geo(ihu,ilat2,ilon1)
+              param_l21 = N_density_geo(ihl,ilat2,ilon1)
+              param_u22 = N_density_geo(ihu,ilat2,ilon2)
+              param_l22 = N_density_geo(ihl,ilat2,ilon2)
+
+              CASE(7)
+              ilog10 = 0
+              param_u11 = Neutral_temp_geo(ihu,ilat1,ilon1)
+              param_l11 = Neutral_temp_geo(ihl,ilat1,ilon1)
+              param_u12 = Neutral_temp_geo(ihu,ilat1,ilon2)
+              param_l12 = Neutral_temp_geo(ihl,ilat1,ilon2)
+              param_u21 = Neutral_temp_geo(ihu,ilat2,ilon1)
+              param_l21 = Neutral_temp_geo(ihl,ilat2,ilon1)
+              param_u22 = Neutral_temp_geo(ihu,ilat2,ilon2)
+              param_l22 = Neutral_temp_geo(ihl,ilat2,ilon2)
+
+              CASE(8)
+              ilog10 = 0
+              param_u11 = Neutral_temp_inf_geo(ihu,ilat1,ilon1)
+              param_l11 = Neutral_temp_inf_geo(ihl,ilat1,ilon1)
+              param_u12 = Neutral_temp_inf_geo(ihu,ilat1,ilon2)
+              param_l12 = Neutral_temp_inf_geo(ihl,ilat1,ilon2)
+              param_u21 = Neutral_temp_inf_geo(ihu,ilat2,ilon1)
+              param_l21 = Neutral_temp_inf_geo(ihl,ilat2,ilon1)
+              param_u22 = Neutral_temp_inf_geo(ihu,ilat2,ilon2)
+              param_l22 = Neutral_temp_inf_geo(ihl,ilat2,ilon2)
+
+              END SELECT
 
           ! now the 8 point interpolation.........
 
-              fac_height = (PZ(i)-pzh(ihl))/(pzh(ihu)-pzh(ihl))
 
 !             IF ( fac_height > 1. ) THEN
 !                 tn11 = tnu11
@@ -732,49 +859,64 @@ CONTAINS
               param_21 = (((param_u21-param_l21)*fac_height)+param_l21)
               param_22 = (((param_u22-param_l22)*fac_height)+param_l22)
 
-!             if(o11 > small_power) then
-!                 o11=10**o11
-!             else
-!                 o11=small_number
-!             endif
-!             if(o12 > small_power) then
-!                 o12=10**o12
-!             else
-!                 o12=small_number
-!             endif
-!             if(o21 > small_power) then
-!                 o21=10**o21
-!             else
-!                 o21=small_number
-!             endif
-!             if(o22 > small_power) then
-!                 o22=10**o22
-!             else
-!                 o22=small_number
-!             endif
+              if (ilog10.eq.1) then
+              if(param_11 > small_power) then
+                  param_11=10**param_11
+              else
+                  param_11=small_number
+              endif
+              if(param_12 > small_power) then
+                  param_12=10**param_12
+              else
+                  param_12=small_number
+              endif
+              if(param_21 > small_power) then
+                  param_21=10**param_21
+              else
+                  param_21=small_number
+              endif
+              if(param_22 > small_power) then
+                  param_22=10**param_22
+              else
+                  param_22=small_number
+              endif
+              endif
 
-              IF ( ispecial == 0 ) THEN
-                  faclon = (glond2-geo_grid_longitudes_degrees(ilon1)) / &
-                           (geo_grid_longitudes_degrees(ilon2)-geo_grid_longitudes_degrees(ilon1))
-              ELSEIF ( ispecial == 1 ) THEN
-                  faclon = (glond2-geo_grid_longitudes_degrees(ilon1)) &
-                  /(geo_grid_longitudes_degrees(ilon2)+360.-geo_grid_longitudes_degrees(ilon1))
-              ENDIF
 
               param_2 = ((param_22-param_21)*faclon) + param_21
               param_1 = ((param_12-param_11)*faclon) + param_11
 
-              faclat = (GLAt(i)-geo_grid_latitudes_degrees(ilat1)) / &
-                       (geo_grid_latitudes_degrees(ilat2)-geo_grid_latitudes_degrees(ilat1))
 
 ! GHGM check this small number part
 !             O(i) = ((do2-do1)*faclat) + do1
 !             if(o(i) < small_number) o(i)=small_number
 
-              param_on_tube(i) = ((param_2-param_1)*faclat) + param_1
+              SELECT CASE (iparam)
+              CASE(1)
+              oxygen(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
+              CASE(2)
+              molecular_oxygen(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
+              CASE(3)
+              molecular_nitrogen(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
+              CASE(4)
+              hydrogen(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
+              CASE(5)
+              helium(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
+              CASE(6)
+              nitrogen(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
+              CASE(7)
+              temperature(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
+              CASE(8)
+              temperature_inf(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
+              END SELECT
+
+              enddo ! params
+
           900 ENDDO
       enddo
    enddo
+
+print *, " GHGM ended MSIS interpolation "
 
 !  sw_1st_call_int_fixed_ht = .FALSE.
   RETURN
