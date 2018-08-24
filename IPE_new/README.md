@@ -33,6 +33,7 @@ and sets up the following symbolic links
 IPE_new/run/ipe => IPE_new/install/bin/ipe
 IPE_new/run/eregrid => IPE_new/install/bin/eregrid
 IPE_new/run/legacy2netcdf => IPE_new/install/bin/legacy2netcdf
+IPE_new/run/grid2netcdf => IPE_new/install/bin/grid2netcdf
 ```
 If you modify code and want to update the executables, simply run
 `make install` from the `IPE_new` directory.
@@ -54,6 +55,32 @@ and Geospace are currently in production.
 This executable is used to convert legacy IPE pickup files to the currently used
 NetCDF format.
 
+`grid2netcdf`
+This executable is used to convert legacy grid and interpolation files to the
+currently used NetCDF format.
+``` 
+   Usage : grid2netcdf [OPTIONS] 
+  
+     Options 
+  
+       --help 
+           Displays this message 
+  
+       --legacy-grid <grid-file>
+           Specifies to use <grid-file> as the legacy grid file 
+           to be converted to NetCDF. If this option is not  
+           provided, ./ipe_grid is assumed.  
+  
+       --interp-file <interpolation-weights-file>
+           Specifies to use <interpolation-weights-file> as the 
+           legacy file containing weights to map from apex grid 
+           to the geographic grid. 
+  
+       --nc-file <output-nc-file>
+           Specifies the name of the output netcdf file to use.
+           If this option is not provided, IPE_Grid.nc is 
+           assumed. 
+```
 
 ## Running the model
 If you're on a system that can access https://storage.googleapis.com, downloading the
