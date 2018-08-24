@@ -20,6 +20,10 @@ if [ ! -f ${IPE_PATH}/run/legacy2netcdf ];then
   ln -s ${IPE_PATH}/install/bin/legacy2netcdf ${IPE_PATH}/run/legacy2netcdf
 fi
 
+if [ ! -f ${IPE_PATH}/run/grid2netcdf ];then
+  ln -s ${IPE_PATH}/install/bin/grid2netcdf ${IPE_PATH}/run/grid2netcdf
+fi
+
 if [ ! -f ${IPE_PATH}/run/eregrid ];then
   ln -s ${IPE_PATH}/install/bin/eregrid ${IPE_PATH}/run/eregrid
 fi
