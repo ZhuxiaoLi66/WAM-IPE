@@ -1137,6 +1137,11 @@ CONTAINS
             ! Electron Temperature
             plasma % electron_temperature(i,lp,mp) = TE_TIX(3,i) 
 
+          if (mp.eq.1.and.lp.eq.1) then
+          write(6,566) i , zx(i), XIONNX(1,i)+XIONNX(2,i)+XIONNX(3,i)+XIONNX(4,i)+XIONNX(5,i)+XIONNX(6,i)                                              
+566 format(i4,2e12.4)
+          endif
+
           ENDDO
 
       ENDDO

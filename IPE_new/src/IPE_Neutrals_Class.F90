@@ -184,6 +184,9 @@ CONTAINS
     INTEGER, PARAMETER :: N_heights=72
     INTEGER, PARAMETER :: N_Latitudes=19
     INTEGER, PARAMETER :: N_Longitudes=36
+    INTEGER, PARAMETER :: nFluxTube=1115
+    INTEGER, PARAMETER :: NMP=80
+    INTEGER, PARAMETER :: NLP=170
 
     REAL(kind=8) :: geo_grid_longitudes_degrees(N_Longitudes)
     REAL(kind=8) :: geo_grid_colatitudes_degrees(N_Latitudes)
@@ -196,13 +199,14 @@ CONTAINS
     REAL(kind=8) :: N_density_geo(N_heights,N_Latitudes,N_longitudes)
     REAL(kind=8) :: Neutral_temp_geo(N_heights,N_Latitudes,N_longitudes)
     REAL(kind=8) :: Neutral_temp_inf_geo(N_heights,N_Latitudes,N_longitudes)
-    REAL(kind=8) :: VX(N_heights,N_Latitudes,N_longitudes)
-    REAL(kind=8) :: VY(N_heights,N_Latitudes,N_longitudes)
+    REAL(kind=8) :: VnX_meridional_geo(N_heights,N_Latitudes,N_longitudes)
+    REAL(kind=8) :: VnY_zonal_geo(N_heights,N_Latitudes,N_longitudes)
+    REAL(kind=8) :: vx_geographic(nFluxTube,NLP,NMP)
+    REAL(kind=8) :: vy_geographic(nFluxTube,NLP,NMP)
 
 
-
-      iyd = 99000 + day
-      ap_msis(1:2) = ap(1:2) 
+    iyd = 99000 + day
+    ap_msis(1:2) = ap(1:2) 
 
     print *, 'GHGM Starting neutrals'
 
@@ -258,9 +262,8 @@ CONTAINS
             N_density_geo(iht,ilat,ilon)        = densities(8)*10.0_prec**6
             Neutral_temp_inf_geo(iht,ilat,ilon) = temperatures(1)
             Neutral_temp_geo(iht,ilat,ilon)     = temperatures(2)
-! GHGM - need to do the velocities....
-!           neutrals % velocity_geographic(1,i,lp,mp) = w(2) ! zonal velocity 
-!           neutrals % velocity_geographic(2,i,lp,mp) = w(1) ! meridional velocity 
+            VnX_meridional_geo(iht,ilat,ilon)   = w(1) ! meridional wind (m/sec +northwards)         
+            VnY_zonal_geo(iht,ilat,ilon)        = w(2) ! zonal wind (m/sec +eastwards)           
 
         enddo
       enddo
@@ -293,13 +296,24 @@ CONTAINS
         O_density_geo,O2_density_geo,N2_density_geo, &
         H_density_geo,HE_density_geo,N_density_geo, &
         Neutral_temp_geo,Neutral_temp_inf_geo, &
+        VnX_meridional_geo,VnY_zonal_geo, &
         grid % altitude, grid % latitude, grid % longitude, &
         neutrals % helium,neutrals % oxygen,neutrals % molecular_nitrogen,neutrals % molecular_oxygen, &
         neutrals % hydrogen,neutrals % nitrogen,neutrals % temperature_inf,neutrals % temperature, &
+        vx_geographic, vy_geographic, &
         grid % flux_tube_max) 
 
+    neutrals % velocity_geographic(1,1:nFluxTube,1:NLP,1:NMP) = vx_geographic
+    neutrals % velocity_geographic(2,1:nFluxTube,1:NLP,1:NMP) = vy_geographic
+    neutrals % velocity_geographic(3,1:nFluxTube,1:NLP,1:NMP) = 0.0
+
+do i = 1 , nFluxTube
+write(6,777) i, grid % altitude(i,1), neutrals % oxygen(i,1,1), neutrals % temperature(i,1,1),  neutrals % velocity_geographic(1,i,1,1)
+777 format(i4,4e12.4)
+enddo
+
     print *, 'GHGM Done interface'
-    istop = 1
+    istop = 0
     if(istop.eq.1) stop
 
 #ifdef COUPLED
@@ -532,9 +546,11 @@ CONTAINS
         O_density_geo,O2_density_geo,N2_density_geo, &
         H_density_geo,HE_density_geo,N_density_geo, &
         Neutral_temp_geo,Neutral_temp_inf_geo, &
+        VnX_meridional_geo,VnY_zonal_geo, &
         pz_3d,gcolat_3d,glond_3d, &
         helium,oxygen,molecular_nitrogen,molecular_oxygen, &
         hydrogen,nitrogen,temperature_inf,temperature, &
+        vnx,vny, &
         iflux_tube_max) 
 
   IMPLICIT NONE
@@ -575,7 +591,7 @@ CONTAINS
                   param_11 , param_12 , param_21 , param_22 , param_1 , param_2
 
   INTEGER :: i , ih , ihl , ihu, ii , ilat , ilat1 , ilat2 , ilon , ilon1 , ilon2
-  INTEGER :: ispecial , l , m , n , istop , ilog10 , n_params , iparam
+  INTEGER :: ispecial , l , m , n , istop , ilog10 , n_params , iparam , iconstant_above_top_level             
 
   REAL(kind=8) :: O_density_geo(N_heights,N_Latitudes,N_longitudes)
   REAL(kind=8) :: O2_density_geo(N_heights,N_Latitudes,N_longitudes)
@@ -585,8 +601,8 @@ CONTAINS
   REAL(kind=8) :: N_density_geo(N_heights,N_Latitudes,N_longitudes)
   REAL(kind=8) :: Neutral_temp_geo(N_heights,N_Latitudes,N_longitudes)
   REAL(kind=8) :: Neutral_temp_inf_geo(N_heights,N_Latitudes,N_longitudes)
-  REAL(kind=8) :: VX(N_heights,N_Latitudes,N_longitudes)
-  REAL(kind=8) :: VY(N_heights,N_Latitudes,N_longitudes)
+  REAL(kind=8) :: VnX_meridional_geo(N_heights,N_Latitudes,N_longitudes)
+  REAL(kind=8) :: VnY_zonal_geo(N_heights,N_Latitudes,N_longitudes)
 
   REAL(kind=8) :: helium(nFluxTube,NLP,NMP)
   REAL(kind=8) :: oxygen(nFluxTube,NLP,NMP)
@@ -596,6 +612,8 @@ CONTAINS
   REAL(kind=8) :: nitrogen(nFluxTube,NLP,NMP)
   REAL(kind=8) :: temperature_inf(nFluxTube,NLP,NMP)
   REAL(kind=8) :: temperature(nFluxTube,NLP,NMP)
+  REAL(kind=8) :: vnx(nFluxTube,NLP,NMP)
+  REAL(kind=8) :: vny(nFluxTube,NLP,NMP)
   REAL(kind=8) small_power,small_number
   small_power = -20.
   small_number = 1.d-20
@@ -743,7 +761,7 @@ print *, " GHGM starting MSIS interpolation "
               faclat = (gcolat_deg(i)-geo_grid_colatitudes_degrees(ilat1)) / &
                        (geo_grid_colatitudes_degrees(ilat2)-geo_grid_colatitudes_degrees(ilat1))
 
-              n_params = 8
+              n_params = 10
 
               do iparam = 1 , n_params
 
@@ -751,6 +769,7 @@ print *, " GHGM starting MSIS interpolation "
 
               CASE(1)
               ilog10 = 1
+              iconstant_above_top_level = 0
               param_u11 = log10(O_density_geo(ihu,ilat1,ilon1))
               param_l11 = log10(O_density_geo(ihl,ilat1,ilon1))
               param_u12 = log10(O_density_geo(ihu,ilat1,ilon2))
@@ -762,6 +781,7 @@ print *, " GHGM starting MSIS interpolation "
 
               CASE(2)
               ilog10 = 1
+              iconstant_above_top_level = 0
               param_u11 = log10(O2_density_geo(ihu,ilat1,ilon1))
               param_l11 = log10(O2_density_geo(ihl,ilat1,ilon1))
               param_u12 = log10(O2_density_geo(ihu,ilat1,ilon2))
@@ -773,6 +793,7 @@ print *, " GHGM starting MSIS interpolation "
 
               CASE(3)
               ilog10 = 1
+              iconstant_above_top_level = 0
               param_u11 = log10(N2_density_geo(ihu,ilat1,ilon1))
               param_l11 = log10(N2_density_geo(ihl,ilat1,ilon1))
               param_u12 = log10(N2_density_geo(ihu,ilat1,ilon2))
@@ -784,6 +805,7 @@ print *, " GHGM starting MSIS interpolation "
 
               CASE(4)
               ilog10 = 0
+              iconstant_above_top_level = 0
               param_u11 = H_density_geo(ihu,ilat1,ilon1)
               param_l11 = H_density_geo(ihl,ilat1,ilon1)
               param_u12 = H_density_geo(ihu,ilat1,ilon2)
@@ -795,6 +817,7 @@ print *, " GHGM starting MSIS interpolation "
 
               CASE(5)
               ilog10 = 0
+              iconstant_above_top_level = 0
               param_u11 = HE_density_geo(ihu,ilat1,ilon1)
               param_l11 = HE_density_geo(ihl,ilat1,ilon1)
               param_u12 = HE_density_geo(ihu,ilat1,ilon2)
@@ -806,6 +829,7 @@ print *, " GHGM starting MSIS interpolation "
 
               CASE(6)
               ilog10 = 0
+              iconstant_above_top_level = 0
               param_u11 = N_density_geo(ihu,ilat1,ilon1)
               param_l11 = N_density_geo(ihl,ilat1,ilon1)
               param_u12 = N_density_geo(ihu,ilat1,ilon2)
@@ -817,6 +841,7 @@ print *, " GHGM starting MSIS interpolation "
 
               CASE(7)
               ilog10 = 0
+              iconstant_above_top_level = 0
               param_u11 = Neutral_temp_geo(ihu,ilat1,ilon1)
               param_l11 = Neutral_temp_geo(ihl,ilat1,ilon1)
               param_u12 = Neutral_temp_geo(ihu,ilat1,ilon2)
@@ -828,6 +853,7 @@ print *, " GHGM starting MSIS interpolation "
 
               CASE(8)
               ilog10 = 0
+              iconstant_above_top_level = 1
               param_u11 = Neutral_temp_inf_geo(ihu,ilat1,ilon1)
               param_l11 = Neutral_temp_inf_geo(ihl,ilat1,ilon1)
               param_u12 = Neutral_temp_inf_geo(ihu,ilat1,ilon2)
@@ -837,27 +863,45 @@ print *, " GHGM starting MSIS interpolation "
               param_u22 = Neutral_temp_inf_geo(ihu,ilat2,ilon2)
               param_l22 = Neutral_temp_inf_geo(ihl,ilat2,ilon2)
 
+              CASE(9)
+              ilog10 = 0
+              iconstant_above_top_level = 1
+              param_u11 = VnX_meridional_geo(ihu,ilat1,ilon1)
+              param_l11 = VnX_meridional_geo(ihl,ilat1,ilon1)
+              param_u12 = VnX_meridional_geo(ihu,ilat1,ilon2)
+              param_l12 = VnX_meridional_geo(ihl,ilat1,ilon2)
+              param_u21 = VnX_meridional_geo(ihu,ilat2,ilon1)
+              param_l21 = VnX_meridional_geo(ihl,ilat2,ilon1)
+              param_u22 = VnX_meridional_geo(ihu,ilat2,ilon2)
+              param_l22 = VnX_meridional_geo(ihl,ilat2,ilon2)
+
+              CASE(10)
+              ilog10 = 0
+              iconstant_above_top_level = 1
+              param_u11 = VnY_zonal_geo(ihu,ilat1,ilon1)
+              param_l11 = VnY_zonal_geo(ihl,ilat1,ilon1)
+              param_u12 = VnY_zonal_geo(ihu,ilat1,ilon2)
+              param_l12 = VnY_zonal_geo(ihl,ilat1,ilon2)
+              param_u21 = VnY_zonal_geo(ihu,ilat2,ilon1)
+              param_l21 = VnY_zonal_geo(ihl,ilat2,ilon1)
+              param_u22 = VnY_zonal_geo(ihu,ilat2,ilon2)
+              param_l22 = VnY_zonal_geo(ihl,ilat2,ilon2)
               END SELECT
 
           ! now the 8 point interpolation.........
 
 
-!             IF ( fac_height > 1. ) THEN
-!                 tn11 = tnu11
-!                 tn12 = tnu12
-!                 tn21 = tnu21
-!                 tn22 = tnu22
-!             ELSE
-!                 tn11 = ((tnu11-tnl11)*fac_height) + tnl11
-!                 tn12 = ((tnu12-tnl12)*fac_height) + tnl12
-!                 tn21 = ((tnu21-tnl21)*fac_height) + tnl21
-!                 tn22 = ((tnu22-tnl22)*fac_height) + tnl22
-!             ENDIF
-
-              param_11 = (((param_u11-param_l11)*fac_height)+param_l11)
-              param_12 = (((param_u12-param_l12)*fac_height)+param_l12)
-              param_21 = (((param_u21-param_l21)*fac_height)+param_l21)
-              param_22 = (((param_u22-param_l22)*fac_height)+param_l22)
+              IF ((fac_height.ge.1.).and.(iconstant_above_top_level.eq.1)) THEN
+                  param_11 = param_u11
+                  param_12 = param_u12
+                  param_21 = param_u21
+                  param_22 = param_u22
+              ELSE
+                  param_11 = (((param_u11-param_l11)*fac_height)+param_l11)
+                  param_12 = (((param_u12-param_l12)*fac_height)+param_l12)
+                  param_21 = (((param_u21-param_l21)*fac_height)+param_l21)
+                  param_22 = (((param_u22-param_l22)*fac_height)+param_l22)
+              ENDIF
 
               if (ilog10.eq.1) then
               if(param_11 > small_power) then
@@ -886,11 +930,6 @@ print *, " GHGM starting MSIS interpolation "
               param_2 = ((param_22-param_21)*faclon) + param_21
               param_1 = ((param_12-param_11)*faclon) + param_11
 
-
-! GHGM check this small number part
-!             O(i) = ((do2-do1)*faclat) + do1
-!             if(o(i) < small_number) o(i)=small_number
-
               SELECT CASE (iparam)
               CASE(1)
               oxygen(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
@@ -908,6 +947,10 @@ print *, " GHGM starting MSIS interpolation "
               temperature(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
               CASE(8)
               temperature_inf(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
+              CASE(9)
+              vnx(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
+              CASE(10)
+              vny(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
               END SELECT
 
               enddo ! params
