@@ -67,6 +67,7 @@ IMPLICIT NONE
 
       PROCEDURE :: Read_MHD_Potential
       PROCEDURE :: Write_MHD_Potential
+      PROCEDURE :: Interpolate_Geospace_to_MHDpotential
 
       PROCEDURE, PRIVATE :: Empirical_E_Field_Wrapper
       PROCEDURE, PRIVATE :: Regrid_Potential
@@ -204,8 +205,33 @@ CONTAINS
 
       CALL Check( nf90_close( ncid ) )
  
+      print *,'Geospace',MAXVAL(geospace_potential),MINVAL(geospace_potential)
 
   END SUBROUTINE Read_Geospace_Potential
+
+   SUBROUTINE Interpolate_Geospace_to_MHDpotential( eldyn, grid, time_tracker)
+     IMPLICIT NONE
+    CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn
+     TYPE( IPE_Grid ), INTENT(in)             :: grid
+     TYPE( IPE_Time ), INTENT(in)             :: time_tracker
+     ! Local
+     INTEGER :: j,latidx
+     REAL(prec) :: colat_local(1:181)
+     REAL(prec) :: potential_local(181,181)
+
+
+     DO j=1,181
+     latidx=181-j+1
+     colat_local(j)=90.0_prec - geospace_latitude(latidx)
+     potential_local(:,j)=geospace_potential(:,latidx)
+     END DO
+     colat_local=colat_local*dtr
+     geospace_longitude=geospace_longitude*dtr
+     CALL eldyn % Regrid_Potential( grid, time_tracker, potential_local, geospace_longitude,colat_local, 1, 181, 181 )
+     print *, 'regrid pot',MAXVAL(eldyn % electric_potential),MINVAL(eldyn %electric_potential)
+      eldyn % mhd_electric_potential= eldyn % electric_potential
+ 
+   END SUBROUTINE Interpolate_Geospace_to_MHDpotential
  
   SUBROUTINE Write_MHD_Potential( eldyn, grid, time_tracker, filename )
     IMPLICIT NONE
@@ -460,6 +486,7 @@ CONTAINS
     REAL(prec) :: mlon90_rad(start_index:nlon)
  
 
+     print *,'colat after',colat
 
       mlon90_rad = MLT_to_MagneticLongitude( mlt, 1999, time_tracker % day_of_year, time_tracker % utime, start_index, nlon )
 
@@ -487,6 +514,7 @@ CONTAINS
       DO lp = 1, grid % NLP
 
         lat = grid % magnetic_colatitude(1,lp)        
+     print *,'IPE lat',lat
         ! colatitude decreases with increasing lp
         ilat(lp) = nlat
         DO i = start_index, nlat
@@ -628,6 +656,8 @@ CONTAINS
                                                potential(j1,i2)*lat_weight(2)*lon_weight(1) +&
                                                potential(j2,i2)*lat_weight(2)*lon_weight(2) )
 
+!       print *, 'lat weight',lat_weight(1:2)
+!       print *, 'lon weight',lon_weight(1:2)
 
 
        ENDDO

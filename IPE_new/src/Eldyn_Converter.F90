@@ -12,6 +12,7 @@ IMPLICIT NONE
   INTEGER           :: i
   CHARACTER(50)     :: filename
 
+    filename='potential_SMG_20150316_200100.nc'
     CALL ipe % Build( init_success )
 
     IF( init_success )THEN
@@ -27,8 +28,8 @@ IMPLICIT NONE
         ! You can feel free to comment it out, and replace it with calls
         ! to your "Read", "Regrid", and "Merge" routines.
         CALL ipe % eldyn % Read_Geospace_Potential( filename )
-       ! CALL ipe % eldyn % Regrid_Geospace(  )
- 
+       print *,'reading Geospace'
+        CALL ipe % eldyn % Interpolate_Geospace_to_MHDpotential ( ipe % grid,ipe % time_tracker)
 
         ! This syntax will also work
         !CALL Read_Geospace_Potential( ipe % eldyn, filename )
@@ -37,6 +38,7 @@ IMPLICIT NONE
         CALL ipe % eldyn % Write_MHD_Potential( ipe % grid, &
                                                 ipe % time_tracker, &
                                                "MHD_Potential"//ipe % time_tracker % DateStamp( )//".nc" ) 
+        print *,'writing geospace'
         
       ENDDO
 
