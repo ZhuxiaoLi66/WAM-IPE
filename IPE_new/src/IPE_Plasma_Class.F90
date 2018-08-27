@@ -1043,45 +1043,45 @@ CONTAINS
           JMINX = 1
           JMAXX = grid % flux_tube_max(lp)
  
-          write(66,*) mp,lp,JMINX,JMAXX
-          write(66,*) &
-                        grid % flux_tube_max(lp), & 
-                        ZX(1:JMAXX), & 
-                        PCO, & 
-                        SLX(1:JMAXX), & 
-                        GLX(1:JMAXX), & 
-                        BMX(1:JMAXX), & 
-                        GRX(1:JMAXX), &
-                        OX(1:JMAXX), & 
-                        HX(1:JMAXX), & 
-                        N2X(1:JMAXX), & 
-                        O2X(1:JMAXX), & 
-                        HEX(1:JMAXX), & 
-                        N4SX(1:JMAXX), & 
-                        INNO, &
-                        NNOX(1:JMAXX), & 
-                        TNX(1:JMAXX), & 
-                        TINFX(1:JMAXX), &
-                        UNX(1:JMAXX), & 
-                        flip_time_step, &
-                        DTMIN, & 
-                        F107D, &
-                        F107A, & 
-                        SZA, &
-                        FPAS, & 
-                        HPEQ, & 
-                        HEPRAT, &
-                        COLFACX, & 
-                        IHEPLS, & 
-                        INPLS, &
-                        UTHR, & 
-                        EHTX(1:3,1:JMAXX), & 
-                        AUR_PROD(1:3,1:JMAXX), & 
-                        TE_TIX(1:3,1:JMAXX), &
-                        XIONNX(1:9,1:JMAXX), &
-                        XIONVX(1:9,1:JMAXX), &
-                        NHEAT(1:JMAXX), & 
-                        EFLAG
+!         write(66,*) mp,lp,JMINX,JMAXX
+!         write(66,*) &
+!                       grid % flux_tube_max(lp), & 
+!                       ZX(1:JMAXX), & 
+!                       PCO, & 
+!                       SLX(1:JMAXX), & 
+!                       GLX(1:JMAXX), & 
+!                       BMX(1:JMAXX), & 
+!                       GRX(1:JMAXX), &
+!                       OX(1:JMAXX), & 
+!                       HX(1:JMAXX), & 
+!                       N2X(1:JMAXX), & 
+!                       O2X(1:JMAXX), & 
+!                       HEX(1:JMAXX), & 
+!                       N4SX(1:JMAXX), & 
+!                       INNO, &
+!                       NNOX(1:JMAXX), & 
+!                       TNX(1:JMAXX), & 
+!                       TINFX(1:JMAXX), &
+!                       UNX(1:JMAXX), & 
+!                       flip_time_step, &
+!                       DTMIN, & 
+!                       F107D, &
+!                       F107A, & 
+!                       SZA, &
+!                       FPAS, & 
+!                       HPEQ, & 
+!                       HEPRAT, &
+!                       COLFACX, & 
+!                       IHEPLS, & 
+!                       INPLS, &
+!                       UTHR, & 
+!                       EHTX(1:3,1:JMAXX), & 
+!                       AUR_PROD(1:3,1:JMAXX), & 
+!                       TE_TIX(1:3,1:JMAXX), &
+!                       XIONNX(1:9,1:JMAXX), &
+!                       XIONVX(1:9,1:JMAXX), &
+!                       NHEAT(1:JMAXX), & 
+!                       EFLAG
 
           CALL CTIPINT( JMINX, & !.. index of the first point on the field line
                         JMAXX, & !.. index of the last point on the field line
