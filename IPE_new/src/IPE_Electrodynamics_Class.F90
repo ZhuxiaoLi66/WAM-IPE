@@ -70,6 +70,7 @@ IMPLICIT NONE
 
       PROCEDURE, PRIVATE :: Empirical_E_Field_Wrapper
       PROCEDURE, PRIVATE :: Regrid_Potential
+      PROCEDURE, PRIVATE :: Calculate_Potential_Gradient
 
   END TYPE IPE_Electrodynamics
 
@@ -362,9 +363,83 @@ CONTAINS
         CALL eldyn % Regrid_Potential( grid, time_tracker, potent_local, mlt_local, colat_local, 0, nmlon, nmlat )
         
         ! Calculate the potential gradient in IPE coordinates.
+        CALL eldyn % Calculate_Potential_Gradient( grid )
 
 
   END SUBROUTINE Empirical_E_Field_Wrapper
+
+  SUBROUTINE Calculate_Potential_Gradient( eldyn, grid )
+    ! Uses 2nd order centered differencing (on the apex grid) to calculate the
+    ! electric field components from the potential attribute from the
+    ! IPE_Electrodynamics class.
+    CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn 
+    TYPE( IPE_Grid ), INTENT(in)                :: grid
+    ! Local
+    INTEGER :: mp, lp
+    REAL(prec) :: r, d_lp, d_mp
+
+
+      r = earth_radius + 90000.0_prec
+
+      ! lp-component of e-field
+      DO mp = 1, grid % NMP
+
+        lp = 1
+        d_lp = r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp) )
+
+        eldyn % electric_field(1,lp,mp) = ( eldyn % electric_potential(lp+1,mp) - &  
+                                            eldyn % electric_potential(lp,mp) )/d_lp
+
+        DO lp = 2, grid % NLP-1
+
+          d_lp = r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp-1) )
+
+          eldyn % electric_field(1,lp,mp) = ( eldyn % electric_potential(lp+1,mp) - &  
+                                              eldyn % electric_potential(lp-1,mp) )/d_lp
+
+        ENDDO
+
+        lp = grid % NLP
+        d_lp = r*( grid % magnetic_colatitude(1,lp) - grid % magnetic_colatitude(1,lp-1) )
+
+        eldyn % electric_field(1,lp,mp) = ( eldyn % electric_potential(lp,mp) - &  
+                                            eldyn % electric_potential(lp-1,mp) )/d_lp
+
+      ENDDO
+
+    
+      ! mp-component of e-field
+      ! Do periodic boundary conditions ( @ mp == 1 )
+      mp = 1
+      DO lp = 1, grid % NLP
+        d_mp = r*( grid % magnetic_longitude(mp+1) - grid % magnetic_longitude( grid % NMP ) + 2.0_prec*pi )
+
+        eldyn % electric_field(2,lp,mp) = ( eldyn % electric_potential(lp,mp+1) - &  
+                                            eldyn % electric_potential(lp,grid % NMP) )/d_mp
+      ENDDO
+      
+      DO mp = 2, grid % NMP-1
+        DO lp = 1, grid % NLP
+
+          d_mp = r*( grid % magnetic_longitude(mp+1) - grid % magnetic_longitude(mp-1) )
+
+          eldyn % electric_field(2,lp,mp) = ( eldyn % electric_potential(lp,mp+1) - &  
+                                              eldyn % electric_potential(lp,mp-1) )/d_mp
+
+        ENDDO
+      ENDDO
+
+      ! Do periodic boundary conditions ( @ mp == grid % NMP )
+      mp = grid % NMP
+      DO lp = 1, grid % NLP
+
+        d_mp = r*( grid % magnetic_longitude(1) - grid % magnetic_longitude(mp-1) + 2.0_prec*pi )
+
+        eldyn % electric_field(2,lp,mp) = ( eldyn % electric_potential(lp,1) - &  
+                                            eldyn % electric_potential(lp,mp-1) )/d_mp
+      ENDDO
+
+  END SUBROUTINE Calculate_Potential_Gradient
 
   SUBROUTINE Regrid_Potential( eldyn, grid, time_tracker, potential, mlt, colat, start_index, nlon, nlat )
   ! This subroutine regrids electric potential from a structured grid
