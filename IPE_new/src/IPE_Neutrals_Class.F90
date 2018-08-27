@@ -57,6 +57,7 @@ IMPLICIT NONE
   END TYPE IPE_Neutrals
 
 
+INTEGER, PARAMETER, PRIVATE :: NMP_reduce_factor = 4
 REAL(prec), PARAMETER, PRIVATE :: min_density = 10.0_prec**(-12)
 CHARACTER(250), PARAMETER :: hwm_path ='./'
 
@@ -627,8 +628,10 @@ enddo
 
 print *, " GHGM starting MSIS interpolation "
 
-  do mp = 1 , nmp
-      do lp = 1 , nlp
+  do mp = 1 , nmp , NMP_reduce_factor
+!print *, 'GHGM new mps ', mp
+      do lp = 1 , nlp , 2
+!print *, '       GHGM new lps ', lp
 ! do mp = 40 , 40
 !     do lp = 50 , 50
       !g

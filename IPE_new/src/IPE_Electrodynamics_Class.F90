@@ -486,7 +486,7 @@ CONTAINS
     REAL(prec) :: mlon90_rad(start_index:nlon)
  
 
-     print *,'colat after',colat
+!    print *,'colat after',colat
 
       mlon90_rad = MLT_to_MagneticLongitude( mlt, 1999, time_tracker % day_of_year, time_tracker % utime, start_index, nlon )
 
@@ -514,7 +514,7 @@ CONTAINS
       DO lp = 1, grid % NLP
 
         lat = grid % magnetic_colatitude(1,lp)        
-     print *,'IPE lat',lat
+!    print *,'IPE lat',lat
         ! colatitude decreases with increasing lp
         ilat(lp) = nlat
         DO i = start_index, nlat

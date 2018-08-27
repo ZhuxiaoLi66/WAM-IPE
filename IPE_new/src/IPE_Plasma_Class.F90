@@ -58,6 +58,7 @@ IMPLICIT NONE
 
   END TYPE IPE_Plasma
 
+  INTEGER, PARAMETER, PRIVATE :: NMP_reduce_factor = 4
   INTEGER, PARAMETER , PRIVATE   :: perp_transport_max_lp = 151
   INTEGER, PARAMETER, PRIVATE    :: n_ion_species = 9
   REAL(prec), PARAMETER, PRIVATE :: safe_density_minimum = 10.0_prec**(-4)
@@ -260,7 +261,7 @@ CONTAINS
       electron_density_pole_value     = 0.0_prec
       electron_temperature_pole_value = 0.0_prec
 
-      DO mp = 1, plasma % NMP
+      DO mp = 1, plasma % NMP , NMP_reduce_factor
         DO i = 1, grid % flux_tube_max(1)
           DO j = 1, n_ion_species
         
@@ -327,7 +328,7 @@ CONTAINS
 
       max_phi = MAXVAL( grid % magnetic_longitude )
 
-      DO mp = 1, grid % NMP
+      DO mp = 1, grid % NMP , NMP_reduce_factor
         DO lp = 1, perp_transport_max_lp
   
           theta_t0 = colat_90km(lp) - v_ExB(1,lp,mp)*time_step
@@ -369,7 +370,7 @@ CONTAINS
 
           mp_min = grid % NMP
 
-          DO mpx = 1, grid % NMP
+          DO mpx = 1, grid % NMP , NMP_reduce_factor
 
             IF( phi_t0 <= grid % magnetic_longitude(mpx) )THEN
               mp_min = mpx
@@ -749,8 +750,8 @@ CONTAINS
         en_maxwell(j) = REAL( j, prec )*0.05_prec - 0.025_prec
       ENDDO
 
-      DO mp = 1, grid % NMP
-        DO lp = 1, grid % NLP
+      DO mp = 1, grid % NMP , NMP_reduce_factor
+        DO lp = 1, grid % NLP , 2
 
           DO i=1,grid % flux_tube_max(lp)
             plasma % ionization_rates(1,i,lp,mp) = 0.0_prec
@@ -982,9 +983,9 @@ CONTAINS
       UTHR  = time_tracker % hour
 
       print *, 'GHGM ', plasma % NMP , plasma % NLP
-      DO mp = 1, plasma % NMP    
+      DO mp = 1, plasma % NMP , NMP_reduce_factor
           print *, 'GHGM mp ', mp
-        DO lp = 1, plasma % NLP    
+        DO lp = 1, plasma % NLP , 2
 !         print *, 'GHGM lp ', lp
 !     DO mp = 1, 2    
 !       DO lp = 1, 2    
@@ -1043,46 +1044,6 @@ CONTAINS
           JMINX = 1
           JMAXX = grid % flux_tube_max(lp)
  
-!         write(66,*) mp,lp,JMINX,JMAXX
-!         write(66,*) &
-!                       grid % flux_tube_max(lp), & 
-!                       ZX(1:JMAXX), & 
-!                       PCO, & 
-!                       SLX(1:JMAXX), & 
-!                       GLX(1:JMAXX), & 
-!                       BMX(1:JMAXX), & 
-!                       GRX(1:JMAXX), &
-!                       OX(1:JMAXX), & 
-!                       HX(1:JMAXX), & 
-!                       N2X(1:JMAXX), & 
-!                       O2X(1:JMAXX), & 
-!                       HEX(1:JMAXX), & 
-!                       N4SX(1:JMAXX), & 
-!                       INNO, &
-!                       NNOX(1:JMAXX), & 
-!                       TNX(1:JMAXX), & 
-!                       TINFX(1:JMAXX), &
-!                       UNX(1:JMAXX), & 
-!                       flip_time_step, &
-!                       DTMIN, & 
-!                       F107D, &
-!                       F107A, & 
-!                       SZA, &
-!                       FPAS, & 
-!                       HPEQ, & 
-!                       HEPRAT, &
-!                       COLFACX, & 
-!                       IHEPLS, & 
-!                       INPLS, &
-!                       UTHR, & 
-!                       EHTX(1:3,1:JMAXX), & 
-!                       AUR_PROD(1:3,1:JMAXX), & 
-!                       TE_TIX(1:3,1:JMAXX), &
-!                       XIONNX(1:9,1:JMAXX), &
-!                       XIONVX(1:9,1:JMAXX), &
-!                       NHEAT(1:JMAXX), & 
-!                       EFLAG
-
           CALL CTIPINT( JMINX, & !.. index of the first point on the field line
                         JMAXX, & !.. index of the last point on the field line
                         grid % flux_tube_max(lp), & !.. CTIPe array dimension, must equal to FLDIM
@@ -1253,11 +1214,11 @@ CONTAINS
 
       CLOSE( fUnit )
 
-      DO mp = 1, grid % NMP
+      DO mp = 1, grid % NMP , NMP_reduce_factor
 
         ii = 0
 
-        DO lp = 1, grid % NLP
+        DO lp = 1, grid % NLP , 2
           DO i = 1, grid % flux_tube_max(lp)
 
             ii = ii + 1
