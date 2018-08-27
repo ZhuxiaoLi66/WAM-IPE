@@ -72,6 +72,7 @@ IMPLICIT NONE
       PROCEDURE, PRIVATE :: Empirical_E_Field_Wrapper
       PROCEDURE, PRIVATE :: Regrid_Potential
       PROCEDURE, PRIVATE :: Calculate_Potential_Gradient
+      PROCEDURE, PRIVATE :: Calculate_ExB_Velocity
 
   END TYPE IPE_Electrodynamics
 
@@ -320,17 +321,26 @@ CONTAINS
 !#ifdef DEBUG
 !        CALL eldyn % Write_MHD_Potential( )
 !#endif
-!        CALL eldyn % Merge_Potential
+!        CALL eldyn % Merge_Geospace_Potential
 
 !      ELSEIF( openggcm )THEN
 
-!      .....
+!        CALL  eldyn % Read_OpenGGCM_Potential( filename )
+!        CALL  eldyn % Regrid_OpenGGCM(  )
+!#ifdef DEBUG
+!        CALL eldyn % Write_MHD_Potential( )
+!#endif
+!        CALL eldyn % Merge_OpenGGCM_Potential
 
 !      ENDIF
 
-!      CALL eldyn % Get_Efield_From_Potential( )
-!      CALL eldyn % Get_ExB( )
-        
+
+      ! Calculate the potential gradient in IPE coordinates.
+      CALL eldyn % Calculate_Potential_Gradient( grid )
+
+      ! Calculate ExB drift velocity
+      CALL eldyn % Calculate_ExB_Velocity( grid ) 
+
 
   END SUBROUTINE Update_IPE_Electrodynamics
  
@@ -348,87 +358,108 @@ CONTAINS
     REAL(prec) :: colat_local(0:nmlat)
      
 
-        IF( setup_efield_empirical )THEN
-          CALL efield_init
-          setup_efield_empirical = .FALSE.
+       IF( setup_efield_empirical )THEN
+         CALL efield_init
+         setup_efield_empirical = .FALSE.
 
-          ! Maps latitude from 130km to 90km along flux tube.
-          DO j=0,nmlat
+         ! Maps latitude from 130km to 90km along flux tube.
+         DO j=0,nmlat
 
-            theta130_rad   = ( 180.0_prec - ylatm(j) ) * dtr
-            theta90_rad(j) = ASIN(SIN( theta130_rad )*SQRT((earth_radius+90000.0_prec)/(earth_radius+130000.0_prec)))
-            IF ( theta130_rad > pi*0.50_prec ) theta90_rad(j) = pi-theta90_rad(j)
+           theta130_rad   = ( 180.0_prec - ylatm(j) ) * dtr
+           theta90_rad(j) = ASIN(SIN( theta130_rad )*SQRT((earth_radius+90000.0_prec)/(earth_radius+130000.0_prec)))
+           IF ( theta130_rad > pi*0.50_prec ) theta90_rad(j) = pi-theta90_rad(j)
 
-          END DO 
+         END DO 
 
-        ENDIF
+       ENDIF
 
-        ! iday, iday_m, ut, f107d, bt, angle, v_sw, bz are all variables
-        ! declared in efield_ipe.f
-        CALL time_tracker % Get_Date( year, imo, iday_m )
-        iday = time_tracker % day_of_year                 
+       ! iday, iday_m, ut, f107d, bt, angle, v_sw, bz are all variables
+       ! declared in efield_ipe.f
+       CALL time_tracker % Get_Date( year, imo, iday_m )
+       iday = time_tracker % day_of_year                 
 
-        CALL time_tracker % Get_UTime( utime )
-        ut=utime/3600.0_prec
+       CALL time_tracker % Get_UTime( utime )
+       ut=utime/3600.0_prec
 
-        f107d = forcing % f107( forcing % current_index )
+       f107d = forcing % f107( forcing % current_index )
 
-        bt = forcing % solarwind_Bt( forcing % current_index )
-        angle = forcing % solarwind_angle( forcing % current_index )
-        v_sw  = forcing % solarwind_velocity( forcing % current_index )
-        bz    = forcing % solarwind_Bz( forcing % current_index )
-         
-        CALL  get_efield
-
-
-
-        ! Interpolate the potential to the IPE grid
-        potent_local = potent
-        mlt_local    = ylonm
-        colat_local  = ylatm
-        CALL eldyn % Regrid_Potential( grid, time_tracker, potent_local, mlt_local, colat_local, 0, nmlon, nmlat )
+       bt = forcing % solarwind_Bt( forcing % current_index )
+       angle = forcing % solarwind_angle( forcing % current_index )
+       v_sw  = forcing % solarwind_velocity( forcing % current_index )
+       bz    = forcing % solarwind_Bz( forcing % current_index )
         
-        ! Calculate the potential gradient in IPE coordinates.
-        CALL eldyn % Calculate_Potential_Gradient( grid )
+       CALL  get_efield
 
+       ! Interpolate the potential to the IPE grid
+       potent_local = potent
+       mlt_local    = ylonm
+       colat_local  = ylatm
+       CALL eldyn % Regrid_Potential( grid, time_tracker, potent_local, mlt_local, colat_local, 0, nmlon, nmlat )
+        
 
   END SUBROUTINE Empirical_E_Field_Wrapper
+
+  SUBROUTINE Calculate_ExB_Velocity( eldyn, grid )
+    ! Calculates ExB drift velocity according to Eqs(4.18-4.19) in
+    ! A.D. Richmond (1995)
+    CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn 
+    TYPE( IPE_Grid ), INTENT(in)                :: grid
+    ! Local
+    INTEGER    :: mp, lp
+    REAL(prec) :: r
+
+      r = earth_radius + 90000.0_prec
+      DO mp = 1, grid % NMP
+        DO lp = 1, grid % NLP
+  
+          eldyn % v_ExB_apex(1,lp,mp) = eldyn % electric_field(2,lp,mp)/grid % apex_be3(lp,mp)/r 
+          eldyn % v_ExB_apex(2,lp,mp) = -eldyn % electric_field(1,lp,mp)/grid % apex_be3(lp,mp)/r
+
+        ENDDO
+      ENDDO
+    
+  END SUBROUTINE Calculate_ExB_Velocity
 
   SUBROUTINE Calculate_Potential_Gradient( eldyn, grid )
     ! Uses 2nd order centered differencing (on the apex grid) to calculate the
     ! electric field components from the potential attribute from the
     ! IPE_Electrodynamics class.
+    ! The electric field gradient is calculated using Sections 3 and 4 of A.D.
+    ! Richmond (1995)
     CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn 
     TYPE( IPE_Grid ), INTENT(in)                :: grid
     ! Local
     INTEGER :: mp, lp
-    REAL(prec) :: r, d_lp, d_mp
+    REAL(prec) :: r, d_lp, d_mp, coslam, sinim
 
 
       r = earth_radius + 90000.0_prec
 
-      ! lp-component of e-field
+      ! lp-component of e-field : Eq(4.8)
       DO mp = 1, grid % NMP
 
         lp = 1
-        d_lp = r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp) )
+        coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
+        d_lp = r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp) )*coslam
 
-        eldyn % electric_field(1,lp,mp) = ( eldyn % electric_potential(lp+1,mp) - &  
+        eldyn % electric_field(1,lp,mp) = -( eldyn % electric_potential(lp+1,mp) - &  
                                             eldyn % electric_potential(lp,mp) )/d_lp
 
         DO lp = 2, grid % NLP-1
 
-          d_lp = r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp-1) )
+          coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
+          d_lp = r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp-1) )*coslam
 
-          eldyn % electric_field(1,lp,mp) = ( eldyn % electric_potential(lp+1,mp) - &  
+          eldyn % electric_field(1,lp,mp) = -( eldyn % electric_potential(lp+1,mp) - &  
                                               eldyn % electric_potential(lp-1,mp) )/d_lp
 
         ENDDO
 
         lp = grid % NLP
-        d_lp = r*( grid % magnetic_colatitude(1,lp) - grid % magnetic_colatitude(1,lp-1) )
+        coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
+        d_lp = r*( grid % magnetic_colatitude(1,lp) - grid % magnetic_colatitude(1,lp-1) )*coslam
 
-        eldyn % electric_field(1,lp,mp) = ( eldyn % electric_potential(lp,mp) - &  
+        eldyn % electric_field(1,lp,mp) = -( eldyn % electric_potential(lp,mp) - &  
                                             eldyn % electric_potential(lp-1,mp) )/d_lp
 
       ENDDO
@@ -438,7 +469,10 @@ CONTAINS
       ! Do periodic boundary conditions ( @ mp == 1 )
       mp = 1
       DO lp = 1, grid % NLP
-        d_mp = r*( grid % magnetic_longitude(mp+1) - grid % magnetic_longitude( grid % NMP ) + 2.0_prec*pi )
+
+        coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
+        sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
+        d_mp = sinim*r*( grid % magnetic_longitude(mp+1) - grid % magnetic_longitude( grid % NMP ) + 2.0_prec*pi )
 
         eldyn % electric_field(2,lp,mp) = ( eldyn % electric_potential(lp,mp+1) - &  
                                             eldyn % electric_potential(lp,grid % NMP) )/d_mp
@@ -447,7 +481,9 @@ CONTAINS
       DO mp = 2, grid % NMP-1
         DO lp = 1, grid % NLP
 
-          d_mp = r*( grid % magnetic_longitude(mp+1) - grid % magnetic_longitude(mp-1) )
+          coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
+          sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
+          d_mp = sinim*r*( grid % magnetic_longitude(mp+1) - grid % magnetic_longitude(mp-1) )
 
           eldyn % electric_field(2,lp,mp) = ( eldyn % electric_potential(lp,mp+1) - &  
                                               eldyn % electric_potential(lp,mp-1) )/d_mp
@@ -459,7 +495,9 @@ CONTAINS
       mp = grid % NMP
       DO lp = 1, grid % NLP
 
-        d_mp = r*( grid % magnetic_longitude(1) - grid % magnetic_longitude(mp-1) + 2.0_prec*pi )
+        coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
+        sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
+        d_mp = sinim*r*( grid % magnetic_longitude(1) - grid % magnetic_longitude(mp-1) + 2.0_prec*pi )
 
         eldyn % electric_field(2,lp,mp) = ( eldyn % electric_potential(lp,1) - &  
                                             eldyn % electric_potential(lp,mp-1) )/d_mp
@@ -485,8 +523,6 @@ CONTAINS
     REAL(prec) :: lat_weight(1:2), lon_weight(1:2)
     REAL(prec) :: mlon90_rad(start_index:nlon)
  
-
-     print *,'colat after',colat
 
       mlon90_rad = MLT_to_MagneticLongitude( mlt, 1999, time_tracker % day_of_year, time_tracker % utime, start_index, nlon )
 
@@ -514,11 +550,13 @@ CONTAINS
       DO lp = 1, grid % NLP
 
         lat = grid % magnetic_colatitude(1,lp)        
-     print *,'IPE lat',lat
+
         ! colatitude decreases with increasing lp
         ilat(lp) = nlat
         DO i = start_index, nlat
 
+          ! Need to pass in colatitude through the call stack (theta90_rad ->
+          ! colatitude )
           IF( theta90_rad(i) < lat )THEN
             ilat(lp) = i
             EXIT
@@ -656,14 +694,8 @@ CONTAINS
                                                potential(j1,i2)*lat_weight(2)*lon_weight(1) +&
                                                potential(j2,i2)*lat_weight(2)*lon_weight(2) )
 
-!       print *, 'lat weight',lat_weight(1:2)
-!       print *, 'lon weight',lon_weight(1:2)
-
 
        ENDDO
-
-       !eldyn % electric_potential(grid % NLP,mp) = eldyn % electric_potential(grid % NLP-1, mp)
-
      ENDDO
 
          
