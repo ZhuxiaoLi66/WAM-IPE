@@ -629,9 +629,10 @@ enddo
 print *, " GHGM starting MSIS interpolation "
 
   do mp = 1 , nmp , NMP_reduce_factor
-!print *, 'GHGM new mps ', mp
+print *, 'GHGM new mps ', mp
       do lp = 1 , nlp , 2
-!print *, '       GHGM new lps ', lp
+print *, '       GHGM new lps ', lp
+print *, '           GHGM iflux_tube_max ', iflux_tube_max(lp)
 ! do mp = 40 , 40
 !     do lp = 50 , 50
       !g
