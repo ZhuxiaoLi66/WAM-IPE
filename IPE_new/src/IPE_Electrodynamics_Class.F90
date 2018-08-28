@@ -393,7 +393,7 @@ CONTAINS
        ! Interpolate the potential to the IPE grid
        potent_local = potent
        mlt_local    = ylonm
-       colat_local  = ylatm
+       colat_local  = theta90_rad*180.0_prec/pi
        CALL eldyn % Regrid_Potential( grid, time_tracker, potent_local, mlt_local, colat_local, 0, nmlon, nmlat )
         
 
@@ -509,6 +509,24 @@ CONTAINS
   ! This subroutine regrids electric potential from a structured grid
   ! on (magnetic local time, magnetic colatitude) to IPE's grid.
   !
+  ! Input :
+  !
+  !   grid
+  !
+  !   time_tracker
+  !
+  !   potential
+  !
+  !   mlt - magnetic local time [ deg ]
+  !
+  !   colat - magnetic colatitude [ deg ]
+  !
+  !   start_index - starting index for the potential, mlt, and colat arrays
+  !
+  !   nlon - last index in the longitude direction
+  !
+  !   nlat - last index in the latitude direction
+  !
     CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn 
     TYPE( IPE_Grid ), INTENT(in)                :: grid
     TYPE( IPE_Time ), INTENT(in)                :: time_tracker
@@ -522,11 +540,12 @@ CONTAINS
     REAL(prec) :: lat, lon, dlon, difflon, mindiff, wsum
     REAL(prec) :: lat_weight(1:2), lon_weight(1:2)
     REAL(prec) :: mlon90_rad(start_index:nlon)
+    REAL(prec) :: mlat90_rad(start_index:nlon)
  
 
       mlon90_rad = MLT_to_MagneticLongitude( mlt, 1999, time_tracker % day_of_year, time_tracker % utime, start_index, nlon )
-
-
+      mlat90_rad = colat*pi/180.0_prec
+      
       ! Search for nearest grid points in the magnetic longitude/latitude grid
       DO mp = 1, grid % NMP
          lon = grid % magnetic_longitude(mp)        
@@ -557,7 +576,7 @@ CONTAINS
 
           ! Need to pass in colatitude through the call stack (theta90_rad ->
           ! colatitude )
-          IF( theta90_rad(i) < lat )THEN
+          IF( mlat90_rad(i) < lat )THEN
             ilat(lp) = i
             EXIT
           ENDIF
@@ -583,8 +602,8 @@ CONTAINS
 
             i1 = ilat(lp)-1
             i2 = ilat(lp)
-            lat_weight(1) =  ( lat - theta90_rad(i2) )/( theta90_rad(i1) - theta90_rad(i2) )
-            lat_weight(2) = -( lat - theta90_rad(i1) )/( theta90_rad(i1) - theta90_rad(i2) )
+            lat_weight(1) =  ( lat - mlat90_rad(i2) )/( mlat90_rad(i1) - mlat90_rad(i2) )
+            lat_weight(2) = -( lat - mlat90_rad(i1) )/( mlat90_rad(i1) - mlat90_rad(i2) )
 
           ENDIF
 
@@ -714,7 +733,7 @@ CONTAINS
 
       ! Map magnetic local time to magnetic longitude
       CALL sunloc( year, day_of_year, utime, sunlons ) 
-      DO i=start_index,nmlon
+      DO i=start_index,nlon
 
         mag_longitude(i)=(mlt(i)-180.0_prec)*pi/180.0_prec+sunlons
         IF( mag_longitude(i) < 0.0_prec   ) mag_longitude(i)=mag_longitude(i)+pi*2.0
