@@ -151,6 +151,7 @@ CONTAINS
     REAL(prec), INTENT(in)            :: t0, t1
     ! Local
     REAL(prec) :: AP(1:7)
+    REAL(prec) :: wt1, wt2
 
 
       CALL ipe % time_tracker % Update( t0 )
@@ -158,6 +159,7 @@ CONTAINS
       ! Need to add a call to update the index for capturing AP
       AP = ipe % forcing % GetAP( t0 )
 
+      CALL CPU_TIME( wt1 )
       CALL ipe % neutrals % Update( ipe % grid, &
                                     ipe % time_tracker % utime, &
                                     ipe % time_tracker % year, &
@@ -165,11 +167,17 @@ CONTAINS
                                     ipe % forcing % f107( ipe % forcing % current_index ) , &
                                     ipe % forcing % f107_81day_avg( ipe % forcing % current_index ), &
                                     AP )
+      CALL CPU_TIME( wt2 )
+      PRINT*, 'Neutral : ', wt2-wt1
 
+      CALL CPU_TIME( wt1 )
       CALL ipe % eldyn % Update( ipe % grid, &
                                  ipe % forcing, &
                                  ipe % time_tracker )
+      CALL CPU_TIME( wt2 )
+      PRINT*, 'Eldyn : ', wt2-wt1
    
+      CALL CPU_TIME( wt1 )
       CALL ipe % plasma % Update( ipe % grid, &
                                   ipe % neutrals, &
                                   ipe % forcing, &
@@ -177,6 +185,8 @@ CONTAINS
                                   ipe % eldyn % v_ExB_apex, &
                                   ipe % parameters % solar_forcing_time_step )
 
+      CALL CPU_TIME( wt2 )
+      PRINT*, 'Plasma : ', wt2-wt1
 
       ! Update the timer
       CALL ipe % time_tracker % Update( t1 )
@@ -612,7 +622,7 @@ CONTAINS
         CALL Check( nf90_put_att( ncid, phi_varid, "long_name", "Electric Potential" ) )
         CALL Check( nf90_put_att( ncid, phi_varid, "units", "[Unknown]" ) )
 
-        CALL Check( nf90_def_var( ncid, "mhd_phi", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) , phi_varid ) )
+        CALL Check( nf90_def_var( ncid, "mhd_phi", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) , mhd_phi_varid ) )
         CALL Check( nf90_put_att( ncid, mhd_phi_varid, "long_name", "Electric Potential - MHD Component" ) )
         CALL Check( nf90_put_att( ncid, mhd_phi_varid, "units", "[Unknown]" ) )
 
