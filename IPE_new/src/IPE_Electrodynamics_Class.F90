@@ -204,8 +204,6 @@ CONTAINS
 
       CALL Check( nf90_close( ncid ) )
  
-      print *,'Geospace',MAXVAL(geospace_potential),MINVAL(geospace_potential)
-
   END SUBROUTINE Read_Geospace_Potential
 
    SUBROUTINE Interpolate_Geospace_to_MHDpotential( eldyn, grid, time_tracker)
@@ -215,19 +213,18 @@ CONTAINS
      TYPE( IPE_Time ), INTENT(in)             :: time_tracker
      ! Local
      INTEGER :: j,latidx
-     REAL(prec) :: colat_local(1:181)
+     REAL(prec) :: colat_local(181)
      REAL(prec) :: potential_local(181,181)
-
 
      DO j=1,181
      latidx=181-j+1
      colat_local(j)=90.0_prec - geospace_latitude(latidx)
      potential_local(:,j)=geospace_potential(:,latidx)
      END DO
-     colat_local=colat_local*dtr
-     geospace_longitude=geospace_longitude*dtr
+     colat_local = colat_local*dtr
+
      CALL eldyn % Regrid_Potential( grid, time_tracker, potential_local, geospace_longitude,colat_local, 1, 181, 181 )
-     print *, 'regrid pot',MAXVAL(eldyn % electric_potential),MINVAL(eldyn %electric_potential)
+
       eldyn % mhd_electric_potential= eldyn % electric_potential
  
    END SUBROUTINE Interpolate_Geospace_to_MHDpotential
@@ -411,10 +408,8 @@ CONTAINS
     REAL(prec) :: mlon90_rad(start_index:nlon)
  
 
-     print *,'colat after',colat
 
       mlon90_rad = MLT_to_MagneticLongitude( mlt, 1999, time_tracker % day_of_year, time_tracker % utime, start_index, nlon )
-
 
       ! Search for nearest grid points in the magnetic longitude/latitude grid
       DO mp = 1, grid % NMP
@@ -439,12 +434,12 @@ CONTAINS
       DO lp = 1, grid % NLP
 
         lat = grid % magnetic_colatitude(1,lp)        
-     print *,'IPE lat',lat
         ! colatitude decreases with increasing lp
         ilat(lp) = nlat
         DO i = start_index, nlat
 
-          IF( theta90_rad(i) < lat )THEN
+!         IF( theta90_rad(i) < lat )THEN
+          IF( colat(i) < lat )THEN
             ilat(lp) = i
             EXIT
           ENDIF
@@ -470,8 +465,10 @@ CONTAINS
 
             i1 = ilat(lp)-1
             i2 = ilat(lp)
-            lat_weight(1) =  ( lat - theta90_rad(i2) )/( theta90_rad(i1) - theta90_rad(i2) )
-            lat_weight(2) = -( lat - theta90_rad(i1) )/( theta90_rad(i1) - theta90_rad(i2) )
+!           lat_weight(1) =  ( lat - theta90_rad(i2) )/( theta90_rad(i1) - theta90_rad(i2) )
+!           lat_weight(2) = -( lat - theta90_rad(i1) )/( theta90_rad(i1) - theta90_rad(i2) )
+            lat_weight(1) =  ( lat - colat(i2) )/( colat(i1) - colat(i2) )
+            lat_weight(2) = -( lat - colat(i1) )/( colat(i1) - colat(i2) )
 
           ENDIF
 
@@ -607,12 +604,12 @@ CONTAINS
 
       ! Map magnetic local time to magnetic longitude
       CALL sunloc( year, day_of_year, utime, sunlons ) 
-      DO i=start_index,nmlon
-
+      DO i=start_index,nlon
         mag_longitude(i)=(mlt(i)-180.0_prec)*pi/180.0_prec+sunlons
         IF( mag_longitude(i) < 0.0_prec   ) mag_longitude(i)=mag_longitude(i)+pi*2.0
         IF( mag_longitude(i) >= pi*2.0_prec ) mag_longitude(i)=mag_longitude(i)-pi*2.0
 
+       print *,'in MLT_to_Mag',mlt(i),sunlons, mag_longitude(i)
       END DO
 
   END FUNCTION MLT_to_MagneticLongitude
@@ -650,6 +647,7 @@ CONTAINS
     !        output: xmlon  
     call solgmlon(sbsllat,sbsllon,colat,elon,xmlon) 
     sunlons = xmlon*dtr
+    print *,'in sunloc',colat
 
   END SUBROUTINE sunloc
 
