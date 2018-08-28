@@ -750,7 +750,7 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % geo_ion_densities(7,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, op2d_varid,  ipe % plasma % geo_ion_densities(8,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, op2p_varid,  ipe % plasma % geo_ion_densities(9,:,:,:) ) )
-      CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % geo_ion_temperature ) )
+      CALL Check( nf90_put_var( ncid, ion_temp_varid, ipe % plasma % geo_ion_temperature ) )
       CALL Check( nf90_put_var( ncid, e_varid, ipe % plasma % geo_electron_density ) )
       CALL Check( nf90_put_var( ncid, ion_rate_varid, ipe % plasma % geo_ionization_rates(1,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, O_rate_varid, ipe % plasma % geo_ionization_rates(2,:,:,:) ) )
