@@ -737,7 +737,6 @@ CONTAINS
         IF( mag_longitude(i) < 0.0_prec   ) mag_longitude(i)=mag_longitude(i)+pi*2.0
         IF( mag_longitude(i) >= pi*2.0_prec ) mag_longitude(i)=mag_longitude(i)-pi*2.0
 
-       print *,'in MLT_to_Mag',mlt(i),sunlons, mag_longitude(i)
       END DO
 
   END FUNCTION MLT_to_MagneticLongitude
@@ -775,7 +774,6 @@ CONTAINS
     !        output: xmlon  
     call solgmlon(sbsllat,sbsllon,colat,elon,xmlon) 
     sunlons = xmlon*dtr
-    print *,'in sunloc',colat
 
   END SUBROUTINE sunloc
 
