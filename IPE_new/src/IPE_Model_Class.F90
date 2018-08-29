@@ -83,9 +83,7 @@ CONTAINS
 
         ! ////// grid ////// !
 
-        print *, 'GHGM - reading IPE grid file'
         CALL ipe % grid % Read_IPE_Grid_NetCDF( ipe % parameters % netcdf_grid_file  )
-        print *, 'GHGM - done reading IPE grid file'
         ipe % grid % npts2d = ipe % parameters % npts2d
 
 
@@ -231,6 +229,7 @@ CONTAINS
     INTEGER :: op_varid, hp_varid, hep_varid, np_varid, n2p_varid, o2p_varid, nop_varid
     INTEGER :: op2d_varid, op2p_varid, ion_temp_varid, phi_varid, mhd_phi_varid, hc_varid, pc_varid, bc_varid
     INTEGER :: opv_varid(1:3), hpv_varid(1:3), hepv_varid(1:3), npv_varid(1:3), n2pv_varid(1:3), o2pv_varid(1:3), nopv_varid(1:3)
+    INTEGER :: ion_vel_op_varid, ion_vel_hp_varid, ion_vel_hep_varid
     INTEGER :: recStart(1:4), recCount(1:4)
 
 
@@ -369,6 +368,19 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, ion_temp_varid, "long_name", "Ion temperature" ) )
       CALL Check( nf90_put_att( ncid, ion_temp_varid, "units", "K" ) )
 
+      CALL Check( nf90_def_var( ncid, "ion_vel_op", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , ion_vel_op_varid ) )
+      CALL Check( nf90_put_att( ncid, ion_vel_op_varid, "long_name", "O+ Velocity (B Parallel)" ) )
+      CALL Check( nf90_put_att( ncid, ion_vel_op_varid, "units", "?/s" ) )
+
+      CALL Check( nf90_def_var( ncid, "ion_vel_hp", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , ion_vel_hp_varid ) )
+      CALL Check( nf90_put_att( ncid, ion_vel_hp_varid, "long_name", "H+ Velocity (B Parallel)" ) )
+      CALL Check( nf90_put_att( ncid, ion_vel_hp_varid, "units", "?/s" ) )
+
+      CALL Check( nf90_def_var( ncid, "ion_vel_hep", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , ion_vel_hep_varid ) )
+      CALL Check( nf90_put_att( ncid, ion_vel_hep_varid, "long_name", "He+ Velocity (B Parallel)" ) )
+      CALL Check( nf90_put_att( ncid, ion_vel_hep_varid, "units", "?/s" ) )
+
+
       CALL Check( nf90_enddef(ncid) )
       
       CALL Check( nf90_put_var( ncid, time_varid, time ) )
@@ -405,6 +417,9 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, op2d_varid, ipe % plasma % ion_densities(8,:,:,:), recStart, recCount ) )
       CALL Check( nf90_put_var( ncid, op2p_varid, ipe % plasma % ion_densities(9,:,:,:), recStart, recCount ) )
       CALL Check( nf90_put_var( ncid, ion_temp_varid, ipe % plasma % ion_temperature, recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, ion_vel_op_varid, ipe % plasma % ion_velocities(1,:,:,:), recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, ion_vel_hp_varid, ipe % plasma % ion_velocities(2,:,:,:), recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, ion_vel_hep_varid, ipe % plasma % ion_velocities(3,:,:,:), recStart, recCount ) )
 
       CALL Check( nf90_close( ncid ) )
 
@@ -448,96 +463,77 @@ CONTAINS
 
       IF( ipe % parameters % write_apex_neutrals )THEN
 
-        print *, ' GHGM reading neutrals'
-        print *, ' GHGM reading n1'
         CALL Check( nf90_inq_varid( ncid, "helium", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % helium ) )
 
-        print *, ' GHGM reading n2'
         CALL Check( nf90_inq_varid( ncid, "oxygen", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % oxygen ) )
 
-        print *, ' GHGM reading n3'
         CALL Check( nf90_inq_varid( ncid, "molecular_oxygen", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % molecular_oxygen ) )
 
-        print *, ' GHGM reading n4'
         CALL Check( nf90_inq_varid( ncid, "molecular_nitrogen", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % molecular_nitrogen ) )
 
-        print *, ' GHGM reading n5'
         CALL Check( nf90_inq_varid( ncid, "nitrogen", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % nitrogen ) )
 
-        print *, ' GHGM reading n6'
         CALL Check( nf90_inq_varid( ncid, "hydrogen", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % hydrogen ) )
 
-        print *, ' GHGM reading n7'
         CALL Check( nf90_inq_varid( ncid, "temperature", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % temperature ) )
 
-        print *, ' GHGM reading n8'
         CALL Check( nf90_inq_varid( ncid, "u", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % velocity_geographic(1,:,:,:) ) )
 
-        print *, ' GHGM reading n9'
         CALL Check( nf90_inq_varid( ncid, "v", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % velocity_geographic(2,:,:,:) ) )
 
-        print *, ' GHGM reading n10'
         CALL Check( nf90_inq_varid( ncid, "w", varid ) )
         CALL Check( nf90_get_var( ncid, varid, ipe % neutrals % velocity_geographic(3,:,:,:) ) )
-        print *, ' GHGM done reading neutrals'
 
       ENDIF
 
 
-        print *, ' GHGM reading 1'
       CALL Check( nf90_inq_varid( ncid, "O+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(1,:,:,:) ) )
 
-        print *, ' GHGM reading 2'
       CALL Check( nf90_inq_varid( ncid, "H+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(2,:,:,:) ) )
 
-        print *, ' GHGM reading 3'
       CALL Check( nf90_inq_varid( ncid, "He+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(3,:,:,:) ) )
 
-        print *, ' GHGM reading 4'
       CALL Check( nf90_inq_varid( ncid, "N+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(4,:,:,:) ) )
 
-        print *, ' GHGM reading 5'
       CALL Check( nf90_inq_varid( ncid, "NO+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(5,:,:,:) ) )
 
-        print *, ' GHGM reading 6'
       CALL Check( nf90_inq_varid( ncid, "O2+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(6,:,:,:) ) )
 
-        print *, ' GHGM reading 7'
       CALL Check( nf90_inq_varid( ncid, "N2+", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(7,:,:,:) ) )
 
-        print *, ' GHGM reading 8'
       CALL Check( nf90_inq_varid( ncid, "O+(2D)", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(8,:,:,:) ) )
 
-        print *, ' GHGM reading 9'
       CALL Check( nf90_inq_varid( ncid, "O+(2P)", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_densities(9,:,:,:) ) )
 
-        print *, ' GHGM reading 10'
       CALL Check( nf90_inq_varid( ncid, "ion_temp", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_temperature ) )
-!     print *, 'GHGM NETCDF ', ipe % plasma % ion_densities(9,:,:,:)
-!     print *, 'GHGM NETCDF ', ipe % plasma % ion_temperature
-      istop = 0
-      if(istop.eq.1) stop
-!     print *, 'GHGM setting ion_temperature to 1000.'
-!     ipe % plasma % ion_temperature = 1000.
+
+      CALL Check( nf90_inq_varid( ncid, "ion_vel_op", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_velocities(1,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ion_vel_hp", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_velocities(2,:,:,:) ) )
+
+      CALL Check( nf90_inq_varid( ncid, "ion_vel_hep", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_velocities(3,:,:,:) ) )
 
       CALL Check( nf90_close( ncid ) )
 

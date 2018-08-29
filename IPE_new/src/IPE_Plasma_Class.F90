@@ -13,7 +13,7 @@ IMPLICIT NONE
     INTEGER :: nFluxTube, NLP, NMP
 
     REAL(prec), ALLOCATABLE :: ion_densities(:,:,:,:)
-    REAL(prec), ALLOCATABLE :: ion_velocities(:,:,:,:,:)
+    REAL(prec), ALLOCATABLE :: ion_velocities(:,:,:,:)
     REAL(prec), ALLOCATABLE :: ion_temperature(:,:,:)
 
     REAL(prec), ALLOCATABLE :: electron_density(:,:,:)
@@ -21,7 +21,7 @@ IMPLICIT NONE
     REAL(prec), ALLOCATABLE :: electron_temperature(:,:,:)
 
     REAL(prec), ALLOCATABLE :: ion_densities_old(:,:,:,:)
-    REAL(prec), ALLOCATABLE :: ion_velocities_old(:,:,:,:,:)
+    REAL(prec), ALLOCATABLE :: ion_velocities_old(:,:,:,:)
     REAL(prec), ALLOCATABLE :: ion_temperature_old(:,:,:)
 
     REAL(prec), ALLOCATABLE :: electron_density_old(:,:,:)
@@ -32,7 +32,7 @@ IMPLICIT NONE
 
     ! Interpolated Fields
     REAL(prec), ALLOCATABLE :: geo_ion_densities(:,:,:,:)
-    REAL(prec), ALLOCATABLE :: geo_ion_velocities(:,:,:,:,:)
+    REAL(prec), ALLOCATABLE :: geo_ion_velocities(:,:,:,:)
     REAL(prec), ALLOCATABLE :: geo_ion_temperature(:,:,:)
     REAL(prec), ALLOCATABLE :: geo_electron_density(:,:,:)
     REAL(prec), ALLOCATABLE :: geo_electron_velocity(:,:,:,:)
@@ -96,13 +96,13 @@ CONTAINS
       plasma % NMP       = NMP
 
       ALLOCATE( plasma % ion_densities(1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
-                plasma % ion_velocities(1:3,1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
+                plasma % ion_velocities(1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
                 plasma % ion_temperature(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_density(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_velocity(1:3,1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_temperature(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % ion_densities_old(1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
-                plasma % ion_velocities_old(1:3,1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
+                plasma % ion_velocities_old(1:n_ion_species,1:nFluxTube,1:NLP,1:NMP), &
                 plasma % ion_temperature_old(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_density_old(1:nFluxTube,1:NLP,1:NMP), &
                 plasma % electron_velocity_old(1:3,1:nFluxTube,1:NLP,1:NMP), &
@@ -118,7 +118,7 @@ CONTAINS
       plasma % ionization_rates        = 0.0_prec
 
       ALLOCATE( plasma % geo_ion_densities(1:n_ion_species,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
-                plasma % geo_ion_velocities(1:3,1:n_ion_species,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
+                plasma % geo_ion_velocities(1:n_ion_species,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_ion_temperature(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_electron_density(1:nlon_geo,1:nlat_geo,1:nheights_geo), &
                 plasma % geo_electron_velocity(1:3,1:nlon_geo,1:nlat_geo,1:nheights_geo), &
@@ -219,10 +219,10 @@ CONTAINS
 
       CALL CPU_TIME( t1 )
       CALL plasma % FLIP_Wrapper( grid, & 
-                                   neutrals, &
-                                   forcing, &
-                                   time_tracker, &
-                                   time_step )
+                                  neutrals, &
+                                  forcing, &
+                                  time_tracker, &
+                                  time_step )
       CALL CPU_TIME( t2 )
       flip_time_avg = flip_time_avg + t2 - t1
       flip_count    = flip_count + 1
@@ -249,7 +249,7 @@ CONTAINS
     TYPE( IPE_Grid ), INTENT(in)    :: grid
     REAL(prec), INTENT(out)         :: ion_densities_pole_value(1:n_ion_species, 1:plasma % nFluxTube)
     REAL(prec), INTENT(out)         :: ion_temperature_pole_value(1:plasma % nFluxTube)
-    REAL(prec), INTENT(out)         :: ion_velocities_pole_value(1:3,1:n_ion_species, 1:plasma % nFluxTube)
+    REAL(prec), INTENT(out)         :: ion_velocities_pole_value(1:n_ion_species, 1:plasma % nFluxTube)
     REAL(prec), INTENT(out)         :: electron_density_pole_value(1:plasma % nFluxTube)
     REAL(prec), INTENT(out)         :: electron_temperature_pole_value(1:plasma % nFluxTube)
     ! Local
@@ -267,7 +267,7 @@ CONTAINS
           DO j = 1, n_ion_species
         
             ion_densities_pole_value(j,i)      = ion_densities_pole_value(j,i) + plasma % ion_densities(j,i,1,mp)
-            ion_velocities_pole_value(1:3,j,i) = ion_velocities_pole_value(1:3,j,i) + plasma % ion_velocities(1:3,j,i,1,mp)
+            ion_velocities_pole_value(j,i) = ion_velocities_pole_value(j,i) + plasma % ion_velocities(j,i,1,mp)
 
           ENDDO
 
@@ -296,7 +296,7 @@ CONTAINS
     ! Local
     REAL(prec) :: ion_densities_pole_value(1:n_ion_species, 1:plasma % nFluxTube)
     REAL(prec) :: ion_temperature_pole_value(1:plasma % nFluxTube)
-    REAL(prec) :: ion_velocities_pole_value(1:3,1:n_ion_species, 1:plasma % nFluxTube)
+    REAL(prec) :: ion_velocities_pole_value(1:n_ion_species, 1:plasma % nFluxTube)
     REAL(prec) :: electron_density_pole_value(1:plasma % nFluxTube)
     REAL(prec) :: electron_temperature_pole_value(1:plasma % nFluxTube)
     REAL(prec) :: colat_90km(1:grid % NLP)
@@ -310,7 +310,6 @@ CONTAINS
     REAL(prec) :: q_int(1:2)
     REAL(prec) :: ion_densities_int(1:n_ion_species)
     REAL(prec) :: ion_temperature_int
-    REAL(prec) :: ion_velocities_int(1:3,1:n_ion_species)
     REAL(prec) :: B_int, max_phi, ksi_fac
     INTEGER    :: lp_t0(1:2)
     INTEGER    :: mp_t0(1:2)
@@ -414,7 +413,6 @@ CONTAINS
   
               ion_densities_int   = 0.0_prec
               ion_temperature_int = 0.0_prec
-              ion_velocities_int  = 0.0_prec
 
               ispecial = 1
               isouth   = grid % flux_tube_max(1)
@@ -450,9 +448,6 @@ CONTAINS
                                       ( ion_temperature_pole_value(isouth)*i_comp_weight(1) + &
                                         ion_temperature_pole_value(inorth)*i_comp_weight(2) )
 
-                ion_velocities_int(1:3,1:n_ion_species) = ion_velocities_int(1:3,1:n_ion_species) + &
-                                      ( ion_velocities_pole_value(1:3,1:n_ion_species, isouth)*i_comp_weight(1) + &
-                                        ion_velocities_pole_value(1:3,1:n_ion_species, inorth)*i_comp_weight(2) )
 
               ELSE
 
@@ -460,13 +455,11 @@ CONTAINS
 
                 ion_temperature_int = ion_temperature_int + ion_temperature_pole_value(isouth)
 
-                ion_velocities_int(1:3,1:n_ion_species) = ion_velocities_int(1:3,1:n_ion_species) + ion_velocities_pole_value(1:3,1:n_ion_species, isouth)
 
               ENDIF
 
               plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)
               plasma % ion_temperature(i,lp,mp) = ion_temperature_int
-              plasma % ion_velocities(1:3,1:n_ion_species,i,lp,mp) = ion_velocities_int(1:3,1:n_ion_species)
 
             ENDDO
 
@@ -487,7 +480,6 @@ CONTAINS
   
               ion_densities_int   = 0.0_prec
               ion_temperature_int = 0.0_prec
-              ion_velocities_int  = 0.0_prec
               B_int               = 0.0_prec
   
               DO mpx = 1, 2
@@ -531,10 +523,6 @@ CONTAINS
                                          plasma % ion_temperature_old(inorth, grid % NLP, mp_t0(mpx))*i_comp_weight(2) )*&
                                        mp_comp_weight(mpx)
 
-                 ion_velocities_int(1:3,1:n_ion_species) = ion_velocities_int(1:3,1:n_ion_species) + &
-                                       ( plasma % ion_velocities_old(1:3,1:n_ion_species, isouth, grid % NLP, mp_t0(mpx))*i_comp_weight(1) + &
-                                         plasma % ion_velocities_old(1:3,1:n_ion_species, inorth, grid % NLP, mp_t0(mpx))*i_comp_weight(2) )*&
-                                       mp_comp_weight(mpx)
  
                ELSE
 
@@ -548,9 +536,6 @@ CONTAINS
                                        plasma % ion_temperature_old(isouth, grid % NLP, mp_t0(mpx))*&
                                        mp_comp_weight(mpx)
 
-                 ion_velocities_int(1:3,1:n_ion_species) = ion_velocities_int(1:3,1:n_ion_species) + &
-                                                           plasma % ion_velocities_old(1:3,1:n_ion_species, isouth, grid % NLP, mp_t0(mpx))*&
-                                                           mp_comp_weight(mpx)
 
                ENDIF
   
@@ -564,7 +549,6 @@ CONTAINS
 
               plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)*( ksi_fac )**2
               plasma % ion_temperature(i,lp,mp) = ion_temperature_int*( ksi_fac**(4.0_prec/3.0_prec) )
-              plasma % ion_velocities(1:3,1:n_ion_species,i,lp,mp) = ion_velocities_int(1:3,1:n_ion_species)
 
             ENDDO
   
@@ -579,7 +563,6 @@ CONTAINS
   
               ion_densities_int   = 0.0_prec
               ion_temperature_int = 0.0_prec
-              ion_velocities_int  = 0.0_prec
               B_int               = 0.0_prec
   
               DO mpx = 1, 2
@@ -624,10 +607,6 @@ CONTAINS
                                             plasma % ion_temperature_old(inorth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(2) )*&
                                           lp_comp_weight(lpx)*mp_comp_weight(mpx)
 
-                    ion_velocities_int(1:3,1:n_ion_species) = ion_velocities_int(1:3,1:n_ion_species) + &
-                                          ( plasma % ion_velocities_old(1:3,1:n_ion_species, isouth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(1) + &
-                                            plasma % ion_velocities_old(1:3,1:n_ion_species, inorth, lp_t0(lpx), mp_t0(mpx))*i_comp_weight(2) )*&
-                                          lp_comp_weight(lpx)*mp_comp_weight(mpx)
  
                   ELSE
 
@@ -642,9 +621,6 @@ CONTAINS
                                           plasma % ion_temperature_old(isouth, lp_t0(lpx), mp_t0(mpx))*&
                                           lp_comp_weight(lpx)*mp_comp_weight(mpx)
 
-                    ion_velocities_int(1:3,1:n_ion_species) = ion_velocities_int(1:3,1:n_ion_species) + &
-                                                              plasma % ion_velocities_old(1:3,1:n_ion_species, isouth, lp_t0(lpx), mp_t0(mpx))*&
-                                                              lp_comp_weight(lpx)*mp_comp_weight(mpx)
 
                   ENDIF
   
@@ -659,7 +635,6 @@ CONTAINS
 
               plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)*( ksi_fac**2 )
               plasma % ion_temperature(i,lp,mp) = ion_temperature_int*( ksi_fac**(4.0_prec/3.0_prec) )
-              plasma % ion_velocities(1:3,1:n_ion_species,i,lp,mp) = ion_velocities_int(1:3,1:n_ion_species)
 
             ENDDO
   
@@ -990,8 +965,6 @@ CONTAINS
           print *, 'GHGM mp ', mp
         DO lp = 1, plasma % NLP , NLP_reduce_factor
           print *, 'GHGM lp ', lp
-!     DO mp = 1, 2    
-!       DO lp = 1, 2    
 
           ! Copy over the grid information (for now)
           ZX(1:grid % flux_tube_max(lp))  = grid % altitude(1:grid % flux_tube_max(lp),lp)/1000.0_prec !convert from m to km
@@ -1027,7 +1000,7 @@ CONTAINS
             ! Ion Densities
             XIONNX(1:9,i) = plasma % ion_densities(1:9,i,lp,mp)
             ! Along Flux Tube Ion Velocities
-            XIONVX(1:9,i) = plasma % ion_velocities(3,1:9,i,lp,mp)
+            XIONVX(1:9,i) = plasma % ion_velocities(1:9,i,lp,mp)
 
             ! Ion Temperatures
             TE_TIX(1,i) = plasma % ion_temperature(i,lp,mp)
@@ -1134,7 +1107,7 @@ endif
             ! Ion Densities
             plasma % ion_densities(1:9,i,lp,mp) = XIONNX(1:9,i)
             ! Along Flux Tube Ion Velocities
-            plasma % ion_velocities(3,1:9,i,lp,mp) = XIONVX(1:9,i)
+            plasma % ion_velocities(1:9,i,lp,mp) = XIONVX(1:9,i)
 
             ! Ion Temperatures
             plasma % ion_temperature(i,lp,mp) = TE_TIX(1,i)
@@ -1212,18 +1185,12 @@ endif
       DO i = 1, n_ion_species
 
         CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_densities(i,:,:,:), plasma % geo_ion_densities(i,:,:,:) )
-        CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_velocities(1,i,:,:,:), plasma % geo_ion_velocities(1,i,:,:,:) )
-        CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_velocities(2,i,:,:,:), plasma % geo_ion_velocities(2,i,:,:,:) )
-        CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_velocities(3,i,:,:,:), plasma % geo_ion_velocities(3,i,:,:,:) )
 
      ENDDO
 
      CALL grid % Interpolate_to_Geographic_Grid( plasma % ion_temperature, plasma % geo_ion_temperature )
      CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_density, plasma % geo_electron_density )
      CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_temperature, plasma % geo_electron_temperature )
-     CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_velocity(1,:,:,:), plasma % geo_electron_velocity(1,:,:,:) )
-     CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_velocity(2,:,:,:), plasma % geo_electron_velocity(2,:,:,:) )
-     CALL grid % Interpolate_to_Geographic_Grid( plasma % electron_velocity(3,:,:,:), plasma % geo_electron_velocity(3,:,:,:) )
 
      CALL grid % Interpolate_to_Geographic_Grid( plasma % ionization_rates(1,:,:,:), plasma % geo_ionization_rates(1,:,:,:) )
      CALL grid % Interpolate_to_Geographic_Grid( plasma % ionization_rates(2,:,:,:), plasma % geo_ionization_rates(2,:,:,:) )
@@ -1242,7 +1209,7 @@ endif
     INTEGER               :: ispec, i, lp, mp, ii, fUnit
     REAL(sp), ALLOCATABLE :: dumm(:,:,:) 
 
-      ALLOCATE( dumm(1:grid % npts2d, 1:grid % NMP, 1:12) )      
+      ALLOCATE( dumm(1:grid % npts2d, 1:grid % NMP, 1:16) )      
       
       dumm = 0.0_sp
 
@@ -1252,7 +1219,7 @@ endif
             STATUS = 'OLD' )
 
 
-      DO ispec=1,12
+      DO ispec=1,16
         READ( fUnit ) dumm(:,:,ispec)
       ENDDO
 
@@ -1266,10 +1233,10 @@ endif
           DO i = 1, grid % flux_tube_max(lp)
 
             ii = ii + 1
-!            PRINT*, i, lp, mp, ii, dumm(ii,mp,11)
             plasma % ion_densities(1:9,i,lp,mp)    = dumm(ii,mp,1:9)
             plasma % electron_temperature(i,lp,mp) = dumm(ii,mp,10)
             plasma % ion_temperature(i,lp,mp)      = dumm(ii,mp,11)
+            plasma % ion_velocities(1:3,i,lp,mp)   = dumm(ii,mp,13:15)
 
           ENDDO
         ENDDO

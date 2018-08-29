@@ -976,14 +976,6 @@ CONTAINS
 
       CALL Check( nf90_close( ncid ) )
 
-!DO lp = 2, grid % NLP
-!write(6,777) 'GHGM this grid ',lp,grid % altitude(grid % flux_tube_midpoint(lp),lp)/1000., &
-!grid % altitude(grid % flux_tube_midpoint(lp-1),lp-1)/1000. - grid % altitude(grid % flux_tube_midpoint(lp),lp)/1000., &
-!grid % magnetic_colatitude(1,lp) * 180./3.14159, &
-!(grid % magnetic_colatitude(1,lp) * 180./3.14159) - (grid % magnetic_colatitude(1,lp-1) * 180./3.14159)
-!777 format(i4,2e12.4,2f9.3)
-!ENDDO
-
   END SUBROUTINE Read_IPE_Grid_NetCDF
 
   SUBROUTINE Calculate_Grid_Attributes_From_Legacy_Input( grid )
