@@ -773,10 +773,6 @@ CONTAINS
     !        output: xmlon  
     call solgmlon(sbsllat,sbsllon,colat,elon,xmlon) 
     sunlons = xmlon*dtr
-<<<<<<< HEAD
-!   print *,'in sunloc',colat
-=======
->>>>>>> origin/ipe_refactor
 
   END SUBROUTINE sunloc
 
