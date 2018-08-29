@@ -25,10 +25,10 @@ IMPLICIT NONE
         CALL ipe % Update( t0_ipe, t1_ipe )
         CALL CPU_TIME(t2)
 
-!       CALL ipe % Write_NetCDF_IPE( "IPE_State.apex."//ipe % time_tracker % DateStamp( )//".nc" ) 
+        CALL ipe % Write_NetCDF_IPE( "IPE_State.apex."//ipe % time_tracker % DateStamp( )//".nc" ) 
         
         ! Interpolate to the Geographic Fixed Height Grid and write to file
-!       CALL ipe % Write_Geographic_NetCDF_IPE( "IPE_State.geo."//ipe % time_tracker % DateStamp( )//".nc" ) 
+        CALL ipe % Write_Geographic_NetCDF_IPE( "IPE_State.geo."//ipe % time_tracker % DateStamp( )//".nc" ) 
 
         PRINT*, 'Total Update Time :', t2-t1
 
