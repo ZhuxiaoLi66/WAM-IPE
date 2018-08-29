@@ -245,6 +245,7 @@ CONTAINS
       ENDIF
 
       CALL Check( nf90_create( TRIM(filename), NF90_NETCDF4, ncid))
+      CALL Check( nf90_put_att( ncid, NF90_GLOBAL, "Version", 1.0) )
 
       CALL Check( nf90_def_dim( ncid, "s", ipe % grid % nFluxTube, z_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "lp", ipe % grid % NLP, x_dimid ) ) 
@@ -570,6 +571,7 @@ CONTAINS
       ENDIF
 
       CALL Check( nf90_create( TRIM(filename), NF90_NETCDF4, ncid))
+      CALL Check( nf90_put_att( ncid, NF90_GLOBAL, "Version", 1.0) )
 
       CALL Check( nf90_def_dim( ncid, "Z", nheights_geo, z_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "longitude", nlon_geo, x_dimid ) ) 
