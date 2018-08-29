@@ -502,8 +502,10 @@ C.... Written by P. Richards June-September 2010.
 
       !.. Set up initial temperature and density profiles.
       !.. 0.1 < HPEQ < 1.0.
+!     print *, ' GHGM HPEQ ', HPEQ
       IF(HPEQ.GT.0.001)
      >  CALL PROFIN(IHEPLS,INPLS,PCO,F107,N,TI,HPEQ,HEPRAT)
+!     print *, ' GHGM CALL PROFIN ', TI
 
       !.. This routine adjusts the H+ and He+ densities for depleted flux tubes      
       !..  if HPEQ is negative. 0.1 < -HPEQ < 1.0
@@ -527,6 +529,8 @@ c      CALL FACEUV(F107,F107A,UVFAC,EUVFLUX)
 
       !.. 2-stream photoelectron routine to get electron heating 
       !.. rate and secondary ion production
+!     print *, ' GHGM IN CTIP CALL PE2S TI ', TI
+! GHGM commenting this out for now
       CALL PE2S(F107,F107A,N,TI,FPAS,-1.0E22,EDEN,UVFAC,COLUM,
      > IHEPLS,INPLS,INNO)
 
@@ -628,6 +632,7 @@ c      IF(JTI.LT.4.AND.IWR.EQ.0) THEN        !$$$
       ENDIF
 
       !..  electron and ion temperature solution
+! GHGM commenting this out for now
       CALL TLOOPS(JMIN,JMAX,CTIPDIM,Z,N,TI,DT,DTMIN,EFLAG)   !$$$ 
 
       !.. O+, H+ solution
@@ -635,6 +640,7 @@ c      IF(JTI.LT.4.AND.IWR.EQ.0) THEN        !$$$
 
       !.. Recalculate the minor ion densities with the new O+ density
       !.. Added by PGR 2012-11-29
+! GHGM commenting this out for now
       DO J=JMIN,JMAX 
        IF(Z(J).GE.80.AND.Z(J).LE.700) THEN
           CALL CMINOR(0,J,0,IHEPLS,INPLS,INNO,FD,7,N,TI,Z,EFLAG)
@@ -642,8 +648,10 @@ c      IF(JTI.LT.4.AND.IWR.EQ.0) THEN        !$$$
       ENDDO
 
       !.. He+ solution
+! GHGM commenting this out for now
       IF(EFLAG(2,1).EQ.0.AND.IHEPLS.GT.0) CALL XION(TI,DT,DTMIN,9,EFLAG)
       !.. N+ solution
+! GHGM commenting this out for now
       IF(EFLAG(2,1).EQ.0.AND.INPLS.GT.0) CALL XION(TI,DT,DTMIN,11,EFLAG)
 
         !.. transfer densities from FLIP to CTIP variable
@@ -672,6 +680,7 @@ c      IF(JTI.LT.4.AND.IWR.EQ.0) THEN        !$$$
             !.. electron density for photoelectron routine
             EDEN(J)=XIONN(1,J)+XIONN(2,J)+XIONN(3,J)+XIONN(4,J)+
      >      XIONN(5,J)+XIONN(6,J)
+!           print *,'GHGM in CTIPINT TI ', TI(1,J)
             CALL RATS(J,TI(3,J),TI(1,J),TN(J),RTS)  !.. Reaction rates
             !.. Neutral heating rate
 !            CALL NEUT_HEATING(0,JMIN,J,Z(J),RTS,TI(3,J),TI(2,J),TN(J),

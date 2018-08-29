@@ -567,7 +567,6 @@ CONTAINS
       DO lp = 1, grid % NLP
 
         lat = grid % magnetic_colatitude(1,lp)        
-
         ! colatitude decreases with increasing lp
         ilat(lp) = nlat
         DO i = start_index, nlat

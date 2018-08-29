@@ -69,6 +69,7 @@ C....... Sep 1989
       !.. IF(Z(J).LT.100) N4S(J)=0.0
 
       !.. C*****  obtain reaction rates from subr rats
+!     PRINT *, 'GHGM CMINOR RATES ', TI(1,J)
       CALL RATS(J,TI(3,J),TI(1,J),TN(J),RTS)
 
 	!.. RTS(99) is used in the RVN2PB file for N2+(v) calculation
@@ -78,13 +79,17 @@ C....... Sep 1989
       IF(I.EQ.1.OR.I.EQ.-1.OR.I.GT.2) GO TO 12
 
       !.. . First guess for [e] using previous stored values
+!     print *, 'GHGM ZNE ',XIONN(1,J),XIONN(2,J),XIONN(3,J),XIONN(4,J)
+!    >                ,XIONN(5,J),XIONN(6,J),XIONN(7,J)    
       ZNE=XIONN(1,J)+XIONN(2,J)+XIONN(3,J)+XIONN(4,J)+XIONN(5,J)+
      >  XIONN(6,J)+XIONN(7,J)
       ZNESAV=ZNE
       CALL CO2P(J,0,0,Z(J),RTS,ON(J),O2N(J),N2N(J),ZNE,PO2P,DO2P
      > ,TOTO2I,N(1,J),OP2D,N2PLUS,NPLUS,N4S(J),NNO(J),OP2P)
+!     print *,' GHGM THIS ZNE ', ZNE
 
       !.. .... no+
+!     print *,'GHGM OPLUS ', N(1,J)
       CALL CNOP(J,0,0,Z(J),RTS,ON(J),O2N(J),N2N(J),ZNE,PNOP
      > ,DNOP,N(1,J),N2PLUS,O2PLUS,N4S(J),NNO(J),NPLUS,N2P(J)
      >  ,PLYNOP,N2D(J),OP2D)
@@ -92,8 +97,8 @@ C....... Sep 1989
       !.. calculation of [e] analytically for first guess in Newton
       B=N(1,J)+N(2,J)+N2PLUS
       C=PNOP/RTS(5)+PO2P/RTS(6)
-      PRINT*, 'ZNE-C :', PNOP, RTS(5), PO2P, RTS(6)
-      PRINT*, 'ZNE :', B, C
+!     PRINT*, 'GHGM ZNE-C :', PNOP, RTS(5), PO2P, RTS(6)
+!     PRINT*, 'GHGM ZNE 2:', B, C
       ZNE=(B+DSQRT(B**2+4.0*C))/2.0
 
       !.. Loop through chemistry twice to evaluate dF/dh for Newton
@@ -169,7 +174,9 @@ C....... Sep 1989
       CALL CN2D(J,0,0,Z(J),RTS,ON(J),O2N(J),N2N(J),NOPLUS,ZNE,PROD(1)
      > ,LOSS(1),N2PLUS,DISN2D,UVDISN,NPLUS,N2P(J)
      > ,N2D(J),N(1,J),NNO(J),N2A(J))
+!     print *, 'GHGM prod loss ', PROD(1),LOSS(1)
       IF(LOSS(1).GT.0) N2D(J)=PROD(1)/LOSS(1)
+!     print *, 'GHGM prod loss n2d', PROD(1),LOSS(1), n2d(j)
 
       !.... NO density
       CALL CNO(J,0,0,Z(J),RTS,ON(J),O2N(J),N2N(J),ZNE,PROD(3),LOSS(3)
@@ -201,8 +208,9 @@ C....... Sep 1989
       IF(INPLS.LE.0) XIONN(4,J)=NPLUS
 
       !.. EQN2D(J) used in PE2S only
-      PRINT*, 'CMINOR :', J, N2D(J), RTS(8),ZNE
+!     PRINT*, 'GHGM CMINOR :', J, N2D(J), RTS(8),ZNE
       EQN2D(J)=N2D(J)*RTS(8)*ZNE
+!     print *, 'GHGM eqn2d ', EQN2D
 
       !... calc o+ prod. from minor ions      !$$$
       FD(5)=OP2P*(RTS(26)*ON(J)+RTS(14)*ZNE+0.047)

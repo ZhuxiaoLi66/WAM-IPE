@@ -14,13 +14,12 @@ C--- Consult file RSLPSD-Algorithm.doc for detailed explanation
      >                    TI,   !.. Ion and electron temperatures
      >                  DTIN,   !.. Time step from calling program
      >                 DTMIN,   !.. Minimum time step
-     >                 EFLAG,mp,lp)   !.. OUTPUT: Error flag array
+     >                 EFLAG)   !.. OUTPUT: Error flag array
       USE SOLVARR       !... DELTA RHS WORK S, Variables for solver
       USE THERMOSPHERE  !.. ON HN N2N O2N HE TN UN EHT COLFAC
       USE ION_DEN_VEL   !.. O+ H+ He+ N+ NO+ O2+ N2+ O+(2D) O+(2P)
 !dbg20120301: N+ problem: "IN BDSLV &&&&&&& BANDWIDTH IS TOO LARGE "
       IMPLICIT NONE
-      integer,intent(in)::mp,lp
       INTEGER FLDIM                      !.. Field line grid array dimension
       INTEGER NFLAG,EFLAG(11,11)         !.. error flags
       INTEGER I,J,JC,ITER                !.. Loop control variables

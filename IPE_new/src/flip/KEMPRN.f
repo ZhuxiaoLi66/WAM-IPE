@@ -85,6 +85,7 @@ C::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 C.......n(2d)
       IMPLICIT DOUBLE PRECISION(A-H,L,N-Z)
       DIMENSION RTS(99),LR(22),PR(22)
+!     print *, 'GHGM PR1 ', NOP,NE,RTS(50)
       PR(1)=NOP*NE*RTS(50)
       PR(2)=N2PLS*NE*RTS(32)*RTS(11)
       PR(3)=N2PLS*ON*RTS(10)
@@ -95,12 +96,17 @@ C.......n(2d)
 	PR(8)=RTS(27)*N2A*ON
       LR(1)=ON*RTS(15)
       LR(2)=O2N*RTS(16)
+!     print *, 'GHGM LR3 ', NE,RTS(8)
       LR(3)=NE*RTS(8)
       LR(4)=OPLS*RTS(29)
       LR(5)=RTS(61)
       LR(6)=RTS(41)*NNO
+!     print *, 'GHGM PR ',PR 
+!     print *, 'GHGM LR ',LR 
       P1=PR(1)+PR(2)+PR(3)+PR(4)+PR(5)+PR(6)+PR(7)+PR(8)
       L1=LR(1)+LR(2)+LR(3)+LR(4)+LR(5)+LR(6)
+!     print *, 'GHGM P1 ',P1 
+!     print *, 'GHGM L1 ',L1 
 C....... EF is used to convert production rates to volume emission rates
       EF=1.0
 C....... This line in for volume emission rates
@@ -1026,6 +1032,7 @@ C...... Written by P. Richards in February 2004
       DATA LRV/1.0,19*0.3333/    
       
       !... Evaluate total production and loss rates
+!     print *, 'GHGM RTS(3) N2N OPLS ', RTS(3),N2N,OPLS
       PR(1)=RTS(3)*N2N*OPLS        !.. N2 + O+
       PR(2)=N2PLS*ON*RTS(10)            !.. N2+ + O
       PR(3)=O2P*N4S*RTS(21)             !.. O2+ + N(4S)
@@ -1044,7 +1051,9 @@ C...... Written by P. Richards in February 2004
       !..Total source term used in main program to calculate [e]
       P1=PR(1)+PR(2)+PR(3)+PR(4)+PR(5)+PR(6)+PR(7)+PR(8)
      >    +PR(9)+PR(10)+PR(11)+PR(12)
-      PRINT*, 'CNOP', P1, LR(1)
+!     print *, 'GHGM NOP PR ', PR
+!     print *, 'GHGM NE RTS5 ', NE,RTS(5)
+!     PRINT*, 'GHGM CNOP ', P1, LR(1) , I
       IF(I.LE.0) NOP=P1/LR(1)         !.. NO+ density
 
       DO IJ=1,INV
