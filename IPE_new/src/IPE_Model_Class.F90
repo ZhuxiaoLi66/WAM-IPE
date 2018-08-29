@@ -154,6 +154,7 @@ CONTAINS
     REAL(prec), INTENT(in)            :: t0, t1
     ! Local
     REAL(prec) :: AP(1:7)
+    REAL(prec) :: wt1, wt2
 
 
       CALL ipe % time_tracker % Update( t0 )
@@ -162,6 +163,7 @@ CONTAINS
       AP = ipe % forcing % GetAP( t0 )
 
       print *, 'GHGM updating neutrals'
+      CALL CPU_TIME( wt1 )
       CALL ipe % neutrals % Update( ipe % grid, &
                                     ipe % time_tracker % utime, &
                                     ipe % time_tracker % year, &
@@ -169,13 +171,19 @@ CONTAINS
                                     ipe % forcing % f107( ipe % forcing % current_index ) , &
                                     ipe % forcing % f107_81day_avg( ipe % forcing % current_index ), &
                                     AP )
+      CALL CPU_TIME( wt2 )
+      PRINT*, 'Neutral : ', wt2-wt1
 
       print *, 'GHGM updating electrodynamics'
+      CALL CPU_TIME( wt1 )
       CALL ipe % eldyn % Update( ipe % grid, &
                                  ipe % forcing, &
                                  ipe % time_tracker )
+      CALL CPU_TIME( wt2 )
+      PRINT*, 'Eldyn : ', wt2-wt1
    
       print *, 'GHGM updating plasma'
+      CALL CPU_TIME( wt1 )
       CALL ipe % plasma % Update( ipe % grid, &
                                   ipe % neutrals, &
                                   ipe % forcing, &
@@ -183,6 +191,8 @@ CONTAINS
                                   ipe % eldyn % v_ExB_apex, &
                                   ipe % parameters % solar_forcing_time_step )
 
+      CALL CPU_TIME( wt2 )
+      PRINT*, 'Plasma : ', wt2-wt1
 
       ! Update the timer
       CALL ipe % time_tracker % Update( t1 )
@@ -647,7 +657,7 @@ CONTAINS
         CALL Check( nf90_put_att( ncid, phi_varid, "long_name", "Electric Potential" ) )
         CALL Check( nf90_put_att( ncid, phi_varid, "units", "[Unknown]" ) )
 
-        CALL Check( nf90_def_var( ncid, "mhd_phi", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) , phi_varid ) )
+        CALL Check( nf90_def_var( ncid, "mhd_phi", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) , mhd_phi_varid ) )
         CALL Check( nf90_put_att( ncid, mhd_phi_varid, "long_name", "Electric Potential - MHD Component" ) )
         CALL Check( nf90_put_att( ncid, mhd_phi_varid, "units", "[Unknown]" ) )
 
@@ -775,7 +785,7 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % geo_ion_densities(7,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, op2d_varid,  ipe % plasma % geo_ion_densities(8,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, op2p_varid,  ipe % plasma % geo_ion_densities(9,:,:,:) ) )
-      CALL Check( nf90_put_var( ncid, n2p_varid, ipe % plasma % geo_ion_temperature ) )
+      CALL Check( nf90_put_var( ncid, ion_temp_varid, ipe % plasma % geo_ion_temperature ) )
       CALL Check( nf90_put_var( ncid, e_varid, ipe % plasma % geo_electron_density ) )
       CALL Check( nf90_put_var( ncid, ion_rate_varid, ipe % plasma % geo_ionization_rates(1,:,:,:) ) )
       CALL Check( nf90_put_var( ncid, O_rate_varid, ipe % plasma % geo_ionization_rates(2,:,:,:) ) )
