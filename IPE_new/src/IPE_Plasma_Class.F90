@@ -58,7 +58,8 @@ IMPLICIT NONE
 
   END TYPE IPE_Plasma
 
-  INTEGER, PARAMETER, PRIVATE :: NMP_reduce_factor = 4
+  INTEGER, PARAMETER, PRIVATE :: NMP_reduce_factor = 1
+  INTEGER, PARAMETER, PRIVATE :: NLP_reduce_factor = 1
   INTEGER, PARAMETER , PRIVATE   :: perp_transport_max_lp = 151
   INTEGER, PARAMETER, PRIVATE    :: n_ion_species = 9
   REAL(prec), PARAMETER, PRIVATE :: safe_density_minimum = 10.0_prec**(-4)
@@ -751,7 +752,7 @@ CONTAINS
       ENDDO
 
       DO mp = 1, grid % NMP , NMP_reduce_factor
-        DO lp = 1, grid % NLP , 2
+        DO lp = 1, grid % NLP , NLP_reduce_factor
 
           DO i=1,grid % flux_tube_max(lp)
             plasma % ionization_rates(1,i,lp,mp) = 0.0_prec
@@ -982,11 +983,13 @@ CONTAINS
       F107A = forcing % f107_81day_avg( forcing % current_index )   
       UTHR  = time_tracker % hour
 
+      print *, 'GHGM TIME ', UTHR
+
       print *, 'GHGM ', plasma % NMP , plasma % NLP
       DO mp = 1, plasma % NMP , NMP_reduce_factor
           print *, 'GHGM mp ', mp
-        DO lp = 1, plasma % NLP , 2
-!         print *, 'GHGM lp ', lp
+        DO lp = 1, plasma % NLP , NLP_reduce_factor
+          print *, 'GHGM lp ', lp
 !     DO mp = 1, 2    
 !       DO lp = 1, 2    
 
@@ -1037,12 +1040,53 @@ CONTAINS
             NHEAT(i)    = 0.0_dp
        
           ENDDO
-!         print *, 'GHGM TE_TIX ', te_tix
-!         istop = 0
-!         if (istop.eq.1) stop
 
           JMINX = 1
           JMAXX = grid % flux_tube_max(lp)
+
+if(mp.eq.1.and.(lp.eq.168.or.lp.eq.169)) then
+print *, ' GHGM LP ',lp
+print *, ' GHGM1 ', JMINX
+print *, ' GHGM2 ', JMAXX
+print *, ' GHGM2.5 ', grid % flux_tube_max(lp)
+print *, ' GHGM3 ', ZX(1:JMAXX)
+print *, ' GHGM4 ', PCO
+print *, ' GHGM5 ', SLX(1:JMAXX)
+print *, ' GHGM6 ', GLX(1:JMAXX)
+print *, ' GHGM7 ', BMX(1:JMAXX)
+print *, ' GHGM8 ', GRX(1:JMAXX)
+print *, ' GHGM9 ', OX(1:JMAXX)
+print *, ' GHGM10 ', HX(1:JMAXX)
+print *, ' GHGM11 ', N2X(1:JMAXX)
+print *, ' GHGM12 ', O2X(1:JMAXX)
+print *, ' GHGM13 ', HEX(1:JMAXX)
+print *, ' GHGM14 ', N4SX(1:JMAXX)
+print *, ' GHGM15 ', INNO
+print *, ' GHGM16 ', NNOX(1:JMAXX)
+print *, ' GHGM17 ', TNX(1:JMAXX)
+print *, ' GHGM18 ', TINFX(1:JMAXX)
+print *, ' GHGM19 ', UNX(1:JMAXX)
+print *, ' GHGM20 ', flip_time_step
+print *, ' GHGM21 ', DTMIN
+print *, ' GHGM22 ', F107D
+print *, ' GHGM23 ', F107A
+print *, ' GHGM24 ', SZA(1:JMAXX)
+print *, ' GHGM25 ', FPAS
+print *, ' GHGM26 ', HPEQ
+print *, ' GHGM27 ', HEPRAT
+print *, ' GHGM28 ', COLFACX
+print *, ' GHGM29 ', IHEPLS
+print *, ' GHGM30 ', INPLS
+print *, ' GHGM31 ', UTHR
+print *, ' GHGM32 ', EHTX(1:3,1:JMAXX)
+print *, ' GHGM33 ', AUR_PROD(1:3,1:JMAXX)
+print *, ' GHGM34 ', TE_TIX(1:3,1:JMAXX)
+print *, ' GHGM35 ', XIONNX(1:9,1:JMAXX)
+print *, ' GHGM36 ', XIONVX(1:9,1:JMAXX)
+print *, ' GHGM37 ', NHEAT(1:JMAXX)
+print *, ' GHGM38 ', EFLAG
+endif
+!if(mp.eq.1.and.lp.eq.169) stop
  
           CALL CTIPINT( JMINX, & !.. index of the first point on the field line
                         JMAXX, & !.. index of the last point on the field line
@@ -1068,7 +1112,7 @@ CONTAINS
                         DTMIN, & !.. Minimum time step allowed (>=10 secs?)
                         F107D, & !.. Daily F10.7
                         F107A, & !.. 81 day average F10.7
-                        SZA, & !.. Solar Zenith angle (radians)
+                        SZA(1:JMAXX), & !.. Solar Zenith angle (radians)
                         FPAS, & !.. Pitch angle scattering fraction
                         HPEQ, & !.. Sets initial equatorial H+ density. See declaration below
                         HEPRAT, & !.. Intial He+/H+ ratio (.01 to 1.0)
@@ -1098,10 +1142,10 @@ CONTAINS
             ! Electron Temperature
             plasma % electron_temperature(i,lp,mp) = TE_TIX(3,i) 
 
-          if (mp.eq.1.and.lp.eq.1) then
-          write(6,566) i , zx(i), XIONNX(1,i),XIONNX(2,i)                                              
-566 format(i4,2e12.4)
-          endif
+!         if (mp.eq.1.and.lp.eq.1) then
+!         write(6,566) i , zx(i), XIONNX(1,i),XIONNX(2,i)                                              
+!566 format(' GHGM ions ',i4,3e12.4)
+!         endif
 
           ENDDO
 
@@ -1218,7 +1262,7 @@ CONTAINS
 
         ii = 0
 
-        DO lp = 1, grid % NLP , 2
+        DO lp = 1, grid % NLP , NLP_reduce_factor
           DO i = 1, grid % flux_tube_max(lp)
 
             ii = ii + 1

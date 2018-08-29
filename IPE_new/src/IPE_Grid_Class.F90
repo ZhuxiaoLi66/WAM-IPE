@@ -208,7 +208,7 @@ CONTAINS
     CLASS( IPE_Grid ), INTENT(inout) :: grid
     CHARACTER(*), INTENT(in)         :: filename
     ! Local
-    INTEGER    :: i, lp, mp
+    INTEGER    :: i, lp, mp , istop
     INTEGER    :: fUnit, ii, NMP, NLP, NPTS2D, MaxFluxTube
     INTEGER    :: jmin(1:grid % NMP,1:grid % NLP)
     INTEGER    :: jmax(1:grid % NMP,1:grid % NLP)
@@ -273,7 +273,6 @@ CONTAINS
 
       READ( fUnit, * ) dum0, dum1, dum2, dum3
 
-      DO lp = 1, grid % NLP
         DO i = 1, grid % flux_tube_max(lp)
 
           ii = jmin(1,lp) + (i-1)
@@ -281,7 +280,13 @@ CONTAINS
           grid % altitude(i,lp) = grid % r_meter(i,lp) - earth_radius 
        
         ENDDO
+
+      DO lp = 1, grid % NLP
+          print *,' GHGM midpoint altitudes ',lp,grid % altitude(grid % flux_tube_midpoint(lp),lp)/1000.
       ENDDO     
+
+      istop = 0
+      if(istop.eq.1) stop
 
       DO mp = 1, grid % NMP
         DO lp = 1, grid % NLP
@@ -777,6 +782,7 @@ CONTAINS
     INTEGER :: ncid
     INTEGER :: dimid, varid
     INTEGER :: nFluxtube, NLP, NMP
+    INTEGER :: lp
     CHARACTER(NF90_MAX_NAME) :: nameHolder
 
 
@@ -970,6 +976,13 @@ CONTAINS
 
       CALL Check( nf90_close( ncid ) )
 
+!DO lp = 2, grid % NLP
+!write(6,777) 'GHGM this grid ',lp,grid % altitude(grid % flux_tube_midpoint(lp),lp)/1000., &
+!grid % altitude(grid % flux_tube_midpoint(lp-1),lp-1)/1000. - grid % altitude(grid % flux_tube_midpoint(lp),lp)/1000., &
+!grid % magnetic_colatitude(1,lp) * 180./3.14159, &
+!(grid % magnetic_colatitude(1,lp) * 180./3.14159) - (grid % magnetic_colatitude(1,lp-1) * 180./3.14159)
+!777 format(i4,2e12.4,2f9.3)
+!ENDDO
 
   END SUBROUTINE Read_IPE_Grid_NetCDF
 

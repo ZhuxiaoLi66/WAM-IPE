@@ -57,7 +57,8 @@ IMPLICIT NONE
   END TYPE IPE_Neutrals
 
 
-INTEGER, PARAMETER, PRIVATE :: NMP_reduce_factor = 4
+INTEGER, PARAMETER, PRIVATE :: NMP_reduce_factor = 1
+INTEGER, PARAMETER, PRIVATE :: NLP_reduce_factor = 1
 REAL(prec), PARAMETER, PRIVATE :: min_density = 10.0_prec**(-12)
 CHARACTER(250), PARAMETER :: hwm_path ='./'
 
@@ -308,10 +309,9 @@ CONTAINS
     neutrals % velocity_geographic(2,1:nFluxTube,1:NLP,1:NMP) = vy_geographic
     neutrals % velocity_geographic(3,1:nFluxTube,1:NLP,1:NMP) = 0.0
 
-do i = 1 , nFluxTube
-write(6,777) i, grid % altitude(i,1), neutrals % oxygen(i,1,1), neutrals % temperature(i,1,1),  neutrals % velocity_geographic(1,i,1,1)
-777 format(i4,4e12.4)
-enddo
+!do lp = 1 , nlp
+!  write(6,*) 'GHGM equatorial grid ', lp, grid % altitude((grid % flux_tube_max(lp)-1)/2,lp)
+!enddo
 
     print *, 'GHGM Done interface'
     istop = 0
@@ -591,7 +591,7 @@ enddo
   REAL(kind=8) :: param_l11 , param_l12 , param_l21 , param_l22 ,  param_u11 , param_u12 , param_u21 , param_u22 , &
                   param_11 , param_12 , param_21 , param_22 , param_1 , param_2
 
-  INTEGER :: i , ih , ihl , ihu, ii , ilat , ilat1 , ilat2 , ilon , ilon1 , ilon2
+  INTEGER :: i , ih , ihl , ihu, ii , ilat , ilat1 , ilat2 , ilon , ilon1 , ilon2 , itube_loop
   INTEGER :: ispecial , l , m , n , istop , ilog10 , n_params , iparam , iconstant_above_top_level             
 
   REAL(kind=8) :: O_density_geo(N_heights,N_Latitudes,N_longitudes)
@@ -629,10 +629,10 @@ enddo
 print *, " GHGM starting MSIS interpolation "
 
   do mp = 1 , nmp , NMP_reduce_factor
-print *, 'GHGM new mps ', mp
-      do lp = 1 , nlp , 2
-print *, '       GHGM new lps ', lp
-print *, '           GHGM iflux_tube_max ', iflux_tube_max(lp)
+!print *, 'GHGM new mps ', mp
+      do lp = 1 , nlp , NLP_reduce_factor
+!rint *, '       GHGM new lps ', lp
+!print *, '           GHGM iflux_tube_max ', iflux_tube_max(lp)
 ! do mp = 40 , 40
 !     do lp = 50 , 50
       !g
@@ -808,44 +808,44 @@ print *, '           GHGM iflux_tube_max ', iflux_tube_max(lp)
               param_l22 = log10(N2_density_geo(ihl,ilat2,ilon2))
 
               CASE(4)
-              ilog10 = 0
+              ilog10 = 1
               iconstant_above_top_level = 0
-              param_u11 = H_density_geo(ihu,ilat1,ilon1)
-              param_l11 = H_density_geo(ihl,ilat1,ilon1)
-              param_u12 = H_density_geo(ihu,ilat1,ilon2)
-              param_l12 = H_density_geo(ihl,ilat1,ilon2)
-              param_u21 = H_density_geo(ihu,ilat2,ilon1)
-              param_l21 = H_density_geo(ihl,ilat2,ilon1)
-              param_u22 = H_density_geo(ihu,ilat2,ilon2)
-              param_l22 = H_density_geo(ihl,ilat2,ilon2)
+              param_u11 = log10(H_density_geo(ihu,ilat1,ilon1))
+              param_l11 = log10(H_density_geo(ihl,ilat1,ilon1))
+              param_u12 = log10(H_density_geo(ihu,ilat1,ilon2))
+              param_l12 = log10(H_density_geo(ihl,ilat1,ilon2))
+              param_u21 = log10(H_density_geo(ihu,ilat2,ilon1))
+              param_l21 = log10(H_density_geo(ihl,ilat2,ilon1))
+              param_u22 = log10(H_density_geo(ihu,ilat2,ilon2))
+              param_l22 = log10(H_density_geo(ihl,ilat2,ilon2))
 
               CASE(5)
-              ilog10 = 0
+              ilog10 = 1
               iconstant_above_top_level = 0
-              param_u11 = HE_density_geo(ihu,ilat1,ilon1)
-              param_l11 = HE_density_geo(ihl,ilat1,ilon1)
-              param_u12 = HE_density_geo(ihu,ilat1,ilon2)
-              param_l12 = HE_density_geo(ihl,ilat1,ilon2)
-              param_u21 = HE_density_geo(ihu,ilat2,ilon1)
-              param_l21 = HE_density_geo(ihl,ilat2,ilon1)
-              param_u22 = HE_density_geo(ihu,ilat2,ilon2)
-              param_l22 = HE_density_geo(ihl,ilat2,ilon2)
+              param_u11 = log10(HE_density_geo(ihu,ilat1,ilon1))
+              param_l11 = log10(HE_density_geo(ihl,ilat1,ilon1))
+              param_u12 = log10(HE_density_geo(ihu,ilat1,ilon2))
+              param_l12 = log10(HE_density_geo(ihl,ilat1,ilon2))
+              param_u21 = log10(HE_density_geo(ihu,ilat2,ilon1))
+              param_l21 = log10(HE_density_geo(ihl,ilat2,ilon1))
+              param_u22 = log10(HE_density_geo(ihu,ilat2,ilon2))
+              param_l22 = log10(HE_density_geo(ihl,ilat2,ilon2))
 
               CASE(6)
-              ilog10 = 0
+              ilog10 = 1
               iconstant_above_top_level = 0
-              param_u11 = N_density_geo(ihu,ilat1,ilon1)
-              param_l11 = N_density_geo(ihl,ilat1,ilon1)
-              param_u12 = N_density_geo(ihu,ilat1,ilon2)
-              param_l12 = N_density_geo(ihl,ilat1,ilon2)
-              param_u21 = N_density_geo(ihu,ilat2,ilon1)
-              param_l21 = N_density_geo(ihl,ilat2,ilon1)
-              param_u22 = N_density_geo(ihu,ilat2,ilon2)
-              param_l22 = N_density_geo(ihl,ilat2,ilon2)
+              param_u11 = log10(N_density_geo(ihu,ilat1,ilon1))
+              param_l11 = log10(N_density_geo(ihl,ilat1,ilon1))
+              param_u12 = log10(N_density_geo(ihu,ilat1,ilon2))
+              param_l12 = log10(N_density_geo(ihl,ilat1,ilon2))
+              param_u21 = log10(N_density_geo(ihu,ilat2,ilon1))
+              param_l21 = log10(N_density_geo(ihl,ilat2,ilon1))
+              param_u22 = log10(N_density_geo(ihu,ilat2,ilon2))
+              param_l22 = log10(N_density_geo(ihl,ilat2,ilon2))
 
               CASE(7)
               ilog10 = 0
-              iconstant_above_top_level = 0
+              iconstant_above_top_level = 1
               param_u11 = Neutral_temp_geo(ihu,ilat1,ilon1)
               param_l11 = Neutral_temp_geo(ihl,ilat1,ilon1)
               param_u12 = Neutral_temp_geo(ihu,ilat1,ilon2)
@@ -905,6 +905,7 @@ print *, '           GHGM iflux_tube_max ', iflux_tube_max(lp)
                   param_12 = (((param_u12-param_l12)*fac_height)+param_l12)
                   param_21 = (((param_u21-param_l21)*fac_height)+param_l21)
                   param_22 = (((param_u22-param_l22)*fac_height)+param_l22)
+!                 print *, ' GHGM H param_u11 ', param_u22,param_l22,fac_height,param_l22           
               ENDIF
 
               if (ilog10.eq.1) then
@@ -931,6 +932,7 @@ print *, '           GHGM iflux_tube_max ', iflux_tube_max(lp)
               endif
 
 
+!             print *,' GHGM param_2 ',iparam,param_22,param_21,faclon
               param_2 = ((param_22-param_21)*faclon) + param_21
               param_1 = ((param_12-param_11)*faclon) + param_11
 
@@ -943,6 +945,11 @@ print *, '           GHGM iflux_tube_max ', iflux_tube_max(lp)
               molecular_nitrogen(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
               CASE(4)
               hydrogen(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
+!             if(mp.eq.1.and.lp.eq.1.and.i.eq.1115) then
+!             do itube_loop = 1 , 1115
+!             print *, 'GHGM hydrogen ',itube_loop , hydrogen(itube_loop,1,1)
+!             enddo
+!             endif
               CASE(5)
               helium(i,lp,mp) = ((param_2-param_1)*faclat) + param_1
               CASE(6)

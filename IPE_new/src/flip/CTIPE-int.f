@@ -531,8 +531,8 @@ c      CALL FACEUV(F107,F107A,UVFAC,EUVFLUX)
       !.. rate and secondary ion production
 !     print *, ' GHGM IN CTIP CALL PE2S TI ', TI
 ! GHGM commenting this out for now
-!     CALL PE2S(F107,F107A,N,TI,FPAS,-1.0E22,EDEN,UVFAC,COLUM,
-!    > IHEPLS,INPLS,INNO)
+      CALL PE2S(F107,F107A,N,TI,FPAS,-1.0E22,EDEN,UVFAC,COLUM,
+     > IHEPLS,INPLS,INNO)
 
       !-- Sum the EUV, photoelectron, and auroral production rate
       CALL SUMPRD(JMIN,JMAX,AUR_PROD)
@@ -633,7 +633,7 @@ c      IF(JTI.LT.4.AND.IWR.EQ.0) THEN        !$$$
 
       !..  electron and ion temperature solution
 ! GHGM commenting this out for now
-!     CALL TLOOPS(JMIN,JMAX,CTIPDIM,Z,N,TI,DT,DTMIN,EFLAG)   !$$$ 
+      CALL TLOOPS(JMIN,JMAX,CTIPDIM,Z,N,TI,DT,DTMIN,EFLAG)   !$$$ 
 
       !.. O+, H+ solution
       CALL DLOOPS(JMIN,JMAX,CTIPDIM,Z,N,TI,DT,DTMIN,EFLAG)   !$$$  
@@ -641,18 +641,18 @@ c      IF(JTI.LT.4.AND.IWR.EQ.0) THEN        !$$$
       !.. Recalculate the minor ion densities with the new O+ density
       !.. Added by PGR 2012-11-29
 ! GHGM commenting this out for now
-!     DO J=JMIN,JMAX 
-!      IF(Z(J).GE.80.AND.Z(J).LE.700) THEN
-!         CALL CMINOR(0,J,0,IHEPLS,INPLS,INNO,FD,7,N,TI,Z,EFLAG)
-!      ENDIF
-!     ENDDO
+      DO J=JMIN,JMAX 
+       IF(Z(J).GE.80.AND.Z(J).LE.700) THEN
+          CALL CMINOR(0,J,0,IHEPLS,INPLS,INNO,FD,7,N,TI,Z,EFLAG)
+       ENDIF
+      ENDDO
 
       !.. He+ solution
 ! GHGM commenting this out for now
-!     IF(EFLAG(2,1).EQ.0.AND.IHEPLS.GT.0) CALL XION(TI,DT,DTMIN,9,EFLAG)
+      IF(EFLAG(2,1).EQ.0.AND.IHEPLS.GT.0) CALL XION(TI,DT,DTMIN,9,EFLAG)
       !.. N+ solution
 ! GHGM commenting this out for now
-!     IF(EFLAG(2,1).EQ.0.AND.INPLS.GT.0) CALL XION(TI,DT,DTMIN,11,EFLAG)
+      IF(EFLAG(2,1).EQ.0.AND.INPLS.GT.0) CALL XION(TI,DT,DTMIN,11,EFLAG)
 
         !.. transfer densities from FLIP to CTIP variable
       DO J=JMIN,JMAX
