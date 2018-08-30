@@ -205,7 +205,7 @@ CONTAINS
       CALL Check( nf90_get_var( ncid, varid, geospace_potential ) )
 
       CALL Check( nf90_close( ncid ) )
- 
+
   END SUBROUTINE Read_Geospace_Potential
 
    SUBROUTINE Interpolate_Geospace_to_MHDpotential( eldyn, grid, time_tracker)
@@ -215,15 +215,21 @@ CONTAINS
      TYPE( IPE_Time ), INTENT(in)             :: time_tracker
      ! Local
      INTEGER :: j,latidx
+     REAL(prec) :: theta110_rad,geospace_latitude_90_rad(181)
      REAL(prec) :: colat_local(181)
      REAL(prec) :: potential_local(181,181)
-
+    
+     DO j=1,181
+     theta110_rad   = ( 90.0_prec - geospace_latitude(j) ) * dtr
+     geospace_latitude_90_rad(j) = ASIN(SIN(theta110_rad)*SQRT((earth_radius+90000.0_prec)/(earth_radius+110000.0_prec)))
+     IF ( theta110_rad > pi*0.50_prec ) geospace_latitude_90_rad(j) = pi - geospace_latitude_90_rad(j)
+     ENDDO
+ 
      DO j=1,181
      latidx=181-j+1
-     colat_local(j)=90.0_prec - geospace_latitude(latidx)
+     colat_local(j)= geospace_latitude_90_rad(latidx)
      potential_local(:,j)=geospace_potential(:,latidx)
      END DO
-     colat_local = colat_local*dtr
 
      CALL eldyn % Regrid_Potential( grid, time_tracker, potential_local, geospace_longitude,colat_local, 1, 181, 181 )
 
