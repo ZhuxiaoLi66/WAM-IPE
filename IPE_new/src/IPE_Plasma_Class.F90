@@ -926,7 +926,7 @@ CONTAINS
     TYPE( IPE_Time ), INTENT(in)       :: time_tracker
     REAL(prec), INTENT(in)             :: flip_time_step
     ! Local
-    INTEGER  :: i, lp, mp
+    INTEGER  :: i, lp, mp, iprint
     INTEGER  :: JMINX, JMAXX
     INTEGER  :: EFLAG(11,11)
     REAL(dp) :: PCO, UTHR
@@ -1017,50 +1017,52 @@ CONTAINS
           JMINX = 1
           JMAXX = grid % flux_tube_max(lp)
 
-if(mp.eq.1.and.(lp.eq.168.or.lp.eq.169)) then
-print *, ' GHGM LP ',lp
-print *, ' GHGM1 ', JMINX
-print *, ' GHGM2 ', JMAXX
-print *, ' GHGM2.5 ', grid % flux_tube_max(lp)
-print *, ' GHGM3 ', ZX(1:JMAXX)
-print *, ' GHGM4 ', PCO
-print *, ' GHGM5 ', SLX(1:JMAXX)
-print *, ' GHGM6 ', GLX(1:JMAXX)
-print *, ' GHGM7 ', BMX(1:JMAXX)
-print *, ' GHGM8 ', GRX(1:JMAXX)
-print *, ' GHGM9 ', OX(1:JMAXX)
-print *, ' GHGM10 ', HX(1:JMAXX)
-print *, ' GHGM11 ', N2X(1:JMAXX)
-print *, ' GHGM12 ', O2X(1:JMAXX)
-print *, ' GHGM13 ', HEX(1:JMAXX)
-print *, ' GHGM14 ', N4SX(1:JMAXX)
-print *, ' GHGM15 ', INNO
-print *, ' GHGM16 ', NNOX(1:JMAXX)
-print *, ' GHGM17 ', TNX(1:JMAXX)
-print *, ' GHGM18 ', TINFX(1:JMAXX)
-print *, ' GHGM19 ', UNX(1:JMAXX)
-print *, ' GHGM20 ', flip_time_step
-print *, ' GHGM21 ', DTMIN
-print *, ' GHGM22 ', F107D
-print *, ' GHGM23 ', F107A
-print *, ' GHGM24 ', SZA(1:JMAXX)
-print *, ' GHGM25 ', FPAS
-print *, ' GHGM26 ', HPEQ
-print *, ' GHGM27 ', HEPRAT
-print *, ' GHGM28 ', COLFACX
-print *, ' GHGM29 ', IHEPLS
-print *, ' GHGM30 ', INPLS
-print *, ' GHGM31 ', UTHR
-print *, ' GHGM32 ', EHTX(1:3,1:JMAXX)
-print *, ' GHGM33 ', AUR_PROD(1:3,1:JMAXX)
-print *, ' GHGM34 ', TE_TIX(1:3,1:JMAXX)
-print *, ' GHGM35 ', XIONNX(1:9,1:JMAXX)
-print *, ' GHGM36 ', XIONVX(1:9,1:JMAXX)
-print *, ' GHGM37 ', NHEAT(1:JMAXX)
-print *, ' GHGM38 ', EFLAG
+if(mp.eq.5.and.(lp.eq.12)) then
+write(166,*) ' GHGM LP ',lp
+write(166,*) ' GHGM1 ', JMINX
+write(166,*) ' GHGM2 ', JMAXX
+write(166,*) ' GHGM2.5 ', grid % flux_tube_max(lp)
+write(166,*) ' GHGM3 ', ZX(1:JMAXX)
+write(166,*) ' GHGM4 ', PCO
+write(166,*) ' GHGM5 ', SLX(1:JMAXX)
+write(166,*) ' GHGM6 ', GLX(1:JMAXX)
+write(166,*) ' GHGM7 ', BMX(1:JMAXX)
+write(166,*) ' GHGM8 ', GRX(1:JMAXX)
+write(166,*) ' GHGM9 ', OX(1:JMAXX)
+write(166,*) ' GHGM10 ', HX(1:JMAXX)
+write(166,*) ' GHGM11 ', N2X(1:JMAXX)
+write(166,*) ' GHGM12 ', O2X(1:JMAXX)
+write(166,*) ' GHGM13 ', HEX(1:JMAXX)
+write(166,*) ' GHGM14 ', N4SX(1:JMAXX)
+write(166,*) ' GHGM15 ', INNO
+write(166,*) ' GHGM16 ', NNOX(1:JMAXX)
+write(166,*) ' GHGM17 ', TNX(1:JMAXX)
+write(166,*) ' GHGM18 ', TINFX(1:JMAXX)
+write(166,*) ' GHGM19 ', UNX(1:JMAXX)
+write(166,*) ' GHGM20 ', flip_time_step
+write(166,*) ' GHGM21 ', DTMIN
+write(166,*) ' GHGM22 ', F107D
+write(166,*) ' GHGM23 ', F107A
+write(166,*) ' GHGM24 ', SZA(1:JMAXX)
+write(166,*) ' GHGM25 ', FPAS
+write(166,*) ' GHGM26 ', HPEQ
+write(166,*) ' GHGM27 ', HEPRAT
+write(166,*) ' GHGM28 ', COLFACX
+write(166,*) ' GHGM29 ', IHEPLS
+write(166,*) ' GHGM30 ', INPLS
+write(166,*) ' GHGM31 ', UTHR
+write(166,*) ' GHGM32 ', EHTX(1:3,1:JMAXX)
+write(166,*) ' GHGM33 ', AUR_PROD(1:3,1:JMAXX)
+write(166,*) ' GHGM34 ', TE_TIX(1:3,1:JMAXX)
+write(166,*) ' GHGM35 ', XIONNX(1:9,1:JMAXX)
+write(166,*) ' GHGM36 ', XIONVX(1:9,1:JMAXX)
+write(166,*) ' GHGM37 ', NHEAT(1:JMAXX)
+write(166,*) ' GHGM38 ', EFLAG
 endif
 !if(mp.eq.1.and.lp.eq.169) stop
- 
+iprint = 0
+!if (mp.eq.17.and.lp.eq.12) iprint = 1 
+
           CALL CTIPINT( JMINX, & !.. index of the first point on the field line
                         JMAXX, & !.. index of the last point on the field line
                         grid % flux_tube_max(lp), & !.. CTIPe array dimension, must equal to FLDIM
@@ -1076,7 +1078,6 @@ endif
                         O2X(1:JMAXX), & !.. array, O2 density (cm-3)
                         HEX(1:JMAXX), & !.. array, He density (cm-3)
                         N4SX(1:JMAXX), & !.. array, N(4S) density (cm-3)
-                        INNO, & !.. switch to turn on FLIP NO calculation IF <0
                         NNOX(1:JMAXX), & !.. array, NO density (cm-3)
                         TNX(1:JMAXX), & !.. array, Neutral temperature (K)
                         TINFX(1:JMAXX), & !.. array, Exospheric Neutral temperature (K)
@@ -1090,8 +1091,6 @@ endif
                         HPEQ, & !.. Sets initial equatorial H+ density. See declaration below
                         HEPRAT, & !.. Intial He+/H+ ratio (.01 to 1.0)
                         COLFACX, & !.. O+ - O collision frequency Burnside factor (1.0 to 1.7)
-                        IHEPLS, & !.. switches He+ dIFfusive solution on IF > 0
-                        INPLS, & !.. switches N+ dIFfusive solution on IF > 0
                         UTHR, &  !.. Universal time in hours 
                         EHTX(1:3,1:JMAXX), & !.. IN/OUT 2D array, Electron & ion heating rate (eV cm-3 s-1)
                         AUR_PROD(1:3,1:JMAXX), & ! IN 2D array, ionization rates for O+, O2+, and N2+
@@ -1099,7 +1098,7 @@ endif
                         XIONNX(1:9,1:JMAXX), &
                         XIONVX(1:9,1:JMAXX), & !.. IN/OUT: 2D array, Storage for ion densities and velocities
                         NHEAT(1:JMAXX), & !.. OUT: array, Neutral heating rate (eV/cm^3/s)
-                        EFLAG ) !.. OUT: 2D array, Error Flags
+                        EFLAG,iprint ) !.. OUT: 2D array, Error Flags
 
 
           DO i=1, grid % nFluxTube

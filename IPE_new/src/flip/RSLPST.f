@@ -15,11 +15,11 @@ C.... Consult file RSLPST-Algorithm.doc for detailed explanation
      >                    TI,   !.. Ion and electron temperatures
      >                  DTIN,   !.. Time step from calling program
      >                 DTMIN,   !.. Minimum time step
-     >                 EFLAG)   !.. OUTPUT: Error flag array
+     >                 EFLAG,iprint)   !.. OUTPUT: Error flag array
       USE SOLVARR       !... DELTA RHS WORK S, Variables for solver
       USE THERMOSPHERE  !.. ON HN N2N O2N HE TN UN EHT COLFAC
       IMPLICIT NONE
-      INTEGER FLDIM                      !.. Field line grid array dimension
+      INTEGER FLDIM,iprint                !.. Field line grid array dimension
       INTEGER NFLAG,EFLAG(11,11)         !.. error flags
       INTEGER I,J,JC,NTI,ITER            !.. Loop control variables
       INTEGER IDIV,KR,ION,IEQ,MIT        !.. solution variables
@@ -107,14 +107,16 @@ C*** OUTER LOOP: Return here on Non-Convergence with reduced time step
           DO J=2,MIT-1
             KR=2*(J-2)
             JC=J+JBTN-1
-            CALL TFIJ(JC,0,DT,N,TI,F,TISAV)
+            if(iprint.eq.1) print *, 'GHGM this one 1',tisav,ti
+            CALL TFIJ(JC,0,DT,N,TI,F,TISAV,iprint)
             RHS(KR+1)=F(1)
             RHS(KR+2)=F(2)
           ENDDO
 
           !.. Create the Jacobian matrix. Note NTI-1 because only TE 
           !.. and one TI solved
-          CALL TMATRX(FLDIM,S,RHS,IEQ,DT,N,TI,JBTN,JBTS,MIT,NTI-1,TISAV)
+          CALL TMATRX(FLDIM,S,RHS,IEQ,DT,N,TI,
+     >                 JBTN,JBTS,MIT,NTI-1,TISAV,iprint)
 
           !.. Solve the linear system with the band solver
           !.. invert the jacobian matrix 'S' in the inversion routine BDSLV.
@@ -229,9 +231,9 @@ C.... Consult file RSLPST-Algorithm.doc for detailed explanation
      >                   JBNS,   !.. Lower boundary index in south
      >                    MIT,   !.. # of points on field line
      >                   NSPC,   !.. # of species
-     >                  TISAV)   !.. saved density N at time t (for dn/dt)
+     >                  TISAV,iprint)   !.. saved density N at time t (for dn/dt)
       IMPLICIT NONE
-      INTEGER FLDIM,INEQ,JBNN,JBNS,MIT,NSPC   !.. see I/O comments above
+      INTEGER FLDIM,INEQ,JBNN,JBNS,MIT,NSPC,iprint   !.. see I/O comments above
       INTEGER KZS,JZS,JF,J1,J2,IV,JV,L,M,KRV,JVC,JFC,IS !.. Loop control variables
       DOUBLE PRECISION F(20)   !.. Function values at time t + delt
       DOUBLE PRECISION RHS(INEQ),S(INEQ,8),N(4,FLDIM),TI(3,FLDIM)
@@ -266,7 +268,8 @@ C.... Consult file RSLPST-Algorithm.doc for detailed explanation
             TI(IV+1,JVC)=TI(IV+1,JVC)+H !.. increment temperature
 
             !.. Obtain the function at the new temperature
-            CALL TFIJ(JFC,1,DT,N,TI,F,TISAV)
+            if(iprint.eq.1) print *, 'GHGM this one 2',tisav,ti
+            CALL TFIJ(JFC,1,DT,N,TI,F,TISAV,iprint)
             TI(IV+1,JVC)=TI(IV+1,JVC)-H   !.. restore temperature
 
             !.. Store derivatives in the band matrix

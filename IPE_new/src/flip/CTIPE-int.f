@@ -300,7 +300,6 @@ C.... Written by P. Richards June-September 2010.
      >               O2X,  !.. array, O2 density (cm-3)
      >               HEX,  !.. array, He density (cm-3)
      >              N4SX,  !.. array, N(4S) density (cm-3)
-     >              INNO,  !.. switch to turn on FLIP NO calculation if <0
      >              NNOX,  !.. array, NO density (cm-3)
      >               TNX,  !.. array, Neutral temperature (K)
      >             TINFX,  !.. array, Exospheric Neutral temperature (K)
@@ -314,15 +313,13 @@ C.... Written by P. Richards June-September 2010.
      >              HPEQ,  !.. Sets initial equatorial H+ density. See declaration below
      >            HEPRAT,  !.. Intial He+/H+ ratio (.01 to 1.0)
      >           COLFACX,  !.. O+ - O collision frequency Burnside factor (1.0 to 1.7)
-     >            IHEPLS,  !.. switches He+ diffusive solution on if > 0
-     >             INPLS,  !.. switches N+ diffusive solution on if > 0
      >             UTHRS,  !.. Universal time in hours !$$$
      >              EHTX,  !.. IN/OUT 2D array, Electron & ion heating rate (eV cm-3 s-1)
      >          AUR_PROD,  !.. IN 2D, array, ionization rates 
      >            TE_TIX,  !.. OUT: 2D array, Electron and ion temperatures (K) (see below)
      >     XIONNX,XIONVX,  !.. OUT: 2D array, Storage for ion densities and velocities 
      >             NHEAT,  !.. OUT: array, Neutral heating rate (eV/cm^3/s) 
-     >             EFLAG)  !.. OUT: 2D array, Error Flags
+     >             EFLAG,iprint)  !.. OUT: 2D array, Error Flags
       USE THERMOSPHERE       !.. ON HN N2N O2N HE TN UN EHT COLFAC
       USE MINORNEUT          !.. N4S N2D NNO N2P N2A O1D O1S
       USE FIELD_LINE_GRID    !.. FLDIM JMIN JMAX FLDIM Z BM GR SL GL SZA
@@ -334,15 +331,15 @@ C.... Written by P. Richards June-September 2010.
       USE PRODUCTION
 
       IMPLICIT NONE
-      INTEGER CTIPDIM         !.. CTIPe array dimension, must equal to FLDIM
+      INTEGER CTIPDIM,iprint         !.. CTIPe array dimension, must equal to FLDIM
       INTEGER JTI             !.. Dummy variable to count the number of calls to this routine
       INTEGER I,J,JMINX,JMAXX !.. lcv + spatial grid indices
       INTEGER EFLAG(11,11)    !.. error flags, check =0 on return from FLIP
-      INTEGER INNO            !.. switch to turn on FLIP NO calculation if <0
+      INTEGER sw_NO            !.. switch to turn on FLIP NO calculation if <0
       INTEGER DEBUG           !.. switch to turn on debug writes 0=off, 1=on
-      !.. IHEPLS,INPLS turn on diffusive solutions if > 0. no solution if 0, 
+      !.. sw_HEplus,sw_Nplus turn on diffusive solutions if > 0. no solution if 0, 
       !.. chemical equilibrium if < 0
-      INTEGER IHEPLS,INPLS  !.. switches He+ and N+ diffusive solutions on
+      INTEGER sw_HEplus,sw_Nplus  !.. switches He+ and N+ diffusive solutions on
       REAL F107,F107A         !.. daily and 81 day average F10.7      !.. 
       REAL EUVFLUX(37),UVFAC(59)  !.. Solar EUV fluxes and mult. factors
       DOUBLE PRECISION M_to_CM,M3_to_CM3,nT_TO_Gauss !.. Unit conversion factors
@@ -376,12 +373,19 @@ C.... Written by P. Richards June-September 2010.
       DOUBLE PRECISION EDEN(CTIPDIM)     !.. electron density
       DOUBLE PRECISION O2DISF(CTIPDIM)   !.. O2 dissociation frequency
       INTEGER IWR         !$$$  for writing in files
+      integer istop
 
       DATA M_TO_CM,M3_TO_CM3,nT_TO_Gauss/1.0E+2,1.0E-6,1.0E+4/    !.. Unit conversion factors
       DATA DEBUG/0/  !.. turn on debug writes if DEBUG=1
 
       DATA JTI/0/
+
       JTI=JTI+1
+
+        sw_NO = -1    ! FLIP calculates it's own NO density 
+        sw_HEplus = 0 ! Don't solve for HEplus ion
+        sw_Nplus = 0  ! Don't solve for Nplus ion
+
 
         Z(:)=0.0D0               !(FLDIM)
         SZA(:)=0.0D0
@@ -389,6 +393,10 @@ C.... Written by P. Richards June-September 2010.
         SL(:)=0.0D0
         GR(:)=0.0D0
         GL(:)=0.0D0
+
+!       print *,' GHGM switches ', sw_NO , sw_HEplus , sw_Nplus
+!       istop = 0
+!       if (istop.eq.1) stop
 
 !ION_DEN_VEL
         XIONN(:,:)=0.0D0!(ISPEC,IDIM)
@@ -503,8 +511,9 @@ C.... Written by P. Richards June-September 2010.
       !.. Set up initial temperature and density profiles.
       !.. 0.1 < HPEQ < 1.0.
 !     print *, ' GHGM HPEQ ', HPEQ
-      IF(HPEQ.GT.0.001)
-     >  CALL PROFIN(IHEPLS,INPLS,PCO,F107,N,TI,HPEQ,HEPRAT)
+      IF(HPEQ.GT.0.001) THEN
+        CALL PROFIN(sw_HEplus,sw_Nplus,PCO,F107,N,TI,HPEQ,HEPRAT)
+      ENDIF
 !     print *, ' GHGM CALL PROFIN ', TI
 
       !.. This routine adjusts the H+ and He+ densities for depleted flux tubes      
@@ -532,7 +541,7 @@ c      CALL FACEUV(F107,F107A,UVFAC,EUVFLUX)
 !     print *, ' GHGM IN CTIP CALL PE2S TI ', TI
 ! GHGM commenting this out for now
       CALL PE2S(F107,F107A,N,TI,FPAS,-1.0E22,EDEN,UVFAC,COLUM,
-     > IHEPLS,INPLS,INNO)
+     > sw_HEplus,sw_Nplus,sw_NO)
 
       !-- Sum the EUV, photoelectron, and auroral production rate
       CALL SUMPRD(JMIN,JMAX,AUR_PROD)
@@ -552,11 +561,11 @@ c     >  ,2X,'PEO2dis    BCKPRD             FD(5..9)')      !$$$
          ENDDO
          N2D(J)=0.0
          IF(Z(J).GE.80.AND.Z(J).LE.700) THEN
-            !.. CALL cminor to get NO+, O+(2D), O2+, N2+ & O+(2P) densities
-            CALL CMINOR(0,J,0,IHEPLS,INPLS,INNO,FD,7,N,TI,Z,EFLAG)
-            BCKPRD=2.0E-10*N2N(J)*EXP(-5.0E-14*N2N(J)*TN(J))
-            PHION(J)=SUMION(1,7,J)+SUMION(2,4,J)+SUMION(2,5,J)+FD(9)
-            PHION(J)=PHION(J)+BCKPRD
+           !.. CALL cminor to get NO+, O+(2D), O2+, N2+ & O+(2P) densities
+           CALL CMINOR(0,J,0,sw_HEplus,sw_Nplus,sw_NO,FD,7,N,TI,Z,EFLAG)
+           BCKPRD=2.0E-10*N2N(J)*EXP(-5.0E-14*N2N(J)*TN(J))
+           PHION(J)=SUMION(1,7,J)+SUMION(2,4,J)+SUMION(2,5,J)+FD(9)
+           PHION(J)=PHION(J)+BCKPRD
 c            WRITE(169,'(F10.2,1P,22E9.2)') Z(J),EUVION(1,7,J),
 c     >       EUVION(2,4,J),EUVION(2,5,J),PEPION(1,7,J),PEPION(2,4,J)
 c     >       ,PEPION(2,5,J),BCKPRD,(FD(I),I=5,9),PHION(J)      !$$$
@@ -588,8 +597,8 @@ c      IF(JTI.LT.4.AND.IWR.EQ.0) THEN        !$$$
 
         WRITE(167,201)  
         WRITE(170,201)
- 201    FORMAT('   JMIN   JMAX   CTIPDIM  INNO  IHEPLS  INPLS')
-        WRITE(167,'(22I7)')  JMIN,JMAX,CTIPDIM,INNO,IHEPLS,INPLS
+ 201    FORMAT('   JMIN   JMAX   CTIPDIM  sw_NO  sw_HEplus  sw_Nplus')
+        WRITE(167,'(22I7)')  JMIN,JMAX,CTIPDIM,sw_NO,sw_HEplus,sw_Nplus
 
         WRITE(167,202)  
         WRITE(170,202)
@@ -633,7 +642,7 @@ c      IF(JTI.LT.4.AND.IWR.EQ.0) THEN        !$$$
 
       !..  electron and ion temperature solution
 ! GHGM commenting this out for now
-      CALL TLOOPS(JMIN,JMAX,CTIPDIM,Z,N,TI,DT,DTMIN,EFLAG)   !$$$ 
+      CALL TLOOPS(JMIN,JMAX,CTIPDIM,Z,N,TI,DT,DTMIN,EFLAG,iprint) 
 
       !.. O+, H+ solution
       CALL DLOOPS(JMIN,JMAX,CTIPDIM,Z,N,TI,DT,DTMIN,EFLAG)   !$$$  
@@ -643,16 +652,20 @@ c      IF(JTI.LT.4.AND.IWR.EQ.0) THEN        !$$$
 ! GHGM commenting this out for now
       DO J=JMIN,JMAX 
        IF(Z(J).GE.80.AND.Z(J).LE.700) THEN
-          CALL CMINOR(0,J,0,IHEPLS,INPLS,INNO,FD,7,N,TI,Z,EFLAG)
+          CALL CMINOR(0,J,0,sw_HEplus,sw_Nplus,sw_NO,FD,7,N,TI,Z,EFLAG)
        ENDIF
       ENDDO
 
       !.. He+ solution
 ! GHGM commenting this out for now
-      IF(EFLAG(2,1).EQ.0.AND.IHEPLS.GT.0) CALL XION(TI,DT,DTMIN,9,EFLAG)
+      IF(EFLAG(2,1).EQ.0.AND.sw_HEplus.GT.0) THEN
+        CALL XION(TI,DT,DTMIN,9,EFLAG)
+      ENDIF
       !.. N+ solution
 ! GHGM commenting this out for now
-      IF(EFLAG(2,1).EQ.0.AND.INPLS.GT.0) CALL XION(TI,DT,DTMIN,11,EFLAG)
+      IF(EFLAG(2,1).EQ.0.AND.sw_Nplus.GT.0) THEN
+        CALL XION(TI,DT,DTMIN,11,EFLAG)
+      ENDIF
 
         !.. transfer densities from FLIP to CTIP variable
       DO J=JMIN,JMAX
@@ -717,7 +730,7 @@ c         WRITE(166,'(A,F8.1)') 'Altitude= 500.0',FPAS ! 1002.53'
          EHT(3,J)=0.0000
          ENDDO
          CALL PE2S(F107,F107A,N,TI,FPAS,700.0,EDEN,UVFAC,COLUM,
-     > IHEPLS,INPLS,INNO)
+     > sw_HEplus,sw_Nplus,sw_NO)
       ENDIF
 
       RETURN
