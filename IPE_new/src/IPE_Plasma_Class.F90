@@ -348,7 +348,7 @@ PRINT*, 'FLIP'
     REAL(prec) :: q_int(1:2)
     REAL(prec) :: ion_densities_int(1:n_ion_species)
     REAL(prec) :: ion_temperature_int
-    REAL(prec) :: B_int, max_phi, ksi_fac
+    REAL(prec) :: r, B_int, max_phi, ksi_fac
     INTEGER    :: lp_t0(1:2)
     INTEGER    :: mp_t0(1:2)
     INTEGER    :: lp_min, mp_min, isouth, inorth, ii, ispecial
@@ -363,14 +363,15 @@ PRINT*, 'FLIP'
                                            electron_temperature_pole_value ) 
 
       colat_90km(1:grid % NLP) = grid % magnetic_colatitude(1,1:grid % NLP)
+      r = earth_radius + 90000.0_prec
 
       max_phi = MAXVAL( grid % magnetic_longitude )
 
       DO mp = 1, grid % NMP , NMP_reduce_factor
         DO lp = 1, perp_transport_max_lp
   
-          theta_t0 = colat_90km(lp) - v_ExB(1,lp,mp)*time_step
-          phi_t0   = grid % magnetic_longitude(mp) - v_ExB(2,lp,mp)*time_step
+          theta_t0 = colat_90km(lp) - v_ExB(1,lp,mp)*time_step/r
+          phi_t0   = grid % magnetic_longitude(mp) - v_ExB(2,lp,mp)*time_step/r
 
           ! If a Lagrangian trajectory crosses the equator, we clip the colatitude
           ! so that the point resides at the equator.

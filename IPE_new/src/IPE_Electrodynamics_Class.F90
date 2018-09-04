@@ -410,14 +410,12 @@ CONTAINS
     TYPE( IPE_Grid ), INTENT(in)                :: grid
     ! Local
     INTEGER    :: mp, lp
-    REAL(prec) :: r
 
-      r = earth_radius + 90000.0_prec
       DO mp = 1, grid % NMP
         DO lp = 1, grid % NLP
   
-          eldyn % v_ExB_apex(1,lp,mp) = eldyn % electric_field(2,lp,mp)/grid % apex_be3(lp,mp)/r 
-          eldyn % v_ExB_apex(2,lp,mp) = -eldyn % electric_field(1,lp,mp)/grid % apex_be3(lp,mp)/r
+          eldyn % v_ExB_apex(1,lp,mp) = eldyn % electric_field(2,lp,mp)/grid % apex_be3(lp,mp) 
+          eldyn % v_ExB_apex(2,lp,mp) = -eldyn % electric_field(1,lp,mp)/grid % apex_be3(lp,mp)
 
         ENDDO
       ENDDO

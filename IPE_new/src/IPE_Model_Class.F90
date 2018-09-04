@@ -225,7 +225,7 @@ CONTAINS
     INTEGER :: x_dimid, y_dimid, z_dimid, time_dimid, time_varid
     INTEGER :: helium_varid, oxygen_varid, molecular_oxygen_varid
     INTEGER :: molecular_nitrogen_varid, nitrogen_varid, hydrogen_varid
-    INTEGER :: temperature_varid, u_varid, v_varid, w_varid
+    INTEGER :: temperature_varid, u_varid, v_varid, w_varid, ve1_varid, ve2_varid
     INTEGER :: op_varid, hp_varid, hep_varid, np_varid, n2p_varid, o2p_varid, nop_varid
     INTEGER :: op2d_varid, op2p_varid, ion_temp_varid, phi_varid, mhd_phi_varid, hc_varid, pc_varid, bc_varid, electron_temp_varid
     INTEGER :: opv_varid(1:3), hpv_varid(1:3), hepv_varid(1:3), npv_varid(1:3), n2pv_varid(1:3), o2pv_varid(1:3), nopv_varid(1:3)
@@ -313,6 +313,14 @@ CONTAINS
         CALL Check( nf90_def_var( ncid, "mhd_phi", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) ,mhd_phi_varid ) )
         CALL Check( nf90_put_att( ncid, mhd_phi_varid, "long_name", "Electric Potential - MHD Component" ) )
         CALL Check( nf90_put_att( ncid, mhd_phi_varid, "units", "[Unknown]" ) )
+
+        CALL Check( nf90_def_var( ncid, "v_exb1", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) ,ve1_varid ) )
+        CALL Check( nf90_put_att( ncid, ve1_varid, "long_name", "ExB Drift Velocity (Magnetic Colatitude component)" ) )
+        CALL Check( nf90_put_att( ncid, ve1_varid, "units", "m/s" ) )
+
+        CALL Check( nf90_def_var( ncid, "v_exb2", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) ,ve2_varid ) )
+        CALL Check( nf90_put_att( ncid, ve2_varid, "long_name", "ExB Drift Velocity (Magnetic Longitude component)" ) )
+        CALL Check( nf90_put_att( ncid, ve2_varid, "units", "m/s" ) )
 
         CALL Check( nf90_def_var( ncid, "hc", NF90_PREC, (/ x_dimid, y_dimid, time_dimid /) , hc_varid ) )
         CALL Check( nf90_put_att( ncid, hc_varid, "long_name", "Hall Conductivity" ) )
@@ -407,6 +415,8 @@ CONTAINS
       IF( ipe % parameters % write_apex_eldyn )THEN
         CALL Check( nf90_put_var( ncid, phi_varid, ipe % eldyn % electric_potential ) )
         CALL Check( nf90_put_var( ncid, mhd_phi_varid, ipe % eldyn % mhd_electric_potential ) )
+        CALL Check( nf90_put_var( ncid, ve1_varid, ipe % eldyn % v_ExB_apex(1,:,:) ) )
+        CALL Check( nf90_put_var( ncid, ve2_varid, ipe % eldyn % v_ExB_apex(2,:,:) ) )
         CALL Check( nf90_put_var( ncid, hc_varid, ipe % eldyn % hall_conductivity ) )
         CALL Check( nf90_put_var( ncid, pc_varid, ipe % eldyn % pedersen_conductivity ) )
         CALL Check( nf90_put_var( ncid, bc_varid, ipe % eldyn % b_parallel_conductivity ) )
