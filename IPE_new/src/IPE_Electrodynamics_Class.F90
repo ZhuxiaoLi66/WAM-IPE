@@ -81,6 +81,8 @@ IMPLICIT NONE
   REAL(prec), PRIVATE :: theta90_rad(0:nmlat)
   REAL(prec), PRIVATE, ALLOCATABLE :: geospace_latitude(:), geospace_longitude(:), geospace_potential(:,:)
 
+  INTEGER, PRIVATE :: n_lat_geospace, n_lon_geospace
+
 CONTAINS
 
 
@@ -179,7 +181,6 @@ CONTAINS
     INTEGER :: dimid, varid
     INTEGER :: nFluxtube, NLP, NMP
     CHARACTER(NF90_MAX_NAME) :: nameHolder
-    INTEGER :: n_lon_geospace, n_lat_geospace
 
 
       CALL Check( nf90_open( TRIM(filename), NF90_NETCDF4, ncid))
@@ -205,27 +206,33 @@ CONTAINS
       CALL Check( nf90_get_var( ncid, varid, geospace_potential ) )
 
       CALL Check( nf90_close( ncid ) )
- 
+
   END SUBROUTINE Read_Geospace_Potential
 
    SUBROUTINE Interpolate_Geospace_to_MHDpotential( eldyn, grid, time_tracker)
      IMPLICIT NONE
-    CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn
+     CLASS( IPE_Electrodynamics ), INTENT(inout) :: eldyn
      TYPE( IPE_Grid ), INTENT(in)             :: grid
      TYPE( IPE_Time ), INTENT(in)             :: time_tracker
      ! Local
      INTEGER :: j,latidx
-     REAL(prec) :: colat_local(181)
-     REAL(prec) :: potential_local(181,181)
+     REAL(prec) :: theta110_rad,geospace_latitude_90_rad(1:n_lat_geospace)
+     REAL(prec) :: colat_local(1:n_lat_geospace)
+     REAL(prec) :: potential_local(1:n_lon_geospace,1:n_lat_geospace)
+    
+      DO j = 1, n_lat_geospace
+        theta110_rad   = ( 90.0_prec - geospace_latitude(j) ) * dtr
+        geospace_latitude_90_rad(j) = ASIN(SIN(theta110_rad)*SQRT((earth_radius+90000.0_prec)/(earth_radius+110000.0_prec)))
+        IF ( theta110_rad > pi*0.50_prec ) geospace_latitude_90_rad(j) = pi - geospace_latitude_90_rad(j)
+      ENDDO
+ 
+      DO j = 1, n_lat_geospace
+        latidx = n_lat_geospace-j+1
+        colat_local(j)= geospace_latitude_90_rad(latidx)*rtd
+        potential_local(:,j)=geospace_potential(:,latidx)
+      END DO
 
-     DO j=1,181
-     latidx=181-j+1
-     colat_local(j)=90.0_prec - geospace_latitude(latidx)
-     potential_local(:,j)=geospace_potential(:,latidx)
-     END DO
-     colat_local = colat_local*dtr
-
-     CALL eldyn % Regrid_Potential( grid, time_tracker, potential_local, geospace_longitude,colat_local, 1, 181, 181 )
+      CALL eldyn % Regrid_Potential( grid, time_tracker, potential_local, geospace_longitude, colat_local, 1, n_lon_geospace, n_lat_geospace )
 
       eldyn % mhd_electric_potential= eldyn % electric_potential
  
