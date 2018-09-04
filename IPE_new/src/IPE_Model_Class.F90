@@ -227,7 +227,7 @@ CONTAINS
     INTEGER :: molecular_nitrogen_varid, nitrogen_varid, hydrogen_varid
     INTEGER :: temperature_varid, u_varid, v_varid, w_varid
     INTEGER :: op_varid, hp_varid, hep_varid, np_varid, n2p_varid, o2p_varid, nop_varid
-    INTEGER :: op2d_varid, op2p_varid, ion_temp_varid, phi_varid, mhd_phi_varid, hc_varid, pc_varid, bc_varid
+    INTEGER :: op2d_varid, op2p_varid, ion_temp_varid, phi_varid, mhd_phi_varid, hc_varid, pc_varid, bc_varid, electron_temp_varid
     INTEGER :: opv_varid(1:3), hpv_varid(1:3), hepv_varid(1:3), npv_varid(1:3), n2pv_varid(1:3), o2pv_varid(1:3), nopv_varid(1:3)
     INTEGER :: ion_vel_op_varid, ion_vel_hp_varid, ion_vel_hep_varid
     INTEGER :: recStart(1:4), recCount(1:4)
@@ -245,7 +245,7 @@ CONTAINS
       ENDIF
 
       CALL Check( nf90_create( TRIM(filename), NF90_NETCDF4, ncid))
-      CALL Check( nf90_put_att( ncid, NF90_GLOBAL, "Version", 1.0) )
+      CALL Check( nf90_put_att( ncid, NF90_GLOBAL, "Version", "1.1") )
 
       CALL Check( nf90_def_dim( ncid, "s", ipe % grid % nFluxTube, z_dimid ) ) 
       CALL Check( nf90_def_dim( ncid, "lp", ipe % grid % NLP, x_dimid ) ) 
@@ -369,6 +369,10 @@ CONTAINS
       CALL Check( nf90_put_att( ncid, ion_temp_varid, "long_name", "Ion temperature" ) )
       CALL Check( nf90_put_att( ncid, ion_temp_varid, "units", "K" ) )
 
+      CALL Check( nf90_def_var( ncid, "e_temp", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) ,electron_temp_varid ) )
+      CALL Check( nf90_put_att( ncid, electron_temp_varid, "long_name", "Electron temperature" ) )
+      CALL Check( nf90_put_att( ncid, electron_temp_varid, "units", "K" ) )
+
       CALL Check( nf90_def_var( ncid, "ion_vel_op", NF90_PREC, (/ z_dimid, x_dimid, y_dimid, time_dimid /) , ion_vel_op_varid ) )
       CALL Check( nf90_put_att( ncid, ion_vel_op_varid, "long_name", "O+ Velocity (B Parallel)" ) )
       CALL Check( nf90_put_att( ncid, ion_vel_op_varid, "units", "?/s" ) )
@@ -418,6 +422,7 @@ CONTAINS
       CALL Check( nf90_put_var( ncid, op2d_varid, ipe % plasma % ion_densities(8,:,:,:), recStart, recCount ) )
       CALL Check( nf90_put_var( ncid, op2p_varid, ipe % plasma % ion_densities(9,:,:,:), recStart, recCount ) )
       CALL Check( nf90_put_var( ncid, ion_temp_varid, ipe % plasma % ion_temperature, recStart, recCount ) )
+      CALL Check( nf90_put_var( ncid, electron_temp_varid, ipe % plasma % electron_temperature, recStart, recCount ) )
       CALL Check( nf90_put_var( ncid, ion_vel_op_varid, ipe % plasma % ion_velocities(1,:,:,:), recStart, recCount ) )
       CALL Check( nf90_put_var( ncid, ion_vel_hp_varid, ipe % plasma % ion_velocities(2,:,:,:), recStart, recCount ) )
       CALL Check( nf90_put_var( ncid, ion_vel_hep_varid, ipe % plasma % ion_velocities(3,:,:,:), recStart, recCount ) )
@@ -526,6 +531,9 @@ CONTAINS
 
       CALL Check( nf90_inq_varid( ncid, "ion_temp", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_temperature ) )
+
+      CALL Check( nf90_inq_varid( ncid, "e_temp", varid ) )
+      CALL Check( nf90_get_var( ncid, varid, ipe % plasma % electron_temperature ) )
 
       CALL Check( nf90_inq_varid( ncid, "ion_vel_op", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_velocities(1,:,:,:) ) )
