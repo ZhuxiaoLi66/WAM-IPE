@@ -616,8 +616,8 @@ CONTAINS
   REAL(kind=8) :: vnx(nFluxTube,NLP,NMP)
   REAL(kind=8) :: vny(nFluxTube,NLP,NMP)
   REAL(kind=8) small_power,small_number
-  small_power = -20.
-  small_number = 1.d-20
+  small_power = -3.
+  small_number = 1.d-3
 
   iwrite = 1
   istop = 0

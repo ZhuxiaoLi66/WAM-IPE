@@ -14,17 +14,17 @@ C....  by P. Richards, July 2011
      >                N,    !.. O+, H+, He+, minor ion densities array
      >               TI,    !.. Ion and electron temperatures
      >                F,    !.. OUTPUT: The integrated continuity equation
-     >            TISAV)    !.. temperatures at previous time step
+     >            TISAV,iprint)    !.. temperatures at previous time step
       USE FIELD_LINE_GRID !.. FLDIM JMIN JMAX FLDIM Z BM GR SL GL SZA
       IMPLICIT NONE
-      INTEGER J,ILJ,ID
+      INTEGER J,ILJ,ID,iprint
       DOUBLE PRECISION DT,N(4,FLDIM),TI(3,FLDIM),F(20),TISAV(3,FLDIM)
       ID=3                         !..unit for diagnostics in North
       IF(J.GT.(JMAX-JMIN)/2) ID=9  !..unit for diagnostics in South
 
       !.... set up the ion and electron energy equations
       CALL GET_ION_TEMP(J,ILJ,ID,DT,N,TI,TISAV,F)
-      CALL GET_ELECTRON_TEMP(J,ILJ,ID,DT,N,TI,TISAV,F)
+      CALL GET_ELECTRON_TEMP(J,ILJ,ID,DT,N,TI,TISAV,F,iprint)
       RETURN
       END
 C:::::::::::::::::::::::::: GET_ION_TEMP ::::::::::::::::::::::::::
@@ -231,12 +231,12 @@ C.. TERLIN interpolates and the integration is done between the midpoints.
      >                 N,    !.. O+, H+, He+, minor ion densities array
      >                TI,    !.. Ion and electron temperatures
      >             TISAV,    !.. temperatures at previous time step
-     >                 F)    !.. OUTPUT: The integrated continuity equation
+     >                 F,iprint)    !.. OUTPUT: The integrated continuity equation
       USE THERMOSPHERE         !.. ON HN N2N O2N HE TN UN EHT COLFAC
       USE FIELD_LINE_GRID      !.. FLDIM JMIN JMAX FLDIM Z BM GR SL GL SZA
       USE ION_DEN_VEL          !.. O+ H+ He+ N+ NO+ O2+ N2+ O+(2D) O+(2P)
       IMPLICIT NONE
-      INTEGER J,ILJ,ID,I,K
+      INTEGER J,ILJ,ID,I,K,iprint
       !.. I/O parameters, see comments above
       DOUBLE PRECISION DT,N(4,FLDIM),TI(3,FLDIM),TISAV(3,FLDIM),F(20)
       DOUBLE PRECISION BOLTZ,NE             !.. Boltzmann constant, e density
@@ -270,7 +270,9 @@ C.. TERLIN interpolates and the integration is done between the midpoints.
         CALL GET_CONDUCTIVITY(TI(3,K),NE,ON(K),O2N(K),N2N(K),HE(K)
      >      ,HN(K),KE(I))
         !.. ion and neutral cooling rates
-        CALL GET_EcoolN(K,TI(3,K),NE,CE_NEUT(I))
+        if (iprint.eq.1) print *, 'GHGM call get_ecooln '
+     >    ,K,TI(3,K),NE,CE_NEUT(I)
+        CALL GET_EcoolN(K,TI(3,K),NE,CE_NEUT(I),iprint)
         !.. Electron - ion energy exchange
         CALL GET_EcoolI(K,FLDIM,TI(3,K),TI(2,K),BM(K),CE_ION(I))
         !.. kNT is used in convection term div(vel)/ds coefficient
@@ -335,12 +337,12 @@ C... Schunk and Nagy Rev Geophys (1978) p366
       SUBROUTINE GET_EcoolN(K,   !.. actual point on the field line
      >                     TE,   !.. Ion and electron temperatures
      >                     NE,   !.. Electron density
-     >                CE_NEUT)   !.. Cooling rate to neutrals
+     >                CE_NEUT,iprint)   !.. Cooling rate to neutrals
       USE FIELD_LINE_GRID    !.. FLDIM JMIN JMAX FLDIM Z BM GR SL GL SZA
       USE THERMOSPHERE       !.. ON HN N2N O2N HE TN UN EHT COLFAC
       USE ION_DEN_VEL        !.. O+ H+ He+ N+ NO+ O2+ N2+ O+(2D) O+(2P)
       IMPLICIT NONE
-      INTEGER K                        !.. actual point on the field line
+      INTEGER K,iprint                        !.. actual point on the field line
       DOUBLE PRECISION TE,NE,CE_NEUT   !.. I/O parameters, see above
       DOUBLE PRECISION SQTE,TDIF,TDIFRT  !.. Computer efficiency parameters
       !.. Parameters for elec-neut elas coll loss rates
@@ -362,6 +364,7 @@ C... Schunk and Nagy Rev Geophys (1978) p366
         SQTE=SQRT(TE)
         TDIF=TE-TN(K)
         TDIFRT=TDIF/TE/TN(K)
+        if (iprint.eq.1) print *, TDIF,TE,TN(K),TDIFRT
 
         !..  Electron-neutral elastic cooling rates S&N p366
         LEN2=1.77E-19*NE*N2N(K)*(1.0-1.2E-4*TE)*TE*TDIF
@@ -408,6 +411,7 @@ C... Schunk and Nagy Rev Geophys (1978) p366
         IF(EXH.GT.70.0) EXH=70.0
         EXH2=22713.0*TDIFRT
         IF(EXH2.GT.70.0) EXH2=70.0
+!       if (iprint.eq.1) print *, NE,ON(K),EXP(EXH),EXP(-EXH2),te,tdifrt
         LF1D=-1.57E-12*NE*ON(K)*EXP(EXH)*(EXP(-EXH2)-1.0)
 
  14     KEN=LEN2+LEO2+LEO+LEH+LRN2+LRO2
