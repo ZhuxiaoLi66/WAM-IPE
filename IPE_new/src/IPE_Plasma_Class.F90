@@ -409,6 +409,7 @@ CONTAINS
             ! to do along flux tube interpolation
             DO i = 1, grid % flux_tube_max(lp)
   
+              IF( grid % altitude(i,lp) > 150000.0_prec )THEN
               q_value = grid % q_factor(i,lp,mp)
   
               ion_densities_int   = 0.0_prec
@@ -461,6 +462,8 @@ CONTAINS
               plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)
               plasma % ion_temperature(i,lp,mp) = ion_temperature_int
 
+
+            ENDIF
             ENDDO
 
   
@@ -476,6 +479,7 @@ CONTAINS
 
             DO i = 1, grid % flux_tube_max(lp)
   
+              IF( grid % altitude(i,lp) > 150000.0_prec )THEN
               q_value = grid % q_factor(i,lp,mp)
   
               ion_densities_int   = 0.0_prec
@@ -550,6 +554,7 @@ CONTAINS
               plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)*( ksi_fac )**2
               plasma % ion_temperature(i,lp,mp) = ion_temperature_int*( ksi_fac**(4.0_prec/3.0_prec) )
 
+            ENDIF
             ENDDO
   
           ELSE
@@ -559,6 +564,7 @@ CONTAINS
 
             DO i = 1, grid % flux_tube_max(lp)
   
+              IF( grid % altitude(i,lp) > 150000.0_prec )THEN
               q_value = grid % q_factor(i,lp,mp)
   
               ion_densities_int   = 0.0_prec
@@ -636,6 +642,7 @@ CONTAINS
               plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)*( ksi_fac**2 )
               plasma % ion_temperature(i,lp,mp) = ion_temperature_int*( ksi_fac**(4.0_prec/3.0_prec) )
 
+            ENDIF
             ENDDO
   
 
