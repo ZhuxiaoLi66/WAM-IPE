@@ -50,6 +50,7 @@ IMPLICIT NONE
       PROCEDURE :: Read_Legacy_Input => Read_Legacy_Input_IPE_Plasma
 
       ! PRIVATE Routines
+      PROCEDURE, PRIVATE :: Clean_Data
       PROCEDURE, PRIVATE :: Buffer_Old_State
       PROCEDURE, PRIVATE :: Calculate_Pole_Values 
       PROCEDURE, PRIVATE :: Cross_Flux_Tube_Transport
@@ -62,7 +63,7 @@ IMPLICIT NONE
   INTEGER, PARAMETER, PRIVATE :: NLP_reduce_factor = 1
   INTEGER, PARAMETER , PRIVATE   :: perp_transport_max_lp = 151
   INTEGER, PARAMETER, PRIVATE    :: n_ion_species = 9
-  REAL(prec), PARAMETER, PRIVATE :: safe_density_minimum = 10.0_prec**(-4)
+  REAL(prec), PARAMETER, PRIVATE :: safe_density_minimum = 10.0_prec**(3)
   REAL(prec), PARAMETER, PRIVATE :: safe_temperature_minimum = 100.0_prec
   
   ! Flip Parameters
@@ -192,7 +193,7 @@ CONTAINS
     INTEGER    :: i, lp, mp, j
     REAL(prec) :: t2, t1
 
-         
+PRINT*, 'Buffer'
       CALL CPU_TIME( t1 )
       CALL plasma % Buffer_Old_State( )
       CALL CPU_TIME( t2 )
@@ -200,14 +201,18 @@ CONTAINS
       buffer_count    = buffer_count + 1
 
 
+PRINT*, 'Transport'
       CALL CPU_TIME( t1 )
       CALL plasma % Cross_Flux_Tube_Transport( grid, v_ExB, time_step )
       CALL CPU_TIME( t2 )
       transport_time_avg = transport_time_avg + t2 - t1
       transport_count    = transport_count + 1
 
-
+    
+PRINT*, 'Clean'
+      CALL plasma % Clean_Data( grid ) 
  
+PRINT*, 'Auroral Precip'
       CALL CPU_TIME( t1 )
       CALL plasma % Auroral_Precipitation( grid, &
                                            neutrals, &
@@ -217,6 +222,7 @@ CONTAINS
       aur_precip_time_avg = aur_precip_time_avg + t2 - t1
       aur_precip_count    = aur_precip_count + 1
 
+PRINT*, 'FLIP'
       CALL CPU_TIME( t1 )
       CALL plasma % FLIP_Wrapper( grid, & 
                                   neutrals, &
@@ -230,6 +236,38 @@ CONTAINS
 
   END SUBROUTINE Update_IPE_Plasma
 !
+  SUBROUTINE Clean_Data( plasma, grid )
+    CLASS( IPE_Plasma ), INTENT(inout) :: plasma
+    TYPE( IPE_Grid ), INTENT(in)       :: grid
+    ! Local
+    INTEGER :: i, j, lp, mp
+
+      DO mp = 1, plasma % NMP
+        DO lp = 1, plasma % NLP
+          DO i = 1, grid % flux_tube_max(lp)
+
+            DO j = 1, n_ion_species
+
+              IF( plasma % ion_densities(j,i,lp,mp) < safe_density_minimum )THEN
+                plasma % ion_densities(j,i,lp,mp) = safe_density_minimum 
+              ENDIF
+
+            ENDDO
+
+            IF( plasma % ion_temperature(i,lp,mp) < safe_temperature_minimum )THEN
+              plasma % ion_temperature(i,lp,mp) = safe_temperature_minimum 
+            ENDIF
+
+            IF( plasma % electron_temperature(i,lp,mp) < safe_temperature_minimum )THEN
+              plasma % electron_temperature(i,lp,mp) = safe_temperature_minimum 
+            ENDIF
+
+          ENDDO
+        ENDDO
+      ENDDO
+
+  END SUBROUTINE Clean_Data
+
   SUBROUTINE Buffer_Old_State( plasma )
     IMPLICIT NONE
     CLASS( IPE_Plasma ), INTENT(inout) :: plasma
@@ -266,7 +304,7 @@ CONTAINS
         DO i = 1, grid % flux_tube_max(1)
           DO j = 1, n_ion_species
         
-            ion_densities_pole_value(j,i)      = ion_densities_pole_value(j,i) + plasma % ion_densities(j,i,1,mp)
+            ion_densities_pole_value(j,i)  = ion_densities_pole_value(j,i) + plasma % ion_densities(j,i,1,mp)
             ion_velocities_pole_value(j,i) = ion_velocities_pole_value(j,i) + plasma % ion_velocities(j,i,1,mp)
 
           ENDDO
@@ -461,6 +499,10 @@ CONTAINS
 
               plasma % ion_densities(1:n_ion_species,i,lp,mp) = ion_densities_int(1:n_ion_species)
               plasma % ion_temperature(i,lp,mp) = ion_temperature_int
+             ! IF( mp == 13 .AND. lp == 1 )THEN
+             !   !PRINT *, 'GHGM transport case 1:', isouth, inorth, grid % flux_tube_max(1)
+             !   !PRINT *, 'GHGM transport:', plasma % ion_densities(1:n_ion_species,1:grid % flux_tube_max(lp),lp,mp)
+             ! ENDIF
 
 
             ENDIF
@@ -648,6 +690,7 @@ CONTAINS
 
           ENDIF  
  
+
         ENDDO
       ENDDO
      
@@ -1002,7 +1045,7 @@ CONTAINS
  
           EFLAG(1:11,1:11) = 0
 
-          DO i=1, grid % nFluxTube
+          DO i=1, grid % flux_tube_max(lp)
 
             ! Ion Densities
             XIONNX(1:9,i) = plasma % ion_densities(1:9,i,lp,mp)
@@ -1016,7 +1059,7 @@ CONTAINS
             TE_TIX(3,i) = plasma % electron_temperature(i,lp,mp)
 
             EHTX(1:3,i) = 0.0_dp
-            NNOX(i)     = 0.0_dp
+            NNOX(i)     = 1.0_dp
             NHEAT(i)    = 0.0_dp
        
           ENDDO
@@ -1024,51 +1067,6 @@ CONTAINS
           JMINX = 1
           JMAXX = grid % flux_tube_max(lp)
 
-if(mp.eq.5.and.(lp.eq.12)) then
-write(166,*) ' GHGM LP ',lp
-write(166,*) ' GHGM1 ', JMINX
-write(166,*) ' GHGM2 ', JMAXX
-write(166,*) ' GHGM2.5 ', grid % flux_tube_max(lp)
-write(166,*) ' GHGM3 ', ZX(1:JMAXX)
-write(166,*) ' GHGM4 ', PCO
-write(166,*) ' GHGM5 ', SLX(1:JMAXX)
-write(166,*) ' GHGM6 ', GLX(1:JMAXX)
-write(166,*) ' GHGM7 ', BMX(1:JMAXX)
-write(166,*) ' GHGM8 ', GRX(1:JMAXX)
-write(166,*) ' GHGM9 ', OX(1:JMAXX)
-write(166,*) ' GHGM10 ', HX(1:JMAXX)
-write(166,*) ' GHGM11 ', N2X(1:JMAXX)
-write(166,*) ' GHGM12 ', O2X(1:JMAXX)
-write(166,*) ' GHGM13 ', HEX(1:JMAXX)
-write(166,*) ' GHGM14 ', N4SX(1:JMAXX)
-write(166,*) ' GHGM15 ', INNO
-write(166,*) ' GHGM16 ', NNOX(1:JMAXX)
-write(166,*) ' GHGM17 ', TNX(1:JMAXX)
-write(166,*) ' GHGM18 ', TINFX(1:JMAXX)
-write(166,*) ' GHGM19 ', UNX(1:JMAXX)
-write(166,*) ' GHGM20 ', flip_time_step
-write(166,*) ' GHGM21 ', DTMIN
-write(166,*) ' GHGM22 ', F107D
-write(166,*) ' GHGM23 ', F107A
-write(166,*) ' GHGM24 ', SZA(1:JMAXX)
-write(166,*) ' GHGM25 ', FPAS
-write(166,*) ' GHGM26 ', HPEQ
-write(166,*) ' GHGM27 ', HEPRAT
-write(166,*) ' GHGM28 ', COLFACX
-write(166,*) ' GHGM29 ', IHEPLS
-write(166,*) ' GHGM30 ', INPLS
-write(166,*) ' GHGM31 ', UTHR
-write(166,*) ' GHGM32 ', EHTX(1:3,1:JMAXX)
-write(166,*) ' GHGM33 ', AUR_PROD(1:3,1:JMAXX)
-write(166,*) ' GHGM34 ', TE_TIX(1:3,1:JMAXX)
-write(166,*) ' GHGM35 ', XIONNX(1:9,1:JMAXX)
-write(166,*) ' GHGM36 ', XIONVX(1:9,1:JMAXX)
-write(166,*) ' GHGM37 ', NHEAT(1:JMAXX)
-write(166,*) ' GHGM38 ', EFLAG
-endif
-!if(mp.eq.1.and.lp.eq.169) stop
-iprint = 0
-!if (mp.eq.17.and.lp.eq.12) iprint = 1 
 
           CALL CTIPINT( JMINX, & !.. index of the first point on the field line
                         JMAXX, & !.. index of the last point on the field line
