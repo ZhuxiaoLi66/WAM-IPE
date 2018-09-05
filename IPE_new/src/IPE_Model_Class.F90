@@ -534,6 +534,7 @@ CONTAINS
 
       CALL Check( nf90_inq_varid( ncid, "e_temp", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % electron_temperature ) )
+      ipe % plasma % electron_temperature = ipe % neutrals % temperature *2.0
 
       CALL Check( nf90_inq_varid( ncid, "ion_vel_op", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_velocities(1,:,:,:) ) )

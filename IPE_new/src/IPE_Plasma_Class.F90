@@ -1014,7 +1014,7 @@ PRINT*, 'FLIP'
       DO mp = 1, plasma % NMP , NMP_reduce_factor
           print *, 'GHGM mp ', mp
         DO lp = 1, plasma % NLP , NLP_reduce_factor
-          print *, 'GHGM lp ', lp
+!         print *, 'GHGM lp ', lp
 
           ! Copy over the grid information (for now)
           ZX(1:grid % flux_tube_max(lp))  = grid % altitude(1:grid % flux_tube_max(lp),lp)/1000.0_prec !convert from m to km
