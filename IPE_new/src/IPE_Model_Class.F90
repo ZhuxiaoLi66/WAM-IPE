@@ -153,44 +153,48 @@ CONTAINS
     ! Local
     REAL(prec) :: AP(1:7)
     REAL(prec) :: wt1, wt2
+    INTEGER    :: i, nSteps
 
+      nSteps = INT((t1-t0)/ipe % parameters % time_step)
 
-      CALL ipe % time_tracker % Update( t0 )
-      
-      ! Need to add a call to update the index for capturing AP
-      AP = ipe % forcing % GetAP( t0 )
+      DO i = 1, nSteps
 
-      print *, 'GHGM updating neutrals'
-      CALL CPU_TIME( wt1 )
-      CALL ipe % neutrals % Update( ipe % grid, &
-                                    ipe % time_tracker % utime, &
-                                    ipe % time_tracker % year, &
-                                    ipe % time_tracker % day_of_year,  & 
-                                    ipe % forcing % f107( ipe % forcing % current_index ) , &
-                                    ipe % forcing % f107_81day_avg( ipe % forcing % current_index ), &
-                                    AP )
-      CALL CPU_TIME( wt2 )
-      PRINT*, 'Neutral : ', wt2-wt1
+        CALL ipe % time_tracker % Update( t0 )
+        
+        
+        ! Need to add a call to update the index for capturing AP
+        AP = ipe % forcing % GetAP( t0 )
+  
+        CALL CPU_TIME( wt1 )
+        CALL ipe % neutrals % Update( ipe % grid, &
+                                      ipe % time_tracker % utime, &
+                                      ipe % time_tracker % year, &
+                                      ipe % time_tracker % day_of_year,  & 
+                                      ipe % forcing % f107( ipe % forcing % current_index ) , &
+                                      ipe % forcing % f107_81day_avg( ipe % forcing % current_index ), &
+                                      AP )
+        CALL CPU_TIME( wt2 )
+        PRINT*, 'Neutral : ', wt2-wt1
+  
+        CALL CPU_TIME( wt1 )
+        CALL ipe % eldyn % Update( ipe % grid, &
+                                   ipe % forcing, &
+                                   ipe % time_tracker )
+        CALL CPU_TIME( wt2 )
+        PRINT*, 'Eldyn : ', wt2-wt1
+     
+        CALL CPU_TIME( wt1 )
+        CALL ipe % plasma % Update( ipe % grid, &
+                                    ipe % neutrals, &
+                                    ipe % forcing, &
+                                    ipe % time_tracker, &
+                                    ipe % eldyn % v_ExB_apex, &
+                                    ipe % parameters % time_step )
+  
+        CALL CPU_TIME( wt2 )
+        PRINT*, 'Plasma : ', wt2-wt1
 
-      print *, 'GHGM updating electrodynamics'
-      CALL CPU_TIME( wt1 )
-      CALL ipe % eldyn % Update( ipe % grid, &
-                                 ipe % forcing, &
-                                 ipe % time_tracker )
-      CALL CPU_TIME( wt2 )
-      PRINT*, 'Eldyn : ', wt2-wt1
-   
-      print *, 'GHGM updating plasma'
-      CALL CPU_TIME( wt1 )
-      CALL ipe % plasma % Update( ipe % grid, &
-                                  ipe % neutrals, &
-                                  ipe % forcing, &
-                                  ipe % time_tracker, &
-                                  ipe % eldyn % v_ExB_apex, &
-                                  ipe % parameters % solar_forcing_time_step )
-
-      CALL CPU_TIME( wt2 )
-      PRINT*, 'Plasma : ', wt2-wt1
+      ENDDO
 
       ! Update the timer
       CALL ipe % time_tracker % Update( t1 )
@@ -544,6 +548,7 @@ CONTAINS
 
       CALL Check( nf90_inq_varid( ncid, "e_temp", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % electron_temperature ) )
+      ipe % plasma % electron_temperature = 2.0_prec*ipe % neutrals % temperature
 
       CALL Check( nf90_inq_varid( ncid, "ion_vel_op", varid ) )
       CALL Check( nf90_get_var( ncid, varid, ipe % plasma % ion_velocities(1,:,:,:) ) )
