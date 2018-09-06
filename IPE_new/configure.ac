@@ -9,6 +9,8 @@ AC_PROG_CC
 AC_PROG_FC([ifort gfortran pgfortran])
 AC_PROG_F77([ifort gfortran pgfortran])
 
+AC_SUBST(FC_MODEXT,mod)
+
 FCFLAGS="-O2"
 
 AM_PROG_AR

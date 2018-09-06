@@ -1,5 +1,9 @@
 bin_PROGRAMS = ipe legacy2netcdf grid2netcdf eregrid
+lib_LIBRARIES = libipe.a
 
+include_HEADERS = ipe_precision.$(FC_MODEXT) ipe_constants_dictionary.$(FC_MODEXT) ipe_common_routines.$(FC_MODEXT) ipe_forcing_class.$(FC_MODEXT) ipe_time_class.$(FC_MODEXT) ipe_grid_class.$(FC_MODEXT) ipe_model_parameters_class.$(FC_MODEXT) ipe_electrodynamics_class.$(FC_MODEXT)  ipe_neutrals_class.$(FC_MODEXT) ipe_plasma_class.$(FC_MODEXT) ipe_model_class.$(FC_MODEXT)
+
+libipe_a_SOURCES = IPE_Precision.F90 IPE_Constants_Dictionary.F90 IPE_Common_Routines.F90 IPE_Forcing_Class.F90 IPE_Time_Class.F90 IPE_Grid_Class.F90 IPE_Model_Parameters_Class.F90 IPE_Electrodynamics_Class.F90  IPE_Neutrals_Class.F90 IPE_Plasma_Class.F90  IPE_Model_Class.F90
 
 ipe_SOURCES = IPE_Precision.F90 IPE_Constants_Dictionary.F90 IPE_Common_Routines.F90 IPE_Forcing_Class.F90 IPE_Time_Class.F90 IPE_Grid_Class.F90 IPE_Model_Parameters_Class.F90 IPE_Electrodynamics_Class.F90  IPE_Neutrals_Class.F90 IPE_Plasma_Class.F90  IPE_Model_Class.F90 IPE_Driver.F90
 
