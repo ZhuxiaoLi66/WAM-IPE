@@ -1,5 +1,0 @@
-ddts_extends: 'theia_pgi_common'
-ddts_build: 'theia_pgi_serial'
-
-parallelism: 'serial'
-tasks: ''

@@ -1,5 +1,0 @@
-ddts_extends: 'trillian_pgi_common'
-ddts_build: 'trillian_pgi_serial'
-
-parallelism: 'serial'
-tasks: ''

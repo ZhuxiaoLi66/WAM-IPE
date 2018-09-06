@@ -1,5 +1,0 @@
-ddts_extends: 'trillian_cray_common'
-ddts_build: 'trillian_cray_serial'
-
-parallelism: 'serial'
-tasks: ''

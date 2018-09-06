@@ -1,5 +1,0 @@
-ddts_extends: 'theia_intel_common'
-ddts_build: 'theia_intel_serial'
-
-parallelism: 'serial'
-tasks: ''
