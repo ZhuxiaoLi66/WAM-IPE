@@ -438,11 +438,17 @@ CONTAINS
       r = earth_radius + 90000.0_prec
 
       ! lp-component of e-field : Eq(4.8)
+      ! Note that ed1 is calculated slightly differently here by dividing
+      ! through by a factor of sin_Im for accomodating the transport. 
+      ! The distance conversion from radians to meters involves (here) i
+      ! multiplication of the difference in radians (between two grid points)
+      ! by sin_Im*r.
       DO mp = 1, grid % NMP
 
         lp = 1
         coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
-        d_lp = r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp) )*coslam
+        sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
+        d_lp = sinim*r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp) )*coslam
 
         eldyn % electric_field(1,lp,mp) = -( eldyn % electric_potential(lp+1,mp) - &  
                                             eldyn % electric_potential(lp,mp) )/d_lp
@@ -450,7 +456,8 @@ CONTAINS
         DO lp = 2, grid % NLP-1
 
           coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
-          d_lp = r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp-1) )*coslam
+          sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
+          d_lp = sinim*r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp-1) )*coslam
 
           eldyn % electric_field(1,lp,mp) = -( eldyn % electric_potential(lp+1,mp) - &  
                                               eldyn % electric_potential(lp-1,mp) )/d_lp
@@ -459,7 +466,8 @@ CONTAINS
 
         lp = grid % NLP
         coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
-        d_lp = r*( grid % magnetic_colatitude(1,lp) - grid % magnetic_colatitude(1,lp-1) )*coslam
+        sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
+        d_lp = sinim*r*( grid % magnetic_colatitude(1,lp) - grid % magnetic_colatitude(1,lp-1) )*coslam
 
         eldyn % electric_field(1,lp,mp) = -( eldyn % electric_potential(lp,mp) - &  
                                             eldyn % electric_potential(lp-1,mp) )/d_lp

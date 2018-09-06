@@ -79,10 +79,6 @@ IMPLICIT NONE
   integer :: istop
 
 
-! Temporary Timers
-  REAL(prec) :: flip_time_avg, aur_precip_time_avg, transport_time_avg, buffer_time_avg
-  REAL(prec) :: flip_count, aur_precip_count, transport_count, buffer_count
-
 CONTAINS
 
   SUBROUTINE Build_IPE_Plasma( plasma, nFluxTube, NLP, NMP )
@@ -135,16 +131,6 @@ CONTAINS
       plasma % geo_ionization_rates        = 0.0_prec
 
 
-      flip_time_avg = 0.0_prec
-      aur_precip_time_avg = 0.0_prec
-      transport_time_avg = 0.0_prec
-      buffer_time_avg = 0.0_prec
-      flip_count = 0.0_prec
-      aur_precip_count = 0.0_prec
-      transport_count = 0.0_prec
-      buffer_count = 0.0_prec
-
-
   END SUBROUTINE Build_IPE_Plasma
 !
   SUBROUTINE Trash_IPE_Plasma( plasma )
@@ -172,11 +158,6 @@ CONTAINS
                 plasma % geo_electron_temperature, &
                 plasma % geo_ionization_rates )
 
-     PRINT*, 'Buffer ', buffer_time_avg/buffer_count
-     PRINT*, 'Transport ', transport_time_avg/transport_count
-     PRINT*, 'Auroral_Precipitation ', aur_precip_time_avg/aur_precip_count
-     PRINT*, 'FLIP_Wrapper ', flip_time_avg/flip_count
-
   END SUBROUTINE Trash_IPE_Plasma
 !
   SUBROUTINE Update_IPE_Plasma( plasma, grid, neutrals, forcing, time_tracker, v_ExB, time_step )
@@ -193,36 +174,32 @@ CONTAINS
     INTEGER    :: i, lp, mp, j
     REAL(prec) :: t2, t1
 
-PRINT*, 'Buffer'
       CALL CPU_TIME( t1 )
       CALL plasma % Buffer_Old_State( )
       CALL CPU_TIME( t2 )
-      buffer_time_avg = buffer_time_avg + t2 - t1
-      buffer_count    = buffer_count + 1
+      PRINT*, 'Buffer : ', t2-t1
 
+! Asynchronous sends/receives will occur in the "Buffer_Old_State" routine
+! To layer more work between when the data transaction occurs and when the data
+! is needed, we've added the Auroral precipitation between the buffering and the
+! Cross_Flux_Tube_Transport
 
-PRINT*, 'Transport'
-      CALL CPU_TIME( t1 )
-      CALL plasma % Cross_Flux_Tube_Transport( grid, v_ExB, time_step )
-      CALL CPU_TIME( t2 )
-      transport_time_avg = transport_time_avg + t2 - t1
-      transport_count    = transport_count + 1
-
-    
-PRINT*, 'Clean'
-      CALL plasma % Clean_Data( grid ) 
- 
-PRINT*, 'Auroral Precip'
       CALL CPU_TIME( t1 )
       CALL plasma % Auroral_Precipitation( grid, &
                                            neutrals, &
                                            forcing, &
                                            time_tracker )
       CALL CPU_TIME( t2 )
-      aur_precip_time_avg = aur_precip_time_avg + t2 - t1
-      aur_precip_count    = aur_precip_count + 1
+      PRINT*, 'Auroral Precip : ', t2-t1
 
-PRINT*, 'FLIP'
+
+      CALL CPU_TIME( t1 )
+      CALL plasma % Cross_Flux_Tube_Transport( grid, v_ExB, time_step )
+      CALL CPU_TIME( t2 )
+      PRINT*, 'Transport : ', t2-t1
+
+      CALL plasma % Clean_Data( grid ) 
+
       CALL CPU_TIME( t1 )
       CALL plasma % FLIP_Wrapper( grid, & 
                                   neutrals, &
@@ -230,8 +207,7 @@ PRINT*, 'FLIP'
                                   time_tracker, &
                                   time_step )
       CALL CPU_TIME( t2 )
-      flip_time_avg = flip_time_avg + t2 - t1
-      flip_count    = flip_count + 1
+      PRINT*, 'FLIP : ', t2-t1
 
 
   END SUBROUTINE Update_IPE_Plasma
@@ -278,6 +254,8 @@ PRINT*, 'FLIP'
 
       plasma % electron_density_old   = plasma % electron_density
       plasma % electron_temperature_old = plasma % electron_temperature
+
+      ! CALL Update_Halos.....
 
   END SUBROUTINE Buffer_Old_State
 !
@@ -370,8 +348,8 @@ PRINT*, 'FLIP'
       DO mp = 1, grid % NMP , NMP_reduce_factor
         DO lp = 1, perp_transport_max_lp
   
-          theta_t0 = colat_90km(lp) - v_ExB(1,lp,mp)*time_step/r
-          phi_t0   = grid % magnetic_longitude(mp) - v_ExB(2,lp,mp)*time_step/r
+          phi_t0   = grid % magnetic_longitude(mp) - v_ExB(1,lp,mp)*time_step/r
+          theta_t0 = colat_90km(lp) - v_ExB(2,lp,mp)*time_step/r
 
           ! If a Lagrangian trajectory crosses the equator, we clip the colatitude
           ! so that the point resides at the equator.
