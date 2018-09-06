@@ -227,7 +227,7 @@ C////////////main calculations  begin here ////////////
           IF(E(IE).LE.3.AND.E(IE).GT.2) THEN
             !.. Needed for updated electron heating in CTIPe
 !           print *, 'GHGM RSPE2B TI ', TI
-            CALL CMINOR(0,J,0,sw_HEplus,sw_Nplus,sw_NO,FD,7,N,TI,Z,EFLAG)
+           CALL CMINOR(0,J,0,sw_HEplus,sw_Nplus,sw_NO,FD,7,N,TI,Z,EFLAG)
 !           PRINT*, 'GHGM RSPE2B :', JMIN, JMAX, J, PRED(J), EQN2D(J)
             PRED(J)=PRED(J)+EQN2D(J)
 !           PRINT*, 'GHGM RSPE2B  2 :', JMIN, JMAX, J, PRED(J), EQN2D(J)
