@@ -2,14 +2,14 @@ C.................... RSPE2B.FOR ...............................
 C... A program to calculate photoelectron fluxes- by Phil Richards
 C... 2-stream interhemispheric photoelectron program loosely based on
 C... a program by Nagy and Banks but incorporating several of my own
-C... innovations. see publications. a more accurate model is available
+C... sw_NOvations. see publications. a more accurate model is available
 C... on <pe2s.for> but this one is accurate enough for most purposes.
 C... N= density of H+, O+, minor ions(O2+ + NO+), and He+. 
 C... TI= temperature of H+, O+, electrons
 C... FRPAS= fraction of flux lost in plasmasphere
 C... ZWR= altitude for printing spectrum.
       SUBROUTINE PE2S(F107,F107A,N,TI,FRPAS,ZWR,EDEN,UVFAC,COLUM,
-     > IHEPLS,INPLS,INNO)
+     > sw_HEplus,sw_Nplus,sw_NO)
       USE FIELD_LINE_GRID    !.. FLDIM JMIN JMAX FLDIM Z BM GR SL GL SZA
       !..EUVION PEXCIT PEPION OTHPR1 OTHPR2 SUMION SUMEXC PAUION PAUEXC NPLSPRD
       USE THERMOSPHERE  !.. ON HN N2N O2N HE TN UN EHT COLFAC
@@ -26,7 +26,7 @@ C... ZWR= altitude for printing spectrum.
       INTEGER M,M2,M400,ICF,ICN
       INTEGER EFLAG(11,11) 
       !.. For CMINOR. Turns He+, N+, and NO solutions on and off 
-      INTEGER IHEPLS,INPLS,INNO
+      INTEGER sw_HEplus,sw_Nplus,sw_NO
       integer ret
       REAL ALT,ZLB,ZPAS,ZPROD,ZWR
       REAL AVESEC,SHAPE,AVMU,FNORM
@@ -227,7 +227,7 @@ C////////////main calculations  begin here ////////////
           IF(E(IE).LE.3.AND.E(IE).GT.2) THEN
             !.. Needed for updated electron heating in CTIPe
 !           print *, 'GHGM RSPE2B TI ', TI
-            CALL CMINOR(0,J,0,IHEPLS,INPLS,INNO,FD,7,N,TI,Z,EFLAG)
+            CALL CMINOR(0,J,0,sw_HEplus,sw_Nplus,sw_NO,FD,7,N,TI,Z,EFLAG)
 !           PRINT*, 'GHGM RSPE2B :', JMIN, JMAX, J, PRED(J), EQN2D(J)
             PRED(J)=PRED(J)+EQN2D(J)
 !           PRINT*, 'GHGM RSPE2B  2 :', JMIN, JMAX, J, PRED(J), EQN2D(J)

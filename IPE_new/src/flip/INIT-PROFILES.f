@@ -3,13 +3,13 @@ C.... This file contains routines for setting up initial profiles and
 C.... Adjusting the H+ He+ depleted flux tube profiles
 C::::::::::::::::::::::::::::::: PROFIN ::::::::::::::::::::::::::::::::::
 C....... set up rough initial O+, H+, and temperature profiles
-      SUBROUTINE PROFIN(IHEPLS,INPLS,PCO,F107,N,TI,HPEQ,HEPRAT)
+      SUBROUTINE PROFIN(sw_HEplus,sw_Nplus,PCO,F107,N,TI,HPEQ,HEPRAT)
       USE ION_DEN_VEL   !.. O+ H+ He+ N+ NO+ O2+ N2+ O+(2D) O+(2P) ISPEC
       USE FIELD_LINE_GRID    !.. FLDIM JMIN JMAX FLDIM Z BM GR SL GL SZA
       USE THERMOSPHERE  !.. ON HN N2N O2N HE TN UN EHT COLFAC
       IMPLICIT NONE
       INTEGER J,JEQ
-      INTEGER IHEPLS,INPLS  !.. switches He+ and N+ diffusive solutions on if > 0
+      INTEGER sw_HEplus,sw_Nplus  !.. switches He+ and N+ diffusive solutions on if > 0
       REAL F107
       DOUBLE PRECISION ALT,N(4,IDIM),TI(3,IDIM),HPEQ,XHOLD,HEPRAT,
      >  PCO,HP_FULL,HP_D_EQ
@@ -68,10 +68,10 @@ C....... set up rough initial O+, H+, and temperature profiles
 
         !-- He+ density is fraction of H+
         XIONN(3,J) = 0.0
-        IF(IHEPLS.GT.0) XIONN(3,J)=HEPRAT*N(2,J)
+        IF(sw_HEplus.GT.0) XIONN(3,J)=HEPRAT*N(2,J)
         !-- N+ density is 10% of O+
         XIONN(4,J) = 0.0
-        IF(INPLS.GT.0) XIONN(4,J) = 0.1 * N(1,J)
+        IF(sw_Nplus.GT.0) XIONN(4,J) = 0.1 * N(1,J)
         XIONN(1,J)=N(1,J)   !.. store O+ 
         XIONN(2,J)=N(2,J)   !.. store H+
       ENDDO

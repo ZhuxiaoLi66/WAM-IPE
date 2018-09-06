@@ -1015,7 +1015,7 @@ PRINT*, 'FLIP'
       DO mp = 1, plasma % NMP , NMP_reduce_factor
           print *, 'GHGM mp ', mp
         DO lp = 1, plasma % NLP , NLP_reduce_factor
-!         print *, 'GHGM lp ', lp
+          print *, 'GHGM lp ', lp
 
           ! Copy over the grid information (for now)
           ZX(1:grid % flux_tube_max(lp))  = grid % altitude(1:grid % flux_tube_max(lp),lp)/1000.0_prec !convert from m to km
@@ -1068,6 +1068,48 @@ PRINT*, 'FLIP'
           JMINX = 1
           JMAXX = grid % flux_tube_max(lp)
 
+
+          if (mp.eq.1.and.(lp.eq.168.or.lp.eq.169.or.lp.eq.170)) then
+          if (lp.eq.170) write(66,*) 'FLIP'
+          write(66,255) mp,lp,JMINX,JMAXX
+          write(66,255) grid % flux_tube_max(lp) 
+          write(66,244)  ZX(1:JMAXX) 
+          write(66,244)  PCO 
+          write(66,244)  SLX(1:JMAXX) 
+          write(66,244)  GLX(1:JMAXX) 
+          write(66,244)  BMX(1:JMAXX) 
+          write(66,244)  GRX(1:JMAXX)
+          write(66,244)  OX(1:JMAXX) 
+          write(66,244)  HX(1:JMAXX) 
+          write(66,244)  N2X(1:JMAXX) 
+          write(66,244)  O2X(1:JMAXX) 
+          write(66,244)  HEX(1:JMAXX) 
+          write(66,244)  N4SX(1:JMAXX) 
+          write(66,244)  NNOX(1:JMAXX) 
+          write(66,244)  TNX(1:JMAXX) 
+          write(66,244)  TINFX(1:JMAXX)
+          write(66,244)  UNX(1:JMAXX) 
+          write(66,244)  flip_time_step
+          write(66,244)  DTMIN 
+          write(66,244)  F107D
+          write(66,244)  F107A 
+          write(66,244)  SZA(1:JMAXX)
+          write(66,244)  FPAS 
+          write(66,244)  HPEQ 
+          write(66,244)  HEPRAT
+          write(66,244)  COLFACX 
+          write(66,244)  UTHR 
+          write(66,244)  EHTX(1:3,1:JMAXX) 
+          write(66,244)  AUR_PROD(1:3,1:JMAXX) 
+          write(66,244)  TE_TIX(1:3,1:JMAXX)
+          write(66,244)  XIONNX(1:9,1:JMAXX)
+          write(66,244)  XIONVX(1:9,1:JMAXX)
+          write(66,244)  NHEAT(1:JMAXX) 
+!         write(66,255)  EFLAG
+ 244      format(10e12.4)
+ 255      format(10i6)
+          endif
+!         if (mp.eq.1.and.lp.eq.170) stop
 
           CALL CTIPINT( JMINX, & !.. index of the first point on the field line
                         JMAXX, & !.. index of the last point on the field line

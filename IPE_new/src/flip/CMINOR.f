@@ -3,7 +3,7 @@ C....... This subroutine evaluates the minor ion and neutral densities
 C....... from chemical equilibrium and is also used for printing the
 C....... production and loss rates for the FLIP model. P. Richards
 C....... Sep 1989
-      SUBROUTINE CMINOR(I,J,JP,IHEPLS,INPLS,INNO,FD,ID,N,TI,Z,EFLAG)
+      SUBROUTINE CMINOR(I,J,JP,sw_HEplus,sw_Nplus,sw_NO,FD,ID,N,TI,Z,EFLAG)
       USE ION_DEN_VEL   !.. O+ H+ He+ N+ NO+ O2+ N2+ O+(2D) O+(2P)
       !..EUVION PEXCIT PEPION OTHPR1 OTHPR2 SUMION SUMEXC PAUION PAUEXC NPLSPRD
       USE PRODUCTION !.. EUV, photoelectron, and auroral production
@@ -11,8 +11,8 @@ C....... Sep 1989
       USE MINORNEUT !.. N4S N2D NNO N2P N2A O1D O1S
       IMPLICIT NONE
       INTEGER I,II,J,K,ITS,ID,JITER,JP
-      INTEGER INNO  !.. switch to turn on FLIP NO calculation if <0
-      INTEGER IHEPLS,INPLS  !.. switches He+ and N+ diffusive solutions on if > 0
+      INTEGER sw_NO  !.. switch to turn on FLIP NO calculation if <0
+      INTEGER sw_HEplus,sw_Nplus  !.. switches He+ and N+ diffusive solutions on if > 0
       INTEGER EFLAG(11,11)         !.. error flags
       !.. These variables used in Newton solver for [e]
       DOUBLE PRECISION DNOP,DO2P,ZNE,ZNESAV,B,C,H,DEX,DX
@@ -182,8 +182,8 @@ C....... Sep 1989
       CALL CNO(J,0,0,Z(J),RTS,ON(J),O2N(J),N2N(J),ZNE,PROD(3),LOSS(3)
      >  ,N2D(J),N4S(J),N2P(J),NNO(J),O2PLUS,N(1,J),PSRNO,PLYNOP,N2A(J),
      >  NPLUS)
-      !.. Calculate chemical equilibrium NO density if INNO < 0
-      IF(INNO.LT.0.AND.LOSS(3).GT.0) THEN
+      !.. Calculate chemical equilibrium NO density if sw_NO < 0
+      IF(sw_NO.LT.0.AND.LOSS(3).GT.0) THEN
         NNO(J)=PROD(3)/LOSS(3)
         !.. Set a floor on NO density, which is needed below ~150 km at night 
         IF(NNO(J).LT.1.0E8*EXP((100-Z(J))/20)) 
@@ -197,15 +197,15 @@ C....... Sep 1989
       IF(LOSS(4).GT.0) O1D(J)=PROD(4)/LOSS(4)
 
       !... Chemical He+ density
-      IF(IHEPLS.LT.0) CALL CHEP(J,0,JP,IHEPLS,Z(J),RTS,ON(J),O2N(J),
+      IF(sw_HEplus.LT.0) CALL CHEP(J,0,JP,sw_HEplus,Z(J),RTS,ON(J),O2N(J),
      >  N2N(J),ZNE,HEPLUS,PRHEP,HE(J),NNO(J),N(1,J),N(2,J),HN(J))
-      IF(IHEPLS.LE.0) XIONN(3,J)=HEPLUS
+      IF(sw_HEplus.LE.0) XIONN(3,J)=HEPLUS
 
       !... Chemical N+ density
-      IF(INPLS.LT.0) CALL CNPLS(J,0,JP,INPLS,Z(J),RTS,ON(J),O2N(J)
+      IF(sw_Nplus.LT.0) CALL CNPLS(J,0,JP,sw_Nplus,Z(J),RTS,ON(J),O2N(J)
      > ,N2N(J),ZNE,DISNP,NPLUS,N(1,J),N2D(J),OP2P,HEPLUS,OTHPR2(3,J)
      > ,O2PLUS,N4S(J),OP2D,N2PLUS,NNO(J))
-      IF(INPLS.LE.0) XIONN(4,J)=NPLUS
+      IF(sw_Nplus.LE.0) XIONN(4,J)=NPLUS
 
       !.. EQN2D(J) used in PE2S only
 !     PRINT*, 'GHGM CMINOR :', J, N2D(J), RTS(8),ZNE
@@ -296,7 +296,7 @@ C....... Sep 1989
      >   ,OP2P,TOP2PI,PEOP2P,HEPLUS,N4S(J),NNO(J))
       ENDIF
 
-      IF(I.EQ.17) CALL CNPLS(J,ID,JP,INPLS,Z(J),RTS,ON(J),O2N(J),N2N(J)
+      IF(I.EQ.17) CALL CNPLS(J,ID,JP,sw_Nplus,Z(J),RTS,ON(J),O2N(J),N2N(J)
      > ,ZNE,DISNP,NPLUS,N(1,J),N2D(J),OP2P,HEPLUS,OTHPR2(3,J)
      > ,O2PLUS,N4S(J),OP2D,N2PLUS,NNO(J))
 
@@ -306,7 +306,7 @@ C....... Sep 1989
       IF(I.EQ.19) CALL CN2P(J,ID,JP,Z(J),RTS,ON(J),O2N(J),N2N(J),ZNE
      > ,PROD(5),LOSS(5),N2P(J),PN2PEL,UVDISN,O2PLUS,NNO(J),N2PLUS)
 
-      IF(I.EQ.20) CALL CHEP(J,ID,JP,IHEPLS,Z(J),RTS,ON(J),O2N(J),N2N(J)
+      IF(I.EQ.20) CALL CHEP(J,ID,JP,sw_HEplus,Z(J),RTS,ON(J),O2N(J),N2N(J)
      > ,ZNE,HEPLUS,PRHEP,HE(J),NNO(J),N(1,J),N(2,J),HN(J))
 
       IF(I.EQ.25) CALL CO2(J,ID,JP,Z(J),RTS,ON(J),O2N(J),N2N(J),ZNE

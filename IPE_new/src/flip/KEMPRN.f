@@ -458,7 +458,7 @@ C.......o+(2p)
       END
 C::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 C......N+
-      SUBROUTINE CNPLS(J,I,JP,INPLS,Z,RTS,ON,O2N,N2N,NE,DISNP
+      SUBROUTINE CNPLS(J,I,JP,sw_Nplus,Z,RTS,ON,O2N,N2N,NE,DISNP
      > ,NPLUS,OPLS,N2D,OP2P,HEPLUS,PHOTN,O2P,N4S,OP2D,N2PLS,NNO)
       IMPLICIT DOUBLE PRECISION(A-H,L,N-Z)
       DIMENSION RTS(99),LR(22),PR(22)
@@ -480,7 +480,7 @@ C......N+
 
       CNPLUS=(PR(1)+PR(2)+PR(3)+PR(4)+PR(5)+PR(6)+PR(7)+PR(8)+PR(9))
      >   /(LR(1)+LR(2)+LR(3)+LR(4)+LR(5)+LR(6))
-      IF(INPLS.LE.0) NPLUS=CNPLUS
+      IF(sw_Nplus.LE.0) NPLUS=CNPLUS
       IF(JP.EQ.1.AND.I.GT.0) WRITE(I,101)
  101   FORMAT(/2X,'N+',20X,'PRODUCTION',73X,':',8X,'LOSS RATES'/
      > ,4X,'ALT   [N+]   [N+]c     hv+N2   O++N2D  O+2P+N2',3X
@@ -545,7 +545,7 @@ C.... 21-AUG-1992. Added N2+ recombination source
       END
 C::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 C....... He+
-      SUBROUTINE CHEP(J,I,JP,IHEPLS,Z,RTS,ON,O2N,N2N,NE,HEPLUS,PRHEP,
+      SUBROUTINE CHEP(J,I,JP,sw_HEplus,Z,RTS,ON,O2N,N2N,NE,HEPLUS,PRHEP,
      >   HE,NNO ,OPLUS,HPLUS,HN)
       IMPLICIT DOUBLE PRECISION(A-H,L,N-Z)
       DIMENSION RTS(99),LR(22),PR(22)
@@ -559,7 +559,7 @@ C....... He+
       LR(6)=RTS(95)*NNO                              !..Fox
       !...... He+ from chemical equilibrium
       CHEPLUS=PR(1)/(LR(1)+LR(2)+LR(3)+LR(4)+LR(5)+LR(6))
-      IF(IHEPLS.LE.0) HEPLUS=CHEPLUS
+      IF(sw_HEplus.LE.0) HEPLUS=CHEPLUS
 
       !... H+ production and loss
       PHPLUS=RTS(2)*OPLUS*HN
