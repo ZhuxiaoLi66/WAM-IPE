@@ -437,54 +437,16 @@ CONTAINS
 
       r = earth_radius + 90000.0_prec
 
-      ! lp-component of e-field : Eq(4.8)
-      ! Note that ed1 is calculated slightly differently here by dividing
-      ! through by a factor of sin_Im for accomodating the transport. 
-      ! The distance conversion from radians to meters involves (here) i
-      ! multiplication of the difference in radians (between two grid points)
-      ! by sin_Im*r.
-      DO mp = 1, grid % NMP
-
-        lp = 1
-        coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
-        sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
-        d_lp = sinim*r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp) )*coslam
-
-        eldyn % electric_field(1,lp,mp) = -( eldyn % electric_potential(lp+1,mp) - &  
-                                            eldyn % electric_potential(lp,mp) )/d_lp
-
-        DO lp = 2, grid % NLP-1
-
-          coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
-          sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
-          d_lp = sinim*r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp-1) )*coslam
-
-          eldyn % electric_field(1,lp,mp) = -( eldyn % electric_potential(lp+1,mp) - &  
-                                              eldyn % electric_potential(lp-1,mp) )/d_lp
-
-        ENDDO
-
-        lp = grid % NLP
-        coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
-        sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
-        d_lp = sinim*r*( grid % magnetic_colatitude(1,lp) - grid % magnetic_colatitude(1,lp-1) )*coslam
-
-        eldyn % electric_field(1,lp,mp) = -( eldyn % electric_potential(lp,mp) - &  
-                                            eldyn % electric_potential(lp-1,mp) )/d_lp
-
-      ENDDO
-
-    
-      ! mp-component of e-field
+      ! longitude component of e-field ( ed1 )
       ! Do periodic boundary conditions ( @ mp == 1 )
       mp = 1
       DO lp = 1, grid % NLP
 
         coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
         sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
-        d_mp = sinim*r*( grid % magnetic_longitude(mp+1) - grid % magnetic_longitude( grid % NMP ) + 2.0_prec*pi )
+        d_mp = sinim*coslam*r*( grid % magnetic_longitude(mp+1) - grid % magnetic_longitude( grid % NMP ) + 2.0_prec*pi )
 
-        eldyn % electric_field(2,lp,mp) = ( eldyn % electric_potential(lp,mp+1) - &  
+        eldyn % electric_field(1,lp,mp) = -( eldyn % electric_potential(lp,mp+1) - &  
                                             eldyn % electric_potential(lp,grid % NMP) )/d_mp
       ENDDO
       
@@ -493,9 +455,9 @@ CONTAINS
 
           coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
           sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
-          d_mp = sinim*r*( grid % magnetic_longitude(mp+1) - grid % magnetic_longitude(mp-1) )
+          d_mp = sinim*coslam*r*( grid % magnetic_longitude(mp+1) - grid % magnetic_longitude(mp-1) )
 
-          eldyn % electric_field(2,lp,mp) = ( eldyn % electric_potential(lp,mp+1) - &  
+          eldyn % electric_field(1,lp,mp) = -( eldyn % electric_potential(lp,mp+1) - &  
                                               eldyn % electric_potential(lp,mp-1) )/d_mp
 
         ENDDO
@@ -507,11 +469,50 @@ CONTAINS
 
         coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
         sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
-        d_mp = sinim*r*( grid % magnetic_longitude(1) - grid % magnetic_longitude(mp-1) + 2.0_prec*pi )
+        d_mp = sinim*coslam*r*( grid % magnetic_longitude(1) - grid % magnetic_longitude(mp-1) + 2.0_prec*pi )
 
-        eldyn % electric_field(2,lp,mp) = ( eldyn % electric_potential(lp,1) - &  
+        eldyn % electric_field(1,lp,mp) = -( eldyn % electric_potential(lp,1) - &  
                                             eldyn % electric_potential(lp,mp-1) )/d_mp
       ENDDO
+
+      ! latitude component of e-field ( ed2 ): Eq(4.8)
+      ! Note that ed1 is calculated slightly differently here by dividing
+      ! through by a factor of sin_Im for accomodating the transport. 
+      ! The distance conversion from radians to meters involves (here) i
+      ! multiplication of the difference in radians (between two grid points)
+      ! by sin_Im*r.
+      DO mp = 1, grid % NMP
+
+        lp = 1
+        coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
+        sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
+        d_lp = sinim*r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp) )
+
+        eldyn % electric_field(2,lp,mp) = ( eldyn % electric_potential(lp+1,mp) - &  
+                                            eldyn % electric_potential(lp,mp) )/d_lp
+
+        DO lp = 2, grid % NLP-1
+
+          coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
+          sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
+          d_lp = sinim*r*( grid % magnetic_colatitude(1,lp+1) - grid % magnetic_colatitude(1,lp-1) )
+
+          eldyn % electric_field(2,lp,mp) = ( eldyn % electric_potential(lp+1,mp) - &  
+                                              eldyn % electric_potential(lp-1,mp) )/d_lp
+
+        ENDDO
+
+        lp = grid % NLP
+        coslam = cos( 0.5_prec*pi - grid % magnetic_colatitude(1,lp) )
+        sinim  = 2.0_prec*sqrt( 1.0_prec - coslam*coslam )/sqrt( 4.0_prec - 3.0_prec*coslam*coslam )
+        d_lp = sinim*r*( grid % magnetic_colatitude(1,lp) - grid % magnetic_colatitude(1,lp-1) )
+
+        eldyn % electric_field(2,lp,mp) = ( eldyn % electric_potential(lp,mp) - &  
+                                            eldyn % electric_potential(lp-1,mp) )/d_lp
+
+      ENDDO
+
+    
 
   END SUBROUTINE Calculate_Potential_Gradient
 
