@@ -91,7 +91,10 @@
 !
           xk  = xlogps - alog(prsl(i,k))
           wh = dtco2c(i,k)+dth2oc(i,k)+dtco2h(i,k)+dth2oh(i,k)+dto3(i,k)+dtrad(i,k)
-          wl = hlw(i,k)+swh(i,k)*xmu(i)    ! see analog in gbphys.f: dt3dt(i,k) = dt3dt(i,k) + swh(i,k)*dtf*xmu(i)
+
+!         wl = hlw(i,k)+swh(i,k)*xmu(i)    ! see analog in gbphys.f: dt3dt(i,k) = dt3dt(i,k) + swh(i,k)*dtf*xmu(i)
+          wl = 0.
+
           if(xk < xb) then
              wtot(i,k) = wl
           elseif(xk >= xb .and. xk <= xt) then

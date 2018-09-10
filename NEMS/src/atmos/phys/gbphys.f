@@ -581,6 +581,10 @@
       use module_nst_water_prop, only: get_dtzm_2d
       use cs_conv, only : cs_convr
 
+
+      use idea_solar,only :  xb, xt_idea => xt, rdx, xlogps
+
+
       implicit none
 !
 !  ---  some constant parameters:
@@ -799,6 +803,11 @@
       real(kind=kind_phys) tf, tcr, tcrf
 !     parameter (tf=233.16, tcr=263.16, tcrf=1.0/(tcr-tf))
       parameter (tf=258.16, tcr=273.16, tcrf=1.0/(tcr-tf))
+
+
+      real(kind=kind_phys) :: xk, wl, wh
+
+
 !
 !
 !===> ...  begin here
@@ -1115,8 +1124,27 @@
       if (lsidea) then                       !idea jw
         do k = 1, levs
           do i = 1, im
-!           dtdt(i,k) = hlwd(i,k,2)
-            dtdt(i,k) = 0.
+!!          dtdt(i,k) = hlwd(i,k,2)
+!           dtdt(i,k) = 0.
+
+
+! tapering off
+            xk  = xlogps - alog(prsl(i,k))
+
+            wh = 0.
+            wl = dtdt(i,k)
+
+            if(xk < xb) then
+               dtdt(i,k) = wl
+!           elseif(xk >= xb .and. xk <= xt) then
+!              dtdt(i,k) = (wl*(xt-xk) + wh*(xk-xb))*rdx 
+            elseif(xk >= xb .and. xk <= xt_idea) then
+               dtdt(i,k) = (wl*(xt_idea-xk) + wh*(xk-xb))*rdx 
+            else
+               dtdt(i,k) = wh
+            endif
+
+
           enddo
         enddo
       endif
